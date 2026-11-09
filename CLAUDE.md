@@ -158,7 +158,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5 (max 
 
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
-| <!-- TODO --> Projectile | Tire vers l'ennemi le plus proche | 10 | 1 s | +1 projectile aux niv 3 et 5 |
+| **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 10 | 1 s | +1 projectile aux niv 3 et 5 |
 | <!-- TODO --> Aura | Dégâts continus autour du joueur | 5/tick | 0,5 s | Le rayon augmente avec le niveau |
 | <!-- TODO --> Orbite | Objets qui tournent autour du joueur | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 objet par niveau |
 
@@ -170,7 +170,7 @@ Noms des armes : `TODO` (en lien avec le thème magie). Règle de dégâts : **1
 
 | Ennemi | PV | Vitesse | Dégâts contact | XP | Comportement |
 |---|---|---|---|---|---|
-| Basique | 10 | 80 | 5 | 1 | Fonce sur le joueur |
+| Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 150 | 3 | 1 | Fonce, fragile |
 | Tank | 60 | 50 | 10 | 5 | Lent, résistant |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à <!-- TODO --> min |
@@ -265,8 +265,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Pause automatique quand l'onglet est caché
 
 ### Phase 3 — Combat
-- [ ] Arme 1 (projectile auto vers l'ennemi le plus proche)
-- [ ] Dégâts, mort des ennemis, feedback visuel (flash, nombres de dégâts)
+- [x] Arme 1 (projectile auto vers l'ennemi le plus proche)
+- [x] Dégâts, mort des ennemis, kills (+ stats par arme pour un futur damage meter)
+- [ ] Feedback visuel (flash, nombres de dégâts)
 - [ ] Gemmes d'XP + aimant
 
 ### Phase 4 — Progression `[MVP atteint ici]`
@@ -328,6 +329,10 @@ Format : date — décision — raison.
 | 2026-11-09 | Horde : `massContrast` 2, répulsion raidie (r / (1 - r)), file d'attente (bloqué par un égal devant → arrête de pousser) | Tanks au premier rang autour du joueur, sans se fondre en une seule masse. Version retenue après itérations |
 | 2026-11-09 | Délai de coup indépendant par ennemi (0,7 s) au lieu d'une invincibilité globale ; flash blanc au coup reçu | Demandé : la densité de la horde doit être le danger. ⚠️ 20 basiques au contact ≈ 140 dégâts/s, à rééquilibrer en Phase 4 |
 | 2026-11-09 | "Rejouer" recrée une GameScene neuve (nouvelle seed) au lieu de réinitialiser l'ancienne | Garantit qu'aucun état ne fuit d'une partie à l'autre (testé) |
+| 2026-11-09 | Arme 1 = "Trait arcanique" : 450 px/s, 1,4 s de vie, sans perforation ; sans cible à portée, elle attend (prête) | Réponses aux TODO ; la perforation pourra devenir un upgrade |
+| 2026-11-09 | Basique : 10 → 20 PV | Demandé : doit encaisser 2 coups au lieu d'un |
+| 2026-11-09 | Chaque arme compte ses dégâts utiles (sans l'excédent) et ses kills | Prépare un futur "damage meter" (classement des armes) demandé pour plus tard |
+| 2026-11-09 | Phase 3 : compteur d'XP temporaire sous le timer ; pool de 1000 gemmes, si plein l'XP va à la plus ancienne ; kills sur l'écran de mort | Validés pour la Phase 3 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

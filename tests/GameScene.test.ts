@@ -9,7 +9,12 @@ const DT = 1 / 60;
 /** Faux objets à la place du navigateur : on peut "appuyer" sur des touches et lire l'UI. */
 function makeDeps() {
   const pressed = new Set<string>();
-  const ui = { paused: false, deathShownWith: null as number | null, restarts: 0 };
+  const ui = {
+    paused: false,
+    deathShownWith: null as number | null,
+    deathKills: null as number | null,
+    restarts: 0,
+  };
   const deps: GameSceneDeps = {
     input: {
       isDown: () => false,
@@ -17,7 +22,10 @@ function makeDeps() {
     },
     pauseOverlay: { setVisible: (v) => (ui.paused = v) },
     deathOverlay: {
-      show: (s) => (ui.deathShownWith = s),
+      show: (s, k) => {
+        ui.deathShownWith = s;
+        ui.deathKills = k;
+      },
       hide: () => (ui.deathShownWith = null),
     },
     hud: { setTime: () => {} },
@@ -33,9 +41,11 @@ function makeDeps() {
   return { deps, ui, press };
 }
 
-function newScene() {
+/** `armed: false` retire les armes : utile pour tester le contact sans que l'arme tue l'ennemi. */
+function newScene({ armed = true } = {}) {
   const ctx = makeDeps();
   const scene = new GameScene(ctx.deps, 1234);
+  if (!armed) scene.weapons.length = 0;
   scene.enter();
   return { scene, ...ctx };
 }
@@ -49,14 +59,14 @@ function enemyOnPlayer(scene: GameScene) {
 
 describe('GameScene — dégâts et mort', () => {
   it('un ennemi au contact blesse le joueur', () => {
-    const { scene } = newScene();
+    const { scene } = newScene({ armed: false });
     enemyOnPlayer(scene);
     scene.update(DT);
     expect(scene.player.hp).toBe(PLAYER_BASE.maxHp - ENEMY_TYPES.basic.contactDamage);
   });
 
   it('plusieurs ennemis au contact : chacun frappe (délais indépendants)', () => {
-    const { scene } = newScene();
+    const { scene } = newScene({ armed: false });
     for (let i = 0; i < 4; i++) enemyOnPlayer(scene);
     const tank = scene.enemies.acquire();
     tank?.spawn(ENEMY_TYPES.tank, scene.player.x - 5, scene.player.y);
@@ -67,7 +77,7 @@ describe('GameScene — dégâts et mort', () => {
   });
 
   it('un même ennemi ne refrappe qu’après CONTACT_HIT_COOLDOWN', () => {
-    const { scene } = newScene();
+    const { scene } = newScene({ armed: false });
     enemyOnPlayer(scene);
     scene.update(DT);
     const afterFirstHit = scene.player.hp;
@@ -121,6 +131,27 @@ describe('GameScene — dégâts et mort', () => {
   });
 });
 
+describe('GameScene — combat', () => {
+  it('l’arme tue un ennemi proche et le kill est compté', () => {
+    const { scene } = newScene();
+    scene.enemies.acquire()?.spawn(ENEMY_TYPES.fast, 200, 0);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(scene.kills).toBeGreaterThanOrEqual(1);
+    expect(scene.weapons[0]?.kills).toBe(scene.kills);
+  });
+
+  it('l’écran de mort affiche les kills', () => {
+    const { scene, ui } = newScene();
+    scene.enemies.acquire()?.spawn(ENEMY_TYPES.basic, 200, 0);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    scene.update(DT);
+    expect(scene.isDead).toBe(true);
+    expect(ui.deathKills).toBe(scene.kills);
+  });
+});
+
 describe('GameScene — rejouer sans fuite d’état', () => {
   it('une nouvelle scène repart de zéro, même après une partie chargée', () => {
     const first = newScene();
@@ -140,6 +171,9 @@ describe('GameScene — rejouer sans fuite d’état', () => {
     expect(second.player.hp).toBe(PLAYER_BASE.maxHp);
     expect(second.player.x).toBe(0);
     expect(second.enemies.activeCount).toBe(0);
+    expect(second.projectiles.activeCount).toBe(0);
+    expect(second.kills).toBe(0);
+    expect(second.weapons[0]?.totalDamage).toBe(0);
   });
 
   it('même seed → même partie (reproductible)', () => {

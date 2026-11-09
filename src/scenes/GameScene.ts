@@ -8,11 +8,16 @@ import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
+import { PROJECTILE_POOL_SIZE, WEAPON_LIST, WEAPONS } from '../data/weapons';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
+import { Projectile } from '../entities/Projectile';
+import { Weapon } from '../entities/Weapon';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { MovementSystem } from '../systems/MovementSystem';
+import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
+import { WeaponSystem } from '../systems/WeaponSystem';
 import type { DeathOverlay } from '../ui/DeathOverlay';
 import type { Hud } from '../ui/Hud';
 import type { PauseOverlay } from '../ui/PauseOverlay';
@@ -21,6 +26,11 @@ import type { PauseOverlay } from '../ui/PauseOverlay';
 const GRID_SIZE = 64;
 const GRID_COLOR = '#2c2c3d';
 const HITBOX_COLOR = '#00e5ff';
+/** Halo autour des projectiles : taille (× rayon) et opacité */
+const PROJECTILE_GLOW_SCALE = 2;
+const PROJECTILE_GLOW_ALPHA = 0.3;
+/** Deux passes de dessin (halo puis cœur), définies une fois pour ne rien allouer par frame. */
+const PROJECTILE_PASSES = [PROJECTILE_GLOW_SCALE, 1] as const;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -48,10 +58,16 @@ export class GameScene implements Scene {
   /** Ennemis au contact du joueur à cette update (rempli par CollisionSystem, réutilisé). */
   private readonly touching = new Array<Enemy>(ENEMY_POOL_SIZE);
   private touchingCount = 0;
+  /** Armes du joueur. Une seule au départ ; les autres se gagneront en montant de niveau (Phase 4). */
+  readonly weapons: Weapon[] = [new Weapon(WEAPONS.arcaneBolt)];
+  readonly projectiles = new Pool(PROJECTILE_POOL_SIZE, () => new Projectile());
+  private readonly weaponSystem: WeaponSystem;
+  private readonly projectileSystem: ProjectileSystem;
   private paused = false;
   private dead = false;
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
+  private killCount = 0;
 
   constructor(
     private readonly deps: GameSceneDeps,
@@ -59,6 +75,14 @@ export class GameScene implements Scene {
   ) {
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
+    this.weaponSystem = new WeaponSystem(ENEMY_POOL_SIZE, this.collisions, this.projectiles);
+    this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, (e) =>
+      this.killEnemy(e),
+    );
+  }
+
+  get kills(): number {
+    return this.killCount;
   }
 
   enter(): void {
@@ -115,6 +139,16 @@ export class GameScene implements Scene {
     this.movement.update(this.enemies, this.player.x, this.player.y, dt);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
     this.applyContactDamage();
+    if (this.dead) return;
+
+    this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y);
+    this.projectileSystem.update(dt, this.projectiles);
+  }
+
+  /** Un ennemi tombe à 0 PV : il retourne au pool. (Phase 3c : il lâchera une gemme d'XP.) */
+  private killEnemy(e: Enemy): void {
+    this.enemies.release(e);
+    this.killCount++;
   }
 
   /**
@@ -136,13 +170,17 @@ export class GameScene implements Scene {
   private die(): void {
     this.dead = true;
     this.setPaused(false);
-    this.deps.deathOverlay.show(this.elapsed);
+    this.deps.deathOverlay.show(this.elapsed, this.killCount);
   }
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */
   private freeze(): void {
     this.player.syncPrevious();
     for (const e of this.enemies.items) e.syncPrevious();
+    for (const p of this.projectiles.items) {
+      p.prevX = p.x;
+      p.prevY = p.y;
+    }
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -154,12 +192,39 @@ export class GameScene implements Scene {
     this.renderGrid(ctx);
     this.renderEnemies(ctx, alpha);
     this.player.render(ctx, alpha);
+    this.renderProjectiles(ctx, alpha);
     if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
     this.camera.end(ctx);
 
     this.deps.hud.setTime(this.elapsed);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);
+    this.deps.debug.setStat('projectiles', this.projectiles.activeCount);
+    this.deps.debug.setStat('kills', this.killCount);
+  }
+
+  /** Projectiles groupés par arme (une couleur = un chemin) : un halo, puis le cœur. */
+  private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const items = this.projectiles.items;
+    for (const def of WEAPON_LIST) {
+      for (const pass of PROJECTILE_PASSES) {
+        ctx.beginPath();
+        for (let i = 0; i < items.length; i++) {
+          const p = items[i];
+          if (!p?.active || p.source?.def !== def) continue;
+          const x = p.renderX(alpha);
+          const y = p.renderY(alpha);
+          const r = p.radius * pass;
+          if (!this.isOnScreen(x, y, r)) continue;
+          ctx.moveTo(x + r, y);
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+        }
+        ctx.globalAlpha = pass === 1 ? 1 : PROJECTILE_GLOW_ALPHA;
+        ctx.fillStyle = def.color;
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   private isOnScreen(x: number, y: number, r: number): boolean {

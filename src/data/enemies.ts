@@ -16,7 +16,7 @@ export interface EnemyType {
 export const ENEMY_TYPES = {
   basic: {
     id: 'basic',
-    hp: 10,
+    hp: 20,
     speed: 80,
     contactDamage: 5,
     xp: 1,

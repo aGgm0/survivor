@@ -4,11 +4,11 @@ import { formatTime } from './formatTime';
 export class DeathOverlay {
   constructor(
     private readonly el: HTMLElement,
-    private readonly timeEl: HTMLElement,
+    private readonly infoEl: HTMLElement,
   ) {}
 
-  show(survivedSeconds: number): void {
-    this.timeEl.textContent = `Survécu ${formatTime(survivedSeconds)}`;
+  show(survivedSeconds: number, kills: number): void {
+    this.infoEl.textContent = `Survécu ${formatTime(survivedSeconds)} · ${kills} kills`;
     this.el.hidden = false;
   }
 
