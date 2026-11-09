@@ -140,6 +140,19 @@ describe('GameScene — combat', () => {
     expect(scene.weapons[0]?.kills).toBe(scene.kills);
   });
 
+  it('un ennemi touché flashe et un nombre de dégâts apparaît', () => {
+    const { scene } = newScene();
+    const tank = scene.enemies.acquire();
+    tank?.spawn(ENEMY_TYPES.tank, 200, 0);
+    let flashed = false;
+    for (let i = 0; i < 60 && !flashed; i++) {
+      scene.update(DT);
+      flashed = (tank?.flashUntil ?? 0) > 0;
+    }
+    expect(flashed).toBe(true);
+    expect(scene.damageNumbers.numbers.activeCount).toBeGreaterThan(0);
+  });
+
   it('l’écran de mort affiche les kills', () => {
     const { scene, ui } = newScene();
     scene.enemies.acquire()?.spawn(ENEMY_TYPES.basic, 200, 0);

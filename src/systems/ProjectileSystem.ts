@@ -9,6 +9,14 @@ import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
  */
 const GRID_STALENESS_MARGIN = 8;
 
+/** Ce que la scène veut savoir des impacts (retour visuel, kills, gemmes...). */
+export interface ProjectileEvents {
+  /** Un ennemi vient d'être touché (appelé à chaque impact, y compris le coup fatal). */
+  onHit(enemy: Enemy, damage: number): void;
+  /** Un ennemi tombe à 0 PV : la scène le retire, compte le kill, etc. */
+  onKill(enemy: Enemy): void;
+}
+
 /** Déplace les projectiles, gère leurs impacts sur les ennemis et leur fin de vie. */
 export class ProjectileSystem {
   private readonly candidates: Enemy[];
@@ -16,8 +24,7 @@ export class ProjectileSystem {
   constructor(
     capacity: number,
     private readonly collisions: CollisionSystem,
-    /** Appelé quand un ennemi tombe à 0 PV (la scène le retire, compte le kill, etc.). */
-    private readonly onEnemyKilled: (enemy: Enemy) => void,
+    private readonly events: ProjectileEvents,
   ) {
     this.candidates = new Array<Enemy>(capacity);
   }
@@ -61,9 +68,10 @@ export class ProjectileSystem {
     const dealt = Math.min(p.damage, e.hp);
     e.hp -= p.damage;
     if (p.source) p.source.totalDamage += dealt;
+    this.events.onHit(e, p.damage);
     if (e.hp <= 0) {
       if (p.source) p.source.kills++;
-      this.onEnemyKilled(e);
+      this.events.onKill(e);
     }
   }
 }

@@ -14,6 +14,7 @@ import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 import { Weapon } from '../entities/Weapon';
 import { CollisionSystem } from '../systems/CollisionSystem';
+import { DamageNumberSystem } from '../systems/DamageNumberSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
@@ -31,6 +32,11 @@ const PROJECTILE_GLOW_SCALE = 2;
 const PROJECTILE_GLOW_ALPHA = 0.3;
 /** Deux passes de dessin (halo puis cœur), définies une fois pour ne rien allouer par frame. */
 const PROJECTILE_PASSES = [PROJECTILE_GLOW_SCALE, 1] as const;
+/** s pendant lesquelles un ennemi touché est affiché en blanc */
+const ENEMY_HIT_FLASH = 0.1;
+const ENEMY_FLASH_COLOR = '#ffffff';
+/** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
+const VISUAL_SEED_SALT = 0x9e3779b9;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -63,6 +69,7 @@ export class GameScene implements Scene {
   readonly projectiles = new Pool(PROJECTILE_POOL_SIZE, () => new Projectile());
   private readonly weaponSystem: WeaponSystem;
   private readonly projectileSystem: ProjectileSystem;
+  readonly damageNumbers: DamageNumberSystem;
   private paused = false;
   private dead = false;
   /** secondes de survie (n'avance pas pendant la pause) */
@@ -76,9 +83,11 @@ export class GameScene implements Scene {
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
     this.weaponSystem = new WeaponSystem(ENEMY_POOL_SIZE, this.collisions, this.projectiles);
-    this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, (e) =>
-      this.killEnemy(e),
-    );
+    this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
+    this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, {
+      onHit: (e, damage) => this.onEnemyHit(e, damage),
+      onKill: (e) => this.killEnemy(e),
+    });
   }
 
   get kills(): number {
@@ -143,6 +152,13 @@ export class GameScene implements Scene {
 
     this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y);
     this.projectileSystem.update(dt, this.projectiles);
+    this.damageNumbers.update(dt);
+  }
+
+  /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
+  private onEnemyHit(e: Enemy, damage: number): void {
+    e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
+    this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
   /** Un ennemi tombe à 0 PV : il retourne au pool. (Phase 3c : il lâchera une gemme d'XP.) */
@@ -181,6 +197,7 @@ export class GameScene implements Scene {
       p.prevX = p.x;
       p.prevY = p.y;
     }
+    this.damageNumbers.freeze();
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -193,6 +210,7 @@ export class GameScene implements Scene {
     this.renderEnemies(ctx, alpha);
     this.player.render(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
+    this.damageNumbers.render(ctx, alpha, this.camera);
     if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
     this.camera.end(ctx);
 
@@ -263,24 +281,43 @@ export class GameScene implements Scene {
   /**
    * Dessin groupé par type : un seul chemin + un seul `fill()` par couleur,
    * au lieu d'un `fill()` par ennemi. Les ennemis hors écran sont ignorés.
+   * Les ennemis qui viennent d'être touchés sont dessinés à part, en blanc.
    */
   private renderEnemies(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const items = this.enemies.items;
     for (const type of ENEMY_TYPE_LIST) {
-      const r = type.radius;
       ctx.beginPath();
-      for (let i = 0; i < items.length; i++) {
-        const e = items[i];
-        if (!e?.active || e.type !== type) continue;
-        const x = e.renderX(alpha);
-        const y = e.renderY(alpha);
-        if (!this.isOnScreen(x, y, r)) continue;
-        // moveTo évite qu'un trait relie chaque cercle au précédent.
-        ctx.moveTo(x + r, y);
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-      }
+      this.addEnemyCircles(ctx, alpha, type, false);
       ctx.fillStyle = type.color;
       ctx.fill();
+    }
+    ctx.beginPath();
+    this.addEnemyCircles(ctx, alpha, null, true);
+    ctx.fillStyle = ENEMY_FLASH_COLOR;
+    ctx.fill();
+  }
+
+  /**
+   * Ajoute au chemin en cours les cercles des ennemis visibles qui correspondent au filtre :
+   * `type` (null = tous) et `flashing` (vient d'être touché ou non).
+   */
+  private addEnemyCircles(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    type: Enemy['type'] | null,
+    flashing: boolean,
+  ): void {
+    const items = this.enemies.items;
+    for (let i = 0; i < items.length; i++) {
+      const e = items[i];
+      if (!e?.active || (type && e.type !== type)) continue;
+      if (e.flashUntil > this.elapsed !== flashing) continue;
+      const r = e.type.radius;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      if (!this.isOnScreen(x, y, r)) continue;
+      // moveTo évite qu'un trait relie chaque cercle au précédent.
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
     }
   }
 

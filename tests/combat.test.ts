@@ -19,9 +19,13 @@ function setup(spawns: [EnemyType, number, number][] = []) {
   const collisions = new CollisionSystem(100);
   const killed: Enemy[] = [];
   const weaponSystem = new WeaponSystem(100, collisions, projectiles);
-  const projectileSystem = new ProjectileSystem(100, collisions, (e) => {
-    killed.push(e);
-    enemies.release(e);
+  const hits: [Enemy, number][] = [];
+  const projectileSystem = new ProjectileSystem(100, collisions, {
+    onHit: (e, damage) => hits.push([e, damage]),
+    onKill: (e) => {
+      killed.push(e);
+      enemies.release(e);
+    },
   });
   const weapon = new Weapon(BOLT);
   /** Simule `seconds` secondes de combat, joueur immobile en (0, 0). */
@@ -34,7 +38,7 @@ function setup(spawns: [EnemyType, number, number][] = []) {
   };
   const active = <T extends { active: boolean }>(pool: Pool<T>) =>
     pool.items.filter((x) => x.active);
-  return { enemies, projectiles, collisions, weaponSystem, weapon, killed, run, active };
+  return { enemies, projectiles, collisions, weaponSystem, weapon, killed, hits, run, active };
 }
 
 describe('WeaponSystem — ciblage', () => {
@@ -124,6 +128,13 @@ describe('ProjectileSystem', () => {
     if (target) enemies.release(target); // la cible disparaît : le projectile file dans le vide
     run(BOLT.projectileLifetime + 0.1);
     expect(projectiles.activeCount).toBe(0);
+  });
+
+  it('signale chaque impact (y compris le coup fatal) avec ses dégâts', () => {
+    const { hits, run, killed } = setup([[ENEMY_TYPES.basic, 200, 0]]);
+    run(2); // 2 coups pour un basique
+    expect(hits.map(([, d]) => d)).toEqual([BOLT.damage, BOLT.damage]);
+    expect(killed).toHaveLength(1);
   });
 
   it('un projectile ne touche qu’un seul ennemi', () => {

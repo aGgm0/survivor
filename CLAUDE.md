@@ -267,7 +267,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 ### Phase 3 — Combat
 - [x] Arme 1 (projectile auto vers l'ennemi le plus proche)
 - [x] Dégâts, mort des ennemis, kills (+ stats par arme pour un futur damage meter)
-- [ ] Feedback visuel (flash, nombres de dégâts)
+- [x] Feedback visuel (flash blanc des ennemis touchés, nombres de dégâts)
 - [ ] Gemmes d'XP + aimant
 
 ### Phase 4 — Progression `[MVP atteint ici]`
