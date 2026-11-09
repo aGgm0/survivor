@@ -38,7 +38,13 @@ function makeDeps() {
         return c;
       },
     },
-    hud: { setTime: () => {}, setProgress: () => {}, setHp: () => {}, setKills: () => {} },
+    hud: {
+      setTime: () => {},
+      setProgress: () => {},
+      setHp: () => {},
+      setKills: () => {},
+      setInventory: () => {},
+    },
     debug: { setStat: () => {}, showHitboxes: false },
     onRestart: () => ui.restarts++,
   };

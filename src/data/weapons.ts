@@ -19,6 +19,8 @@ interface WeaponDefBase {
   readonly id: string;
   /** Nom affiché (écran d'upgrade, damage meter...) */
   readonly name: string;
+  /** 2 lettres affichées dans la case de l'inventaire du HUD (en attendant de vraies icônes) */
+  readonly short: string;
   /** Description courte (écran de level up quand on obtient l'arme) */
   readonly description: string;
   /** Dégâts par coup au niveau 1 */
@@ -84,6 +86,7 @@ export const WEAPONS = {
     kind: 'projectile',
     id: 'arcaneBolt',
     name: 'Trait arcanique',
+    short: 'TA',
     description: "Tire sur l'ennemi le plus proche",
     damage: 10,
     knockback: 160, // moyen, dans la direction du tir
@@ -105,6 +108,7 @@ export const WEAPONS = {
     kind: 'aura',
     id: 'burningAura',
     name: 'Aura ardente',
+    short: 'AA',
     description: 'Brûle les ennemis autour de toi',
     damage: 5,
     knockback: 50, // faible : une brûlure pousse peu
@@ -122,6 +126,7 @@ export const WEAPONS = {
     kind: 'orbit',
     id: 'runicOrbs',
     name: 'Orbes runiques',
+    short: 'OR',
     description: 'Des orbes tournent autour de toi',
     damage: 8,
     knockback: 320, // fort : les orbes "frappent", leur rôle est d'écarter la horde

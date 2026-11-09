@@ -1,3 +1,5 @@
+import { PASSIVES } from '../data/upgrades';
+import type { Weapon } from '../entities/Weapon';
 import { formatTime } from './formatTime';
 
 /** Éléments du HUD (HTML par-dessus le canvas). */
@@ -8,6 +10,10 @@ export interface HudElements {
   hpFill: HTMLElement;
   hpText: HTMLElement;
   kills: HTMLElement;
+  /** Rangée des armes possédées */
+  weapons: HTMLElement;
+  /** Rangée des passifs possédés */
+  passives: HTMLElement;
 }
 
 /**
@@ -24,8 +30,42 @@ export class Hud {
   private shownHp = -1;
   private shownMaxHp = -1;
   private shownKills = -1;
+  private shownInventoryVersion = -1;
+  /** Liste d'armes affichée : une nouvelle partie en crée une nouvelle (voir setInventory). */
+  private shownWeapons: readonly Weapon[] | null = null;
 
   constructor(private readonly el: HudElements) {}
+
+  /**
+   * Inventaire : une case par arme et par passif, avec son niveau.
+   * `version` change à chaque level up : on ne reconstruit les cases que dans ce cas
+   * (créer des éléments HTML à chaque frame serait très coûteux).
+   */
+  setInventory(
+    version: number,
+    weapons: readonly Weapon[],
+    passiveLevels: ReadonlyMap<string, number>,
+  ): void {
+    // Le HUD sert à toutes les parties : la version seule ne suffit pas (une nouvelle partie
+    // repart de 0 et pourrait retomber sur le numéro affiché). La liste d'armes, elle, est
+    // neuve à chaque partie.
+    if (version === this.shownInventoryVersion && weapons === this.shownWeapons) return;
+    this.shownInventoryVersion = version;
+    this.shownWeapons = weapons;
+
+    this.el.weapons.replaceChildren(
+      ...weapons.map((w) =>
+        slot(w.def.short, w.level, `${w.def.name} — niv ${w.level}`, w.def.color),
+      ),
+    );
+    const owned = PASSIVES.filter((p) => (passiveLevels.get(p.id) ?? 0) > 0);
+    this.el.passives.replaceChildren(
+      ...owned.map((p) => {
+        const level = passiveLevels.get(p.id) ?? 0;
+        return slot(p.short, level, `${p.name} — niv ${level}`, null);
+      }),
+    );
+  }
 
   setTime(seconds: number): void {
     const whole = Math.floor(seconds);
@@ -67,6 +107,23 @@ export class Hud {
     this.shownKills = kills;
     this.el.kills.textContent = `${kills} kills`;
   }
+}
+
+/** Une case d'inventaire : 2 lettres, le niveau en petit, et le nom complet au survol. */
+function slot(short: string, level: number, tooltip: string, color: string | null): HTMLElement {
+  const box = document.createElement('div');
+  box.className = color ? 'slot slot-weapon' : 'slot';
+  box.title = tooltip;
+  if (color) box.style.borderColor = color;
+  const label = document.createElement('span');
+  label.className = 'slot-label';
+  label.textContent = short;
+  if (color) label.style.color = color;
+  const lvl = document.createElement('span');
+  lvl.className = 'slot-level';
+  lvl.textContent = String(level);
+  box.append(label, lvl);
+  return box;
 }
 
 function toTenthsOfPercent(ratio: number): number {

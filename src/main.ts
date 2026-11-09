@@ -36,6 +36,8 @@ const hud = new Hud({
   hpFill: getElement('hud-hpfill', HTMLDivElement),
   hpText: getElement('hud-hptext', HTMLSpanElement),
   kills: getElement('hud-kills', HTMLDivElement),
+  weapons: getElement('hud-weapons', HTMLDivElement),
+  passives: getElement('hud-passives', HTMLDivElement),
 });
 const game = new Game(renderer, debug, input);
 

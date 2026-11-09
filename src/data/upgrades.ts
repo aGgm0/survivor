@@ -7,6 +7,8 @@ export type PassiveStat =
 export interface PassiveDef {
   readonly id: string;
   readonly name: string;
+  /** 2 lettres affichées dans la case de l'inventaire du HUD (en attendant de vraies icônes) */
+  readonly short: string;
   /** Texte affiché sur l'écran de level up (effet d'un niveau) */
   readonly description: string;
   readonly maxLevel: number;
@@ -22,6 +24,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'vitality',
     name: 'Vitalité',
+    short: 'Vi',
     description: '+20 PV max (et soigne 20)',
     maxLevel: 5,
     stat: 'maxHp',
@@ -30,6 +33,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'swiftness',
     name: 'Célérité',
+    short: 'Cé',
     description: '+8 % vitesse',
     maxLevel: 5,
     stat: 'speedPct',
@@ -38,6 +42,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'attraction',
     name: 'Attraction',
+    short: 'At',
     description: "+30 % rayon d'aimant",
     maxLevel: 5,
     stat: 'pickupPct',
@@ -46,6 +51,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'power',
     name: 'Puissance',
+    short: 'Pu',
     description: '+10 % dégâts (toutes armes)',
     maxLevel: 5,
     stat: 'damagePct',
@@ -54,6 +60,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'haste',
     name: 'Hâte',
+    short: 'Hâ',
     description: '-8 % cooldown (toutes armes)',
     maxLevel: 5,
     stat: 'cooldownPct',
@@ -62,6 +69,7 @@ export const PASSIVES: readonly PassiveDef[] = [
   {
     id: 'impact',
     name: 'Impact',
+    short: 'Im',
     description: '+25 % recul (toutes armes)',
     maxLevel: 5,
     stat: 'knockbackPct',

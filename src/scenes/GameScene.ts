@@ -75,7 +75,7 @@ export interface GameSceneDeps {
   pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
   endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
-  hud: Pick<Hud, 'setTime' | 'setProgress' | 'setHp' | 'setKills'>;
+  hud: Pick<Hud, 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
@@ -107,6 +107,8 @@ export class GameScene implements Scene, Build {
   private pendingLevelUps = 0;
   /** Choix affichés à l'écran ; null = pas de level up en cours */
   private choices: UpgradeChoice[] | null = null;
+  /** Augmente à chaque upgrade choisi : le HUD ne redessine l'inventaire que quand il change. */
+  private buildVersion = 0;
   private paused = false;
   /** Bilan de la partie une fois terminée (victoire ou défaite) ; null = partie en cours */
   private report: RunReport | null = null;
@@ -272,6 +274,7 @@ export class GameScene implements Scene, Build {
     if (!choice) return;
     applyUpgrade(choice, this);
     this.recomputeWeapons();
+    this.buildVersion++;
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
       this.openLevelUp();
@@ -364,6 +367,7 @@ export class GameScene implements Scene, Build {
     this.deps.hud.setProgress(this.progression.level, this.progression.progress);
     this.deps.hud.setHp(this.player.hp, this.player.maxHp);
     this.deps.hud.setKills(this.killCount);
+    this.deps.hud.setInventory(this.buildVersion, this.weapons, this.passiveLevels);
     this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);
