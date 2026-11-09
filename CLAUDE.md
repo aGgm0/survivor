@@ -173,7 +173,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 | Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 150 | 3 | 1 | Fonce, fragile |
 | Tank | 60 | 50 | 10 | 5 | Lent, résistant |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à <!-- TODO --> min |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 et 9:00 (rayon 48 px, barre de PV), PV fixes sans multiplicateur de vague |
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
@@ -274,7 +274,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Level up + écran de choix (3 upgrades) + barre d'XP et niveau
 - [x] Upgrades passifs (Vitalité, Célérité, Attraction, Puissance, Hâte) + niveaux du Trait arcanique
 - [x] Armes 2 et 3 (Aura ardente, Orbes runiques) + nouvelle arme garantie au level up tant qu'on a < 3 armes
-- [ ] Vagues data-driven + boss
+- [x] Vagues data-driven (`data/waves.ts`) + boss à 5:00 et 9:00
 - [ ] Timer, écran Game Over / Victoire, rejouer
 - [ ] HUD : PV, barre d'XP, niveau, timer, kills
 
@@ -338,6 +338,8 @@ Format : date — décision — raison.
 | 2026-11-10 | Phase 4 validée : noms "Aura ardente" / "Orbes runiques", bonus de niveau d'arme, 5 passifs (5 niv max), soin +30 si tout est max, vagues 0-10 min, boss à 5:00 et 9:00, victoire à 10:00 (ennemis figés) | Tableaux proposés et validés ("ok reco") |
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
 | 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
+| 2026-11-10 | Boss : PV fixes (1000, comme le brief), sans le multiplicateur de vague | Respect du brief ; le boss de 9:00 sera peut-être trop faible, à revoir en jouant |
+| 2026-11-10 | Grille spatiale : cases calées sur le tank (48 px), pas sur le boss (96 px) | Des cases 4× plus grandes pour un seul boss ralentiraient toutes les recherches de voisins |
 | 2026-11-10 | Aura : horloge de dégâts par ennemi (brûlé dès l'entrée, puis toutes les 0,5 s) au lieu d'un tick commun | Demandé : avec un tick commun, un ennemi entré juste après un tick traversait ~0,5 s sans dégâts |
 | 2026-11-10 | Toutes les armes infligent leurs dégâts via une seule fonction (`damageEnemy`) | Damage meter cohérent, quel que soit le type d'arme |
 | 2026-11-10 | Trait arcanique multi-projectiles : éventail de 12° centré sur la cible | Le brief dit "+1 projectile" sans préciser la forme |

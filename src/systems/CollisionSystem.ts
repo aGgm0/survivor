@@ -1,12 +1,17 @@
 import type { Pool } from '../core/Pool';
 import { SpatialGrid } from '../core/SpatialGrid';
-import { ENEMY_TYPE_LIST } from '../data/enemies';
+import { ENEMY_TYPE_LIST, ENEMY_TYPES } from '../data/enemies';
 import type { Enemy } from '../entities/Enemy';
 
-/** Plus gros rayon d'ennemi : sert à savoir jusqu'où chercher des voisins. */
+/** Plus gros rayon d'ennemi (le boss) : sert à savoir jusqu'où chercher des voisins. */
 export const MAX_ENEMY_RADIUS = Math.max(...ENEMY_TYPE_LIST.map((t) => t.radius));
-/** Une case doit contenir au moins un ennemi entier : 2 × le plus gros rayon. */
-const CELL_SIZE = MAX_ENEMY_RADIUS * 2;
+/**
+ * Taille des cases : calée sur les ennemis courants (2 × le rayon du tank), PAS sur le boss.
+ * Avec des cases de 96 px pour un seul boss, chaque case contiendrait 4× plus de petits
+ * ennemis, et toutes les recherches de voisins ralentiraient. Les recherches restent justes :
+ * elles couvrent simplement plus de cases quand leur rayon est grand.
+ */
+const CELL_SIZE = ENEMY_TYPES.tank.radius * 2;
 /** Marge pour compter un "contact" avec le joueur alors qu'on vient de le repousser au bord. */
 const CONTACT_TOLERANCE = 1;
 

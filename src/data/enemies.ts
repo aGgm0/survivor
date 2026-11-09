@@ -1,4 +1,4 @@
-// Types d'ennemis (voir CLAUDE.md § 5.5). Le boss arrive en Phase 4.
+// Types d'ennemis (voir CLAUDE.md § 5.5). Leur fréquence d'apparition est dans waves.ts.
 export interface EnemyType {
   readonly id: string;
   readonly hp: number;
@@ -40,6 +40,16 @@ export const ENEMY_TYPES = {
     xp: 5,
     radius: 24,
     color: '#5cb85c',
+  },
+  /** N'apparaît qu'aux instants de BOSS_TIMES (waves.ts), jamais dans le tirage aléatoire. */
+  boss: {
+    id: 'boss',
+    hp: 1000,
+    speed: 70,
+    contactDamage: 20,
+    xp: 50,
+    radius: 48,
+    color: '#8e2de2',
   },
 } as const satisfies Record<string, EnemyType>;
 

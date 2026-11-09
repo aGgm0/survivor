@@ -13,6 +13,8 @@ export class Enemy implements Poolable {
   vx = 0;
   vy = 0;
   hp = 0;
+  /** PV au moment du spawn (pour la barre de vie du boss) */
+  maxHp = 0;
   type: EnemyType = ENEMY_TYPES.basic;
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
@@ -30,10 +32,14 @@ export class Enemy implements Poolable {
    */
   constructor(readonly id: number = 0) {}
 
-  /** Réinitialise TOUT l'état : un ennemi recyclé ne doit rien garder de sa vie précédente. */
-  spawn(type: EnemyType, x: number, y: number): void {
+  /**
+   * Réinitialise TOUT l'état : un ennemi recyclé ne doit rien garder de sa vie précédente.
+   * `hpMult` : les vagues tardives donnent plus de PV (voir waves.ts).
+   */
+  spawn(type: EnemyType, x: number, y: number, hpMult = 1): void {
     this.type = type;
-    this.hp = type.hp;
+    this.maxHp = type.hp * hpMult;
+    this.hp = this.maxHp;
     this.nextContactHitAt = 0;
     this.flashUntil = 0;
     this.nextOrbitHitAt = 0;

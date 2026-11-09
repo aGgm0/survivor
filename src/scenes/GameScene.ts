@@ -9,6 +9,7 @@ import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import { NEW_WEAPON_GUARANTEE_BELOW, UPGRADE_CHOICE_COUNT } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
+import { BOSS_TYPE } from '../data/waves';
 import {
   PROJECTILE_POOL_SIZE,
   WEAPON_LIST,
@@ -57,6 +58,8 @@ const VISUAL_SEED_SALT = 0x9e3779b9;
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
 const AURA_STROKE_ALPHA = 0.5;
+/** Barre de PV au-dessus du boss */
+const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a1a' } as const;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -198,9 +201,9 @@ export class GameScene implements Scene, Build {
     this.player.update(dt, axisX, axisY);
 
     if (input.wasPressed(CONTROLS.debugSpawn)) {
-      this.spawner.spawnBatch(SPAWN.debugBatch, this.player.x, this.player.y);
+      this.spawner.spawnBatch(SPAWN.debugBatch, this.elapsed, this.player.x, this.player.y);
     }
-    this.spawner.update(dt, this.player.x, this.player.y);
+    this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
@@ -317,6 +320,7 @@ export class GameScene implements Scene, Build {
     this.gems.render(ctx, alpha, this.camera);
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderEnemies(ctx, alpha);
+    this.renderBossBars(ctx, alpha);
     this.player.render(ctx, alpha);
     this.renderOrbs(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
@@ -331,6 +335,24 @@ export class GameScene implements Scene, Build {
     this.deps.debug.setStat('contacts', this.touchingCount);
     this.deps.debug.setStat('projectiles', this.projectiles.activeCount);
     this.deps.debug.setStat('kills', this.killCount);
+  }
+
+  /** Barre de PV au-dessus de chaque boss visible (1000 PV : on veut voir où il en est). */
+  private renderBossBars(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const items = this.enemies.items;
+    for (let i = 0; i < items.length; i++) {
+      const e = items[i];
+      if (!e?.active || e.type !== BOSS_TYPE) continue;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      if (!this.isOnScreen(x, y, e.type.radius + BOSS_BAR.offset + BOSS_BAR.height)) continue;
+      const barX = x - BOSS_BAR.width / 2;
+      const barY = y - e.type.radius - BOSS_BAR.offset - BOSS_BAR.height;
+      ctx.fillStyle = BOSS_BAR.bg;
+      ctx.fillRect(barX, barY, BOSS_BAR.width, BOSS_BAR.height);
+      ctx.fillStyle = BOSS_BAR.fill;
+      ctx.fillRect(barX, barY, BOSS_BAR.width * Math.max(0, e.hp / e.maxHp), BOSS_BAR.height);
+    }
   }
 
   /** Disque translucide autour du joueur pour chaque aura possédée. */
