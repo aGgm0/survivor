@@ -160,9 +160,9 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5 (max 
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 10 | 1 s | +1 projectile aux niv 3 et 5 |
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Rayon +15/+15/+20 px et +2/+3 dégâts selon les niveaux |
-| **Orbes runiques** (orbite) | 2 orbes à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
+| **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
 
-**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 160 (sens du tir), Aura ardente 50 (depuis le joueur), Orbes runiques 320 (depuis l'orbe). Plus l'ennemi est lourd, moins il recule (tank ~3× moins, boss ~12× moins). Passif **Impact** : +25 % de recul par niveau.
+**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 160 (sens du tir), Aura ardente 50 (depuis le joueur), Orbes runiques 320 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins, boss ~12× moins). Passif **Impact** : +25 % de recul par niveau.
 
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
@@ -282,6 +282,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] HUD : PV, barre d'XP, niveau, timer, kills
 
 **✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
+
+### Après le MVP — idées validées, à planifier
+- [ ] **Mutations d'armes** : au niveau 5, choix entre 2 variantes par arme (ex. Aura : très grande mais moins de dégâts + ralentit, OU même taille + poison). Demande des effets d'état (ralentissement, poison).
 
 ### Phase 5 — Polish `[LATER]`
 - [ ] Sprites et animations, sons et musique

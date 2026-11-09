@@ -86,6 +86,24 @@ describe('recul par arme', () => {
     expect(tank?.vx).toBeGreaterThan(0); // poussé vers la droite (le tir allait vers +x)
   });
 
+  it('les orbes repoussent vers l’extérieur, même un ennemi frappé côté intérieur', () => {
+    const enemies = new Pool(10, (i) => new Enemy(i));
+    const e = enemies.acquire();
+    // Ennemi à l'intérieur du cercle des orbes (distance 70 < 80), sur la trajectoire de l'orbe
+    // qui démarre à l'angle 0 : l'orbe le touche par l'extérieur.
+    e?.spawn(ENEMY_TYPES.basic, 70, 0);
+    const collisions = new CollisionSystem(10);
+    collisions.rebuild(enemies);
+    const system = new WeaponSystem(10, collisions, new Pool(1, () => new Projectile()), {
+      onHit: () => {},
+      onKill: () => {},
+    });
+    const orbs = new Weapon(WEAPONS.runicOrbs);
+    orbs.recompute(NO_MODS);
+    system.update(DT, [orbs], 0, 0, DT);
+    expect(e?.vx).toBeGreaterThan(0); // poussé vers l'extérieur (+x), pas vers le joueur
+  });
+
   it('l’aura repousse vers l’extérieur, depuis le joueur', () => {
     const enemies = new Pool(10, (i) => new Enemy(i));
     const e = enemies.acquire();

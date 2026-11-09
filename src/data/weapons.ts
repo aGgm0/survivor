@@ -132,7 +132,7 @@ export const WEAPONS = {
     knockback: 320, // fort : les orbes "frappent", leur rôle est d'écarter la horde
     count: 2,
     orbitDistance: 80,
-    orbRadius: 10,
+    orbRadius: 13, // 10 → 13 : retour de jeu, "vraiment petit"
     angularSpeed: 3,
     rehitCooldown: 0.5,
     color: '#c77dff',

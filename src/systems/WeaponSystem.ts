@@ -175,9 +175,12 @@ export class WeaponSystem {
         const dy = e.y - oy;
         if (dx * dx + dy * dy > touch * touch) continue;
         e.nextOrbitHitAt = now + def.rehitCooldown;
-        // Recul depuis le centre de l'orbe : l'ennemi est éjecté là où l'orbe l'a frappé.
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        damageEnemy(weapon, e, weapon.damage, this.events, dx / dist, dy / dist);
+        // Recul toujours vers l'extérieur, depuis le joueur. (Depuis le centre de l'orbe, un
+        // ennemi frappé côté intérieur du cercle était renvoyé... sur le joueur.)
+        const ex = e.x - x;
+        const ey = e.y - y;
+        const dist = Math.sqrt(ex * ex + ey * ey) || 1;
+        damageEnemy(weapon, e, weapon.damage, this.events, ex / dist, ey / dist);
       }
     }
   }
