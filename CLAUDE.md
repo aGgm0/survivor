@@ -251,9 +251,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Game loop fixed timestep + overlay FPS
 
 ### Phase 1 — Bouger
-- [ ] Input clavier
-- [ ] Joueur qui se déplace (diagonale normalisée)
-- [ ] Caméra qui suit le joueur + sol/grille de fond pour voir le mouvement
+- [x] Input clavier
+- [x] Joueur qui se déplace (diagonale normalisée)
+- [x] Caméra qui suit le joueur + sol/grille de fond pour voir le mouvement
+- [x] Interpolation au rendu + pause simple (Échap / P)
 
 ### Phase 2 — Ennemis
 - [ ] Spawn hors écran + poursuite du joueur
@@ -306,6 +307,10 @@ Format : date — décision — raison.
 | 2026-11-09 | Run de 10 min, thème magie provisoire, jeu en local | Réponses aux TODO du brief |
 | 2026-11-09 | Vite 8, Vitest 5, ESLint 10, TypeScript 6.0 (pas 7) | typescript-eslint ne supporte pas encore TS 7 |
 | 2026-11-09 | Alertes `npm audit` minimatch (via ESLint) acceptées | Outil de dev uniquement, pas de correctif publié |
+| 2026-11-09 | Map infinie, caméra rigide centrée sur le joueur | Standard du genre ; lisible avec beaucoup d'ennemis. Caméra souple = polish |
+| 2026-11-09 | Pause simple (overlay HTML) dès la Phase 1 | Demandé ; le menu pause complet reste en Phase 5 |
+| 2026-11-09 | Touches lues via `event.code` | Une seule config pour AZERTY (ZQSD) et QWERTY (WASD) |
+| 2026-11-09 | Rendu interpolé (`alpha`) entre deux updates | Mouvement fluide sur écrans 144/240 Hz malgré la logique à 60 Hz |
 
 ---
 

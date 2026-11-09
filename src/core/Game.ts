@@ -1,6 +1,7 @@
 import type { Renderer } from './Renderer';
 import type { Scene } from './Scene';
 import type { DebugOverlay } from './DebugOverlay';
+import type { Input } from './Input';
 
 /** 60 updates de logique par seconde, quel que soit le FPS de l'écran. */
 export const FIXED_STEP = 1 / 60;
@@ -27,6 +28,7 @@ export class Game {
   constructor(
     private readonly renderer: Renderer,
     private readonly debug: DebugOverlay,
+    private readonly input: Input,
   ) {
     // Onglet caché → on arrête la boucle. Au retour, on repart d'un temps propre
     // pour ne pas "rattraper" les secondes passées ailleurs.
@@ -64,12 +66,18 @@ export class Game {
 
     while (this.accumulator >= FIXED_STEP) {
       this.scene?.update(FIXED_STEP);
+      this.input.endUpdate();
       this.debug.countUpdate();
       this.accumulator -= FIXED_STEP;
     }
 
+    // Interpolation : l'accumulateur contient le temps "pas encore simulé".
+    // alpha = 0,4 → on est à 40 % du chemin vers la prochaine update, donc on dessine
+    // les entités à 40 % entre leur position précédente et l'actuelle. Mouvement fluide à 144/240 Hz.
+    const alpha = this.accumulator / FIXED_STEP;
+
     this.renderer.clear();
-    this.scene?.render(this.renderer.ctx);
+    this.scene?.render(this.renderer.ctx, alpha);
     this.debug.countFrame(frameTime);
 
     requestAnimationFrame(this.frame);

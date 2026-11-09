@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { clamp, lerp, Rng } from '../src/core/math';
+import { clamp, lerp, normalizeInto, Rng } from '../src/core/math';
+
+describe('normalizeInto', () => {
+  it('ramène la diagonale à une longueur de 1', () => {
+    const out = normalizeInto(1, 1, { x: 0, y: 0 });
+    expect(Math.hypot(out.x, out.y)).toBeCloseTo(1);
+    expect(out.x).toBeCloseTo(Math.SQRT1_2);
+  });
+
+  it('laisse un axe simple intact', () => {
+    expect(normalizeInto(0, -1, { x: 0, y: 0 })).toEqual({ x: 0, y: -1 });
+  });
+
+  it('renvoie (0, 0) pour un vecteur nul, sans division par zéro', () => {
+    expect(normalizeInto(0, 0, { x: 5, y: 5 })).toEqual({ x: 0, y: 0 });
+  });
+});
 
 describe('clamp', () => {
   it('borne la valeur entre min et max', () => {

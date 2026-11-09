@@ -1,3 +1,24 @@
+export interface Vec2 {
+  x: number;
+  y: number;
+}
+
+/**
+ * Écrit dans `out` le vecteur (x, y) ramené à une longueur de 1, ou (0, 0) s'il est nul.
+ * On écrit dans un objet fourni au lieu d'en renvoyer un nouveau : zéro allocation dans la boucle.
+ */
+export function normalizeInto(x: number, y: number, out: Vec2): Vec2 {
+  const length = Math.hypot(x, y);
+  if (length === 0) {
+    out.x = 0;
+    out.y = 0;
+  } else {
+    out.x = x / length;
+    out.y = y / length;
+  }
+  return out;
+}
+
 export function clamp(value: number, min: number, max: number): number {
   return value < min ? min : value > max ? max : value;
 }

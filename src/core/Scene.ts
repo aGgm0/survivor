@@ -4,6 +4,10 @@ export interface Scene {
   exit(): void;
   /** Logique uniquement. `dt` est en secondes et vaut toujours le pas fixe. */
   update(dt: number): void;
-  /** Dessin uniquement : ne doit jamais modifier l'état du jeu. */
-  render(ctx: CanvasRenderingContext2D): void;
+  /**
+   * Dessin uniquement : ne doit jamais modifier l'état du jeu.
+   * `alpha` (0 à 1) = où on en est entre la dernière update et la suivante,
+   * pour dessiner les positions interpolées.
+   */
+  render(ctx: CanvasRenderingContext2D, alpha: number): void;
 }
