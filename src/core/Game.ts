@@ -33,8 +33,12 @@ export class Game {
     // Onglet caché → on arrête la boucle. Au retour, on repart d'un temps propre
     // pour ne pas "rattraper" les secondes passées ailleurs.
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.stop();
-      else this.start();
+      if (document.hidden) {
+        this.scene?.onHidden?.();
+        this.stop();
+      } else {
+        this.start();
+      }
     });
   }
 

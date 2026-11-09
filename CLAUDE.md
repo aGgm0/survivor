@@ -140,7 +140,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 | Vitesse | 200 px/s | |
 | Rayon de ramassage | 60 px | Augmentable via upgrade |
 | Armure | 0 | Réduction plate des dégâts |
-| Invincibilité après coup | 0,5 s | Évite de mourir en une frame |
+| Délai de coup par ennemi | 0,7 s | Pas d'invincibilité globale : chaque ennemi au contact frappe, puis attend 0,7 s (`data/combat.ts`) |
 
 <!-- TODO: plusieurs personnages jouables ? [LATER] -->
 
@@ -261,7 +261,8 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Object pool (+ debug F4 : +100 ennemis)
 - [x] Timer de survie en haut à droite (avancé depuis le HUD de la Phase 4)
 - [x] SpatialGrid + séparation entre ennemis (+ contact joueur détecté, F3 ×2 = hitboxes)
-- [ ] Collisions joueur/ennemi, PV, invincibilité, mort
+- [x] Collisions joueur/ennemi, PV, délai de coup par ennemi, mort (barre de PV sous le joueur, écran de mort, R = rejouer)
+- [x] Pause automatique quand l'onglet est caché
 
 ### Phase 3 — Combat
 - [ ] Arme 1 (projectile auto vers l'ennemi le plus proche)
@@ -325,6 +326,8 @@ Format : date — décision — raison.
 | 2026-11-09 | Id d'ennemi = index dans le pool (pas de compteur global) | Même seed → même partie, même après un "rejouer" |
 | 2026-11-09 | Le joueur transmet son élan aux ennemis bousculés (au lieu de les téléporter seulement) | Supprime les saccades quand le joueur fonce dans la horde |
 | 2026-11-09 | Horde : `massContrast` 2, répulsion raidie (r / (1 - r)), file d'attente (bloqué par un égal devant → arrête de pousser) | Tanks au premier rang autour du joueur, sans se fondre en une seule masse. Version retenue après itérations |
+| 2026-11-09 | Délai de coup indépendant par ennemi (0,7 s) au lieu d'une invincibilité globale ; flash blanc au coup reçu | Demandé : la densité de la horde doit être le danger. ⚠️ 20 basiques au contact ≈ 140 dégâts/s, à rééquilibrer en Phase 4 |
+| 2026-11-09 | "Rejouer" recrée une GameScene neuve (nouvelle seed) au lieu de réinitialiser l'ancienne | Garantit qu'aucun état ne fuit d'une partie à l'autre (testé) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

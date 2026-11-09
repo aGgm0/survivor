@@ -46,7 +46,8 @@ body {
   pointer-events: none;
 }
 
-#pause-overlay {
+/* Écrans plein cadre par-dessus le jeu (pause, mort) */
+.overlay {
   position: absolute;
   inset: 0;
   display: flex;
@@ -59,12 +60,20 @@ body {
   font-family: monospace;
 }
 
-.pause-title {
+.overlay-death {
+  background: rgba(40, 0, 0, 0.7);
+}
+
+.overlay-title {
   font-size: 48px;
   letter-spacing: 8px;
 }
 
-.pause-hint {
+.overlay-info {
+  font-size: 20px;
+}
+
+.overlay-hint {
   font-size: 14px;
   color: #aaa;
 }

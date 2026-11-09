@@ -6,6 +6,7 @@ export const CONTROLS = {
   left: ['KeyA', 'ArrowLeft'],
   right: ['KeyD', 'ArrowRight'],
   pause: ['Escape', 'KeyP'],
+  restart: ['KeyR'],
   /** debug : ajoute un paquet d'ennemis (test de perf) */
   debugSpawn: ['F4'],
 } as const;

@@ -12,9 +12,14 @@
       <div id="stage">
         <canvas id="game"></canvas>
         <div id="hud-timer">00:00</div>
-        <div id="pause-overlay" hidden>
-          <p class="pause-title">PAUSE</p>
-          <p class="pause-hint">Échap ou P pour reprendre</p>
+        <div id="pause-overlay" class="overlay" hidden>
+          <p class="overlay-title">PAUSE</p>
+          <p class="overlay-hint">Échap ou P pour reprendre</p>
+        </div>
+        <div id="death-overlay" class="overlay overlay-death" hidden>
+          <p class="overlay-title">MORT</p>
+          <p id="death-time" class="overlay-info"></p>
+          <p class="overlay-hint">R pour rejouer</p>
         </div>
         <div id="debug-overlay" hidden></div>
       </div>

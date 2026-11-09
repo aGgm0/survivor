@@ -7,8 +7,6 @@ export const PLAYER_BASE = {
   pickupRadius: 60,
   /** réduction plate des dégâts reçus */
   armor: 0,
-  /** s d'invincibilité après un coup */
-  invincibilityTime: 0.5,
   /** px, taille du joueur (affichage et future hitbox) */
   radius: 16,
 } as const;

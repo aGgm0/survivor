@@ -10,4 +10,6 @@ export interface Scene {
    * pour dessiner les positions interpolées.
    */
   render(ctx: CanvasRenderingContext2D, alpha: number): void;
+  /** Optionnel : l'onglet vient d'être caché (la boucle s'arrête juste après). */
+  onHidden?(): void;
 }

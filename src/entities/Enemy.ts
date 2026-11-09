@@ -14,6 +14,8 @@ export class Enemy implements Poolable {
   vy = 0;
   hp = 0;
   type: EnemyType = ENEMY_TYPES.basic;
+  /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
+  nextContactHitAt = 0;
 
   /**
    * @param id identifiant stable = place dans le pool. Sert de départage déterministe
@@ -26,6 +28,7 @@ export class Enemy implements Poolable {
   spawn(type: EnemyType, x: number, y: number): void {
     this.type = type;
     this.hp = type.hp;
+    this.nextContactHitAt = 0;
     this.teleport(x, y);
   }
 

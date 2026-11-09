@@ -4,6 +4,7 @@ import type { Input } from '../core/Input';
 import { Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import type { Scene } from '../core/Scene';
+import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
@@ -12,6 +13,7 @@ import { Player } from '../entities/Player';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
+import type { DeathOverlay } from '../ui/DeathOverlay';
 import type { Hud } from '../ui/Hud';
 import type { PauseOverlay } from '../ui/PauseOverlay';
 
@@ -20,18 +22,25 @@ const GRID_SIZE = 64;
 const GRID_COLOR = '#2c2c3d';
 const HITBOX_COLOR = '#00e5ff';
 
+/**
+ * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
+ * les tests peuvent fournir de faux objets sans navigateur.
+ */
 export interface GameSceneDeps {
-  input: Input;
-  pauseOverlay: PauseOverlay;
-  hud: Hud;
-  debug: DebugOverlay;
+  input: Pick<Input, 'isDown' | 'wasPressed'>;
+  pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
+  deathOverlay: Pick<DeathOverlay, 'show' | 'hide'>;
+  hud: Pick<Hud, 'setTime'>;
+  debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
+  /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
+  onRestart: () => void;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
 export class GameScene implements Scene {
-  private readonly player = new Player();
+  readonly player = new Player();
   private readonly camera = new Camera();
-  private readonly enemies = new Pool(ENEMY_POOL_SIZE, (i) => new Enemy(i));
+  readonly enemies = new Pool(ENEMY_POOL_SIZE, (i) => new Enemy(i));
   private readonly rng: Rng;
   private readonly spawner: SpawnSystem;
   private readonly collisions = new CollisionSystem(ENEMY_POOL_SIZE);
@@ -40,6 +49,7 @@ export class GameScene implements Scene {
   private readonly touching = new Array<Enemy>(ENEMY_POOL_SIZE);
   private touchingCount = 0;
   private paused = false;
+  private dead = false;
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
 
@@ -53,23 +63,41 @@ export class GameScene implements Scene {
 
   enter(): void {
     this.setPaused(false);
+    this.deps.deathOverlay.hide();
     // Afficher la seed permet de rejouer exactement la même partie pour reproduire un bug.
     this.deps.debug.setStat('seed', this.rng.seed);
   }
 
   exit(): void {
     this.setPaused(false);
+    this.deps.deathOverlay.hide();
+  }
+
+  /** Onglet caché : on met en pause, pour ne pas reprendre en pleine horde au retour. */
+  onHidden(): void {
+    if (!this.dead) this.setPaused(true);
+  }
+
+  get isDead(): boolean {
+    return this.dead;
+  }
+
+  get isPaused(): boolean {
+    return this.paused;
   }
 
   update(dt: number): void {
     const { input } = this.deps;
-    if (input.wasPressed(CONTROLS.pause)) this.setPaused(!this.paused);
 
+    if (this.dead) {
+      this.freeze();
+      if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+      return;
+    }
+
+    if (input.wasPressed(CONTROLS.pause)) this.setPaused(!this.paused);
     if (this.paused) {
-      // Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités
-      // entre leur ancienne et leur nouvelle position pendant toute la pause.
-      this.player.syncPrevious();
-      for (const e of this.enemies.items) e.syncPrevious();
+      this.freeze();
       return;
     }
 
@@ -86,6 +114,35 @@ export class GameScene implements Scene {
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
+    this.applyContactDamage();
+  }
+
+  /**
+   * Chaque ennemi au contact frappe, puis doit attendre CONTACT_HIT_COOLDOWN avant de
+   * pouvoir refrapper. Les délais sont indépendants : 10 ennemis au contact = 10 coups.
+   * On compare à `elapsed` (temps de partie) : rien à décompter sur chaque ennemi.
+   */
+  private applyContactDamage(): void {
+    for (let i = 0; i < this.touchingCount; i++) {
+      const e = this.touching[i];
+      if (!e || this.elapsed < e.nextContactHitAt) continue;
+      this.player.takeHit(e.type.contactDamage);
+      e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
+      if (this.player.isDead) break;
+    }
+    if (this.player.isDead) this.die();
+  }
+
+  private die(): void {
+    this.dead = true;
+    this.setPaused(false);
+    this.deps.deathOverlay.show(this.elapsed);
+  }
+
+  /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */
+  private freeze(): void {
+    this.player.syncPrevious();
+    for (const e of this.enemies.items) e.syncPrevious();
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
