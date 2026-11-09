@@ -11,6 +11,7 @@ import type { Enemy } from '../entities/Enemy';
 export const SPAWN_RADIUS = Math.hypot(LOGICAL_WIDTH, LOGICAL_HEIGHT) / 2 + SPAWN.offscreenMargin;
 const RECYCLE_DISTANCE = SPAWN_RADIUS * SPAWN.recycleDistanceFactor;
 const SPAWN_INTERVAL = 1 / SPAWN.perSecond;
+const FLOAT_EPSILON = 1e-9;
 
 export class SpawnSystem {
   private timer = 0;
@@ -22,7 +23,9 @@ export class SpawnSystem {
 
   update(dt: number, playerX: number, playerY: number): void {
     this.timer += dt;
-    while (this.timer >= SPAWN_INTERVAL) {
+    // Tolérance : 0,8333… s ajouté plusieurs fois n'est pas exact en virgule flottante, et
+    // sans elle un spawn "pile à l'heure" pouvait glisser d'une update.
+    while (this.timer >= SPAWN_INTERVAL - FLOAT_EPSILON) {
       this.timer -= SPAWN_INTERVAL;
       if (this.enemies.activeCount < SPAWN.maxEnemies) this.spawnOne(playerX, playerY);
     }

@@ -30,7 +30,7 @@ export class WeaponSystem {
         weapon.cooldownTimer = 0;
         continue;
       }
-      if (this.fire(weapon, fromX, fromY, target)) weapon.cooldownTimer = weapon.def.cooldown;
+      if (this.fire(weapon, fromX, fromY, target)) weapon.cooldownTimer = weapon.cooldown;
     }
   }
 
@@ -57,13 +57,23 @@ export class WeaponSystem {
     return best;
   }
 
+  /**
+   * Tire `projectileCount` projectiles en éventail centré sur la cible
+   * (ex. 3 projectiles à 12° d'écart : -12°, 0°, +12°).
+   * Renvoie faux si la réserve de projectiles est vide (on retentera à l'update suivante).
+   */
   private fire(weapon: Weapon, x: number, y: number, target: Enemy): boolean {
-    const projectile = this.projectiles.acquire();
-    if (!projectile) return false; // réserve pleine : on retentera à la prochaine update
-    const dx = target.x - x;
-    const dy = target.y - y;
-    const dist = Math.hypot(dx, dy) || 1;
-    projectile.launch(weapon, x, y, dx / dist, dy / dist);
-    return true;
+    const baseAngle = Math.atan2(target.y - y, target.x - x);
+    const spread = (weapon.def.spreadDeg * Math.PI) / 180;
+    const count = weapon.projectileCount;
+    let fired = 0;
+    for (let i = 0; i < count; i++) {
+      const projectile = this.projectiles.acquire();
+      if (!projectile) break;
+      const angle = baseAngle + (i - (count - 1) / 2) * spread;
+      projectile.launch(weapon, x, y, Math.cos(angle), Math.sin(angle));
+      fired++;
+    }
+    return fired > 0;
   }
 }

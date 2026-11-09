@@ -14,6 +14,9 @@ function makeDeps() {
     deathShownWith: null as number | null,
     deathKills: null as number | null,
     restarts: 0,
+    levelUpShown: null as { level: number; titles: string[] } | null,
+    /** Clic simulé sur une carte de level up (lu une fois par la scène) */
+    click: null as number | null,
   };
   const deps: GameSceneDeps = {
     input: {
@@ -28,7 +31,16 @@ function makeDeps() {
       },
       hide: () => (ui.deathShownWith = null),
     },
-    hud: { setTime: () => {}, setXp: () => {} },
+    levelUpOverlay: {
+      show: (level, choices) => (ui.levelUpShown = { level, titles: choices.map((c) => c.title) }),
+      hide: () => (ui.levelUpShown = null),
+      takeClick: () => {
+        const c = ui.click;
+        ui.click = null;
+        return c;
+      },
+    },
+    hud: { setTime: () => {}, setProgress: () => {} },
     debug: { setStat: () => {}, showHitboxes: false },
     onRestart: () => ui.restarts++,
   };
@@ -166,7 +178,7 @@ describe('GameScene — combat', () => {
     scene.player.x = gem.x - 40;
     scene.player.y = gem.y;
     for (let i = 0; i < 60; i++) scene.update(DT);
-    expect(scene.player.xp).toBe(ENEMY_TYPES.fast.xp);
+    expect(scene.progression.totalXp).toBe(ENEMY_TYPES.fast.xp);
     expect(scene.gems.gems.activeCount).toBe(0);
   });
 
@@ -179,6 +191,81 @@ describe('GameScene — combat', () => {
     scene.update(DT);
     expect(scene.isDead).toBe(true);
     expect(ui.deathKills).toBe(scene.kills);
+  });
+});
+
+describe('GameScene — level up', () => {
+  /** Pose une gemme sous le joueur et laisse l'aimant la ramasser. */
+  function giveXp(scene: GameScene, amount: number) {
+    scene.gems.drop(scene.player.x + 5, scene.player.y, amount, scene.player.x, scene.player.y);
+    for (let i = 0; i < 30 && !scene.isChoosingUpgrade; i++) scene.update(DT);
+  }
+
+  it('assez d’XP : le jeu se fige et 3 choix s’affichent', () => {
+    const { scene, ui } = newScene({ armed: false });
+    giveXp(scene, 15);
+    expect(scene.progression.level).toBe(2);
+    expect(scene.isChoosingUpgrade).toBe(true);
+    expect(ui.levelUpShown?.level).toBe(2);
+    expect(ui.levelUpShown?.titles).toHaveLength(3);
+
+    // Pendant le choix, le temps ne passe pas et rien ne bouge.
+    const e = scene.enemies.acquire();
+    e?.spawn(ENEMY_TYPES.basic, 300, 0);
+    const timeBefore = scene.player.x;
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(e?.x).toBe(300);
+    expect(scene.player.x).toBe(timeBefore);
+  });
+
+  it('touche 1 : applique le 1er choix et reprend la partie', () => {
+    const { scene, ui, press } = newScene({ armed: false });
+    giveXp(scene, 15);
+    const first = scene.currentChoices[0];
+    press('Digit1', scene);
+    expect(scene.isChoosingUpgrade).toBe(false);
+    expect(ui.levelUpShown).toBeNull();
+    if (first?.kind === 'passive') expect(scene.passiveLevels.get(first.passive.id)).toBe(1);
+  });
+
+  it('un clic sur une carte marche aussi', () => {
+    const { scene, ui } = newScene({ armed: false });
+    giveXp(scene, 15);
+    ui.click = 2;
+    scene.update(DT);
+    expect(scene.isChoosingUpgrade).toBe(false);
+  });
+
+  it('plusieurs niveaux d’un coup : les écrans s’enchaînent', () => {
+    const { scene, ui, press } = newScene({ armed: false });
+    giveXp(scene, 15 + 25); // niveaux 2 et 3
+    expect(scene.progression.level).toBe(3);
+    expect(ui.levelUpShown?.level).toBe(2);
+    press('Digit1', scene);
+    expect(scene.isChoosingUpgrade).toBe(true);
+    expect(ui.levelUpShown?.level).toBe(3);
+    press('Digit2', scene);
+    expect(scene.isChoosingUpgrade).toBe(false);
+  });
+
+  it('Échap ne met pas en pause pendant le choix', () => {
+    const { scene, ui, press } = newScene({ armed: false });
+    giveXp(scene, 15);
+    press('Escape', scene);
+    expect(ui.paused).toBe(false);
+    expect(scene.isChoosingUpgrade).toBe(true);
+  });
+
+  it('monter le Trait arcanique change vraiment ses dégâts', () => {
+    const { scene, press } = newScene();
+    // On rejoue jusqu'à tomber sur le choix de l'arme (les choix sont tirés au hasard).
+    for (let attempt = 0; attempt < 20 && scene.weapons[0]?.level === 1; attempt++) {
+      giveXp(scene, scene.progression.xpForNext);
+      const index = scene.currentChoices.findIndex((c) => c.kind === 'weaponLevel');
+      press(index >= 0 ? `Digit${index + 1}` : 'Digit1', scene);
+    }
+    expect(scene.weapons[0]?.level).toBe(2);
+    expect(scene.weapons[0]?.damage).toBeGreaterThanOrEqual(15);
   });
 });
 
@@ -204,7 +291,10 @@ describe('GameScene — rejouer sans fuite d’état', () => {
     expect(second.projectiles.activeCount).toBe(0);
     expect(second.kills).toBe(0);
     expect(second.weapons[0]?.totalDamage).toBe(0);
-    expect(second.player.xp).toBe(0);
+    expect(second.progression.totalXp).toBe(0);
+    expect(second.progression.level).toBe(1);
+    expect(second.passiveLevels.size).toBe(0);
+    expect(second.weapons[0]?.level).toBe(1);
     expect(second.gems.gems.activeCount).toBe(0);
   });
 

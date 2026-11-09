@@ -7,6 +7,7 @@ import type { Scene } from '../core/Scene';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
+import { UPGRADE_CHOICE_COUNT } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { PROJECTILE_POOL_SIZE, WEAPON_LIST, WEAPONS } from '../data/weapons';
 import { Enemy } from '../entities/Enemy';
@@ -20,8 +21,17 @@ import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
+import { XpSystem } from '../systems/XpSystem';
+import {
+  applyUpgrade,
+  availableUpgrades,
+  rollUpgradeChoices,
+  type Build,
+  type UpgradeChoice,
+} from '../systems/upgrades';
 import type { DeathOverlay } from '../ui/DeathOverlay';
 import type { Hud } from '../ui/Hud';
+import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
 
 /** px entre deux lignes de la grille de fond */
@@ -47,14 +57,15 @@ export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
   pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
   deathOverlay: Pick<DeathOverlay, 'show' | 'hide'>;
-  hud: Pick<Hud, 'setTime' | 'setXp'>;
+  levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
+  hud: Pick<Hud, 'setTime' | 'setProgress'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
-export class GameScene implements Scene {
+export class GameScene implements Scene, Build {
   readonly player = new Player();
   private readonly camera = new Camera();
   readonly enemies = new Pool(ENEMY_POOL_SIZE, (i) => new Enemy(i));
@@ -65,13 +76,20 @@ export class GameScene implements Scene {
   /** Ennemis au contact du joueur à cette update (rempli par CollisionSystem, réutilisé). */
   private readonly touching = new Array<Enemy>(ENEMY_POOL_SIZE);
   private touchingCount = 0;
-  /** Armes du joueur. Une seule au départ ; les autres se gagneront en montant de niveau (Phase 4). */
+  /** Armes du joueur. Une seule au départ ; les autres se gagneront en montant de niveau (Phase 4b). */
   readonly weapons: Weapon[] = [new Weapon(WEAPONS.arcaneBolt)];
   readonly projectiles = new Pool(PROJECTILE_POOL_SIZE, () => new Projectile());
   private readonly weaponSystem: WeaponSystem;
   private readonly projectileSystem: ProjectileSystem;
   readonly damageNumbers: DamageNumberSystem;
   readonly gems = new GemSystem();
+  readonly progression = new XpSystem();
+  /** Niveau de chaque passif possédé (absent = 0) */
+  readonly passiveLevels = new Map<string, number>();
+  /** Level up gagnés mais pas encore choisis (plusieurs d'un coup avec une grosse gemme) */
+  private pendingLevelUps = 0;
+  /** Choix affichés à l'écran ; null = pas de level up en cours */
+  private choices: UpgradeChoice[] | null = null;
   private paused = false;
   private dead = false;
   /** secondes de survie (n'avance pas pendant la pause) */
@@ -90,15 +108,27 @@ export class GameScene implements Scene {
       onHit: (e, damage) => this.onEnemyHit(e, damage),
       onKill: (e) => this.killEnemy(e),
     });
+    this.recomputeWeapons();
   }
 
   get kills(): number {
     return this.killCount;
   }
 
+  /** Vrai pendant l'écran de choix d'upgrade (le jeu est figé). */
+  get isChoosingUpgrade(): boolean {
+    return this.choices !== null;
+  }
+
+  /** Les choix affichés (pour les tests et le debug). */
+  get currentChoices(): readonly UpgradeChoice[] {
+    return this.choices ?? [];
+  }
+
   enter(): void {
     this.setPaused(false);
     this.deps.deathOverlay.hide();
+    this.deps.levelUpOverlay.hide();
     // Afficher la seed permet de rejouer exactement la même partie pour reproduire un bug.
     this.deps.debug.setStat('seed', this.rng.seed);
   }
@@ -106,11 +136,13 @@ export class GameScene implements Scene {
   exit(): void {
     this.setPaused(false);
     this.deps.deathOverlay.hide();
+    this.deps.levelUpOverlay.hide();
   }
 
   /** Onglet caché : on met en pause, pour ne pas reprendre en pleine horde au retour. */
   onHidden(): void {
-    if (!this.dead) this.setPaused(true);
+    // Mort ou en plein choix d'upgrade : le jeu est déjà figé, pas besoin de pause.
+    if (!this.dead && !this.choices) this.setPaused(true);
   }
 
   get isDead(): boolean {
@@ -127,6 +159,14 @@ export class GameScene implements Scene {
     if (this.dead) {
       this.freeze();
       if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+      return;
+    }
+
+    if (this.choices) {
+      // Écran de level up : le jeu est figé, on attend un choix (clic ou 1-2-3).
+      this.freeze();
+      const index = this.readChoiceInput();
+      if (index !== null) this.chooseUpgrade(index);
       return;
     }
 
@@ -154,8 +194,48 @@ export class GameScene implements Scene {
 
     this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y);
     this.projectileSystem.update(dt, this.projectiles);
-    this.player.xp += this.gems.update(dt, this.player);
+    this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
     this.damageNumbers.update(dt);
+    if (this.pendingLevelUps > 0) this.openLevelUp();
+  }
+
+  /** Tire 3 choix (avec l'aléatoire du jeu : même seed → mêmes choix) et les affiche. */
+  private openLevelUp(): void {
+    this.choices = rollUpgradeChoices(availableUpgrades(this), this.rng, UPGRADE_CHOICE_COUNT);
+    // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
+    const level = this.progression.level - this.pendingLevelUps + 1;
+    this.deps.levelUpOverlay.show(level, this.choices);
+  }
+
+  /** Index choisi (0, 1, 2) au clavier ou à la souris, ou null s'il n'y a rien de valide. */
+  private readChoiceInput(): number | null {
+    const { input, levelUpOverlay } = this.deps;
+    let index = levelUpOverlay.takeClick();
+    if (input.wasPressed(CONTROLS.choice1)) index = 0;
+    else if (input.wasPressed(CONTROLS.choice2)) index = 1;
+    else if (input.wasPressed(CONTROLS.choice3)) index = 2;
+    // Moins de 3 choix possible (fin de partie) : la touche 3 ne doit rien faire.
+    if (index === null || !this.choices || index >= this.choices.length) return null;
+    return index;
+  }
+
+  chooseUpgrade(index: number): void {
+    const choice = this.choices?.[index];
+    if (!choice) return;
+    applyUpgrade(choice, this);
+    this.recomputeWeapons();
+    this.pendingLevelUps--;
+    if (this.pendingLevelUps > 0) {
+      this.openLevelUp();
+    } else {
+      this.choices = null;
+      this.deps.levelUpOverlay.hide();
+    }
+  }
+
+  /** Après un changement de niveau d'arme ou de passif : recalcule les stats de chaque arme. */
+  private recomputeWeapons(): void {
+    for (const weapon of this.weapons) weapon.recompute(this.player);
   }
 
   /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
@@ -222,7 +302,7 @@ export class GameScene implements Scene {
     this.camera.end(ctx);
 
     this.deps.hud.setTime(this.elapsed);
-    this.deps.hud.setXp(this.player.xp);
+    this.deps.hud.setProgress(this.progression.level, this.progression.progress);
     this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);

@@ -6,6 +6,7 @@ import { GameScene } from './scenes/GameScene';
 import { PauseOverlay } from './ui/PauseOverlay';
 import { DeathOverlay } from './ui/DeathOverlay';
 import { Hud } from './ui/Hud';
+import { LevelUpOverlay } from './ui/LevelUpOverlay';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -21,7 +22,16 @@ const deathOverlay = new DeathOverlay(
   getElement('death-overlay', HTMLDivElement),
   getElement('death-time', HTMLParagraphElement),
 );
-const hud = new Hud(getElement('hud-timer', HTMLDivElement), getElement('hud-xp', HTMLDivElement));
+const levelUpOverlay = new LevelUpOverlay(
+  getElement('levelup-overlay', HTMLDivElement),
+  getElement('levelup-title', HTMLParagraphElement),
+  getElement('levelup-choices', HTMLDivElement),
+);
+const hud = new Hud(
+  getElement('hud-timer', HTMLDivElement),
+  getElement('hud-level', HTMLDivElement),
+  getElement('hud-xpfill', HTMLDivElement),
+);
 const game = new Game(renderer, debug, input);
 
 /**
@@ -33,7 +43,7 @@ function startRun(): void {
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
   const seed = Date.now() >>> 0;
   const scene = new GameScene(
-    { input, pauseOverlay, deathOverlay, hud, debug, onRestart: startRun },
+    { input, pauseOverlay, deathOverlay, levelUpOverlay, hud, debug, onRestart: startRun },
     seed,
   );
   game.setScene(scene);

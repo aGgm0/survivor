@@ -18,8 +18,15 @@ function activeEnemies(pool: Pool<Enemy>): Enemy[] {
 describe('SpawnSystem', () => {
   it('fait apparaître `perSecond` ennemis par seconde', () => {
     const { pool, spawner } = setup();
-    spawner.update(1, 0, 0);
-    expect(pool.activeCount).toBe(SPAWN.perSecond);
+    // Sur 10 s pour qu'un rythme non entier (1,2/s) donne un compte exact.
+    for (let i = 0; i < 10; i++) spawner.update(1, 0, 0);
+    expect(pool.activeCount).toBe(Math.round(SPAWN.perSecond * 10));
+  });
+
+  it('n’envoie pas de tanks au début (poids 0)', () => {
+    const { pool, spawner } = setup(200);
+    spawner.spawnBatch(200, 0, 0);
+    expect(pool.items.filter((e) => e.active && e.type.id === 'tank')).toHaveLength(0);
   });
 
   it('fait apparaître les ennemis sur le cercle hors écran', () => {

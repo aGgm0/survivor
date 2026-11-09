@@ -30,7 +30,8 @@ export class Projectile implements Poolable {
     this.vx = dirX * def.projectileSpeed;
     this.vy = dirY * def.projectileSpeed;
     this.life = def.projectileLifetime;
-    this.damage = def.damage;
+    // Dégâts actuels de l'arme (niveau + passifs), pas ceux de base.
+    this.damage = source.damage;
     this.radius = def.projectileRadius;
     this.color = def.color;
   }

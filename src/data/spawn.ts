@@ -1,16 +1,19 @@
 import { ENEMY_TYPES, type EnemyType } from './enemies';
 
-/** chances relatives d'apparition de chaque type */
+/**
+ * Chances relatives d'apparition de chaque type. Pas de tanks : avec une seule arme au
+ * niveau 1, ils sont quasi intuables et bloquaient l'accès au premier level up.
+ */
 const SPAWN_WEIGHTS: readonly (readonly [EnemyType, number])[] = [
-  [ENEMY_TYPES.basic, 6],
-  [ENEMY_TYPES.fast, 3],
-  [ENEMY_TYPES.tank, 1],
+  [ENEMY_TYPES.basic, 4],
+  [ENEMY_TYPES.fast, 6],
+  [ENEMY_TYPES.tank, 0],
 ];
 
-// ⚠️ Réglages TEMPORAIRES de la Phase 2 : remplacés par les vagues (waves.ts) en Phase 4.
+// ⚠️ Réglages TEMPORAIRES : remplacés par les vagues (waves.ts) en Phase 4c.
 export const SPAWN = {
-  /** ennemis qui apparaissent par seconde */
-  perSecond: 2,
+  /** ennemis qui apparaissent par seconde (2 → 1,2 : on mourait avant le niveau 2) */
+  perSecond: 1.2,
   /** au-delà, le spawn automatique s'arrête */
   maxEnemies: 600,
   weights: SPAWN_WEIGHTS,

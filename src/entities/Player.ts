@@ -34,8 +34,9 @@ export class Player {
   armor: number = PLAYER_BASE.armor;
   /** px : les gemmes d'XP dans ce rayon sont attirées */
   pickupRadius: number = PLAYER_BASE.pickupRadius;
-  /** XP totale ramassée (niveaux et level up : Phase 4) */
-  xp = 0;
+  /** Multiplicateurs appliqués à toutes les armes (modifiés par les passifs) */
+  damageMult = 1;
+  cooldownMult = 1;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
 
@@ -70,6 +71,12 @@ export class Player {
     this.hp = Math.max(0, this.hp - computeDamage(rawDamage, this.armor));
     this.hitFlashTimer = HIT_FLASH_TIME;
     return true;
+  }
+
+  /** Rend des PV, sans dépasser le maximum. */
+  heal(amount: number): void {
+    if (this.isDead) return;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
   /** Aligne la position précédente sur l'actuelle (début d'update, pause, téléportation). */

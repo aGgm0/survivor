@@ -7,6 +7,10 @@ export const CONTROLS = {
   right: ['KeyD', 'ArrowRight'],
   pause: ['Escape', 'KeyP'],
   restart: ['KeyR'],
+  // Choix au level up. Touches physiques : sur AZERTY, ce sont les touches & é " (sans Maj).
+  choice1: ['Digit1', 'Numpad1'],
+  choice2: ['Digit2', 'Numpad2'],
+  choice3: ['Digit3', 'Numpad3'],
   /** debug : ajoute un paquet d'ennemis (test de perf) */
   debugSpawn: ['F4'],
 } as const;

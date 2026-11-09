@@ -11,8 +11,14 @@
       <!-- La "scène" a exactement la taille du canvas : les overlays s'y accrochent, pas à la fenêtre -->
       <div id="stage">
         <canvas id="game"></canvas>
+        <div id="hud-xpbar"><div id="hud-xpfill"></div></div>
+        <div id="hud-level">Niv 1</div>
         <div id="hud-timer">00:00</div>
-        <div id="hud-xp">XP 0</div>
+        <div id="levelup-overlay" class="overlay overlay-levelup" hidden>
+          <p id="levelup-title" class="overlay-title">NIVEAU 2</p>
+          <div id="levelup-choices" class="choices"></div>
+          <p class="overlay-hint">Clic ou touches 1 · 2 · 3</p>
+        </div>
         <div id="pause-overlay" class="overlay" hidden>
           <p class="overlay-title">PAUSE</p>
           <p class="overlay-hint">Échap ou P pour reprendre</p>
