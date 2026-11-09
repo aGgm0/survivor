@@ -3,9 +3,12 @@
 /** s : survivre jusque-là = victoire (10 min pour le MVP) */
 export const RUN_DURATION = 600;
 
-/** XP nécessaire pour passer du niveau `level` au suivant. TODO : à équilibrer en jouant. */
+/**
+ * XP nécessaire pour passer du niveau `level` au suivant.
+ * 5 + niveau × 10 au départ → × 7 : retour de jeu "l'XP monte trop lentement".
+ */
 export function xpToNext(level: number): number {
-  return 5 + level * 10;
+  return 5 + level * 7;
 }
 
 /** Nombre de choix proposés à chaque level up */

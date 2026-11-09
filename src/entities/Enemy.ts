@@ -15,6 +15,8 @@ export class Enemy implements Poolable {
   hp = 0;
   /** PV au moment du spawn (pour la barre de vie du boss) */
   maxHp = 0;
+  /** Multiplicateur de la vague au spawn : un ennemi plus résistant rapporte autant de fois plus d'XP. */
+  xpMult = 1;
   type: EnemyType = ENEMY_TYPES.basic;
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
@@ -40,6 +42,8 @@ export class Enemy implements Poolable {
     this.type = type;
     this.maxHp = type.hp * hpMult;
     this.hp = this.maxHp;
+    // Plus de PV à percer = plus d'XP : sinon monter de niveau ralentit à chaque vague.
+    this.xpMult = hpMult;
     this.nextContactHitAt = 0;
     this.flashUntil = 0;
     this.nextOrbitHitAt = 0;

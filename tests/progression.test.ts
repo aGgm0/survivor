@@ -31,27 +31,28 @@ function makeBuild(): Build {
 }
 
 describe('XpSystem', () => {
-  it('suit la formule du brief : 5 + niveau × 10', () => {
-    expect(xpToNext(1)).toBe(15);
-    expect(xpToNext(2)).toBe(25);
-    expect(new XpSystem().xpForNext).toBe(15);
+  it('suit la formule : 5 + niveau × 7', () => {
+    expect(xpToNext(1)).toBe(12);
+    expect(xpToNext(2)).toBe(19);
+    expect(xpToNext(10)).toBe(75);
+    expect(new XpSystem().xpForNext).toBe(12);
   });
 
   it('monte de niveau et garde le surplus', () => {
     const xp = new XpSystem();
     expect(xp.addXp(10)).toBe(0);
-    expect(xp.addXp(8)).toBe(1); // 18 ≥ 15
+    expect(xp.addXp(5)).toBe(1); // 15 ≥ 12
     expect(xp.level).toBe(2);
     expect(xp.xpIntoLevel).toBe(3);
-    expect(xp.progress).toBeCloseTo(3 / 25);
+    expect(xp.progress).toBeCloseTo(3 / 19);
   });
 
   it('peut gagner plusieurs niveaux d’un coup', () => {
     const xp = new XpSystem();
-    expect(xp.addXp(15 + 25 + 5)).toBe(2);
+    expect(xp.addXp(12 + 19 + 5)).toBe(2);
     expect(xp.level).toBe(3);
     expect(xp.xpIntoLevel).toBe(5);
-    expect(xp.totalXp).toBe(45);
+    expect(xp.totalXp).toBe(36);
   });
 });
 

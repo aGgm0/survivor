@@ -184,6 +184,14 @@ describe('GameScene — combat', () => {
     expect(scene.gems.gems.activeCount).toBe(0);
   });
 
+  it('un ennemi renforcé par la vague rapporte plus d’XP (× son multiplicateur)', () => {
+    const { scene } = newScene();
+    scene.enemies.acquire()?.spawn(ENEMY_TYPES.fast, 200, 0, 2);
+    for (let i = 0; i < 90 && scene.kills === 0; i++) scene.update(DT);
+    const gem = scene.gems.gems.items.find((g) => g.active);
+    expect(gem?.value).toBe(ENEMY_TYPES.fast.xp * 2);
+  });
+
   it('l’écran de mort affiche les kills', () => {
     const { scene, ui } = newScene();
     scene.enemies.acquire()?.spawn(ENEMY_TYPES.basic, 200, 0);

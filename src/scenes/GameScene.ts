@@ -294,7 +294,7 @@ export class GameScene implements Scene, Build {
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
-    this.gems.drop(e.x, e.y, e.type.xp, this.player.x, this.player.y);
+    this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
   }
