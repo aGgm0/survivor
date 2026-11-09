@@ -3,6 +3,7 @@ import { CONTACT_HIT_COOLDOWN } from '../src/data/combat';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
+import type { RunReport } from '../src/systems/runReport';
 
 const DT = 1 / 60;
 
@@ -11,8 +12,8 @@ function makeDeps() {
   const pressed = new Set<string>();
   const ui = {
     paused: false,
-    deathShownWith: null as number | null,
-    deathKills: null as number | null,
+    /** Bilan affiché sur l'écran de fin (null = masqué) */
+    end: null as RunReport | null,
     restarts: 0,
     levelUpShown: null as { level: number; titles: string[] } | null,
     /** Clic simulé sur une carte de level up (lu une fois par la scène) */
@@ -24,12 +25,9 @@ function makeDeps() {
       wasPressed: (codes) => codes.some((c) => pressed.has(c)),
     },
     pauseOverlay: { setVisible: (v) => (ui.paused = v) },
-    deathOverlay: {
-      show: (s, k) => {
-        ui.deathShownWith = s;
-        ui.deathKills = k;
-      },
-      hide: () => (ui.deathShownWith = null),
+    endOverlay: {
+      show: (report) => (ui.end = report),
+      hide: () => (ui.end = null),
     },
     levelUpOverlay: {
       show: (level, choices) => (ui.levelUpShown = { level, titles: choices.map((c) => c.title) }),
@@ -40,7 +38,7 @@ function makeDeps() {
         return c;
       },
     },
-    hud: { setTime: () => {}, setProgress: () => {} },
+    hud: { setTime: () => {}, setProgress: () => {}, setHp: () => {}, setKills: () => {} },
     debug: { setStat: () => {}, showHitboxes: false },
     onRestart: () => ui.restarts++,
   };
@@ -53,10 +51,13 @@ function makeDeps() {
   return { deps, ui, press };
 }
 
-/** `armed: false` retire les armes : utile pour tester le contact sans que l'arme tue l'ennemi. */
-function newScene({ armed = true } = {}) {
+/**
+ * `armed: false` retire les armes : utile pour tester le contact sans que l'arme tue l'ennemi.
+ * `runDuration` raccourcit la partie (s) pour tester la victoire sans simuler 10 minutes.
+ */
+function newScene({ armed = true, runDuration }: { armed?: boolean; runDuration?: number } = {}) {
   const ctx = makeDeps();
-  const scene = new GameScene(ctx.deps, 1234);
+  const scene = new GameScene(ctx.deps, 1234, runDuration ? { runDuration } : {});
   if (!armed) scene.weapons.length = 0;
   scene.enter();
   return { scene, ...ctx };
@@ -111,8 +112,9 @@ describe('GameScene — dégâts et mort', () => {
     scene.player.hp = 1;
     enemyOnPlayer(scene);
     scene.update(DT);
-    expect(scene.isDead).toBe(true);
-    expect(ui.deathShownWith).toBeGreaterThan(0);
+    expect(scene.isOver).toBe(true);
+    expect(ui.end?.victory).toBe(false);
+    expect(ui.end?.time).toBeGreaterThan(0);
 
     const x = scene.player.x;
     const count = scene.enemies.activeCount;
@@ -189,8 +191,8 @@ describe('GameScene — combat', () => {
     scene.player.hp = 1;
     enemyOnPlayer(scene);
     scene.update(DT);
-    expect(scene.isDead).toBe(true);
-    expect(ui.deathKills).toBe(scene.kills);
+    expect(scene.isOver).toBe(true);
+    expect(ui.end?.kills).toBe(scene.kills);
   });
 });
 
@@ -269,6 +271,39 @@ describe('GameScene — level up', () => {
   });
 });
 
+describe('GameScene — victoire et bilan', () => {
+  it('survivre jusqu’au timer : victoire, tout se fige, bilan affiché', () => {
+    const { scene, ui } = newScene({ runDuration: 2 });
+    for (let i = 0; i < 2 * 60 + 5; i++) scene.update(DT);
+    expect(scene.isOver).toBe(true);
+    expect(ui.end?.victory).toBe(true);
+    expect(ui.end?.time).toBe(2); // le temps affiché ne dépasse pas la durée de la partie
+    expect(ui.end?.level).toBe(scene.progression.level);
+
+    const enemy = scene.enemies.items.find((e) => e.active);
+    const x = enemy?.x;
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(enemy?.x).toBe(x); // les ennemis restent figés
+  });
+
+  it('R après la victoire relance une partie', () => {
+    const { scene, ui, press } = newScene({ runDuration: 1 });
+    for (let i = 0; i < 65; i++) scene.update(DT);
+    press('KeyR', scene);
+    expect(ui.restarts).toBe(1);
+  });
+
+  it('le bilan contient le damage meter, trié par dégâts', () => {
+    const { scene, ui } = newScene({ runDuration: 3 });
+    scene.enemies.acquire()?.spawn(ENEMY_TYPES.fast, 200, 0);
+    for (let i = 0; i < 3 * 60 + 5; i++) scene.update(DT);
+    const weapons = ui.end?.weapons ?? [];
+    expect(weapons[0]?.name).toBe('Trait arcanique');
+    expect(weapons[0]?.damage).toBeGreaterThan(0);
+    expect(weapons[0]?.share).toBe(1);
+  });
+});
+
 describe('GameScene — rejouer sans fuite d’état', () => {
   it('une nouvelle scène repart de zéro, même après une partie chargée', () => {
     const first = newScene();
@@ -276,15 +311,15 @@ describe('GameScene — rejouer sans fuite d’état', () => {
     first.scene.player.hp = 1;
     enemyOnPlayer(first.scene);
     first.scene.update(DT);
-    expect(first.scene.isDead).toBe(true);
+    expect(first.scene.isOver).toBe(true);
 
     // "Rejouer" = nouvelle scène, mêmes objets d'UI partagés que la précédente.
     first.scene.exit();
     const second = new GameScene(first.deps, 99);
     second.enter();
-    expect(first.ui.deathShownWith).toBeNull(); // écran de mort masqué
+    expect(first.ui.end).toBeNull(); // écran de fin masqué
     expect(first.ui.paused).toBe(false);
-    expect(second.isDead).toBe(false);
+    expect(second.isOver).toBe(false);
     expect(second.player.hp).toBe(PLAYER_BASE.maxHp);
     expect(second.player.x).toBe(0);
     expect(second.enemies.activeCount).toBe(0);

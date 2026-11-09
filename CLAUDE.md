@@ -190,8 +190,8 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
 ### 5.8 Fin de run
 
-- **Défaite** : PV à 0 → écran Game Over (temps survécu, kills, niveau atteint).
-- **Victoire** : survivre jusqu'au timer (10 min pour le MVP).
+- **Défaite** : PV à 0 → écran Game Over (temps survécu, kills, niveau atteint, damage meter).
+- **Victoire** : survivre jusqu'au timer (10 min pour le MVP) → tout se fige, écran de victoire avec le même bilan.
 - Bouton "Rejouer" qui relance une run propre (aucun état qui fuit d'une run à l'autre).
 
 ### 5.9 Méta-progression `[LATER]`
@@ -275,8 +275,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Upgrades passifs (Vitalité, Célérité, Attraction, Puissance, Hâte) + niveaux du Trait arcanique
 - [x] Armes 2 et 3 (Aura ardente, Orbes runiques) + nouvelle arme garantie au level up tant qu'on a < 3 armes
 - [x] Vagues data-driven (`data/waves.ts`) + boss à 5:00 et 9:00
-- [ ] Timer, écran Game Over / Victoire, rejouer
-- [ ] HUD : PV, barre d'XP, niveau, timer, kills
+- [x] Timer, écran Game Over / Victoire (+ damage meter), rejouer
+- [x] HUD : PV, barre d'XP, niveau, timer, kills
+
+**✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
 
 ### Phase 5 — Polish `[LATER]`
 - [ ] Sprites et animations, sons et musique
@@ -338,6 +340,8 @@ Format : date — décision — raison.
 | 2026-11-10 | Phase 4 validée : noms "Aura ardente" / "Orbes runiques", bonus de niveau d'arme, 5 passifs (5 niv max), soin +30 si tout est max, vagues 0-10 min, boss à 5:00 et 9:00, victoire à 10:00 (ennemis figés) | Tableaux proposés et validés ("ok reco") |
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
 | 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
+| 2026-11-10 | Un seul écran de fin (victoire/défaite) avec bilan + damage meter (dégâts, %, kills par arme) | Le damage meter demandé "pour plus tard" ; les données existaient depuis la Phase 3 |
+| 2026-11-10 | PV dans le HUD (barre en haut à gauche), barre sous le joueur retirée ; kills sous le timer | HUD complet du plan Phase 4 |
 | 2026-11-10 | Boss : PV fixes (1000, comme le brief), sans le multiplicateur de vague | Respect du brief ; le boss de 9:00 sera peut-être trop faible, à revoir en jouant |
 | 2026-11-10 | Grille spatiale : cases calées sur le tank (48 px), pas sur le boss (96 px) | Des cases 4× plus grandes pour un seul boss ralentiraient toutes les recherches de voisins |
 | 2026-11-10 | Aura : horloge de dégâts par ennemi (brûlé dès l'entrée, puis toutes les 0,5 s) au lieu d'un tick commun | Demandé : avec un tick commun, un ennemi entré juste après un tick traversait ~0,5 s sans dégâts |

@@ -6,17 +6,6 @@ const PLAYER_COLOR = '#8a6cff';
 /** Couleur et durée (s) du flash quand le joueur prend un coup */
 const HIT_FLASH_COLOR = '#ffffff';
 const HIT_FLASH_TIME = 0.1;
-const HP_BAR = {
-  width: 40,
-  height: 5,
-  /** px sous le bas du joueur */
-  offset: 8,
-  background: '#1a1a1a',
-  fill: '#ff4d4f',
-  /** Contour sombre : sans lui, la barre rouge se perd au milieu des ennemis rouges/orange. */
-  outline: '#000',
-  outlineWidth: 2,
-} as const;
 
 export class Player {
   x = 0;
@@ -101,16 +90,6 @@ export class Player {
     ctx.beginPath();
     ctx.arc(x, y, this.radius, 0, Math.PI * 2);
     ctx.fill();
-
-    // Barre de PV (temporaire, en attendant le HUD de la Phase 4).
-    const barX = x - HP_BAR.width / 2;
-    const barY = y + this.radius + HP_BAR.offset;
-    ctx.strokeStyle = HP_BAR.outline;
-    ctx.lineWidth = HP_BAR.outlineWidth;
-    ctx.strokeRect(barX, barY, HP_BAR.width, HP_BAR.height);
-    ctx.fillStyle = HP_BAR.background;
-    ctx.fillRect(barX, barY, HP_BAR.width, HP_BAR.height);
-    ctx.fillStyle = HP_BAR.fill;
-    ctx.fillRect(barX, barY, HP_BAR.width * (this.hp / this.maxHp), HP_BAR.height);
+    // Les PV sont affichés dans le HUD (ui/Hud.ts).
   }
 }

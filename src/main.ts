@@ -4,7 +4,7 @@ import { DebugOverlay } from './core/DebugOverlay';
 import { Input } from './core/Input';
 import { GameScene } from './scenes/GameScene';
 import { PauseOverlay } from './ui/PauseOverlay';
-import { DeathOverlay } from './ui/DeathOverlay';
+import { EndOverlay } from './ui/EndOverlay';
 import { Hud } from './ui/Hud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
 
@@ -18,20 +18,25 @@ const renderer = new Renderer(getElement('game', HTMLCanvasElement));
 const debug = new DebugOverlay(getElement('debug-overlay', HTMLDivElement));
 const input = new Input(window);
 const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement));
-const deathOverlay = new DeathOverlay(
-  getElement('death-overlay', HTMLDivElement),
-  getElement('death-time', HTMLParagraphElement),
+const endOverlay = new EndOverlay(
+  getElement('end-overlay', HTMLDivElement),
+  getElement('end-title', HTMLParagraphElement),
+  getElement('end-info', HTMLParagraphElement),
+  getElement('end-meter', HTMLDivElement),
 );
 const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-overlay', HTMLDivElement),
   getElement('levelup-title', HTMLParagraphElement),
   getElement('levelup-choices', HTMLDivElement),
 );
-const hud = new Hud(
-  getElement('hud-timer', HTMLDivElement),
-  getElement('hud-level', HTMLDivElement),
-  getElement('hud-xpfill', HTMLDivElement),
-);
+const hud = new Hud({
+  timer: getElement('hud-timer', HTMLDivElement),
+  level: getElement('hud-level', HTMLDivElement),
+  xpFill: getElement('hud-xpfill', HTMLDivElement),
+  hpFill: getElement('hud-hpfill', HTMLDivElement),
+  hpText: getElement('hud-hptext', HTMLSpanElement),
+  kills: getElement('hud-kills', HTMLDivElement),
+});
 const game = new Game(renderer, debug, input);
 
 /**
@@ -43,7 +48,7 @@ function startRun(): void {
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
   const seed = Date.now() >>> 0;
   const scene = new GameScene(
-    { input, pauseOverlay, deathOverlay, levelUpOverlay, hud, debug, onRestart: startRun },
+    { input, pauseOverlay, endOverlay, levelUpOverlay, hud, debug, onRestart: startRun },
     seed,
   );
   game.setScene(scene);

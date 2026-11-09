@@ -7,7 +7,11 @@ import type { Scene } from '../core/Scene';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
-import { NEW_WEAPON_GUARANTEE_BELOW, UPGRADE_CHOICE_COUNT } from '../data/progression';
+import {
+  NEW_WEAPON_GUARANTEE_BELOW,
+  RUN_DURATION,
+  UPGRADE_CHOICE_COUNT,
+} from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_TYPE } from '../data/waves';
 import {
@@ -36,7 +40,8 @@ import {
   type Build,
   type UpgradeChoice,
 } from '../systems/upgrades';
-import type { DeathOverlay } from '../ui/DeathOverlay';
+import type { EndOverlay } from '../ui/EndOverlay';
+import { buildDamageReport, type RunReport } from '../systems/runReport';
 import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
@@ -68,9 +73,9 @@ const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a
 export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
   pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
-  deathOverlay: Pick<DeathOverlay, 'show' | 'hide'>;
+  endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
-  hud: Pick<Hud, 'setTime' | 'setProgress'>;
+  hud: Pick<Hud, 'setTime' | 'setProgress' | 'setHp' | 'setKills'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
@@ -103,15 +108,23 @@ export class GameScene implements Scene, Build {
   /** Choix affichés à l'écran ; null = pas de level up en cours */
   private choices: UpgradeChoice[] | null = null;
   private paused = false;
-  private dead = false;
+  /** Bilan de la partie une fois terminée (victoire ou défaite) ; null = partie en cours */
+  private report: RunReport | null = null;
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
   private killCount = 0;
+  private readonly runDuration: number;
 
+  /**
+   * @param options.runDuration durée de la partie avant la victoire (s). Les tests la raccourcissent
+   * pour ne pas simuler 10 minutes.
+   */
   constructor(
     private readonly deps: GameSceneDeps,
     seed: number,
+    options: { runDuration?: number } = {},
   ) {
+    this.runDuration = options.runDuration ?? RUN_DURATION;
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
     const hitEvents = {
@@ -145,7 +158,7 @@ export class GameScene implements Scene, Build {
 
   enter(): void {
     this.setPaused(false);
-    this.deps.deathOverlay.hide();
+    this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
     // Afficher la seed permet de rejouer exactement la même partie pour reproduire un bug.
     this.deps.debug.setStat('seed', this.rng.seed);
@@ -153,18 +166,24 @@ export class GameScene implements Scene, Build {
 
   exit(): void {
     this.setPaused(false);
-    this.deps.deathOverlay.hide();
+    this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
   }
 
   /** Onglet caché : on met en pause, pour ne pas reprendre en pleine horde au retour. */
   onHidden(): void {
-    // Mort ou en plein choix d'upgrade : le jeu est déjà figé, pas besoin de pause.
-    if (!this.dead && !this.choices) this.setPaused(true);
+    // Partie finie ou en plein choix d'upgrade : le jeu est déjà figé, pas besoin de pause.
+    if (!this.report && !this.choices) this.setPaused(true);
   }
 
-  get isDead(): boolean {
-    return this.dead;
+  /** Vrai quand la partie est terminée (mort ou victoire). */
+  get isOver(): boolean {
+    return this.report !== null;
+  }
+
+  /** Bilan de fin de partie, ou null si elle est en cours. */
+  get result(): RunReport | null {
+    return this.report;
   }
 
   get isPaused(): boolean {
@@ -174,7 +193,7 @@ export class GameScene implements Scene, Build {
   update(dt: number): void {
     const { input } = this.deps;
 
-    if (this.dead) {
+    if (this.report) {
       this.freeze();
       if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
       return;
@@ -195,6 +214,12 @@ export class GameScene implements Scene, Build {
     }
 
     this.elapsed += dt;
+    if (this.elapsed >= this.runDuration) {
+      // Survécu jusqu'au bout : tout se fige et l'écran de victoire s'affiche.
+      this.elapsed = this.runDuration;
+      this.endRun(true);
+      return;
+    }
 
     const axisX = Number(input.isDown(CONTROLS.right)) - Number(input.isDown(CONTROLS.left));
     const axisY = Number(input.isDown(CONTROLS.down)) - Number(input.isDown(CONTROLS.up));
@@ -208,7 +233,7 @@ export class GameScene implements Scene, Build {
     this.movement.update(this.enemies, this.player.x, this.player.y, dt);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
     this.applyContactDamage();
-    if (this.dead) return;
+    if (this.report) return;
 
     this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y, this.elapsed);
     this.projectileSystem.update(dt, this.projectiles);
@@ -287,13 +312,20 @@ export class GameScene implements Scene, Build {
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
-    if (this.player.isDead) this.die();
+    if (this.player.isDead) this.endRun(false);
   }
 
-  private die(): void {
-    this.dead = true;
+  /** Fin de partie (mort ou victoire) : on fige tout et on affiche le bilan. */
+  private endRun(victory: boolean): void {
     this.setPaused(false);
-    this.deps.deathOverlay.show(this.elapsed, this.killCount);
+    this.report = {
+      victory,
+      time: this.elapsed,
+      kills: this.killCount,
+      level: this.progression.level,
+      weapons: buildDamageReport(this.weapons),
+    };
+    this.deps.endOverlay.show(this.report);
   }
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */
@@ -330,6 +362,8 @@ export class GameScene implements Scene, Build {
 
     this.deps.hud.setTime(this.elapsed);
     this.deps.hud.setProgress(this.progression.level, this.progression.progress);
+    this.deps.hud.setHp(this.player.hp, this.player.maxHp);
+    this.deps.hud.setKills(this.killCount);
     this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);

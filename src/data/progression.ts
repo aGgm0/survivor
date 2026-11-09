@@ -1,5 +1,8 @@
 // Niveaux et level up (voir CLAUDE.md § 5.6).
 
+/** s : survivre jusque-là = victoire (10 min pour le MVP) */
+export const RUN_DURATION = 600;
+
 /** XP nécessaire pour passer du niveau `level` au suivant. TODO : à équilibrer en jouant. */
 export function xpToNext(level: number): number {
   return 5 + level * 10;

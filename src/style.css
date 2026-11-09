@@ -63,6 +63,42 @@ body {
   pointer-events: none;
 }
 
+#hud-hp {
+  position: absolute;
+  top: 48px;
+  left: 16px;
+  width: 200px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #000;
+  pointer-events: none;
+}
+
+#hud-hpfill {
+  width: 100%;
+  height: 100%;
+  background: #e5484d;
+}
+
+#hud-hptext {
+  position: absolute;
+  inset: 0;
+  font: bold 12px/14px monospace;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 2px #000;
+}
+
+#hud-kills {
+  position: absolute;
+  top: 48px;
+  right: 16px;
+  font: bold 16px monospace;
+  color: #ddd;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
 #hud-timer {
   position: absolute;
   top: 16px;
@@ -88,7 +124,51 @@ body {
 }
 
 .overlay-death {
-  background: rgba(40, 0, 0, 0.7);
+  background: rgba(40, 0, 0, 0.75);
+}
+
+.overlay-victory {
+  background: rgba(40, 32, 0, 0.75);
+}
+
+.overlay-victory .overlay-title {
+  color: #ffd54f;
+}
+
+/* Damage meter de l'écran de fin */
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 520px;
+}
+
+.meter-row {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  font-size: 13px;
+}
+
+.meter-label {
+  grid-row: 1 / 3;
+  align-self: center;
+}
+
+.meter-bar {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+}
+
+.meter-value {
+  color: #aaa;
+  font-size: 12px;
 }
 
 .overlay-title {
@@ -156,7 +236,7 @@ body {
 
 #debug-overlay {
   position: absolute;
-  top: 48px;
+  top: 80px;
   left: 8px;
   padding: 6px 10px;
   font: 12px/1.4 monospace;
