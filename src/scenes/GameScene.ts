@@ -9,7 +9,8 @@ import { ENEMY_TYPE_LIST } from '../data/enemies';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
-import { moveEnemiesTowards } from '../systems/MovementSystem';
+import { CollisionSystem } from '../systems/CollisionSystem';
+import { MovementSystem } from '../systems/MovementSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
 import type { Hud } from '../ui/Hud';
 import type { PauseOverlay } from '../ui/PauseOverlay';
@@ -17,6 +18,7 @@ import type { PauseOverlay } from '../ui/PauseOverlay';
 /** px entre deux lignes de la grille de fond */
 const GRID_SIZE = 64;
 const GRID_COLOR = '#2c2c3d';
+const HITBOX_COLOR = '#00e5ff';
 
 export interface GameSceneDeps {
   input: Input;
@@ -29,9 +31,14 @@ export interface GameSceneDeps {
 export class GameScene implements Scene {
   private readonly player = new Player();
   private readonly camera = new Camera();
-  private readonly enemies = new Pool(ENEMY_POOL_SIZE, () => new Enemy());
+  private readonly enemies = new Pool(ENEMY_POOL_SIZE, (i) => new Enemy(i));
   private readonly rng: Rng;
   private readonly spawner: SpawnSystem;
+  private readonly collisions = new CollisionSystem(ENEMY_POOL_SIZE);
+  private readonly movement = new MovementSystem(ENEMY_POOL_SIZE, this.collisions);
+  /** Ennemis au contact du joueur à cette update (rempli par CollisionSystem, réutilisé). */
+  private readonly touching = new Array<Enemy>(ENEMY_POOL_SIZE);
+  private touchingCount = 0;
   private paused = false;
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
@@ -76,7 +83,9 @@ export class GameScene implements Scene {
       this.spawner.spawnBatch(SPAWN.debugBatch, this.player.x, this.player.y);
     }
     this.spawner.update(dt, this.player.x, this.player.y);
-    moveEnemiesTowards(this.enemies, this.player.x, this.player.y, dt);
+    this.collisions.rebuild(this.enemies);
+    this.movement.update(this.enemies, this.player.x, this.player.y, dt);
+    this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -88,10 +97,40 @@ export class GameScene implements Scene {
     this.renderGrid(ctx);
     this.renderEnemies(ctx, alpha);
     this.player.render(ctx, alpha);
+    if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
     this.camera.end(ctx);
 
     this.deps.hud.setTime(this.elapsed);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
+    this.deps.debug.setStat('contacts', this.touchingCount);
+  }
+
+  private isOnScreen(x: number, y: number, r: number): boolean {
+    const cam = this.camera;
+    return x + r >= cam.left && x - r <= cam.right && y + r >= cam.top && y - r <= cam.bottom;
+  }
+
+  /** Debug (F3) : contour des hitboxes, pour vérifier visuellement les collisions. */
+  private renderHitboxes(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const items = this.enemies.items;
+    ctx.beginPath();
+    for (let i = 0; i < items.length; i++) {
+      const e = items[i];
+      if (!e?.active) continue;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      const r = e.type.radius;
+      if (!this.isOnScreen(x, y, r)) continue;
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+    }
+    const px = this.player.renderX(alpha);
+    const py = this.player.renderY(alpha);
+    ctx.moveTo(px + this.player.radius, py);
+    ctx.arc(px, py, this.player.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = HITBOX_COLOR;
+    ctx.lineWidth = 1;
+    ctx.stroke();
   }
 
   private setPaused(paused: boolean): void {
@@ -104,7 +143,6 @@ export class GameScene implements Scene {
    * au lieu d'un `fill()` par ennemi. Les ennemis hors écran sont ignorés.
    */
   private renderEnemies(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const cam = this.camera;
     const items = this.enemies.items;
     for (const type of ENEMY_TYPE_LIST) {
       const r = type.radius;
@@ -114,8 +152,7 @@ export class GameScene implements Scene {
         if (!e?.active || e.type !== type) continue;
         const x = e.renderX(alpha);
         const y = e.renderY(alpha);
-        if (x + r < cam.left || x - r > cam.right || y + r < cam.top || y - r > cam.bottom)
-          continue;
+        if (!this.isOnScreen(x, y, r)) continue;
         // moveTo évite qu'un trait relie chaque cercle au précédent.
         ctx.moveTo(x + r, y);
         ctx.arc(x, y, r, 0, Math.PI * 2);

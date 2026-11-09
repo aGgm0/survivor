@@ -15,9 +15,10 @@ export class Pool<T extends Poolable> {
   /** Pile des objets libres. Sa taille ne dépasse jamais la capacité : pas de réallocation. */
   private readonly free: T[];
 
-  constructor(capacity: number, factory: () => T) {
+  /** `factory` reçoit l'index de l'objet (stable, utile comme identifiant). */
+  constructor(capacity: number, factory: (index: number) => T) {
     const items: T[] = [];
-    for (let i = 0; i < capacity; i++) items.push(factory());
+    for (let i = 0; i < capacity; i++) items.push(factory(i));
     this.items = items;
     this.free = items.slice().reverse();
   }

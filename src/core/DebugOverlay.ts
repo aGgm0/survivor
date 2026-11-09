@@ -1,14 +1,24 @@
 /** Fréquence de rafraîchissement du texte : modifier le DOM à chaque frame coûte cher pour rien. */
 const REFRESH_INTERVAL = 0.5;
 
+/** F3 fait défiler ces modes. Les hitboxes sont à part car leur dessin coûte cher et fausse les FPS. */
+const enum DebugMode {
+  Off,
+  Stats,
+  StatsAndHitboxes,
+}
+const MODE_COUNT = 3;
+
 /**
- * Overlay debug en HTML, affiché/caché avec F3. Affiche FPS (rendu), UPS (updates logiques)
- * et des valeurs libres fournies par le jeu via `setStat` (core/ ne connaît pas le gameplay).
+ * Overlay debug en HTML. F3 : éteint → stats → stats + hitboxes.
+ * Affiche FPS (rendu), UPS (updates logiques) et des valeurs libres fournies par le jeu
+ * via `setStat` (core/ ne connaît pas le gameplay).
  */
 export class DebugOverlay {
   private frames = 0;
   private updates = 0;
   private elapsed = 0;
+  private mode = DebugMode.Off;
   private readonly stats = new Map<string, number | string>();
 
   constructor(private readonly el: HTMLElement) {
@@ -16,8 +26,14 @@ export class DebugOverlay {
       if (e.code !== 'F3') return;
       // F3 ouvre la recherche dans certains navigateurs : on l'empêche.
       e.preventDefault();
-      this.el.hidden = !this.el.hidden;
+      this.mode = ((this.mode + 1) % MODE_COUNT) as DebugMode;
+      this.el.hidden = this.mode === DebugMode.Off;
     });
+  }
+
+  /** Vrai quand le jeu doit dessiner les hitboxes (3e mode de F3). */
+  get showHitboxes(): boolean {
+    return this.mode === DebugMode.StatsAndHitboxes;
   }
 
   /** Valeur affichée sous les FPS. Appelable à chaque frame : seul l'affichage est limité. */
@@ -37,7 +53,7 @@ export class DebugOverlay {
     if (!this.el.hidden) {
       const fps = Math.round(this.frames / this.elapsed);
       const ups = Math.round(this.updates / this.elapsed);
-      let text = `FPS ${fps}\nUPS ${ups}`;
+      let text = `FPS ${fps}${this.showHitboxes ? ' (hitboxes)' : ''}\nUPS ${ups}`;
       for (const [label, value] of this.stats) text += `\n${label} ${value}`;
       this.el.textContent = text;
     }

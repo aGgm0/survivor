@@ -21,5 +21,12 @@ const game = new Game(renderer, debug, input);
 
 // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
 const seed = Date.now() >>> 0;
-game.setScene(new GameScene({ input, pauseOverlay, hud, debug }, seed));
+const scene = new GameScene({ input, pauseOverlay, hud, debug }, seed);
+game.setScene(scene);
 game.start();
+
+// En dev uniquement (absent du build) : la scène est accessible dans la console du navigateur
+// via `__scene`, pour inspecter l'état du jeu pendant le debug.
+if (import.meta.env.DEV) {
+  Object.assign(window, { __scene: scene });
+}
