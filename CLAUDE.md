@@ -257,8 +257,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Interpolation au rendu + pause simple (Échap / P)
 
 ### Phase 2 — Ennemis
-- [ ] Spawn hors écran + poursuite du joueur
-- [ ] Object pool + SpatialGrid
+- [x] Spawn hors écran + poursuite du joueur (spawn temporaire, recyclage des ennemis lointains)
+- [x] Object pool (+ debug F4 : +100 ennemis)
+- [x] Timer de survie en haut à droite (avancé depuis le HUD de la Phase 4)
+- [ ] SpatialGrid + séparation entre ennemis
 - [ ] Collisions joueur/ennemi, PV, invincibilité, mort
 
 ### Phase 3 — Combat
@@ -311,6 +313,11 @@ Format : date — décision — raison.
 | 2026-11-09 | Pause simple (overlay HTML) dès la Phase 1 | Demandé ; le menu pause complet reste en Phase 5 |
 | 2026-11-09 | Touches lues via `event.code` | Une seule config pour AZERTY (ZQSD) et QWERTY (WASD) |
 | 2026-11-09 | Rendu interpolé (`alpha`) entre deux updates | Mouvement fluide sur écrans 144/240 Hz malgré la logique à 60 Hz |
+| 2026-11-09 | Phase 2 : les 3 types d'ennemis, spawn temporaire 2/s plafonné à 600 (`data/spawn.ts`) | En attendant les vagues de la Phase 4 |
+| 2026-11-09 | Rayons ennemis : basique 14, rapide 10, tank 24 px (joueur 16) | Absents du brief, valeurs de départ |
+| 2026-11-09 | Ennemis trop loin replacés de l'autre côté du joueur | Map infinie : ne pas gaspiller le pool |
+| 2026-11-09 | Séparation entre ennemis, barre de PV sous le joueur, overlay de mort simple | Validés pour la Phase 2 (HUD/Game Over complets en Phase 4) |
+| 2026-11-09 | Timer de survie dès la Phase 2, en haut à droite | Demandé ; l'overlay debug occupe le coin haut gauche |
 
 ---
 

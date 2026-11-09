@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { clamp, lerp, normalizeInto, Rng } from '../src/core/math';
+import { clamp, lerp, normalizeInto, pickWeighted, Rng } from '../src/core/math';
+
+describe('pickWeighted', () => {
+  const entries = [
+    ['a', 3],
+    ['b', 1],
+  ] as const;
+
+  it('choisit selon la position du tirage dans le total des poids', () => {
+    expect(pickWeighted(entries, 0)).toBe('a');
+    expect(pickWeighted(entries, 0.74)).toBe('a');
+    expect(pickWeighted(entries, 0.75)).toBe('b');
+    expect(pickWeighted(entries, 0.999)).toBe('b');
+  });
+
+  it('respecte les proportions sur beaucoup de tirages', () => {
+    const rng = new Rng(1);
+    let a = 0;
+    const n = 10_000;
+    for (let i = 0; i < n; i++) if (pickWeighted(entries, rng.next()) === 'a') a++;
+    expect(a / n).toBeGreaterThan(0.72);
+    expect(a / n).toBeLessThan(0.78);
+  });
+});
 
 describe('normalizeInto', () => {
   it('ramène la diagonale à une longueur de 1', () => {

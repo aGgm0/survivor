@@ -8,12 +8,16 @@
   </head>
   <body>
     <div id="game-root">
-      <canvas id="game"></canvas>
-      <div id="pause-overlay" hidden>
-        <p class="pause-title">PAUSE</p>
-        <p class="pause-hint">Échap ou P pour reprendre</p>
+      <!-- La "scène" a exactement la taille du canvas : les overlays s'y accrochent, pas à la fenêtre -->
+      <div id="stage">
+        <canvas id="game"></canvas>
+        <div id="hud-timer">00:00</div>
+        <div id="pause-overlay" hidden>
+          <p class="pause-title">PAUSE</p>
+          <p class="pause-hint">Échap ou P pour reprendre</p>
+        </div>
+        <div id="debug-overlay" hidden></div>
       </div>
-      <div id="debug-overlay" hidden></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

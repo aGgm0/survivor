@@ -62,3 +62,22 @@ export class Rng {
     return min + Math.floor(this.next() * (max - min + 1));
   }
 }
+
+/**
+ * Tirage pondéré : avec [['a', 3], ['b', 1]], 'a' sort 3 fois plus souvent que 'b'.
+ * `roll` est un nombre dans [0, 1[ (typiquement `rng.next()`), ce qui rend la fonction testable.
+ */
+export function pickWeighted<T>(entries: readonly (readonly [T, number])[], roll: number): T {
+  let total = 0;
+  for (const [, weight] of entries) total += weight;
+
+  let target = roll * total;
+  for (const [value, weight] of entries) {
+    if (target < weight) return value;
+    target -= weight;
+  }
+  // Inatteignable avec roll < 1, mais rassure le typage (et protège des arrondis).
+  const last = entries[entries.length - 1];
+  if (!last) throw new Error('pickWeighted : liste vide');
+  return last[0];
+}
