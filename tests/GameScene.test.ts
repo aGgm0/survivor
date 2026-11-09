@@ -28,7 +28,7 @@ function makeDeps() {
       },
       hide: () => (ui.deathShownWith = null),
     },
-    hud: { setTime: () => {} },
+    hud: { setTime: () => {}, setXp: () => {} },
     debug: { setStat: () => {}, showHitboxes: false },
     onRestart: () => ui.restarts++,
   };
@@ -153,6 +153,23 @@ describe('GameScene — combat', () => {
     expect(scene.damageNumbers.numbers.activeCount).toBeGreaterThan(0);
   });
 
+  it('un ennemi tué lâche sa gemme ; la ramasser donne son XP', () => {
+    const { scene } = newScene();
+    scene.enemies.acquire()?.spawn(ENEMY_TYPES.fast, 200, 0);
+    for (let i = 0; i < 60 && scene.kills === 0; i++) scene.update(DT);
+    expect(scene.kills).toBe(1);
+    const gem = scene.gems.gems.items.find((g) => g.active);
+    if (!gem) throw new Error('pas de gemme');
+    expect(gem.value).toBe(ENEMY_TYPES.fast.xp);
+
+    // Le joueur va vers la gemme : l'aimant fait le reste.
+    scene.player.x = gem.x - 40;
+    scene.player.y = gem.y;
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(scene.player.xp).toBe(ENEMY_TYPES.fast.xp);
+    expect(scene.gems.gems.activeCount).toBe(0);
+  });
+
   it('l’écran de mort affiche les kills', () => {
     const { scene, ui } = newScene();
     scene.enemies.acquire()?.spawn(ENEMY_TYPES.basic, 200, 0);
@@ -187,6 +204,8 @@ describe('GameScene — rejouer sans fuite d’état', () => {
     expect(second.projectiles.activeCount).toBe(0);
     expect(second.kills).toBe(0);
     expect(second.weapons[0]?.totalDamage).toBe(0);
+    expect(second.player.xp).toBe(0);
+    expect(second.gems.gems.activeCount).toBe(0);
   });
 
   it('même seed → même partie (reproductible)', () => {

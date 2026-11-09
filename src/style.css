@@ -46,6 +46,16 @@ body {
   pointer-events: none;
 }
 
+#hud-xp {
+  position: absolute;
+  top: 44px;
+  right: 16px;
+  font: bold 16px monospace;
+  color: #4fc3f7;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
 /* Écrans plein cadre par-dessus le jeu (pause, mort) */
 .overlay {
   position: absolute;

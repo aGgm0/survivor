@@ -32,6 +32,10 @@ export class Player {
   maxHp: number = PLAYER_BASE.maxHp;
   hp: number = PLAYER_BASE.maxHp;
   armor: number = PLAYER_BASE.armor;
+  /** px : les gemmes d'XP dans ce rayon sont attirées */
+  pickupRadius: number = PLAYER_BASE.pickupRadius;
+  /** XP totale ramassée (niveaux et level up : Phase 4) */
+  xp = 0;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
 

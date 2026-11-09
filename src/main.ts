@@ -21,7 +21,7 @@ const deathOverlay = new DeathOverlay(
   getElement('death-overlay', HTMLDivElement),
   getElement('death-time', HTMLParagraphElement),
 );
-const hud = new Hud(getElement('hud-timer', HTMLDivElement));
+const hud = new Hud(getElement('hud-timer', HTMLDivElement), getElement('hud-xp', HTMLDivElement));
 const game = new Game(renderer, debug, input);
 
 /**

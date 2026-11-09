@@ -15,6 +15,7 @@ import { Projectile } from '../entities/Projectile';
 import { Weapon } from '../entities/Weapon';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { DamageNumberSystem } from '../systems/DamageNumberSystem';
+import { GemSystem } from '../systems/GemSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
@@ -46,7 +47,7 @@ export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
   pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
   deathOverlay: Pick<DeathOverlay, 'show' | 'hide'>;
-  hud: Pick<Hud, 'setTime'>;
+  hud: Pick<Hud, 'setTime' | 'setXp'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
@@ -70,6 +71,7 @@ export class GameScene implements Scene {
   private readonly weaponSystem: WeaponSystem;
   private readonly projectileSystem: ProjectileSystem;
   readonly damageNumbers: DamageNumberSystem;
+  readonly gems = new GemSystem();
   private paused = false;
   private dead = false;
   /** secondes de survie (n'avance pas pendant la pause) */
@@ -152,6 +154,7 @@ export class GameScene implements Scene {
 
     this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y);
     this.projectileSystem.update(dt, this.projectiles);
+    this.player.xp += this.gems.update(dt, this.player);
     this.damageNumbers.update(dt);
   }
 
@@ -161,8 +164,9 @@ export class GameScene implements Scene {
     this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
-  /** Un ennemi tombe à 0 PV : il retourne au pool. (Phase 3c : il lâchera une gemme d'XP.) */
+  /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
+    this.gems.drop(e.x, e.y, e.type.xp, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
   }
@@ -198,6 +202,7 @@ export class GameScene implements Scene {
       p.prevY = p.y;
     }
     this.damageNumbers.freeze();
+    this.gems.freeze();
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -207,6 +212,8 @@ export class GameScene implements Scene {
 
     this.camera.begin(ctx);
     this.renderGrid(ctx);
+    // Les gemmes sont au sol : dessinées sous les ennemis.
+    this.gems.render(ctx, alpha, this.camera);
     this.renderEnemies(ctx, alpha);
     this.player.render(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
@@ -215,6 +222,8 @@ export class GameScene implements Scene {
     this.camera.end(ctx);
 
     this.deps.hud.setTime(this.elapsed);
+    this.deps.hud.setXp(this.player.xp);
+    this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);
     this.deps.debug.setStat('projectiles', this.projectiles.activeCount);

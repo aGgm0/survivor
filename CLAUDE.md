@@ -268,7 +268,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Arme 1 (projectile auto vers l'ennemi le plus proche)
 - [x] Dégâts, mort des ennemis, kills (+ stats par arme pour un futur damage meter)
 - [x] Feedback visuel (flash blanc des ennemis touchés, nombres de dégâts)
-- [ ] Gemmes d'XP + aimant
+- [x] Gemmes d'XP + aimant (compteur "XP" temporaire sous le timer)
 
 ### Phase 4 — Progression `[MVP atteint ici]`
 - [ ] Level up + écran de choix (3 upgrades)
@@ -332,7 +332,8 @@ Format : date — décision — raison.
 | 2026-11-09 | Arme 1 = "Trait arcanique" : 450 px/s, 1,4 s de vie, sans perforation ; sans cible à portée, elle attend (prête) | Réponses aux TODO ; la perforation pourra devenir un upgrade |
 | 2026-11-09 | Basique : 10 → 20 PV | Demandé : doit encaisser 2 coups au lieu d'un |
 | 2026-11-09 | Chaque arme compte ses dégâts utiles (sans l'excédent) et ses kills | Prépare un futur "damage meter" (classement des armes) demandé pour plus tard |
-| 2026-11-09 | Phase 3 : compteur d'XP temporaire sous le timer ; pool de 1000 gemmes, si plein l'XP va à la plus ancienne ; kills sur l'écran de mort | Validés pour la Phase 3 |
+| 2026-11-09 | Phase 3 : compteur d'XP temporaire sous le timer ; pool de 1000 gemmes ; kills sur l'écran de mort | Validés pour la Phase 3 |
+| 2026-11-09 | Pool de gemmes plein : la gemme la plus éloignée du joueur (non attirée) est déplacée sur le kill, avec sa valeur ×0,5 + la nouvelle XP | Version initiale (XP versée à la plus ancienne) rejetée : l'XP restait coincée au loin. Pénalité ×0,5 demandée : ramener l'XP ne doit pas être gratuit. L'XP peut être fractionnaire, le HUD affiche la partie entière |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
