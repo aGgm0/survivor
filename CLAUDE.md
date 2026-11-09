@@ -159,10 +159,10 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5 (max 
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 10 | 1 s | +1 projectile aux niv 3 et 5 |
-| <!-- TODO --> Aura | Dégâts continus autour du joueur | 5/tick | 0,5 s | Le rayon augmente avec le niveau |
-| <!-- TODO --> Orbite | Objets qui tournent autour du joueur | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 objet par niveau |
+| **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Rayon +15/+15/+20 px et +2/+3 dégâts selon les niveaux |
+| **Orbes runiques** (orbite) | 2 orbes à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
 
-Noms des armes : `TODO` (en lien avec le thème magie). Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure.
+Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
 `[LATER]` : évolutions d'armes (arme niv max + objet passif = arme évoluée).
 
@@ -273,7 +273,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 ### Phase 4 — Progression `[MVP atteint ici]`
 - [x] Level up + écran de choix (3 upgrades) + barre d'XP et niveau
 - [x] Upgrades passifs (Vitalité, Célérité, Attraction, Puissance, Hâte) + niveaux du Trait arcanique
-- [ ] Armes 2 et 3
+- [x] Armes 2 et 3 (Aura ardente, Orbes runiques) + nouvelle arme garantie au level up tant qu'on a < 3 armes
 - [ ] Vagues data-driven + boss
 - [ ] Timer, écran Game Over / Victoire, rejouer
 - [ ] HUD : PV, barre d'XP, niveau, timer, kills
@@ -337,6 +337,9 @@ Format : date — décision — raison.
 | 2026-11-09 | Pool de gemmes plein : la gemme la plus éloignée du joueur (non attirée) est déplacée sur le kill, avec sa valeur ×0,5 + la nouvelle XP | Version initiale (XP versée à la plus ancienne) rejetée : l'XP restait coincée au loin. Pénalité ×0,5 demandée : ramener l'XP ne doit pas être gratuit. L'XP peut être fractionnaire, le HUD affiche la partie entière |
 | 2026-11-10 | Phase 4 validée : noms "Aura ardente" / "Orbes runiques", bonus de niveau d'arme, 5 passifs (5 niv max), soin +30 si tout est max, vagues 0-10 min, boss à 5:00 et 9:00, victoire à 10:00 (ennemis figés) | Tableaux proposés et validés ("ok reco") |
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
+| 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
+| 2026-11-10 | Aura : horloge de dégâts par ennemi (brûlé dès l'entrée, puis toutes les 0,5 s) au lieu d'un tick commun | Demandé : avec un tick commun, un ennemi entré juste après un tick traversait ~0,5 s sans dégâts |
+| 2026-11-10 | Toutes les armes infligent leurs dégâts via une seule fonction (`damageEnemy`) | Damage meter cohérent, quel que soit le type d'arme |
 | 2026-11-10 | Trait arcanique multi-projectiles : éventail de 12° centré sur la cible | Le brief dit "+1 projectile" sans préciser la forme |
 | 2026-11-10 | Choix de level up tirés avec l'aléatoire du jeu ; l'UI ne fait que mémoriser le clic, lu par la scène dans son update | Partie reproductible ; toute la logique reste dans la game loop |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |

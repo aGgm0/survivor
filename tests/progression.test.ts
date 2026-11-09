@@ -56,9 +56,13 @@ describe('XpSystem', () => {
 });
 
 describe('upgrades — options et tirage', () => {
-  it('au départ : le Trait arcanique niveau 2 et tous les passifs', () => {
+  it('au départ : Trait arcanique niv 2, les 2 autres armes et tous les passifs', () => {
     const options = availableUpgrades(makeBuild());
-    expect(options).toHaveLength(1 + PASSIVES.length);
+    expect(options).toHaveLength(1 + 2 + PASSIVES.length);
+    expect(options.filter((o) => o.kind === 'newWeapon').map((o) => o.title)).toEqual([
+      WEAPONS.burningAura.name,
+      WEAPONS.runicOrbs.name,
+    ]);
     const bolt = options.find((o) => o.kind === 'weaponLevel');
     expect(bolt?.levelText).toBe('Niv 2');
     expect(bolt?.description).toBe(BOLT.levels[0]?.description);
@@ -78,8 +82,42 @@ describe('upgrades — options et tirage', () => {
     expect(rollUpgradeChoices(options, new Rng(1), 3)).toHaveLength(2);
   });
 
+  it('garantie : une nouvelle arme est toujours proposée tant qu’il en reste', () => {
+    const options = availableUpgrades(makeBuild());
+    for (let seed = 0; seed < 200; seed++) {
+      const choices = rollUpgradeChoices(options, new Rng(seed), 3, true);
+      expect(choices).toHaveLength(3);
+      expect(choices.some((c) => c.kind === 'newWeapon')).toBe(true);
+      expect(new Set(choices.map((c) => c.title)).size).toBe(3); // toujours sans doublon
+    }
+  });
+
+  it('sans garantie, il arrive qu’aucune nouvelle arme ne sorte', () => {
+    const options = availableUpgrades(makeBuild());
+    let without = 0;
+    for (let seed = 0; seed < 200; seed++) {
+      const choices = rollUpgradeChoices(options, new Rng(seed), 3, false);
+      if (!choices.some((c) => c.kind === 'newWeapon')) without++;
+    }
+    expect(without).toBeGreaterThan(0);
+  });
+
+  it('une arme déjà possédée n’est plus proposée comme nouvelle', () => {
+    const build = makeBuild();
+    const aura = availableUpgrades(build).find(
+      (o) => o.kind === 'newWeapon' && o.def === WEAPONS.burningAura,
+    );
+    if (!aura) throw new Error();
+    applyUpgrade(aura, build);
+    expect(build.weapons.map((w) => w.def.id)).toEqual(['arcaneBolt', 'burningAura']);
+    const again = availableUpgrades(build).filter((o) => o.kind === 'newWeapon');
+    expect(again.map((o) => o.title)).toEqual([WEAPONS.runicOrbs.name]);
+  });
+
   it('exclut ce qui est au maximum, et propose le soin quand tout est au max', () => {
     const build = makeBuild();
+    build.weapons.push(new Weapon(WEAPONS.burningAura), new Weapon(WEAPONS.runicOrbs));
+    for (const w of build.weapons) w.level = weaponMaxLevel(w.def);
     const bolt = build.weapons[0] as Weapon;
     bolt.level = weaponMaxLevel(BOLT);
     for (const p of PASSIVES) build.passiveLevels.set(p.id, p.maxLevel);
@@ -136,12 +174,12 @@ describe('Weapon — stats par niveau', () => {
     const w = new Weapon(BOLT);
     const mods = { damageMult: 1, cooldownMult: 1 };
     w.recompute(mods);
-    expect([w.damage, w.projectileCount, w.cooldown]).toEqual([10, 1, 1]);
+    expect([w.damage, w.count, w.cooldown]).toEqual([10, 1, 1]);
 
     w.level = 5; // +5 dégâts, +2 projectiles, cooldown -20 %
     w.recompute(mods);
     expect(w.damage).toBe(15);
-    expect(w.projectileCount).toBe(3);
+    expect(w.count).toBe(3);
     expect(w.cooldown).toBeCloseTo(0.8);
 
     w.recompute({ damageMult: 1.5, cooldownMult: 0.5 });
@@ -161,7 +199,13 @@ describe('WeaponSystem — plusieurs projectiles', () => {
     weapon.level = 3; // 2 projectiles
     weapon.recompute({ damageMult: 1, cooldownMult: 1 });
 
-    new WeaponSystem(10, collisions, projectiles).update(1 / 60, [weapon], 0, 0);
+    new WeaponSystem(10, collisions, projectiles, { onHit: () => {}, onKill: () => {} }).update(
+      1 / 60,
+      [weapon],
+      0,
+      0,
+      0,
+    );
     const shots = projectiles.items.filter((p) => p.active);
     expect(shots).toHaveLength(2);
     // Symétriques de part et d'autre de l'axe vers la cible (axe x)

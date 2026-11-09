@@ -18,6 +18,10 @@ export class Enemy implements Poolable {
   nextContactHitAt = 0;
   /** Instant (temps de partie, en s) jusqu'auquel il est affiché en blanc (vient d'être touché). */
   flashUntil = 0;
+  /** Instant (temps de partie, en s) à partir duquel les orbes peuvent de nouveau le toucher. */
+  nextOrbitHitAt = 0;
+  /** Instant (temps de partie, en s) à partir duquel l'aura peut de nouveau le brûler. */
+  nextAuraHitAt = 0;
 
   /**
    * @param id identifiant stable = place dans le pool. Sert de départage déterministe
@@ -32,6 +36,8 @@ export class Enemy implements Poolable {
     this.hp = type.hp;
     this.nextContactHitAt = 0;
     this.flashUntil = 0;
+    this.nextOrbitHitAt = 0;
+    this.nextAuraHitAt = 0;
     this.teleport(x, y);
   }
 

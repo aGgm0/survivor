@@ -1,9 +1,10 @@
 import type { Rng } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
+import { MAX_WEAPONS } from '../data/progression';
 import { HEAL_UPGRADE, PASSIVES, type PassiveDef } from '../data/upgrades';
-import { weaponMaxLevel } from '../data/weapons';
+import { WEAPON_LIST, weaponMaxLevel, type WeaponDef } from '../data/weapons';
 import type { Player } from '../entities/Player';
-import type { Weapon } from '../entities/Weapon';
+import { Weapon } from '../entities/Weapon';
 
 /** Un choix proposé au level up. Les champs d'affichage sont communs à tous les types. */
 export type UpgradeChoice = {
@@ -13,6 +14,7 @@ export type UpgradeChoice = {
   readonly levelText: string;
 } & (
   | { readonly kind: 'weaponLevel'; readonly weapon: Weapon }
+  | { readonly kind: 'newWeapon'; readonly def: WeaponDef }
   | { readonly kind: 'passive'; readonly passive: PassiveDef }
   | { readonly kind: 'heal' }
 );
@@ -20,7 +22,8 @@ export type UpgradeChoice = {
 /** Ce dont le système d'upgrades a besoin (et qu'il modifie). */
 export interface Build {
   readonly player: Player;
-  readonly weapons: readonly Weapon[];
+  /** Modifiable : une nouvelle arme s'y ajoute */
+  readonly weapons: Weapon[];
   /** Niveau de chaque passif possédé (absent = 0) */
   readonly passiveLevels: Map<string, number>;
 }
@@ -42,6 +45,18 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
       levelText: `Niv ${weapon.level + 1}`,
     });
   }
+  if (build.weapons.length < MAX_WEAPONS) {
+    for (const def of WEAPON_LIST) {
+      if (build.weapons.some((w) => w.def === def)) continue; // déjà possédée
+      options.push({
+        kind: 'newWeapon',
+        def,
+        title: def.name,
+        description: def.description,
+        levelText: 'Nouvelle arme',
+      });
+    }
+  }
   for (const passive of PASSIVES) {
     const level = build.passiveLevels.get(passive.id) ?? 0;
     if (level >= passive.maxLevel) continue;
@@ -59,12 +74,28 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
 /**
  * Tire `count` choix différents parmi les options (mélange de Fisher-Yates partiel, seedé).
  * S'il n'y a plus rien à améliorer, propose le soin pour que le level up ne soit jamais vide.
+ * `guaranteeNewWeapon` : si aucune nouvelle arme n'est sortie alors qu'il en reste, la dernière
+ * carte est remplacée par une nouvelle arme tirée au hasard.
  */
 export function rollUpgradeChoices(
   options: readonly UpgradeChoice[],
   rng: Rng,
   count: number,
+  guaranteeNewWeapon = false,
 ): UpgradeChoice[] {
+  const picks = shufflePick(options, rng, count);
+  if (guaranteeNewWeapon && !picks.some((c) => c.kind === 'newWeapon')) {
+    const newWeapons = options.filter((c) => c.kind === 'newWeapon');
+    const forced = newWeapons[rng.int(0, newWeapons.length - 1)];
+    if (forced) {
+      if (picks.length < count) picks.push(forced);
+      else picks[picks.length - 1] = forced;
+    }
+  }
+  return picks;
+}
+
+function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number): UpgradeChoice[] {
   if (options.length === 0) {
     return [
       {
@@ -94,6 +125,9 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
   switch (choice.kind) {
     case 'weaponLevel':
       choice.weapon.level++;
+      return;
+    case 'newWeapon':
+      build.weapons.push(new Weapon(choice.def));
       return;
     case 'passive': {
       const level = build.passiveLevels.get(choice.passive.id) ?? 0;

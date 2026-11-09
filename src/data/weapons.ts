@@ -1,29 +1,40 @@
 // Armes (voir CLAUDE.md § 5.4). Data-driven : ajouter une arme = ajouter une entrée ici.
+// Trois comportements (`kind`) : projectile, aura, orbite. Chacun a ses propres réglages.
 
 /** Ce qu'apporte un niveau d'arme (les bonus s'additionnent niveau après niveau). */
 export interface WeaponLevelBonus {
   /** Texte affiché sur l'écran de level up */
   readonly description: string;
-  /** Dégâts ajoutés à chaque impact */
+  /** Dégâts ajoutés à chaque coup */
   readonly damage?: number;
-  /** Projectiles supplémentaires par tir */
-  readonly projectiles?: number;
+  /** Projectiles supplémentaires par tir (projectile) ou orbes en plus (orbite) */
+  readonly count?: number;
   /** Variation du cooldown en fraction (-0.2 = 20 % plus rapide) */
   readonly cooldownPct?: number;
+  /** px ajoutés au rayon (aura) */
+  readonly radius?: number;
 }
 
-export interface WeaponDef {
+interface WeaponDefBase {
   readonly id: string;
   /** Nom affiché (écran d'upgrade, damage meter...) */
   readonly name: string;
-  /** Description courte de l'arme (écran de level up quand on l'obtient) */
+  /** Description courte (écran de level up quand on obtient l'arme) */
   readonly description: string;
-  /** Dégâts par impact au niveau 1 */
+  /** Dégâts par coup au niveau 1 */
   readonly damage: number;
+  readonly color: string;
+  /** Bonus des niveaux 2, 3, 4... (index 0 = niveau 2). Niveau max = longueur + 1. */
+  readonly levels: readonly WeaponLevelBonus[];
+}
+
+/** Tire des projectiles vers l'ennemi le plus proche. */
+export interface ProjectileWeaponDef extends WeaponDefBase {
+  readonly kind: 'projectile';
   /** s entre deux tirs au niveau 1 */
   readonly cooldown: number;
   /** Projectiles par tir au niveau 1 */
-  readonly projectileCount: number;
+  readonly count: number;
   /** Degrés entre deux projectiles d'un même tir (éventail centré sur la cible) */
   readonly spreadDeg: number;
   /** px/s */
@@ -32,19 +43,46 @@ export interface WeaponDef {
   readonly projectileLifetime: number;
   /** px, taille du projectile (affichage et hitbox) */
   readonly projectileRadius: number;
-  readonly color: string;
-  /** Bonus des niveaux 2, 3, 4... (index 0 = niveau 2). Niveau max = longueur + 1. */
-  readonly levels: readonly WeaponLevelBonus[];
 }
+
+/**
+ * Brûle les ennemis dans un cercle autour du joueur : dès qu'un ennemi y entre, puis toutes
+ * les `cooldown` secondes tant qu'il y reste (chaque ennemi a sa propre horloge).
+ */
+export interface AuraWeaponDef extends WeaponDefBase {
+  readonly kind: 'aura';
+  /** s entre deux brûlures d'un même ennemi, au niveau 1 */
+  readonly cooldown: number;
+  /** px, rayon au niveau 1 */
+  readonly radius: number;
+}
+
+/** Des orbes tournent autour du joueur et blessent les ennemis qu'ils touchent. */
+export interface OrbitWeaponDef extends WeaponDefBase {
+  readonly kind: 'orbit';
+  /** Orbes au niveau 1 */
+  readonly count: number;
+  /** px entre le joueur et le centre des orbes */
+  readonly orbitDistance: number;
+  /** px, taille d'un orbe (affichage et hitbox) */
+  readonly orbRadius: number;
+  /** radians/s : vitesse de rotation */
+  readonly angularSpeed: number;
+  /** s avant qu'un même ennemi puisse être retouché par les orbes (sinon 8 × 60 = 480 dégâts/s) */
+  readonly rehitCooldown: number;
+}
+
+export type WeaponDef = ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef;
 
 export const WEAPONS = {
   arcaneBolt: {
+    kind: 'projectile',
     id: 'arcaneBolt',
     name: 'Trait arcanique',
     description: "Tire sur l'ennemi le plus proche",
     damage: 10,
     cooldown: 1,
-    projectileCount: 1,
+    count: 1,
     spreadDeg: 12,
     projectileSpeed: 450,
     projectileLifetime: 1.4,
@@ -52,18 +90,53 @@ export const WEAPONS = {
     color: '#5ab0ff',
     levels: [
       { description: '+5 dégâts', damage: 5 },
-      { description: '+1 projectile', projectiles: 1 },
+      { description: '+1 projectile', count: 1 },
       { description: 'Cooldown -20 %', cooldownPct: -0.2 },
-      { description: '+1 projectile', projectiles: 1 },
+      { description: '+1 projectile', count: 1 },
+    ],
+  },
+  burningAura: {
+    kind: 'aura',
+    id: 'burningAura',
+    name: 'Aura ardente',
+    description: 'Brûle les ennemis autour de toi',
+    damage: 5,
+    cooldown: 0.5,
+    radius: 70,
+    color: '#ff7a3d',
+    levels: [
+      { description: 'Rayon +15 px', radius: 15 },
+      { description: '+2 dégâts', damage: 2 },
+      { description: 'Rayon +15 px', radius: 15 },
+      { description: '+3 dégâts, rayon +20 px', damage: 3, radius: 20 },
+    ],
+  },
+  runicOrbs: {
+    kind: 'orbit',
+    id: 'runicOrbs',
+    name: 'Orbes runiques',
+    description: 'Des orbes tournent autour de toi',
+    damage: 8,
+    count: 2,
+    orbitDistance: 80,
+    orbRadius: 10,
+    angularSpeed: 3,
+    rehitCooldown: 0.5,
+    color: '#c77dff',
+    levels: [
+      { description: '+1 orbe', count: 1 },
+      { description: '+1 orbe', count: 1 },
+      { description: '+1 orbe, +3 dégâts', count: 1, damage: 3 },
+      { description: '+1 orbe', count: 1 },
     ],
   },
 } as const satisfies Record<string, WeaponDef>;
 
-/** Liste pratique pour itérer sur toutes les armes (ex. dessin groupé par couleur). */
+/** Toutes les armes du jeu (ordre d'affichage, armes à débloquer au level up...). */
 export const WEAPON_LIST: readonly WeaponDef[] = Object.values(WEAPONS);
 
-/** Portée d'une arme : distance max parcourue par son projectile. */
-export function weaponRange(def: WeaponDef): number {
+/** Portée d'une arme à projectiles : distance max parcourue par son projectile. */
+export function weaponRange(def: ProjectileWeaponDef): number {
   return def.projectileSpeed * def.projectileLifetime;
 }
 

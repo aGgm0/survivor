@@ -1,5 +1,6 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
+import type { ProjectileWeaponDef } from '../data/weapons';
 import type { Weapon } from './Weapon';
 
 /** Un projectile. Vit dans un Pool : jamais créé en cours de partie. */
@@ -20,8 +21,14 @@ export class Projectile implements Poolable {
   source: Weapon | null = null;
 
   /** Réinitialise TOUT l'état (un projectile recyclé ne garde rien de sa vie précédente). */
-  launch(source: Weapon, x: number, y: number, dirX: number, dirY: number): void {
-    const def = source.def;
+  launch(
+    source: Weapon,
+    def: ProjectileWeaponDef,
+    x: number,
+    y: number,
+    dirX: number,
+    dirY: number,
+  ): void {
     this.source = source;
     this.x = x;
     this.y = y;

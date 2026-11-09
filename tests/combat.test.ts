@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
-import { WEAPONS, weaponRange } from '../src/data/weapons';
+import { WEAPONS, weaponRange, type WeaponDef } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Projectile } from '../src/entities/Projectile';
 import { Weapon } from '../src/entities/Weapon';
@@ -12,27 +12,30 @@ import { WeaponSystem } from '../src/systems/WeaponSystem';
 const DT = 1 / 60;
 const BOLT = WEAPONS.arcaneBolt;
 
-function setup(spawns: [EnemyType, number, number][] = []) {
+function setup(spawns: [EnemyType, number, number][] = [], def: WeaponDef = BOLT) {
   const enemies = new Pool(100, (i) => new Enemy(i));
   for (const [type, x, y] of spawns) enemies.acquire()?.spawn(type, x, y);
   const projectiles = new Pool(50, () => new Projectile());
   const collisions = new CollisionSystem(100);
   const killed: Enemy[] = [];
-  const weaponSystem = new WeaponSystem(100, collisions, projectiles);
   const hits: [Enemy, number][] = [];
-  const projectileSystem = new ProjectileSystem(100, collisions, {
-    onHit: (e, damage) => hits.push([e, damage]),
-    onKill: (e) => {
+  const events = {
+    onHit: (e: Enemy, damage: number) => hits.push([e, damage]),
+    onKill: (e: Enemy) => {
       killed.push(e);
       enemies.release(e);
     },
-  });
-  const weapon = new Weapon(BOLT);
+  };
+  const weaponSystem = new WeaponSystem(100, collisions, projectiles, events);
+  const projectileSystem = new ProjectileSystem(100, collisions, events);
+  const weapon = new Weapon(def);
+  let now = 0;
   /** Simule `seconds` secondes de combat, joueur immobile en (0, 0). */
   const run = (seconds: number) => {
     for (let t = 0; t < Math.round(seconds / DT); t++) {
+      now += DT;
       collisions.rebuild(enemies);
-      weaponSystem.update(DT, [weapon], 0, 0);
+      weaponSystem.update(DT, [weapon], 0, 0, now);
       projectileSystem.update(DT, projectiles);
     }
   };
@@ -40,6 +43,110 @@ function setup(spawns: [EnemyType, number, number][] = []) {
     pool.items.filter((x) => x.active);
   return { enemies, projectiles, collisions, weaponSystem, weapon, killed, hits, run, active };
 }
+
+describe('Aura ardente', () => {
+  const AURA = WEAPONS.burningAura;
+
+  it('un ennemi qui entre est brûlé tout de suite, puis toutes les 0,5 s', () => {
+    const { hits, run, enemies, active } = setup([[ENEMY_TYPES.tank, 300, 0]], AURA);
+    run(0.3); // dehors : rien
+    expect(hits).toHaveLength(0);
+    active(enemies)[0]?.teleport(50, 0); // il entre à 0,3 s
+    run(DT);
+    expect(hits).toHaveLength(1); // brûlé immédiatement, sans attendre un "tick commun"
+    run(AURA.cooldown - 2 * DT);
+    expect(hits).toHaveLength(1); // pas avant 0,5 s
+    run(3 * DT);
+    expect(hits).toHaveLength(2);
+  });
+
+  it('chaque ennemi a sa propre horloge', () => {
+    const { hits, run, enemies, active } = setup(
+      [
+        [ENEMY_TYPES.tank, 50, 0], // dedans dès le début
+        [ENEMY_TYPES.tank, 300, 0], // entrera plus tard
+      ],
+      AURA,
+    );
+    run(0.2);
+    expect(hits).toHaveLength(1);
+    active(enemies)[1]?.teleport(-50, 0); // entre à 0,2 s
+    run(DT);
+    expect(hits).toHaveLength(2); // le 2e est brûlé tout de suite, sans attendre le 1er
+  });
+
+  it('blesse à chaque tick les ennemis dans le cercle, pas ceux au-delà', () => {
+    const { hits, run } = setup(
+      [
+        [ENEMY_TYPES.tank, 50, 0], // dans le cercle (rayon 70)
+        [ENEMY_TYPES.tank, 300, 0], // hors du cercle
+      ],
+      AURA,
+    );
+    run(1.1); // ticks à 0 s, 0,5 s et 1 s
+    expect(hits).toHaveLength(3);
+    expect(hits.every(([e]) => e.x === 50)).toBe(true);
+    expect(hits[0]?.[1]).toBe(AURA.damage);
+  });
+
+  it('touche un ennemi dont seul le bord entre dans le cercle', () => {
+    const r = AURA.radius + ENEMY_TYPES.tank.radius - 2;
+    const { hits, run } = setup([[ENEMY_TYPES.tank, r, 0]], AURA);
+    run(DT);
+    expect(hits).toHaveLength(1);
+  });
+
+  it('son rayon grandit avec les niveaux', () => {
+    const { weapon } = setup([], AURA);
+    weapon.level = 5;
+    weapon.recompute({ damageMult: 1, cooldownMult: 1 });
+    expect(weapon.radius).toBe(AURA.radius + 15 + 15 + 20);
+    expect(weapon.damage).toBe(AURA.damage + 2 + 3);
+  });
+
+  it('ses kills et ses dégâts comptent pour le damage meter', () => {
+    const { weapon, run, killed } = setup([[ENEMY_TYPES.fast, 30, 0]], AURA);
+    run(DT);
+    expect(killed).toHaveLength(1);
+    expect(weapon.kills).toBe(1);
+    expect(weapon.totalDamage).toBe(ENEMY_TYPES.fast.hp);
+  });
+});
+
+describe('Orbes runiques', () => {
+  const ORBS = WEAPONS.runicOrbs;
+
+  it('les orbes tournent autour du joueur', () => {
+    const { weapon, run } = setup([], ORBS);
+    run(1);
+    expect(weapon.angle).toBeCloseTo(ORBS.angularSpeed * 1);
+  });
+
+  it('un ennemi sur la trajectoire est touché, puis pas retouché avant le délai', () => {
+    // Tank immobile pile sur le cercle des orbes : chaque orbe passe dessus.
+    const { hits, run } = setup([[ENEMY_TYPES.tank, 0, ORBS.orbitDistance]], ORBS);
+    run(ORBS.rehitCooldown * 0.9);
+    expect(hits.length).toBe(1);
+    run(3);
+    // Sur ~3,45 s avec 0,5 s de délai : au plus ~7 coups, jamais un par update (207 updates).
+    expect(hits.length).toBeGreaterThan(1);
+    expect(hits.length).toBeLessThanOrEqual(Math.ceil(3.45 / ORBS.rehitCooldown) + 1);
+  });
+
+  it('un ennemi loin des orbes n’est jamais touché', () => {
+    const { hits, run } = setup([[ENEMY_TYPES.tank, 400, 0]], ORBS);
+    run(3);
+    expect(hits).toHaveLength(0);
+  });
+
+  it('+1 orbe par niveau', () => {
+    const { weapon } = setup([], ORBS);
+    weapon.level = 5;
+    weapon.recompute({ damageMult: 1, cooldownMult: 1 });
+    expect(weapon.count).toBe(ORBS.count + 4);
+    expect(weapon.damage).toBe(ORBS.damage + 3);
+  });
+});
 
 describe('WeaponSystem — ciblage', () => {
   it('vise l’ennemi le plus proche à portée', () => {

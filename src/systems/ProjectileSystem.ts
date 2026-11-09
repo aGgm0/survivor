@@ -2,20 +2,13 @@ import type { Pool } from '../core/Pool';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
 import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
+import { damageEnemy, type HitEvents } from './damage';
 
 /**
  * Marge de recherche : la grille a été construite avant que les ennemis bougent dans cette
  * update (quelques px au plus). On cherche un peu plus large, puis on vérifie la vraie distance.
  */
-const GRID_STALENESS_MARGIN = 8;
-
-/** Ce que la scène veut savoir des impacts (retour visuel, kills, gemmes...). */
-export interface ProjectileEvents {
-  /** Un ennemi vient d'être touché (appelé à chaque impact, y compris le coup fatal). */
-  onHit(enemy: Enemy, damage: number): void;
-  /** Un ennemi tombe à 0 PV : la scène le retire, compte le kill, etc. */
-  onKill(enemy: Enemy): void;
-}
+export const GRID_STALENESS_MARGIN = 8;
 
 /** Déplace les projectiles, gère leurs impacts sur les ennemis et leur fin de vie. */
 export class ProjectileSystem {
@@ -24,7 +17,7 @@ export class ProjectileSystem {
   constructor(
     capacity: number,
     private readonly collisions: CollisionSystem,
-    private readonly events: ProjectileEvents,
+    private readonly events: HitEvents,
   ) {
     this.candidates = new Array<Enemy>(capacity);
   }
@@ -57,21 +50,9 @@ export class ProjectileSystem {
       const dx = e.x - p.x;
       const dy = e.y - p.y;
       if (dx * dx + dy * dy > minDist * minDist) continue;
-      this.damageEnemy(p, e);
+      if (p.source) damageEnemy(p.source, e, p.damage, this.events);
       return true;
     }
     return false;
-  }
-
-  private damageEnemy(p: Projectile, e: Enemy): void {
-    // Seuls les dégâts réellement utiles comptent : 10 sur un ennemi à 3 PV = 3.
-    const dealt = Math.min(p.damage, e.hp);
-    e.hp -= p.damage;
-    if (p.source) p.source.totalDamage += dealt;
-    this.events.onHit(e, p.damage);
-    if (e.hp <= 0) {
-      if (p.source) p.source.kills++;
-      this.events.onKill(e);
-    }
   }
 }

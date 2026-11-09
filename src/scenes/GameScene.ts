@@ -1,15 +1,21 @@
 import { Camera } from '../core/Camera';
 import type { DebugOverlay } from '../core/DebugOverlay';
 import type { Input } from '../core/Input';
-import { Rng } from '../core/math';
+import { lerp, Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import type { Scene } from '../core/Scene';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
-import { UPGRADE_CHOICE_COUNT } from '../data/progression';
+import { NEW_WEAPON_GUARANTEE_BELOW, UPGRADE_CHOICE_COUNT } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
-import { PROJECTILE_POOL_SIZE, WEAPON_LIST, WEAPONS } from '../data/weapons';
+import {
+  PROJECTILE_POOL_SIZE,
+  WEAPON_LIST,
+  WEAPONS,
+  type AuraWeaponDef,
+  type OrbitWeaponDef,
+} from '../data/weapons';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -48,6 +54,9 @@ const ENEMY_HIT_FLASH = 0.1;
 const ENEMY_FLASH_COLOR = '#ffffff';
 /** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
 const VISUAL_SEED_SALT = 0x9e3779b9;
+/** Opacité du disque de l'aura (le contour est plus marqué) */
+const AURA_FILL_ALPHA = 0.12;
+const AURA_STROKE_ALPHA = 0.5;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -102,12 +111,18 @@ export class GameScene implements Scene, Build {
   ) {
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
-    this.weaponSystem = new WeaponSystem(ENEMY_POOL_SIZE, this.collisions, this.projectiles);
+    const hitEvents = {
+      onHit: (e: Enemy, damage: number) => this.onEnemyHit(e, damage),
+      onKill: (e: Enemy) => this.killEnemy(e),
+    };
+    this.weaponSystem = new WeaponSystem(
+      ENEMY_POOL_SIZE,
+      this.collisions,
+      this.projectiles,
+      hitEvents,
+    );
     this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
-    this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, {
-      onHit: (e, damage) => this.onEnemyHit(e, damage),
-      onKill: (e) => this.killEnemy(e),
-    });
+    this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, hitEvents);
     this.recomputeWeapons();
   }
 
@@ -192,7 +207,7 @@ export class GameScene implements Scene, Build {
     this.applyContactDamage();
     if (this.dead) return;
 
-    this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y);
+    this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y, this.elapsed);
     this.projectileSystem.update(dt, this.projectiles);
     this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
     this.damageNumbers.update(dt);
@@ -201,7 +216,12 @@ export class GameScene implements Scene, Build {
 
   /** Tire 3 choix (avec l'aléatoire du jeu : même seed → mêmes choix) et les affiche. */
   private openLevelUp(): void {
-    this.choices = rollUpgradeChoices(availableUpgrades(this), this.rng, UPGRADE_CHOICE_COUNT);
+    this.choices = rollUpgradeChoices(
+      availableUpgrades(this),
+      this.rng,
+      UPGRADE_CHOICE_COUNT,
+      this.weapons.length < NEW_WEAPON_GUARANTEE_BELOW,
+    );
     // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
     const level = this.progression.level - this.pendingLevelUps + 1;
     this.deps.levelUpOverlay.show(level, this.choices);
@@ -283,6 +303,7 @@ export class GameScene implements Scene, Build {
     }
     this.damageNumbers.freeze();
     this.gems.freeze();
+    for (const w of this.weapons) w.prevAngle = w.angle;
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -294,8 +315,10 @@ export class GameScene implements Scene, Build {
     this.renderGrid(ctx);
     // Les gemmes sont au sol : dessinées sous les ennemis.
     this.gems.render(ctx, alpha, this.camera);
+    this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderEnemies(ctx, alpha);
     this.player.render(ctx, alpha);
+    this.renderOrbs(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
     this.damageNumbers.render(ctx, alpha, this.camera);
     if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
@@ -308,6 +331,46 @@ export class GameScene implements Scene, Build {
     this.deps.debug.setStat('contacts', this.touchingCount);
     this.deps.debug.setStat('projectiles', this.projectiles.activeCount);
     this.deps.debug.setStat('kills', this.killCount);
+  }
+
+  /** Disque translucide autour du joueur pour chaque aura possédée. */
+  private renderAuras(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const px = this.player.renderX(alpha);
+    const py = this.player.renderY(alpha);
+    for (const w of this.weapons) {
+      if (w.def.kind !== 'aura') continue;
+      const def: AuraWeaponDef = w.def;
+      ctx.beginPath();
+      ctx.arc(px, py, w.radius, 0, Math.PI * 2);
+      ctx.fillStyle = def.color;
+      ctx.globalAlpha = AURA_FILL_ALPHA;
+      ctx.fill();
+      ctx.globalAlpha = AURA_STROKE_ALPHA;
+      ctx.strokeStyle = def.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** Orbes autour du joueur, à leur angle interpolé (rotation fluide à 144/240 Hz). */
+  private renderOrbs(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const px = this.player.renderX(alpha);
+    const py = this.player.renderY(alpha);
+    for (const w of this.weapons) {
+      if (w.def.kind !== 'orbit') continue;
+      const def: OrbitWeaponDef = w.def;
+      const angle = lerp(w.prevAngle, w.angle, alpha);
+      ctx.beginPath();
+      for (let o = 0; o < w.count; o++) {
+        const x = WeaponSystem.orbX(px, angle, o, w.count, def.orbitDistance);
+        const y = WeaponSystem.orbY(py, angle, o, w.count, def.orbitDistance);
+        ctx.moveTo(x + def.orbRadius, y);
+        ctx.arc(x, y, def.orbRadius, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = def.color;
+      ctx.fill();
+    }
   }
 
   /** Projectiles groupés par arme (une couleur = un chemin) : un halo, puis le cœur. */
