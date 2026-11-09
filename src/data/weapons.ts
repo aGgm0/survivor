@@ -23,6 +23,11 @@ interface WeaponDefBase {
   readonly description: string;
   /** Dégâts par coup au niveau 1 */
   readonly damage: number;
+  /**
+   * px/s : vitesse donnée à l'ennemi touché, en s'éloignant (pour un ennemi de poids moyen ;
+   * voir KNOCKBACK dans combat.ts). L'ennemi ralentit ensuite et revient vers le joueur.
+   */
+  readonly knockback: number;
   readonly color: string;
   /** Bonus des niveaux 2, 3, 4... (index 0 = niveau 2). Niveau max = longueur + 1. */
   readonly levels: readonly WeaponLevelBonus[];
@@ -81,6 +86,7 @@ export const WEAPONS = {
     name: 'Trait arcanique',
     description: "Tire sur l'ennemi le plus proche",
     damage: 10,
+    knockback: 160, // moyen, dans la direction du tir
     cooldown: 1,
     count: 1,
     spreadDeg: 12,
@@ -101,6 +107,7 @@ export const WEAPONS = {
     name: 'Aura ardente',
     description: 'Brûle les ennemis autour de toi',
     damage: 5,
+    knockback: 50, // faible : une brûlure pousse peu
     cooldown: 0.5,
     radius: 70,
     color: '#ff7a3d',
@@ -117,6 +124,7 @@ export const WEAPONS = {
     name: 'Orbes runiques',
     description: 'Des orbes tournent autour de toi',
     damage: 8,
+    knockback: 320, // fort : les orbes "frappent", leur rôle est d'écarter la horde
     count: 2,
     orbitDistance: 80,
     orbRadius: 10,

@@ -162,6 +162,8 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5 (max 
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Rayon +15/+15/+20 px et +2/+3 dégâts selon les niveaux |
 | **Orbes runiques** (orbite) | 2 orbes à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
 
+**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 160 (sens du tir), Aura ardente 50 (depuis le joueur), Orbes runiques 320 (depuis l'orbe). Plus l'ennemi est lourd, moins il recule (tank ~3× moins, boss ~12× moins). Passif **Impact** : +25 % de recul par niveau.
+
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
 `[LATER]` : évolutions d'armes (arme niv max + objet passif = arme évoluée).
@@ -342,6 +344,7 @@ Format : date — décision — raison.
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
 | 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
 | 2026-11-10 | Retours de jeu (3 parties < 5 min) : XP `5 + niv × 7` et XP × multiplicateur de vague ; barre de PV remise sous le joueur (en plus du HUD) ; difficulté des vagues inchangée | "L'XP monte trop lentement" ; "c'est dur mais normal, faut pas que ce soit trop ez" |
+| 2026-11-10 | Recul par arme ajouté à la vitesse de l'ennemi (pas à sa position), réduit par sa masse ; passif Impact | Demandé : les orbes doivent pousser plus que l'aura. Via la vitesse : pas de saut. Via la masse : le boss reste dangereux |
 | 2026-11-10 | Un seul écran de fin (victoire/défaite) avec bilan + damage meter (dégâts, %, kills par arme) | Le damage meter demandé "pour plus tard" ; les données existaient depuis la Phase 3 |
 | 2026-11-10 | PV dans le HUD (barre en haut à gauche), barre sous le joueur retirée ; kills sous le timer | HUD complet du plan Phase 4 |
 | 2026-11-10 | Boss : PV fixes (1000, comme le brief), sans le multiplicateur de vague | Respect du brief ; le boss de 9:00 sera peut-être trop faible, à revoir en jouant |

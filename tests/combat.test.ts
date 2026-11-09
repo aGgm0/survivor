@@ -99,7 +99,7 @@ describe('Aura ardente', () => {
   it('son rayon grandit avec les niveaux', () => {
     const { weapon } = setup([], AURA);
     weapon.level = 5;
-    weapon.recompute({ damageMult: 1, cooldownMult: 1 });
+    weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
     expect(weapon.radius).toBe(AURA.radius + 15 + 15 + 20);
     expect(weapon.damage).toBe(AURA.damage + 2 + 3);
   });
@@ -142,7 +142,7 @@ describe('Orbes runiques', () => {
   it('+1 orbe par niveau', () => {
     const { weapon } = setup([], ORBS);
     weapon.level = 5;
-    weapon.recompute({ damageMult: 1, cooldownMult: 1 });
+    weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
     expect(weapon.count).toBe(ORBS.count + 4);
     expect(weapon.damage).toBe(ORBS.damage + 3);
   });

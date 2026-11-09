@@ -1,7 +1,8 @@
 // Upgrades passifs (voir CLAUDE.md § 5.6). Data-driven : ajouter un passif = ajouter une entrée.
 
 /** Stat du joueur modifiée par un passif. */
-export type PassiveStat = 'maxHp' | 'speedPct' | 'pickupPct' | 'damagePct' | 'cooldownPct';
+export type PassiveStat =
+  'maxHp' | 'speedPct' | 'pickupPct' | 'damagePct' | 'cooldownPct' | 'knockbackPct';
 
 export interface PassiveDef {
   readonly id: string;
@@ -57,6 +58,14 @@ export const PASSIVES: readonly PassiveDef[] = [
     maxLevel: 5,
     stat: 'cooldownPct',
     amount: 0.08,
+  },
+  {
+    id: 'impact',
+    name: 'Impact',
+    description: '+25 % recul (toutes armes)',
+    maxLevel: 5,
+    stat: 'knockbackPct',
+    amount: 0.25,
   },
 ];
 

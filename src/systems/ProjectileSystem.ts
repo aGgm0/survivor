@@ -50,7 +50,11 @@ export class ProjectileSystem {
       const dx = e.x - p.x;
       const dy = e.y - p.y;
       if (dx * dx + dy * dy > minDist * minDist) continue;
-      if (p.source) damageEnemy(p.source, e, p.damage, this.events);
+      if (p.source) {
+        // Recul dans le sens du projectile.
+        const speed = Math.hypot(p.vx, p.vy) || 1;
+        damageEnemy(p.source, e, p.damage, this.events, p.vx / speed, p.vy / speed);
+      }
       return true;
     }
     return false;

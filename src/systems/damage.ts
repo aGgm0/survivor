@@ -1,4 +1,4 @@
-import { MIN_DAMAGE } from '../data/combat';
+import { KNOCKBACK, MIN_DAMAGE } from '../data/combat';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
 
@@ -20,9 +20,17 @@ export interface HitEvents {
 
 /**
  * Blesse un ennemi avec une arme. Point de passage unique pour toutes les armes
- * (projectile, aura, orbite) : les stats du damage meter restent cohérentes.
+ * (projectile, aura, orbite) : les stats du damage meter et le recul restent cohérents.
+ * (`dirX`, `dirY`) : direction du recul, de longueur 1 (ex. sens du projectile).
  */
-export function damageEnemy(source: Weapon, enemy: Enemy, amount: number, events: HitEvents): void {
+export function damageEnemy(
+  source: Weapon,
+  enemy: Enemy,
+  amount: number,
+  events: HitEvents,
+  dirX: number,
+  dirY: number,
+): void {
   // Seuls les dégâts réellement utiles comptent : 10 sur un ennemi à 3 PV = 3.
   source.totalDamage += Math.min(amount, enemy.hp);
   enemy.hp -= amount;
@@ -30,5 +38,22 @@ export function damageEnemy(source: Weapon, enemy: Enemy, amount: number, events
   if (enemy.hp <= 0) {
     source.kills++;
     events.onKill(enemy);
+    return;
   }
+  applyKnockback(enemy, source.knockback, dirX, dirY);
+}
+
+/** Masse de l'ennemi de référence (rayon², comme dans la physique de la horde). */
+const REFERENCE_MASS = KNOCKBACK.referenceRadius * KNOCKBACK.referenceRadius;
+
+/**
+ * Le recul s'ajoute à la VITESSE de l'ennemi (pas à sa position) : il est projeté, puis son
+ * accélération limitée le ramène vers le joueur en douceur. Pas de téléportation, pas de saut.
+ * Plus l'ennemi est lourd, moins il recule.
+ */
+export function applyKnockback(enemy: Enemy, force: number, dirX: number, dirY: number): void {
+  if (force <= 0) return;
+  const factor = Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass);
+  enemy.vx += dirX * force * factor;
+  enemy.vy += dirY * force * factor;
 }

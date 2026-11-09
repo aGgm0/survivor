@@ -173,7 +173,7 @@ describe('upgrades — effets', () => {
 describe('Weapon — stats par niveau', () => {
   it('cumule les bonus des niveaux et les passifs', () => {
     const w = new Weapon(BOLT);
-    const mods = { damageMult: 1, cooldownMult: 1 };
+    const mods = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
     w.recompute(mods);
     expect([w.damage, w.count, w.cooldown]).toEqual([10, 1, 1]);
 
@@ -183,7 +183,7 @@ describe('Weapon — stats par niveau', () => {
     expect(w.count).toBe(3);
     expect(w.cooldown).toBeCloseTo(0.8);
 
-    w.recompute({ damageMult: 1.5, cooldownMult: 0.5 });
+    w.recompute({ damageMult: 1.5, cooldownMult: 0.5, knockbackMult: 1 });
     expect(w.damage).toBeCloseTo(22.5);
     expect(w.cooldown).toBeCloseTo(0.4);
   });
@@ -198,7 +198,7 @@ describe('WeaponSystem — plusieurs projectiles', () => {
     collisions.rebuild(enemies);
     const weapon = new Weapon(BOLT);
     weapon.level = 3; // 2 projectiles
-    weapon.recompute({ damageMult: 1, cooldownMult: 1 });
+    weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
 
     new WeaponSystem(10, collisions, projectiles, { onHit: () => {}, onKill: () => {} }).update(
       1 / 60,

@@ -38,6 +38,7 @@ export class Player {
   /** Multiplicateurs appliqués à toutes les armes (modifiés par les passifs) */
   damageMult = 1;
   cooldownMult = 1;
+  knockbackMult = 1;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
 

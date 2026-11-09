@@ -4,6 +4,7 @@ import type { WeaponDef } from '../data/weapons';
 export interface WeaponModifiers {
   readonly damageMult: number;
   readonly cooldownMult: number;
+  readonly knockbackMult: number;
 }
 
 /** En dessous, le cooldown deviendrait absurde (tir à chaque update). */
@@ -33,9 +34,12 @@ export class Weapon {
   count: number;
   /** px, rayon de l'aura */
   radius: number;
+  /** px/s de recul donné à un ennemi de poids moyen */
+  knockback: number;
 
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
+    this.knockback = def.knockback;
     this.cooldown = def.kind === 'orbit' ? 0 : def.cooldown;
     this.count = def.kind === 'aura' ? 0 : def.count;
     this.radius = def.kind === 'aura' ? def.radius : 0;
@@ -57,6 +61,7 @@ export class Weapon {
       cooldownPct += bonus.cooldownPct ?? 0;
     }
     this.damage = damage * mods.damageMult;
+    this.knockback = def.knockback * mods.knockbackMult;
     this.count = count;
     this.radius = radius;
     // La Hâte accélère les tirs et les ticks d'aura. L'orbite n'a pas de cooldown.

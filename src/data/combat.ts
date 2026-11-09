@@ -8,3 +8,15 @@ export const MIN_DAMAGE = 1;
  * propre délai (pas d'invincibilité globale) : plus il y a d'ennemis au contact, plus ça fait mal.
  */
 export const CONTACT_HIT_COOLDOWN = 0.7;
+
+/**
+ * Recul : la force de recul d'une arme (px/s) vaut pour un ennemi "de référence" (le basique).
+ * Elle est multipliée par (masse de référence / masse de l'ennemi) : un tank recule ~3× moins,
+ * le boss ~12× moins. Sans ça, les orbes rendraient le boss inoffensif.
+ */
+export const KNOCKBACK = {
+  /** px : rayon de l'ennemi de référence (basique) */
+  referenceRadius: 14,
+  /** Plafond du multiplicateur pour les ennemis plus légers que la référence (rapides) */
+  maxFactor: 1.5,
+} as const;

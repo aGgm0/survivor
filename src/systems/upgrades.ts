@@ -160,5 +160,8 @@ function applyPassive(player: Player, passive: PassiveDef): void {
     case 'cooldownPct':
       player.cooldownMult -= passive.amount;
       return;
+    case 'knockbackPct':
+      player.knockbackMult += passive.amount;
+      return;
   }
 }
