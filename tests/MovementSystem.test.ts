@@ -67,6 +67,16 @@ describe('MovementSystem — poursuite', () => {
   });
 });
 
+describe('MovementSystem — vitesse des vagues', () => {
+  it('un ennemi de fin de partie (speedMult 1,3) atteint 1,3× sa vitesse de base', () => {
+    const { enemies, run } = setup([[ENEMY_TYPES.basic, 3000, 0]]);
+    const e = enemies[0] as Enemy;
+    e.speedMult = 1.3;
+    run(2);
+    expect(Math.hypot(e.vx, e.vy)).toBeCloseTo(ENEMY_TYPES.basic.speed * 1.3);
+  });
+});
+
 describe('MovementSystem — horde', () => {
   it('écarte deux ennemis superposés', () => {
     const { enemies, run } = setup([

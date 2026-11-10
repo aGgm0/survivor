@@ -51,6 +51,36 @@ describe('SpawnSystem — vagues', () => {
     expect(later.some((e) => e.type === ENEMY_TYPES.tank)).toBe(true);
   });
 
+  it('paliers de vitesse : normaux avant 6:00, +15 % à 6:00, +30 % à 8:00', () => {
+    expect(waveAt(300).speedMult).toBe(1);
+    expect(waveAt(360).speedMult).toBe(1.15);
+    expect(waveAt(480).speedMult).toBe(1.3);
+    const { pool, spawner } = setup();
+    // (En sautant à 8:00, le boss de 5:00 pas encore envoyé apparaît aussi : on l'écarte.)
+    const late = runBetween(spawner, pool, 480, 482).filter((e) => e.type !== ENEMY_TYPES.boss);
+    expect(late.length).toBeGreaterThan(0);
+    expect(late.every((e) => e.speedMult === 1.3)).toBe(true);
+  });
+
+  it('le boss garde sa vitesse de base, même à 9:00', () => {
+    const { pool, spawner } = setup();
+    spawner.update(1 / 60, BOSS_TIMES[1] ?? 0, 0, 0);
+    const boss = activeEnemies(pool).find((e) => e.type === ENEMY_TYPES.boss);
+    expect(boss?.speedMult).toBe(1);
+  });
+
+  it('la fin de partie envoie surtout des petits, de plus en plus vite', () => {
+    const counts = WAVES.map((w) => w.perSecond);
+    for (let i = 1; i < counts.length; i++) {
+      expect(counts[i]).toBeGreaterThanOrEqual(counts[i - 1] ?? 0); // le rythme ne baisse jamais
+    }
+    const last = WAVES[WAVES.length - 1];
+    const tankShare =
+      (last?.weights.find(([t]) => t === ENEMY_TYPES.tank)?.[1] ?? 0) /
+      (last?.weights.reduce((s, [, w]) => s + w, 0) ?? 1);
+    expect(tankShare).toBeLessThanOrEqual(0.1);
+  });
+
   it('les PV suivent le multiplicateur de la vague', () => {
     const { pool, spawner } = setup();
     const late = runBetween(spawner, pool, 480, 490);

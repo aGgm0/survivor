@@ -17,6 +17,8 @@ export class Enemy implements Poolable {
   maxHp = 0;
   /** Multiplicateur de la vague au spawn : un ennemi plus résistant rapporte autant de fois plus d'XP. */
   xpMult = 1;
+  /** Multiplicateur de vitesse de la vague au spawn (paliers de fin de partie) */
+  speedMult = 1;
   type: EnemyType = ENEMY_TYPES.basic;
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
@@ -36,9 +38,10 @@ export class Enemy implements Poolable {
 
   /**
    * Réinitialise TOUT l'état : un ennemi recyclé ne doit rien garder de sa vie précédente.
-   * `hpMult` : les vagues tardives donnent plus de PV (voir waves.ts).
+   * `hpMult` / `speedMult` : les vagues tardives donnent plus de PV et de vitesse (voir waves.ts).
    */
-  spawn(type: EnemyType, x: number, y: number, hpMult = 1): void {
+  spawn(type: EnemyType, x: number, y: number, hpMult = 1, speedMult = 1): void {
+    this.speedMult = speedMult;
     this.type = type;
     this.maxHp = type.hp * hpMult;
     this.hp = this.maxHp;

@@ -58,7 +58,7 @@ export class MovementSystem {
     const distToTarget = Math.hypot(toTargetX, toTargetY);
     const px = distToTarget === 0 ? 0 : toTargetX / distToTarget;
     const py = distToTarget === 0 ? 0 : toTargetY / distToTarget;
-    const speed = e.type.speed;
+    const speed = e.type.speed * e.speedMult; // les vagues tardives sont plus rapides
 
     // 2 et 3. Répulsion des voisins qui chevauchent.
     let sepX = 0;

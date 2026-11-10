@@ -12,6 +12,8 @@ export interface WaveDef {
   readonly weights: readonly (readonly [EnemyType, number])[];
   /** multiplicateur des PV de base (les ennemis tardifs encaissent plus) */
   readonly hpMult: number;
+  /** multiplicateur de vitesse (paliers : les ennemis de fin de partie sont plus rapides) */
+  readonly speedMult: number;
 }
 
 const { basic, fast, tank } = ENEMY_TYPES;
@@ -27,6 +29,7 @@ export const WAVES: readonly WaveDef[] = [
       [fast, 6],
     ],
     hpMult: 1,
+    speedMult: 1,
   },
   // 2:00 – 4:00 : les tanks arrivent
   {
@@ -38,6 +41,7 @@ export const WAVES: readonly WaveDef[] = [
       [tank, 1],
     ],
     hpMult: 1.2,
+    speedMult: 1,
   },
   // 4:00 – 6:00
   {
@@ -49,28 +53,33 @@ export const WAVES: readonly WaveDef[] = [
       [tank, 2],
     ],
     hpMult: 1.5,
+    speedMult: 1,
   },
-  // 6:00 – 8:00 : plus de tanks
+  // 6:00 – 8:00 : 1er palier de vitesse, la horde grossit
   {
     start: 360,
-    perSecond: 5,
+    perSecond: 9,
     weights: [
       [basic, 4],
-      [fast, 2],
-      [tank, 4],
-    ],
-    hpMult: 2,
-  },
-  // 8:00 – 10:00 : le rush final
-  {
-    start: 480,
-    perSecond: 7,
-    weights: [
-      [basic, 5],
-      [fast, 3],
+      [fast, 4],
       [tank, 2],
     ],
+    hpMult: 2,
+    speedMult: 1.15,
+  },
+  // 8:00 – 10:00 : le rush final, une horde de petits rapides à faucher
+  {
+    start: 480,
+    // 16/s : un build au max tue ~11/s quand la horde arrive et 30-40/s quand elle est dense ;
+    // à 11/s il ne restait que ~70 ennemis à l'écran, pas une "horde de fou".
+    perSecond: 16,
+    weights: [
+      [basic, 4],
+      [fast, 5],
+      [tank, 1],
+    ],
     hpMult: 2.5,
+    speedMult: 1.3,
   },
 ];
 

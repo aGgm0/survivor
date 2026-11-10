@@ -40,7 +40,7 @@ export class SpawnSystem {
     const bossTime = BOSS_TIMES[this.nextBoss];
     if (bossTime !== undefined && now >= bossTime) {
       this.nextBoss++;
-      this.spawnAt(BOSS_TYPE, 1, playerX, playerY);
+      this.spawnAt(BOSS_TYPE, 1, 1, playerX, playerY); // le boss ne suit pas les paliers
     }
 
     this.recycleFarEnemies(playerX, playerY);
@@ -56,11 +56,17 @@ export class SpawnSystem {
 
   private spawnFromWave(wave: WaveDef, playerX: number, playerY: number): boolean {
     const type = pickWeighted(wave.weights, this.rng.next());
-    return this.spawnAt(type, wave.hpMult, playerX, playerY);
+    return this.spawnAt(type, wave.hpMult, wave.speedMult, playerX, playerY);
   }
 
   /** Place un ennemi sur le cercle de spawn, hors écran. Faux si la réserve est vide. */
-  private spawnAt(type: EnemyType, hpMult: number, playerX: number, playerY: number): boolean {
+  private spawnAt(
+    type: EnemyType,
+    hpMult: number,
+    speedMult: number,
+    playerX: number,
+    playerY: number,
+  ): boolean {
     const enemy = this.enemies.acquire();
     if (!enemy) return false;
     const angle = this.rng.range(0, Math.PI * 2);
@@ -69,6 +75,7 @@ export class SpawnSystem {
       playerX + Math.cos(angle) * SPAWN_RADIUS,
       playerY + Math.sin(angle) * SPAWN_RADIUS,
       hpMult,
+      speedMult,
     );
     return true;
   }
