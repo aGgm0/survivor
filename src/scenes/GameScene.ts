@@ -31,6 +31,9 @@ import { GemSystem } from '../systems/GemSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
+import { StatusSystem } from '../systems/status';
+import type { HitKind } from '../systems/damage';
+import { STATUS } from '../data/status';
 import { WeaponSystem } from '../systems/WeaponSystem';
 import { XpSystem } from '../systems/XpSystem';
 import {
@@ -98,6 +101,7 @@ export class GameScene implements Scene, Build {
   readonly projectiles = new Pool(PROJECTILE_POOL_SIZE, () => new Projectile());
   private readonly weaponSystem: WeaponSystem;
   private readonly projectileSystem: ProjectileSystem;
+  private readonly statusSystem: StatusSystem;
   readonly damageNumbers: DamageNumberSystem;
   readonly gems = new GemSystem();
   readonly progression = new XpSystem();
@@ -130,7 +134,7 @@ export class GameScene implements Scene, Build {
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
     const hitEvents = {
-      onHit: (e: Enemy, damage: number) => this.onEnemyHit(e, damage),
+      onHit: (e: Enemy, damage: number, kind: HitKind) => this.onEnemyHit(e, damage, kind),
       onKill: (e: Enemy) => this.killEnemy(e),
     };
     this.weaponSystem = new WeaponSystem(
@@ -141,6 +145,7 @@ export class GameScene implements Scene, Build {
     );
     this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
     this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, hitEvents);
+    this.statusSystem = new StatusSystem(hitEvents);
     this.recomputeWeapons();
   }
 
@@ -232,13 +237,14 @@ export class GameScene implements Scene, Build {
     }
     this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
     this.collisions.rebuild(this.enemies);
-    this.movement.update(this.enemies, this.player.x, this.player.y, dt);
+    this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
     this.applyContactDamage();
     if (this.report) return;
 
     this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y, this.elapsed);
     this.projectileSystem.update(dt, this.projectiles);
+    this.statusSystem.update(this.enemies, this.elapsed);
     this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
     this.damageNumbers.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
@@ -290,7 +296,12 @@ export class GameScene implements Scene, Build {
   }
 
   /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
-  private onEnemyHit(e: Enemy, damage: number): void {
+  private onEnemyHit(e: Enemy, damage: number, kind: HitKind): void {
+    if (kind === 'poison') {
+      // Poison : nombre vert, sans flash (sinon les empoisonnés clignoteraient sans arrêt).
+      this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage, STATUS.poisonColor);
+      return;
+    }
     e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
     this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }

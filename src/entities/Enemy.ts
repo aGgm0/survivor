@@ -1,6 +1,7 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../data/enemies';
+import type { Weapon } from './Weapon';
 
 /** Un ennemi. Les instances vivent dans un Pool : on ne les crée jamais en cours de partie. */
 export class Enemy implements Poolable {
@@ -29,6 +30,17 @@ export class Enemy implements Poolable {
   /** Instant (temps de partie, en s) à partir duquel l'aura peut de nouveau le brûler. */
   nextAuraHitAt = 0;
 
+  // Effets d'état (voir systems/status.ts). Chacun a une date de fin en temps de partie.
+  /** Fraction de vitesse retirée (0,3 = 30 % plus lent) tant que `now < slowUntil` */
+  slowAmount = 0;
+  slowUntil = 0;
+  /** Dégâts de poison par seconde tant que `now < poisonUntil` */
+  poisonDps = 0;
+  poisonUntil = 0;
+  nextPoisonTickAt = 0;
+  /** Arme qui a empoisonné l'ennemi : les dégâts de poison comptent pour elle (damage meter) */
+  poisonSource: Weapon | null = null;
+
   /**
    * @param id identifiant stable = place dans le pool. Sert de départage déterministe
    * (ex. ennemis superposés). Pas un compteur global : sinon une partie relancée avec la même
@@ -51,6 +63,12 @@ export class Enemy implements Poolable {
     this.flashUntil = 0;
     this.nextOrbitHitAt = 0;
     this.nextAuraHitAt = 0;
+    this.slowAmount = 0;
+    this.slowUntil = 0;
+    this.poisonDps = 0;
+    this.poisonUntil = 0;
+    this.nextPoisonTickAt = 0;
+    this.poisonSource = null;
     this.teleport(x, y);
   }
 

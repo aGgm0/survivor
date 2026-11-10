@@ -9,12 +9,14 @@ export class DamageNumber implements Poolable {
   /** s écoulées depuis l'apparition */
   age = 0;
   text = '';
+  color = '';
 
-  show(x: number, y: number, text: string): void {
+  show(x: number, y: number, text: string, color: string): void {
     this.x = x;
     this.y = y;
     this.prevY = y;
     this.age = 0;
     this.text = text;
+    this.color = color;
   }
 }

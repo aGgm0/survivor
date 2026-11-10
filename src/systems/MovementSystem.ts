@@ -2,6 +2,7 @@ import type { Pool } from '../core/Pool';
 import { CROWD } from '../data/physics';
 import type { Enemy } from '../entities/Enemy';
 import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
+import { slowFactor } from './status';
 
 /**
  * Mouvement de la horde par "steering" : on ne déplace pas les ennemis directement, on
@@ -34,11 +35,12 @@ export class MovementSystem {
   }
 
   /** `collisions.rebuild()` doit avoir été appelé juste avant (grille à jour). */
-  update(enemies: Pool<Enemy>, targetX: number, targetY: number, dt: number): void {
+  /** `now` = temps de partie (s), pour savoir si un ralentissement est encore actif. */
+  update(enemies: Pool<Enemy>, targetX: number, targetY: number, dt: number, now = 0): void {
     const items = enemies.items;
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
-      if (e?.active) this.steer(e, i, targetX, targetY, dt);
+      if (e?.active) this.steer(e, i, targetX, targetY, dt, now);
     }
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
@@ -51,14 +53,22 @@ export class MovementSystem {
     }
   }
 
-  private steer(e: Enemy, index: number, targetX: number, targetY: number, dt: number): void {
+  private steer(
+    e: Enemy,
+    index: number,
+    targetX: number,
+    targetY: number,
+    dt: number,
+    now: number,
+  ): void {
     // 1. Envie : direction unitaire (px, py) vers le joueur.
     const toTargetX = targetX - e.x;
     const toTargetY = targetY - e.y;
     const distToTarget = Math.hypot(toTargetX, toTargetY);
     const px = distToTarget === 0 ? 0 : toTargetX / distToTarget;
     const py = distToTarget === 0 ? 0 : toTargetY / distToTarget;
-    const speed = e.type.speed * e.speedMult; // les vagues tardives sont plus rapides
+    // Vitesse de base × palier de la vague (fin de partie) × ralentissement éventuel.
+    const speed = e.type.speed * e.speedMult * slowFactor(e, now);
 
     // 2 et 3. Répulsion des voisins qui chevauchent.
     let sepX = 0;

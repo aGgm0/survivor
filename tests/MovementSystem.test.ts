@@ -77,6 +77,24 @@ describe('MovementSystem — vitesse des vagues', () => {
   });
 });
 
+describe('MovementSystem — ralentissement', () => {
+  it('un ennemi ralenti de 30 % plafonne à 70 % de sa vitesse', () => {
+    const pool = new Pool(10, (i) => new Enemy(i));
+    const e = pool.acquire();
+    if (!e) throw new Error();
+    e.spawn(ENEMY_TYPES.basic, 3000, 0);
+    e.slowAmount = 0.3;
+    e.slowUntil = 100;
+    const collisions = new CollisionSystem(10);
+    const movement = new MovementSystem(10, collisions);
+    for (let i = 0; i < 120; i++) {
+      collisions.rebuild(pool);
+      movement.update(pool, 0, 0, DT, 1);
+    }
+    expect(Math.hypot(e.vx, e.vy)).toBeCloseTo(ENEMY_TYPES.basic.speed * 0.7);
+  });
+});
+
 describe('MovementSystem — horde', () => {
   it('écarte deux ennemis superposés', () => {
     const { enemies, run } = setup([

@@ -35,11 +35,11 @@ export class DamageNumberSystem {
    */
   constructor(private readonly rng: Rng) {}
 
-  spawn(x: number, y: number, value: number): void {
+  spawn(x: number, y: number, value: number, color: string = COLOR): void {
     // Réserve pleine : on saute ce nombre. C'est du visuel, rien n'est perdu.
     const n = this.numbers.acquire();
     if (!n) return;
-    n.show(x + this.rng.range(-JITTER_X, JITTER_X), y, damageText(value));
+    n.show(x + this.rng.range(-JITTER_X, JITTER_X), y, damageText(value), color);
   }
 
   update(dt: number): void {
@@ -77,6 +77,7 @@ export class DamageNumberSystem {
       ctx.globalAlpha = Math.min(1, 2 * (1 - n.age / LIFETIME));
       // Contour noir d'abord : le nombre reste lisible sur n'importe quelle couleur d'ennemi.
       ctx.strokeText(n.text, n.x, y);
+      ctx.fillStyle = n.color;
       ctx.fillText(n.text, n.x, y);
     }
     ctx.globalAlpha = 1;
