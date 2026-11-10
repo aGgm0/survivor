@@ -19,6 +19,8 @@ export interface HitEvents {
   onHit(enemy: Enemy, damage: number, kind: HitKind): void;
   /** Un ennemi tombe à 0 PV : la scène le retire, compte le kill, etc. */
   onKill(enemy: Enemy): void;
+  /** Optionnel : une explosion a eu lieu (pour l'effet visuel). */
+  onExplosion?(x: number, y: number, radius: number, color: string): void;
 }
 
 /**

@@ -21,6 +21,7 @@ import { Projectile } from '../entities/Projectile';
 import { Weapon } from '../entities/Weapon';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { DamageNumberSystem } from '../systems/DamageNumberSystem';
+import { EffectsSystem } from '../systems/EffectsSystem';
 import { GemSystem } from '../systems/GemSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
@@ -100,6 +101,7 @@ export class GameScene implements Scene, Build {
   private readonly statusSystem: StatusSystem;
   readonly damageNumbers: DamageNumberSystem;
   readonly gems = new GemSystem();
+  readonly effects = new EffectsSystem();
   readonly progression = new XpSystem();
   /** Niveau de chaque passif possédé (absent = 0) */
   readonly passiveLevels = new Map<string, number>();
@@ -132,6 +134,8 @@ export class GameScene implements Scene, Build {
     const hitEvents = {
       onHit: (e: Enemy, damage: number, kind: HitKind) => this.onEnemyHit(e, damage, kind),
       onKill: (e: Enemy) => this.killEnemy(e),
+      onExplosion: (x: number, y: number, r: number, color: string) =>
+        this.effects.explosion(x, y, r, color),
     };
     this.weaponSystem = new WeaponSystem(
       ENEMY_POOL_SIZE,
@@ -243,6 +247,7 @@ export class GameScene implements Scene, Build {
     this.statusSystem.update(this.enemies, this.elapsed);
     this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
     this.damageNumbers.update(dt);
+    this.effects.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
   }
 
@@ -376,6 +381,7 @@ export class GameScene implements Scene, Build {
     this.player.render(ctx, alpha);
     this.renderOrbs(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
+    this.effects.render(ctx, this.camera);
     this.damageNumbers.render(ctx, alpha, this.camera);
     if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
     this.camera.end(ctx);

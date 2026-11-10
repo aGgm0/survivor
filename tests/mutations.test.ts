@@ -6,6 +6,7 @@ import { Enemy } from '../src/entities/Enemy';
 import { Projectile } from '../src/entities/Projectile';
 import { Weapon } from '../src/entities/Weapon';
 import { CollisionSystem } from '../src/systems/CollisionSystem';
+import { ProjectileSystem } from '../src/systems/ProjectileSystem';
 import { buildDamageReport } from '../src/systems/runReport';
 import { slowFactor } from '../src/systems/status';
 import { applyUpgrade, mutationChoices } from '../src/systems/upgrades';
@@ -64,6 +65,83 @@ describe('mutation — effets sur les stats', () => {
     const w = maxedAura();
     w.mutation = TOXIC;
     expect(buildDamageReport([w])[0]?.name).toBe('★ Aura toxique');
+  });
+});
+
+describe('mutations du Trait arcanique', () => {
+  const BOLT = WEAPONS.arcaneBolt;
+  const [PIERCE, BURST] = BOLT.mutations;
+
+  /** Un tir unique dans l'axe +x, avec des ennemis posés aux positions données. */
+  function shoot(mutation: MutationDef, positions: [number, number][], seconds = 1.2) {
+    const enemies = new Pool(20, (i) => new Enemy(i));
+    for (const [x, y] of positions) enemies.acquire()?.spawn(ENEMY_TYPES.tank, x, y);
+    const projectiles = new Pool(10, () => new Projectile());
+    const collisions = new CollisionSystem(20);
+    const hits: Enemy[] = [];
+    const explosions: number[] = [];
+    const events = {
+      onHit: (e: Enemy) => hits.push(e),
+      onKill: () => {},
+      onExplosion: (_x: number, _y: number, r: number) => explosions.push(r),
+    };
+    const flight = new ProjectileSystem(20, collisions, events);
+    const w = new Weapon(BOLT);
+    w.level = weaponMaxLevel(BOLT);
+    w.mutation = mutation;
+    w.recompute(NO_MODS);
+    projectiles.acquire()?.launch(w, BOLT, 0, 0, 1, 0);
+    for (let i = 0; i < Math.round(seconds * 60); i++) {
+      collisions.rebuild(enemies);
+      flight.update(1 / 60, projectiles);
+    }
+    return { hits, explosions, projectiles, w };
+  }
+
+  it('Trait perçant traverse 3 ennemis, puis disparaît (le 4e n’est pas touché)', () => {
+    const { hits, projectiles } = shoot(PIERCE, [
+      [100, 0],
+      [200, 0],
+      [300, 0],
+      [400, 0],
+    ]);
+    expect(new Set(hits).size).toBe(3);
+    expect(hits).toHaveLength(3); // jamais deux fois le même
+    expect(projectiles.activeCount).toBe(0);
+  });
+
+  it('Trait perçant : dégâts ×0,9', () => {
+    const w = new Weapon(BOLT);
+    w.level = weaponMaxLevel(BOLT);
+    w.recompute(NO_MODS);
+    const base = w.damage;
+    w.mutation = PIERCE;
+    w.recompute(NO_MODS);
+    expect(w.damage).toBeCloseTo(base * 0.9);
+  });
+
+  it('Trait éclaté : explose sur le 1er ennemi et touche ceux autour (pas ceux loin)', () => {
+    const { hits, explosions, projectiles } = shoot(BURST, [
+      [150, 0], // cible
+      [180, 30], // à moins de 60 px de l'impact
+      [400, 0], // loin
+    ]);
+    expect(explosions).toEqual([BURST.explosion?.radius]);
+    expect(hits).toHaveLength(2); // la cible + le voisin
+    expect(hits.some((e) => e.x > 350)).toBe(false);
+    expect(projectiles.activeCount).toBe(0);
+  });
+
+  it('Trait éclaté : les voisins prennent 70 % des dégâts', () => {
+    const { w } = shoot(BURST, [
+      [150, 0],
+      [180, 30],
+    ]);
+    const tankHp = ENEMY_TYPES.tank.hp;
+    // Le voisin a perdu 70 % des dégâts du tir (vérifié via le damage meter de l'arme).
+    expect(w.totalDamage).toBeCloseTo(
+      Math.min(w.damage, tankHp) + Math.min(w.damage * 0.7, tankHp),
+    );
   });
 });
 

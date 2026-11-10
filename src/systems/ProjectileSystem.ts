@@ -10,7 +10,11 @@ import { damageEnemy, type HitEvents } from './damage';
  */
 export const GRID_STALENESS_MARGIN = 8;
 
-/** Déplace les projectiles, gère leurs impacts sur les ennemis et leur fin de vie. */
+/**
+ * Déplace les projectiles, gère leurs impacts sur les ennemis et leur fin de vie.
+ * Mutations : un projectile perforant traverse plusieurs ennemis ; un projectile
+ * explosif blesse aussi les ennemis autour du point d'impact.
+ */
 export class ProjectileSystem {
   private readonly candidates: Enemy[];
 
@@ -34,29 +38,63 @@ export class ProjectileSystem {
       p.y += p.vy * dt;
       p.life -= dt;
 
-      if (p.life <= 0 || this.hitFirstEnemy(p)) projectiles.release(p);
+      if (p.life <= 0 || this.hitEnemy(p)) projectiles.release(p);
     }
   }
 
-  /** Touche le premier ennemi en contact. Renvoie vrai si le projectile a touché (et disparaît). */
-  private hitFirstEnemy(p: Projectile): boolean {
+  /**
+   * Touche un ennemi en contact (jamais deux fois le même). Renvoie vrai si le projectile
+   * a fini sa course : plus de perforation restante, ou explosion.
+   */
+  private hitEnemy(p: Projectile): boolean {
     const reach = p.radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     const count = this.collisions.queryNeighbors(p.x, p.y, reach, this.candidates);
     for (let j = 0; j < count; j++) {
       const e = this.candidates[j];
       // `active` : un ennemi tué plus tôt dans cette update est encore dans la grille.
-      if (!e?.active) continue;
+      if (!e?.active || p.hasHit(e)) continue;
       const minDist = p.radius + e.type.radius;
       const dx = e.x - p.x;
       const dy = e.y - p.y;
       if (dx * dx + dy * dy > minDist * minDist) continue;
-      if (p.source) {
-        // Recul dans le sens du projectile.
-        const speed = Math.hypot(p.vx, p.vy) || 1;
-        damageEnemy(p.source, e, p.damage, this.events, p.vx / speed, p.vy / speed);
+      const source = p.source;
+      if (!source) return true;
+
+      // Recul dans le sens du projectile.
+      const speed = Math.hypot(p.vx, p.vy) || 1;
+      damageEnemy(source, e, p.damage, this.events, p.vx / speed, p.vy / speed);
+
+      const explosion = source.mutation?.explosion;
+      if (explosion) {
+        this.explode(p, e, explosion.radius, p.damage * explosion.damageRatio);
+        return true;
       }
-      return true;
+      p.hitEnemies[p.hitCount++] = e;
+      p.pierceLeft--;
+      // Un seul ennemi par update : un perforant en traverse un autre à l'update suivante.
+      return p.pierceLeft <= 0;
     }
     return false;
+  }
+
+  /** Explosion au point d'impact : blesse tous les ennemis proches, sauf celui déjà touché. */
+  private explode(p: Projectile, primary: Enemy, radius: number, damage: number): void {
+    const source = p.source;
+    if (!source) return;
+    this.events.onExplosion?.(p.x, p.y, radius, source.color);
+    const reach = radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
+    const count = this.collisions.queryNeighbors(p.x, p.y, reach, this.candidates);
+    for (let j = 0; j < count; j++) {
+      const e = this.candidates[j];
+      if (!e?.active || e === primary) continue;
+      const touch = radius + e.type.radius; // le souffle touche le bord de l'ennemi
+      const dx = e.x - p.x;
+      const dy = e.y - p.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq > touch * touch) continue;
+      // Recul depuis le centre de l'explosion.
+      const dist = Math.sqrt(distSq) || 1;
+      damageEnemy(source, e, damage, this.events, dx / dist, dy / dist);
+    }
   }
 }

@@ -1,7 +1,14 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
 import type { ProjectileWeaponDef } from '../data/weapons';
+import type { Enemy } from './Enemy';
 import type { Weapon } from './Weapon';
+
+/**
+ * Nombre max d'ennemis qu'un projectile peut traverser (taille du tableau `hitEnemies`,
+ * créé une fois avec le projectile : aucune allocation au tir).
+ */
+export const MAX_PIERCE = 8;
 
 /** Un projectile. Vit dans un Pool : jamais créé en cours de partie. */
 export class Projectile implements Poolable {
@@ -19,6 +26,11 @@ export class Projectile implements Poolable {
   color = '';
   /** Arme qui l'a tiré : pour lui attribuer ses dégâts et ses kills. */
   source: Weapon | null = null;
+  /** Ennemis qu'il peut encore toucher avant de disparaître (1 = normal, plus = perforant) */
+  pierceLeft = 1;
+  /** Ennemis déjà touchés : un projectile perforant ne frappe jamais deux fois le même */
+  readonly hitEnemies: (Enemy | null)[] = new Array<Enemy | null>(MAX_PIERCE).fill(null);
+  hitCount = 0;
 
   /** Réinitialise TOUT l'état (un projectile recyclé ne garde rien de sa vie précédente). */
   launch(
@@ -37,10 +49,18 @@ export class Projectile implements Poolable {
     this.vx = dirX * def.projectileSpeed;
     this.vy = dirY * def.projectileSpeed;
     this.life = def.projectileLifetime;
-    // Dégâts actuels de l'arme (niveau + passifs), pas ceux de base.
+    // Dégâts actuels de l'arme (niveau + mutation + passifs), pas ceux de base.
     this.damage = source.damage;
     this.radius = def.projectileRadius;
-    this.color = def.color;
+    this.color = source.color;
+    this.pierceLeft = Math.min(MAX_PIERCE, source.mutation?.pierce ?? 1);
+    this.hitCount = 0;
+    this.hitEnemies.fill(null);
+  }
+
+  hasHit(enemy: Enemy): boolean {
+    for (let i = 0; i < this.hitCount; i++) if (this.hitEnemies[i] === enemy) return true;
+    return false;
   }
 
   renderX(alpha: number): number {

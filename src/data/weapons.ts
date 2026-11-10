@@ -40,6 +40,16 @@ export interface MutationDef {
    * Dégâts par seconde = `dpsRatio` × dégâts actuels de l'arme : niveaux et passifs comptent.
    */
   readonly poison?: { readonly dpsRatio: number; readonly duration: number };
+  /** Projectile : nombre d'ennemis traversés avant de disparaître (1 = normal) */
+  readonly pierce?: number;
+  /** Projectile : explose à l'impact ; les ennemis autour prennent `damageRatio` × les dégâts */
+  readonly explosion?: { readonly radius: number; readonly damageRatio: number };
+  /** Orbite : nombre d'orbes imposé (remplace celui des niveaux) */
+  readonly count?: number;
+  /** Orbite : multiplicateur de la taille des orbes */
+  readonly orbRadiusMult?: number;
+  /** Orbite : multiplicateur de la vitesse de rotation */
+  readonly angularSpeedMult?: number;
 }
 
 interface WeaponDefBase {
@@ -131,6 +141,25 @@ export const WEAPONS = {
       { description: '+1 projectile', count: 1 },
       { description: 'Cooldown -20 %', cooldownPct: -0.2 },
       { description: '+1 projectile', count: 1 },
+    ],
+    mutations: [
+      {
+        id: 'piercingBolt',
+        name: 'Trait perçant',
+        short: 'Tp',
+        description: 'Traverse 3 ennemis avant de disparaître, dégâts ×0,9',
+        color: '#9ad7ff',
+        pierce: 3,
+        damageMult: 0.9,
+      },
+      {
+        id: 'burstBolt',
+        name: 'Trait éclaté',
+        short: 'Té',
+        description: 'Explose à l’impact : 70 % des dégâts aux ennemis à moins de 60 px',
+        color: '#ff8fd6',
+        explosion: { radius: 60, damageRatio: 0.7 },
+      },
     ],
   },
   burningAura: {
