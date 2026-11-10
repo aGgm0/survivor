@@ -284,11 +284,11 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 **✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
 
 ### Après le MVP — idées validées, à planifier
-- [ ] **Mutations d'armes** : au level up qui suit le niveau 5, choix définitif entre 2 variantes (écran "MUTATION", ★ dans le HUD et le damage meter)
+- [x] **Mutations d'armes** : au level up qui suit le niveau 5, choix définitif entre 2 variantes (écran "MUTATION", ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
-  - [x] Mécanique + Aura : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
-  - [ ] Trait arcanique : Trait perçant (traverse 3 ennemis, dégâts ×0,9) / Trait éclaté (explosion 60 px, 70 % des dégâts)
-  - [ ] Orbes runiques : Orbes géants (3 orbes ×2,2, dégâts ×2, recul ×1,8) / Tempête d'orbes (9 orbes, rotation ×1,6, dégâts ×0,7)
+  - [x] Aura : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
+  - [x] Trait arcanique : **Trait perçant** (traverse 3 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 60 px, 70 % des dégâts, anneau visuel)
+  - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, recul ×1,8) / **Tempête d'orbes** (9 orbes, rotation ×1,6, dégâts ×0,7)
 
 ### Phase 5 — Polish `[LATER]`
 - [ ] Sprites et animations, sons et musique

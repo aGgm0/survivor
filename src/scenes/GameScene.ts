@@ -447,8 +447,8 @@ export class GameScene implements Scene, Build {
       for (let o = 0; o < w.count; o++) {
         const x = WeaponSystem.orbX(px, angle, o, w.count, def.orbitDistance);
         const y = WeaponSystem.orbY(py, angle, o, w.count, def.orbitDistance);
-        ctx.moveTo(x + def.orbRadius, y);
-        ctx.arc(x, y, def.orbRadius, 0, Math.PI * 2);
+        ctx.moveTo(x + w.orbRadius, y);
+        ctx.arc(x, y, w.orbRadius, 0, Math.PI * 2);
       }
       ctx.fillStyle = w.color;
       ctx.fill();

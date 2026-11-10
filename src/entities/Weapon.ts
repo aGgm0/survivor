@@ -38,6 +38,9 @@ export class Weapon {
   radius: number;
   /** px/s de recul donné à un ennemi de poids moyen */
   knockback: number;
+  /** Orbite : taille d'un orbe (px) et vitesse de rotation (rad/s) ; 0 pour les autres armes */
+  orbRadius: number;
+  angularSpeed: number;
 
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
@@ -45,6 +48,8 @@ export class Weapon {
     this.cooldown = def.kind === 'orbit' ? 0 : def.cooldown;
     this.count = def.kind === 'aura' ? 0 : def.count;
     this.radius = def.kind === 'aura' ? def.radius : 0;
+    this.orbRadius = def.kind === 'orbit' ? def.orbRadius : 0;
+    this.angularSpeed = def.kind === 'orbit' ? def.angularSpeed : 0;
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */
@@ -88,8 +93,13 @@ export class Weapon {
     const m = this.mutation;
     this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
-    this.count = count;
+    // Une mutation peut imposer un nombre (3 orbes géants, 9 orbes de tempête).
+    this.count = m?.count ?? count;
     this.radius = radius * (m?.radiusMult ?? 1);
+    if (def.kind === 'orbit') {
+      this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1);
+      this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1);
+    }
     // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =
       def.kind === 'orbit'

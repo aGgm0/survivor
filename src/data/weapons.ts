@@ -222,6 +222,29 @@ export const WEAPONS = {
       { description: '+1 orbe, +3 dégâts', count: 1, damage: 3 },
       { description: '+1 orbe', count: 1 },
     ],
+    mutations: [
+      {
+        id: 'giantOrbs',
+        name: 'Orbes géants',
+        short: 'Og',
+        description: '3 orbes énormes (×2,2) : dégâts ×2, recul ×1,8',
+        color: '#e040fb',
+        count: 3,
+        orbRadiusMult: 2.2,
+        damageMult: 2,
+        knockbackMult: 1.8,
+      },
+      {
+        id: 'orbStorm',
+        name: 'Tempête d’orbes',
+        short: 'To',
+        description: '9 orbes, rotation ×1,6, dégâts ×0,7',
+        color: '#b388ff',
+        count: 9,
+        angularSpeedMult: 1.6,
+        damageMult: 0.7,
+      },
+    ],
   },
 } as const satisfies Record<string, WeaponDef>;
 

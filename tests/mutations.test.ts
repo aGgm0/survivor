@@ -145,6 +145,61 @@ describe('mutations du Trait arcanique', () => {
   });
 });
 
+describe('mutations des Orbes runiques', () => {
+  const ORBS = WEAPONS.runicOrbs;
+  const [GIANT, STORM] = ORBS.mutations;
+
+  function mutated(mutation: MutationDef): { base: Weapon; w: Weapon } {
+    const make = () => {
+      const w = new Weapon(ORBS);
+      w.level = weaponMaxLevel(ORBS);
+      w.recompute(NO_MODS);
+      return w;
+    };
+    const w = make();
+    w.mutation = mutation;
+    w.recompute(NO_MODS);
+    return { base: make(), w };
+  }
+
+  it('Orbes géants : 3 orbes 2,2× plus gros, dégâts ×2, recul ×1,8', () => {
+    const { base, w } = mutated(GIANT);
+    expect(w.count).toBe(3);
+    expect(w.orbRadius).toBeCloseTo(ORBS.orbRadius * 2.2);
+    expect(w.damage).toBeCloseTo(base.damage * 2);
+    expect(w.knockback).toBeCloseTo(base.knockback * 1.8);
+  });
+
+  it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×0,7', () => {
+    const { base, w } = mutated(STORM);
+    expect(w.count).toBe(9);
+    expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 1.6);
+    expect(w.damage).toBeCloseTo(base.damage * 0.7);
+    expect(w.orbRadius).toBe(ORBS.orbRadius);
+  });
+
+  it('les orbes géants touchent plus loin de leur trajectoire (hitbox agrandie)', () => {
+    // Basique (rayon 14) à 35 px du cercle des orbes : hors de portée d'un orbe normal
+    // (13 + 14 = 27 px), mais dans celle d'un orbe géant (13 × 2,2 + 14 ≈ 43 px).
+    const hitWith = (w: Weapon) => {
+      const enemies = new Pool(10, (i) => new Enemy(i));
+      enemies.acquire()?.spawn(ENEMY_TYPES.basic, ORBS.orbitDistance + 35, 0);
+      const collisions = new CollisionSystem(10);
+      let hits = 0;
+      const system = new WeaponSystem(10, collisions, new Pool(1, () => new Projectile()), {
+        onHit: () => hits++,
+        onKill: () => {},
+      });
+      collisions.rebuild(enemies);
+      system.update(1 / 60, [w], 0, 0, 1);
+      return hits;
+    };
+    const { base, w } = mutated(GIANT);
+    expect(hitWith(base)).toBe(0);
+    expect(hitWith(w)).toBe(1);
+  });
+});
+
 describe('mutation — effets en jeu', () => {
   function hitOnce(mutation: MutationDef) {
     const enemies = new Pool(10, (i) => new Enemy(i));

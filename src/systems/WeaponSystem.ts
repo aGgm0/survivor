@@ -172,10 +172,10 @@ export class WeaponSystem {
     now: number,
   ): void {
     weapon.prevAngle = weapon.angle;
-    weapon.angle += def.angularSpeed * dt;
+    weapon.angle += weapon.angularSpeed * dt;
 
     const orbs = weapon.count;
-    const reach = def.orbRadius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
+    const reach = weapon.orbRadius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     for (let o = 0; o < orbs; o++) {
       const ox = WeaponSystem.orbX(x, weapon.angle, o, orbs, def.orbitDistance);
       const oy = WeaponSystem.orbY(y, weapon.angle, o, orbs, def.orbitDistance);
@@ -183,7 +183,7 @@ export class WeaponSystem {
       for (let i = 0; i < count; i++) {
         const e = this.candidates[i];
         if (!e?.active || now < e.nextOrbitHitAt) continue;
-        const touch = def.orbRadius + e.type.radius;
+        const touch = weapon.orbRadius + e.type.radius;
         const dx = e.x - ox;
         const dy = e.y - oy;
         if (dx * dx + dy * dy > touch * touch) continue;
