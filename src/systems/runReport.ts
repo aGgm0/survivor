@@ -31,8 +31,8 @@ export function buildDamageReport(weapons: readonly Weapon[]): WeaponReport[] {
   const total = weapons.reduce((sum, w) => sum + w.totalDamage, 0);
   return weapons
     .map((w) => ({
-      name: w.def.name,
-      color: w.def.color,
+      name: w.mutation ? `★ ${w.displayName}` : w.displayName,
+      color: w.color,
       level: w.level,
       damage: Math.round(w.totalDamage),
       kills: w.kills,

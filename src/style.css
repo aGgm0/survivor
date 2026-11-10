@@ -122,6 +122,10 @@ body {
   border-width: 2px;
 }
 
+.slot-mutated {
+  box-shadow: 0 0 6px #ffd54f;
+}
+
 .slot-level {
   position: absolute;
   right: 2px;
@@ -229,6 +233,16 @@ body {
 
 .overlay-levelup {
   background: rgba(10, 20, 40, 0.75);
+}
+
+/* Écran de mutation : fond violet, titre doré */
+.overlay-mutation {
+  background: rgba(35, 10, 50, 0.8);
+}
+
+.overlay-mutation .overlay-title {
+  color: #ffd54f;
+  font-size: 36px;
 }
 
 .choices {

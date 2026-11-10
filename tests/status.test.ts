@@ -70,6 +70,14 @@ describe('poison', () => {
     expect(source.totalDamage).toBe(6 * 3); // damage meter
   });
 
+  it('le premier tick arrive tout de suite, dès l’empoisonnement', () => {
+    const { e, hits, source, pool } = setup();
+    const system = new StatusSystem({ onHit: (_e, d, k) => hits.push([d, k]), onKill: () => {} });
+    applyPoison(e, 6, 3, source, 10);
+    system.update(pool, 10); // même instant
+    expect(hits).toHaveLength(1);
+  });
+
   it('ne repousse pas l’ennemi', () => {
     const { e, run, source } = setup();
     applyPoison(e, 6, 1, source, 0);
@@ -83,10 +91,10 @@ describe('poison', () => {
     run(0, 0.8);
     applyPoison(e, 6, 1, source, 0.8); // renouvelé avant la fin : dure jusqu'à 1,8 s
     run(0.8, 3);
-    // Ticks à 0,5 / 1,0 / 1,5 s (le suivant, 2,0 s, dépasse 1,8 s) : 3 ticks de 3 = 9.
-    // Deux poisons en parallèle en auraient fait plus.
-    expect(hits).toHaveLength(3);
-    expect(hits.reduce((s, [d]) => s + d, 0)).toBe(9);
+    // Ticks à 0 / 0,5 / 1,0 / 1,5 s (le suivant, 2,0 s, est après la fin à 1,8 s) : 4 × 3 = 12.
+    // Le renouvellement ne crée pas de tick bonus, et deux poisons en parallèle en feraient plus.
+    expect(hits).toHaveLength(4);
+    expect(hits.reduce((s, [d]) => s + d, 0)).toBe(12);
   });
 
   it('peut tuer : le kill compte pour l’arme qui a empoisonné', () => {

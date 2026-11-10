@@ -15,6 +15,33 @@ export interface WeaponLevelBonus {
   readonly radius?: number;
 }
 
+/**
+ * Une mutation : variante définitive d'une arme arrivée au niveau max (choix entre 2).
+ * Les multiplicateurs s'appliquent aux stats du niveau 5 ; les champs absents ne changent rien.
+ */
+export interface MutationDef {
+  readonly id: string;
+  /** Nouveau nom de l'arme (HUD, damage meter) */
+  readonly name: string;
+  /** 2 lettres pour la case d'inventaire */
+  readonly short: string;
+  /** Texte de la carte de choix */
+  readonly description: string;
+  /** Nouvelle couleur de l'arme */
+  readonly color: string;
+  readonly damageMult?: number;
+  readonly knockbackMult?: number;
+  /** Aura : multiplicateur du rayon */
+  readonly radiusMult?: number;
+  /** Aura : chaque ennemi brûlé est ralenti de `amount` (0,3 = 30 %) pendant `duration` s */
+  readonly slow?: { readonly amount: number; readonly duration: number };
+  /**
+   * Aura : chaque ennemi brûlé est empoisonné pendant `duration` s (renouvelé).
+   * Dégâts par seconde = `dpsRatio` × dégâts actuels de l'arme : niveaux et passifs comptent.
+   */
+  readonly poison?: { readonly dpsRatio: number; readonly duration: number };
+}
+
 interface WeaponDefBase {
   readonly id: string;
   /** Nom affiché (écran d'upgrade, damage meter...) */
@@ -33,6 +60,8 @@ interface WeaponDefBase {
   readonly color: string;
   /** Bonus des niveaux 2, 3, 4... (index 0 = niveau 2). Niveau max = longueur + 1. */
   readonly levels: readonly WeaponLevelBonus[];
+  /** Les 2 variantes proposées au level up qui suit le niveau max (aucune = pas de mutation) */
+  readonly mutations?: readonly [MutationDef, MutationDef];
 }
 
 /** Tire des projectiles vers l'ennemi le plus proche. */
@@ -120,6 +149,28 @@ export const WEAPONS = {
       { description: '+2 dégâts', damage: 2 },
       { description: 'Rayon +15 px', radius: 15 },
       { description: '+3 dégâts, rayon +20 px', damage: 3, radius: 20 },
+    ],
+    mutations: [
+      {
+        id: 'blaze',
+        name: 'Brasier',
+        short: 'Br',
+        description: 'Rayon ×1,6, dégâts ×0,6, ralentit de 30 % les ennemis dedans',
+        color: '#ffb347',
+        radiusMult: 1.6,
+        damageMult: 0.6,
+        // 0,6 s > 0,5 s entre deux brûlures : l'ennemi reste ralenti tant qu'il est dedans.
+        slow: { amount: 0.3, duration: 0.6 },
+      },
+      {
+        id: 'toxicAura',
+        name: 'Aura toxique',
+        short: 'At',
+        description: 'Même taille, empoisonne pendant 3 s : 60 % des dégâts de l’aura par seconde',
+        color: '#7cfc00',
+        // Au niveau 5 sans bonus : 10 dégâts × 0,6 = 6/s. Grandit avec Puissance.
+        poison: { dpsRatio: 0.6, duration: 3 },
+      },
     ],
   },
   runicOrbs: {

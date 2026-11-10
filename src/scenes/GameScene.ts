@@ -14,13 +14,7 @@ import {
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_TYPE } from '../data/waves';
-import {
-  PROJECTILE_POOL_SIZE,
-  WEAPON_LIST,
-  WEAPONS,
-  type AuraWeaponDef,
-  type OrbitWeaponDef,
-} from '../data/weapons';
+import { PROJECTILE_POOL_SIZE, WEAPONS, type OrbitWeaponDef } from '../data/weapons';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -39,7 +33,9 @@ import { XpSystem } from '../systems/XpSystem';
 import {
   applyUpgrade,
   availableUpgrades,
+  mutationChoices,
   rollUpgradeChoices,
+  weaponReadyToMutate,
   type Build,
   type UpgradeChoice,
 } from '../systems/upgrades';
@@ -252,14 +248,24 @@ export class GameScene implements Scene, Build {
 
   /** Tire 3 choix (avec l'aléatoire du jeu : même seed → mêmes choix) et les affiche. */
   private openLevelUp(): void {
+    // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
+    const level = this.progression.level - this.pendingLevelUps + 1;
+
+    // Une arme au niveau max pas encore mutée : ce level up devient le choix de sa mutation
+    // (garanti, plutôt qu'une carte perdue au milieu du tirage).
+    const mutating = weaponReadyToMutate(this);
+    if (mutating) {
+      this.choices = mutationChoices(mutating);
+      this.deps.levelUpOverlay.show(level, this.choices, `MUTATION — ${mutating.def.name}`);
+      return;
+    }
+
     this.choices = rollUpgradeChoices(
       availableUpgrades(this),
       this.rng,
       UPGRADE_CHOICE_COUNT,
       this.weapons.length < NEW_WEAPON_GUARANTEE_BELOW,
     );
-    // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
-    const level = this.progression.level - this.pendingLevelUps + 1;
     this.deps.levelUpOverlay.show(level, this.choices);
   }
 
@@ -410,14 +416,13 @@ export class GameScene implements Scene, Build {
     const py = this.player.renderY(alpha);
     for (const w of this.weapons) {
       if (w.def.kind !== 'aura') continue;
-      const def: AuraWeaponDef = w.def;
       ctx.beginPath();
       ctx.arc(px, py, w.radius, 0, Math.PI * 2);
-      ctx.fillStyle = def.color;
+      ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
       ctx.globalAlpha = AURA_FILL_ALPHA;
       ctx.fill();
       ctx.globalAlpha = AURA_STROKE_ALPHA;
-      ctx.strokeStyle = def.color;
+      ctx.strokeStyle = w.color;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
@@ -439,7 +444,7 @@ export class GameScene implements Scene, Build {
         ctx.moveTo(x + def.orbRadius, y);
         ctx.arc(x, y, def.orbRadius, 0, Math.PI * 2);
       }
-      ctx.fillStyle = def.color;
+      ctx.fillStyle = w.color;
       ctx.fill();
     }
   }
@@ -447,12 +452,13 @@ export class GameScene implements Scene, Build {
   /** Projectiles groupés par arme (une couleur = un chemin) : un halo, puis le cœur. */
   private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
     const items = this.projectiles.items;
-    for (const def of WEAPON_LIST) {
+    for (const weapon of this.weapons) {
+      if (weapon.def.kind !== 'projectile') continue;
       for (const pass of PROJECTILE_PASSES) {
         ctx.beginPath();
         for (let i = 0; i < items.length; i++) {
           const p = items[i];
-          if (!p?.active || p.source?.def !== def) continue;
+          if (!p?.active || p.source !== weapon) continue;
           const x = p.renderX(alpha);
           const y = p.renderY(alpha);
           const r = p.radius * pass;
@@ -461,7 +467,7 @@ export class GameScene implements Scene, Build {
           ctx.arc(x, y, r, 0, Math.PI * 2);
         }
         ctx.globalAlpha = pass === 1 ? 1 : PROJECTILE_GLOW_ALPHA;
-        ctx.fillStyle = def.color;
+        ctx.fillStyle = weapon.color;
         ctx.fill();
       }
     }

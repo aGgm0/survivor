@@ -4,6 +4,8 @@ import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
 import type { RunReport } from '../src/systems/runReport';
+import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
+import { Weapon } from '../src/entities/Weapon';
 
 const DT = 1 / 60;
 
@@ -262,6 +264,23 @@ describe('GameScene — level up', () => {
     expect(ui.levelUpShown?.level).toBe(3);
     press('Digit2', scene);
     expect(scene.isChoosingUpgrade).toBe(false);
+  });
+
+  it('mutation : arme au max → le level up suivant propose ses 2 variantes', () => {
+    const { scene, ui, press } = newScene({ armed: false });
+    const aura = new Weapon(WEAPONS.burningAura);
+    aura.level = weaponMaxLevel(WEAPONS.burningAura);
+    scene.weapons.push(aura);
+    giveXp(scene, scene.progression.xpForNext);
+    expect(ui.levelUpShown?.titles).toEqual(['★ Brasier', '★ Aura toxique']);
+
+    press('Digit2', scene);
+    expect(aura.mutation?.name).toBe('Aura toxique');
+    expect(scene.isChoosingUpgrade).toBe(false);
+
+    // Le level up d'après redevient normal (l'arme ne peut muter qu'une fois).
+    giveXp(scene, scene.progression.xpForNext);
+    expect(scene.currentChoices.some((c) => c.kind === 'mutation')).toBe(false);
   });
 
   it('Échap ne met pas en pause pendant le choix', () => {

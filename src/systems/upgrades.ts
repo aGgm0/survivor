@@ -2,7 +2,7 @@ import type { Rng } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
 import { MAX_WEAPONS } from '../data/progression';
 import { HEAL_UPGRADE, PASSIVES, type PassiveDef } from '../data/upgrades';
-import { WEAPON_LIST, weaponMaxLevel, type WeaponDef } from '../data/weapons';
+import { WEAPON_LIST, weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 import type { Player } from '../entities/Player';
 import { Weapon } from '../entities/Weapon';
 
@@ -15,6 +15,7 @@ export type UpgradeChoice = {
 } & (
   | { readonly kind: 'weaponLevel'; readonly weapon: Weapon }
   | { readonly kind: 'newWeapon'; readonly def: WeaponDef }
+  | { readonly kind: 'mutation'; readonly weapon: Weapon; readonly mutation: MutationDef }
   | { readonly kind: 'passive'; readonly passive: PassiveDef }
   | { readonly kind: 'heal' }
 );
@@ -120,6 +121,23 @@ function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number)
   return pool.slice(0, n);
 }
 
+/** Première arme prête à muter (niveau max, mutations disponibles, pas encore mutée), ou null. */
+export function weaponReadyToMutate(build: Build): Weapon | null {
+  return build.weapons.find((w) => w.canMutate) ?? null;
+}
+
+/** Les 2 variantes proposées pour une arme prête à muter. */
+export function mutationChoices(weapon: Weapon): UpgradeChoice[] {
+  return (weapon.def.mutations ?? []).map((mutation) => ({
+    kind: 'mutation' as const,
+    weapon,
+    mutation,
+    title: `★ ${mutation.name}`,
+    description: mutation.description,
+    levelText: 'Mutation',
+  }));
+}
+
 /** Applique le choix du joueur. Les armes doivent ensuite recalculer leurs stats (voir GameScene). */
 export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
   switch (choice.kind) {
@@ -128,6 +146,9 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
       return;
     case 'newWeapon':
       build.weapons.push(new Weapon(choice.def));
+      return;
+    case 'mutation':
+      choice.weapon.mutation = choice.mutation;
       return;
     case 'passive': {
       const level = build.passiveLevels.get(choice.passive.id) ?? 0;

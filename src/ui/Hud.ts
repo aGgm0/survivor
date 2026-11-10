@@ -54,9 +54,16 @@ export class Hud {
     this.shownWeapons = weapons;
 
     this.el.weapons.replaceChildren(
-      ...weapons.map((w) =>
-        slot(w.def.short, w.level, `${w.def.name} — niv ${w.level}`, w.def.color),
-      ),
+      ...weapons.map((w) => {
+        const box = slot(w.short, w.level, `${w.displayName} — niv ${w.level}`, w.color);
+        // Arme mutée : étoile à la place du niveau (elle est au max) et bordure dorée.
+        if (w.mutation) {
+          box.classList.add('slot-mutated');
+          const lvl = box.querySelector('.slot-level');
+          if (lvl) lvl.textContent = '★';
+        }
+        return box;
+      }),
     );
     const owned = PASSIVES.filter((p) => (passiveLevels.get(p.id) ?? 0) > 0);
     this.el.passives.replaceChildren(

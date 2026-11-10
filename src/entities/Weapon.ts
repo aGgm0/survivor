@@ -1,4 +1,4 @@
-import type { WeaponDef } from '../data/weapons';
+import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 
 /** Multiplicateurs venant du joueur (passifs), appliqués à toutes ses armes. */
 export interface WeaponModifiers {
@@ -12,11 +12,13 @@ const MIN_COOLDOWN = 0.05;
 
 /**
  * Une arme possédée par le joueur : sa définition (stats fixes) + son état pendant la partie.
- * Les stats de dégâts/kills servent au futur "damage meter" (classement des armes).
+ * Les stats de dégâts/kills servent au "damage meter" (classement des armes).
  */
 export class Weapon {
   level = 1;
-  /** s avant de pouvoir tirer / frapper ; ≤ 0 = prête (projectile, aura) */
+  /** Variante choisie après le niveau max (null = pas encore mutée) */
+  mutation: MutationDef | null = null;
+  /** s avant de pouvoir tirer / frapper ; ≤ 0 = prête (projectile) */
   cooldownTimer = 0;
   /** Angle actuel des orbes (orbite), et celui de l'update précédente pour l'interpolation */
   angle = 0;
@@ -25,10 +27,10 @@ export class Weapon {
   totalDamage = 0;
   kills = 0;
 
-  // Stats actuelles = base + bonus des niveaux + passifs du joueur. Recalculées par
+  // Stats actuelles = base + bonus des niveaux + mutation + passifs du joueur. Recalculées par
   // `recompute()` seulement quand elles changent (level up), pas à chaque tir.
   damage: number;
-  /** s entre deux tirs (projectile) ou deux ticks (aura) ; inutilisé pour l'orbite */
+  /** s entre deux tirs (projectile) ou deux brûlures d'un même ennemi (aura) ; 0 pour l'orbite */
   cooldown: number;
   /** Projectiles par tir (projectile) ou nombre d'orbes (orbite) */
   count: number;
@@ -43,6 +45,28 @@ export class Weapon {
     this.cooldown = def.kind === 'orbit' ? 0 : def.cooldown;
     this.count = def.kind === 'aura' ? 0 : def.count;
     this.radius = def.kind === 'aura' ? def.radius : 0;
+  }
+
+  /** Nom affiché : celui de la mutation si l'arme a muté. */
+  get displayName(): string {
+    return this.mutation?.name ?? this.def.name;
+  }
+
+  get color(): string {
+    return this.mutation?.color ?? this.def.color;
+  }
+
+  get short(): string {
+    return this.mutation?.short ?? this.def.short;
+  }
+
+  /** Vrai quand l'arme est au niveau max, a des mutations, et n'a pas encore muté. */
+  get canMutate(): boolean {
+    return (
+      this.mutation === null &&
+      this.def.mutations !== undefined &&
+      this.level >= weaponMaxLevel(this.def)
+    );
   }
 
   recompute(mods: WeaponModifiers): void {
@@ -60,11 +84,13 @@ export class Weapon {
       radius += bonus.radius ?? 0;
       cooldownPct += bonus.cooldownPct ?? 0;
     }
-    this.damage = damage * mods.damageMult;
-    this.knockback = def.knockback * mods.knockbackMult;
+    // La mutation transforme les stats du niveau max, avant les passifs du joueur.
+    const m = this.mutation;
+    this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult;
+    this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
     this.count = count;
-    this.radius = radius;
-    // La Hâte accélère les tirs et les ticks d'aura. L'orbite n'a pas de cooldown.
+    this.radius = radius * (m?.radiusMult ?? 1);
+    // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =
       def.kind === 'orbit'
         ? 0

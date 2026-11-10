@@ -5,6 +5,7 @@ import type { Projectile } from '../entities/Projectile';
 import type { Weapon } from '../entities/Weapon';
 import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
 import { damageEnemy, type HitEvents } from './damage';
+import { applyPoison, applySlow } from './status';
 import { GRID_STALENESS_MARGIN } from './ProjectileSystem';
 
 /**
@@ -143,6 +144,18 @@ export class WeaponSystem {
       // Recul vers l'extérieur, depuis le joueur.
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       damageEnemy(weapon, e, weapon.damage, this.events, dx / dist, dy / dist);
+      if (e.active) this.applyAuraMutation(weapon, e, now);
+    }
+  }
+
+  /** Effets d'état des auras mutées (Brasier : ralentit ; Aura toxique : empoisonne). */
+  private applyAuraMutation(weapon: Weapon, e: Enemy, now: number): void {
+    const m = weapon.mutation;
+    if (!m) return;
+    if (m.slow) applySlow(e, m.slow.amount, m.slow.duration, now);
+    // Le poison suit les dégâts actuels de l'arme : niveaux, mutation et Puissance comptent.
+    if (m.poison) {
+      applyPoison(e, weapon.damage * m.poison.dpsRatio, m.poison.duration, weapon, now);
     }
   }
 

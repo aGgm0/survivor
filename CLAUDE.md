@@ -284,7 +284,11 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 **✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
 
 ### Après le MVP — idées validées, à planifier
-- [ ] **Mutations d'armes** : au niveau 5, choix entre 2 variantes par arme (ex. Aura : très grande mais moins de dégâts + ralentit, OU même taille + poison). Demande des effets d'état (ralentissement, poison).
+- [ ] **Mutations d'armes** : au level up qui suit le niveau 5, choix définitif entre 2 variantes (écran "MUTATION", ★ dans le HUD et le damage meter)
+  - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
+  - [x] Mécanique + Aura : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
+  - [ ] Trait arcanique : Trait perçant (traverse 3 ennemis, dégâts ×0,9) / Trait éclaté (explosion 60 px, 70 % des dégâts)
+  - [ ] Orbes runiques : Orbes géants (3 orbes ×2,2, dégâts ×2, recul ×1,8) / Tempête d'orbes (9 orbes, rotation ×1,6, dégâts ×0,7)
 
 ### Phase 5 — Polish `[LATER]`
 - [ ] Sprites et animations, sons et musique
@@ -347,6 +351,8 @@ Format : date — décision — raison.
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
 | 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
 | 2026-11-10 | Retours de jeu (3 parties < 5 min) : XP `5 + niv × 7` et XP × multiplicateur de vague ; barre de PV remise sous le joueur (en plus du HUD) ; difficulté des vagues inchangée | "L'XP monte trop lentement" ; "c'est dur mais normal, faut pas que ce soit trop ez" |
+| 2026-11-10 | Mutations : le level up qui suit le niveau max d'une arme est remplacé par le choix de sa mutation (2 variantes, définitif) | Garanti (pas de carte perdue dans le tirage) ; ça "coûte" un level up, juste vu le gain de puissance |
+| 2026-11-10 | Effets d'état = valeur + date de fin en temps de partie ; poison attribué à l'arme (damage meter), renouvelable sans cumul, = 60 % des dégâts actuels de l'aura par seconde (niveaux, mutation et Puissance comptent ; pas Hâte ni Impact) ; 1er tick immédiat, puis toutes les 0,5 s tant qu'on est avant la fin (6/s × 3 s = 6 ticks = 18) | Pas de minuteur à décompter sur chaque ennemi ; pas de poison infini en cumulant ; tick immédiat demandé "comme l'aura de base" |
 | 2026-11-10 | Paliers de vitesse (×1,15 à 6:00, ×1,3 à 8:00, pas le boss) ; fin de partie plus dense (9/s à 6:00, 16/s à 8:00, surtout des petits) ; plafond d'ennemis 600 → 900 | Retour d'une partie de 10 min : "trop lents en fin de game", "pas assez de monde". Mesure : un build max tue ~11/s, donc à 11/s il ne restait que ~70 ennemis à l'écran → 16/s validé. Perf : 563 ennemis + 3 armes niv 5 à 116 FPS |
 | 2026-11-10 | Inventaire dans le HUD : une case par arme (à sa couleur) et par passif, avec le niveau ; nom complet au survol ; 2 lettres (`short` dans data/) en attendant de vraies icônes | Demandé ("comme dans les jeux du genre") |
 | 2026-11-10 | Recul par arme ajouté à la vitesse de l'ennemi (pas à sa position), réduit par sa masse ; passif Impact | Demandé : les orbes doivent pousser plus que l'aura. Via la vitesse : pas de saut. Via la masse : le boss reste dangereux |

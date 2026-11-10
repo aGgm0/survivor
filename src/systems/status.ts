@@ -35,9 +35,9 @@ export function applyPoison(
   enemy.poisonDps = alreadyPoisoned ? Math.max(enemy.poisonDps, dps) : dps;
   enemy.poisonUntil = Math.max(enemy.poisonUntil, now + duration);
   enemy.poisonSource = source;
-  // Premier dégât une demi-période après l'empoisonnement (pas instantané : le coup d'arme
-  // qui empoisonne vient déjà d'infliger ses propres dégâts).
-  if (!alreadyPoisoned) enemy.nextPoisonTickAt = now + STATUS.poisonTick;
+  // Premier tick tout de suite, comme l'aura qui brûle dès l'entrée (retour de jeu).
+  // Un renouvellement garde le rythme en cours (pas de tick bonus à chaque renouvellement).
+  if (!alreadyPoisoned) enemy.nextPoisonTickAt = now;
 }
 
 /** Multiplicateur de vitesse dû au ralentissement (1 = normal). */
@@ -58,8 +58,9 @@ export class StatusSystem {
       const e = items[i];
       if (!e?.active || !e.poisonSource) continue;
       if (now < e.nextPoisonTickAt) continue;
-      // Un tick qui tombe pile à la fin compte : 6 dégâts/s pendant 3 s = 6 ticks = 18 dégâts.
-      if (e.nextPoisonTickAt > e.poisonUntil + TICK_EPSILON) {
+      // Ticks à 0 / 0,5 / … tant qu'on est AVANT la fin : 6 dégâts/s pendant 3 s =
+      // ticks de 0 à 2,5 s = 6 ticks = 18 dégâts (un tick à 3,0 s en ferait 21).
+      if (e.nextPoisonTickAt >= e.poisonUntil - TICK_EPSILON) {
         e.poisonSource = null; // poison terminé
         continue;
       }
