@@ -64,8 +64,8 @@ export const WAVES: readonly WaveDef[] = [
       [fast, 4],
       [tank, 2],
     ],
-    hpMult: 2,
-    speedMult: 1.15,
+    hpMult: 2.5, // était 2 : trop facile avec des armes mutées
+    speedMult: 1.25, // était 1,15
   },
   // 8:00 – 10:00 : le rush final, une horde de petits rapides à faucher
   {
@@ -78,16 +78,27 @@ export const WAVES: readonly WaveDef[] = [
       [fast, 5],
       [tank, 1],
     ],
-    hpMult: 2.5,
-    speedMult: 1.3,
+    hpMult: 3.5, // était 2,5
+    speedMult: 1.45, // était 1,3
   },
 ];
 
+export interface BossSpawn {
+  /** s : instant d'apparition */
+  readonly time: number;
+  /** multiplicateur des PV de base du boss (1000) ; l'XP suit, comme pour les vagues */
+  readonly hpMult: number;
+  readonly speedMult: number;
+}
+
 /**
- * s : instants d'apparition d'un boss (5:00 et 9:00). Le boss garde ses PV de base (1000,
- * comme le brief), sans le multiplicateur de la vague.
+ * Boss de la partie, triés par instant. Retour de jeu : à 1000 PV ils mouraient trop vite face
+ * à des armes mutées → 3000 PV à 5:00, 8000 PV (et +20 % de vitesse) à 9:00.
  */
-export const BOSS_TIMES: readonly number[] = [300, 540];
+export const BOSS_SPAWNS: readonly BossSpawn[] = [
+  { time: 300, hpMult: 3, speedMult: 1 },
+  { time: 540, hpMult: 8, speedMult: 1.2 },
+];
 export const BOSS_TYPE = ENEMY_TYPES.boss;
 
 /** Vague active à l'instant `time` (s). */

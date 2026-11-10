@@ -47,6 +47,12 @@ describe('XpSystem', () => {
     expect(xp.progress).toBeCloseTo(3 / 19);
   });
 
+  it('xpMult multiplie l’XP requise (×4 quand tout est au max)', () => {
+    const xp = new XpSystem();
+    xp.xpMult = 4;
+    expect(xp.xpForNext).toBe(xpToNext(1) * 4);
+  });
+
   it('peut gagner plusieurs niveaux d’un coup', () => {
     const xp = new XpSystem();
     expect(xp.addXp(12 + 19 + 5)).toBe(2);

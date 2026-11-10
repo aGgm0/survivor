@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
-import { BOSS_TIMES, WAVES, waveAt } from '../src/data/waves';
+import { BOSS_SPAWNS, WAVES, waveAt } from '../src/data/waves';
+
+const BOSS_TIMES = BOSS_SPAWNS.map((b) => b.time);
 import { Enemy } from '../src/entities/Enemy';
 import { SPAWN_RADIUS, SpawnSystem } from '../src/systems/SpawnSystem';
 
@@ -51,22 +53,24 @@ describe('SpawnSystem — vagues', () => {
     expect(later.some((e) => e.type === ENEMY_TYPES.tank)).toBe(true);
   });
 
-  it('paliers de vitesse : normaux avant 6:00, +15 % à 6:00, +30 % à 8:00', () => {
+  it('paliers de vitesse : normaux avant 6:00, puis de plus en plus rapides', () => {
     expect(waveAt(300).speedMult).toBe(1);
-    expect(waveAt(360).speedMult).toBe(1.15);
-    expect(waveAt(480).speedMult).toBe(1.3);
+    expect(waveAt(360).speedMult).toBeGreaterThan(1);
+    expect(waveAt(480).speedMult).toBeGreaterThan(waveAt(360).speedMult);
     const { pool, spawner } = setup();
     // (En sautant à 8:00, le boss de 5:00 pas encore envoyé apparaît aussi : on l'écarte.)
     const late = runBetween(spawner, pool, 480, 482).filter((e) => e.type !== ENEMY_TYPES.boss);
     expect(late.length).toBeGreaterThan(0);
-    expect(late.every((e) => e.speedMult === 1.3)).toBe(true);
+    expect(late.every((e) => e.speedMult === waveAt(480).speedMult)).toBe(true);
   });
 
-  it('le boss garde sa vitesse de base, même à 9:00', () => {
+  it('chaque boss a ses propres multiplicateurs, pas ceux de la vague', () => {
     const { pool, spawner } = setup();
-    spawner.update(1 / 60, BOSS_TIMES[1] ?? 0, 0, 0);
-    const boss = activeEnemies(pool).find((e) => e.type === ENEMY_TYPES.boss);
-    expect(boss?.speedMult).toBe(1);
+    spawner.update(1 / 60, BOSS_SPAWNS[0]?.time ?? 0, 0, 0);
+    spawner.update(1 / 60, BOSS_SPAWNS[1]?.time ?? 0, 0, 0);
+    const bosses = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
+    expect(bosses.map((b) => b.maxHp)).toEqual([3000, 8000]);
+    expect(bosses.map((b) => b.speedMult)).toEqual([1, 1.2]);
   });
 
   it('la fin de partie envoie surtout des petits, de plus en plus vite', () => {
@@ -97,7 +101,7 @@ describe('SpawnSystem — vagues', () => {
 });
 
 describe('SpawnSystem — boss', () => {
-  it('un boss apparaît à chaque instant de BOSS_TIMES, une seule fois', () => {
+  it('un boss apparaît à chaque instant prévu, une seule fois', () => {
     const { pool, spawner } = setup();
     const bosses = () => activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
     runBetween(spawner, pool, 0, (BOSS_TIMES[0] ?? 0) - 1);
@@ -105,7 +109,7 @@ describe('SpawnSystem — boss', () => {
     pool.releaseAll(); // on vide pour ne pas saturer la réserve
     runBetween(spawner, pool, (BOSS_TIMES[0] ?? 0) - 1, (BOSS_TIMES[0] ?? 0) + 30);
     expect(bosses()).toHaveLength(1);
-    expect(bosses()[0]?.hp).toBe(ENEMY_TYPES.boss.hp); // PV du brief, sans multiplicateur
+    expect(bosses()[0]?.hp).toBe(ENEMY_TYPES.boss.hp * (BOSS_SPAWNS[0]?.hpMult ?? 1));
     pool.releaseAll();
     runBetween(spawner, pool, (BOSS_TIMES[1] ?? 0) - 1, (BOSS_TIMES[1] ?? 0) + 1);
     expect(bosses()).toHaveLength(1);

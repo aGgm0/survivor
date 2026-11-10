@@ -5,6 +5,8 @@ import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
 import type { RunReport } from '../src/systems/runReport';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
+import { MAXED_XP_MULT } from '../src/data/progression';
+import { PASSIVES } from '../src/data/upgrades';
 import { Weapon } from '../src/entities/Weapon';
 
 const DT = 1 / 60;
@@ -281,6 +283,25 @@ describe('GameScene — level up', () => {
     // Le level up d'après redevient normal (l'arme ne peut muter qu'une fois).
     giveXp(scene, scene.progression.xpForNext);
     expect(scene.currentChoices.some((c) => c.kind === 'mutation')).toBe(false);
+  });
+
+  it('tout au maximum : les niveaux suivants demandent ×4 d’XP', () => {
+    const { scene, press } = newScene({ armed: false });
+    // Tout au max sauf un passif à 4/5, toutes les armes mutées.
+    for (const def of [WEAPONS.arcaneBolt, WEAPONS.burningAura, WEAPONS.runicOrbs]) {
+      const w = new Weapon(def);
+      w.level = weaponMaxLevel(def);
+      w.mutation = def.mutations[0];
+      scene.weapons.push(w);
+    }
+    for (const p of PASSIVES) scene.passiveLevels.set(p.id, p.maxLevel);
+    scene.passiveLevels.set('impact', 4);
+    expect(scene.progression.xpMult).toBe(1);
+
+    giveXp(scene, scene.progression.xpForNext);
+    const last = scene.currentChoices.findIndex((c) => c.title === 'Impact');
+    press(`Digit${last + 1}`, scene);
+    expect(scene.progression.xpMult).toBe(MAXED_XP_MULT);
   });
 
   it('Échap ne met pas en pause pendant le choix', () => {

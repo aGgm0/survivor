@@ -8,6 +8,7 @@ import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
+  MAXED_XP_MULT,
   NEW_WEAPON_GUARANTEE_BELOW,
   RUN_DURATION,
   UPGRADE_CHOICE_COUNT,
@@ -292,6 +293,9 @@ export class GameScene implements Scene, Build {
     applyUpgrade(choice, this);
     this.recomputeWeapons();
     this.buildVersion++;
+    // Plus rien à améliorer ni à faire muter : les prochains niveaux demandent ×4 d'XP.
+    const maxedOut = availableUpgrades(this).length === 0 && !weaponReadyToMutate(this);
+    this.progression.xpMult = maxedOut ? MAXED_XP_MULT : 1;
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
       this.openLevelUp();

@@ -175,7 +175,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 | Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 150 | 3 | 1 | Fonce, fragile |
 | Tank | 60 | 50 | 10 | 5 | Lent, résistant |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 et 9:00 (rayon 48 px, barre de PV), PV fixes sans multiplicateur de vague |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×8 PV = 8000, vitesse ×1,2**) ; rayon 48 px, barre de PV (`BOSS_SPAWNS` dans waves.ts) |
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
@@ -184,6 +184,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 - Les ennemis lâchent des gemmes d'XP, attirées par le joueur quand il est dans le rayon de ramassage.
 - XP requise : `xpToNext(level) = 5 + level * 7` (était `× 10`, trop lent en jeu).
 - Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP).
+- Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
 - Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme, stat passive (PV, vitesse, aimant, dégâts %, cooldown %).
 
 ### 5.7 Vagues & difficulté
@@ -351,6 +352,7 @@ Format : date — décision — raison.
 | 2026-11-10 | Spawn temporaire : 2/s → 1,2/s et plus de tanks (40 % basiques, 60 % rapides) | On mourait avant le niveau 2 : tanks et basiques intuables avec une seule arme niv 1. Remplacé par les vagues en 4c |
 | 2026-11-10 | Tant que le joueur a < 3 armes, au moins un choix de level up est une nouvelle arme (s'il en reste) | Demandé : sinon on peut enchaîner les passifs et rester coincé avec une seule arme |
 | 2026-11-10 | Retours de jeu (3 parties < 5 min) : XP `5 + niv × 7` et XP × multiplicateur de vague ; barre de PV remise sous le joueur (en plus du HUD) ; difficulté des vagues inchangée | "L'XP monte trop lentement" ; "c'est dur mais normal, faut pas que ce soit trop ez" |
+| 2026-11-10 | Après les mutations : XP ×4 quand tout est max ; vitesse 6:00/8:00 ×1,25/×1,45 (était 1,15/1,3) ; PV ×2,5/×3,5 (était 2/2,5) ; boss ×3 PV à 5:00, ×8 PV et ×1,2 vitesse à 9:00 | Retour de jeu : "ez victoire", niveau max à 9:00, soins à répétition, ennemis qui n'arrivaient même pas au contact, boss "despawn" |
 | 2026-11-10 | Mutations : le level up qui suit le niveau max d'une arme est remplacé par le choix de sa mutation (2 variantes, définitif) | Garanti (pas de carte perdue dans le tirage) ; ça "coûte" un level up, juste vu le gain de puissance |
 | 2026-11-10 | Effets d'état = valeur + date de fin en temps de partie ; poison attribué à l'arme (damage meter), renouvelable sans cumul, = 60 % des dégâts actuels de l'aura par seconde (niveaux, mutation et Puissance comptent ; pas Hâte ni Impact) ; 1er tick immédiat, puis toutes les 0,5 s tant qu'on est avant la fin (6/s × 3 s = 6 ticks = 18) | Pas de minuteur à décompter sur chaque ennemi ; pas de poison infini en cumulant ; tick immédiat demandé "comme l'aura de base" |
 | 2026-11-10 | Paliers de vitesse (×1,15 à 6:00, ×1,3 à 8:00, pas le boss) ; fin de partie plus dense (9/s à 6:00, 16/s à 8:00, surtout des petits) ; plafond d'ennemis 600 → 900 | Retour d'une partie de 10 min : "trop lents en fin de game", "pas assez de monde". Mesure : un build max tue ~11/s, donc à 11/s il ne restait que ~70 ennemis à l'écran → 16/s validé. Perf : 563 ennemis + 3 armes niv 5 à 116 FPS |
@@ -358,7 +360,7 @@ Format : date — décision — raison.
 | 2026-11-10 | Recul par arme ajouté à la vitesse de l'ennemi (pas à sa position), réduit par sa masse ; passif Impact | Demandé : les orbes doivent pousser plus que l'aura. Via la vitesse : pas de saut. Via la masse : le boss reste dangereux |
 | 2026-11-10 | Un seul écran de fin (victoire/défaite) avec bilan + damage meter (dégâts, %, kills par arme) | Le damage meter demandé "pour plus tard" ; les données existaient depuis la Phase 3 |
 | 2026-11-10 | PV dans le HUD (barre en haut à gauche), barre sous le joueur retirée ; kills sous le timer | HUD complet du plan Phase 4 |
-| 2026-11-10 | Boss : PV fixes (1000, comme le brief), sans le multiplicateur de vague | Respect du brief ; le boss de 9:00 sera peut-être trop faible, à revoir en jouant |
+| 2026-11-10 | Boss : PV fixes (1000, comme le brief), sans le multiplicateur de vague | Respect du brief ; le boss de 9:00 sera peut-être trop faible, à revoir en jouant (→ remplacé : multiplicateurs par boss, voir plus haut) |
 | 2026-11-10 | Grille spatiale : cases calées sur le tank (48 px), pas sur le boss (96 px) | Des cases 4× plus grandes pour un seul boss ralentiraient toutes les recherches de voisins |
 | 2026-11-10 | Aura : horloge de dégâts par ennemi (brûlé dès l'entrée, puis toutes les 0,5 s) au lieu d'un tick commun | Demandé : avec un tick commun, un ennemi entré juste après un tick traversait ~0,5 s sans dégâts |
 | 2026-11-10 | Toutes les armes infligent leurs dégâts via une seule fonction (`damageEnemy`) | Damage meter cohérent, quel que soit le type d'arme |

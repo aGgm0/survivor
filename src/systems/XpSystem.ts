@@ -7,9 +7,14 @@ export class XpSystem {
   xpIntoLevel = 0;
   /** XP totale de la partie (stats de fin) */
   totalXp = 0;
+  /**
+   * Multiplicateur de l'XP requise. La scène le passe à MAXED_XP_MULT quand plus rien n'est
+   * améliorable : sinon les level up "soin" s'enchaînent et rendent le joueur intuable.
+   */
+  xpMult = 1;
 
   get xpForNext(): number {
-    return xpToNext(this.level);
+    return xpToNext(this.level) * this.xpMult;
   }
 
   /** Remplissage de la barre d'XP, de 0 à 1. */

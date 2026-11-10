@@ -41,7 +41,7 @@ export const ENEMY_TYPES = {
     radius: 24,
     color: '#5cb85c',
   },
-  /** N'apparaît qu'aux instants de BOSS_TIMES (waves.ts), jamais dans le tirage aléatoire. */
+  /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
   boss: {
     id: 'boss',
     hp: 1000,

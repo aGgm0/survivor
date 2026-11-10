@@ -11,6 +11,12 @@ export function xpToNext(level: number): number {
   return 5 + level * 7;
 }
 
+/**
+ * Quand tout est au maximum (armes, mutations, passifs), il faut ×4 d'XP par niveau :
+ * ces level up ne donnent plus qu'un soin, et en enchaîner rendait le joueur intuable.
+ */
+export const MAXED_XP_MULT = 4;
+
 /** Nombre de choix proposés à chaque level up */
 export const UPGRADE_CHOICE_COUNT = 3;
 

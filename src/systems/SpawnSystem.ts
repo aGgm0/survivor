@@ -3,7 +3,7 @@ import type { Pool } from '../core/Pool';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import type { EnemyType } from '../data/enemies';
 import { SPAWN } from '../data/spawn';
-import { BOSS_TIMES, BOSS_TYPE, waveAt, type WaveDef } from '../data/waves';
+import { BOSS_SPAWNS, BOSS_TYPE, waveAt, type WaveDef } from '../data/waves';
 import type { Enemy } from '../entities/Enemy';
 
 /**
@@ -17,7 +17,7 @@ const FLOAT_EPSILON = 1e-9;
 /** Fait apparaître les ennemis selon la vague en cours, et les boss à leurs instants. */
 export class SpawnSystem {
   private timer = 0;
-  /** Prochain boss de BOSS_TIMES à faire apparaître */
+  /** Prochain boss de BOSS_SPAWNS à faire apparaître */
   private nextBoss = 0;
 
   constructor(
@@ -37,10 +37,11 @@ export class SpawnSystem {
       if (this.enemies.activeCount < SPAWN.maxEnemies) this.spawnFromWave(wave, playerX, playerY);
     }
 
-    const bossTime = BOSS_TIMES[this.nextBoss];
-    if (bossTime !== undefined && now >= bossTime) {
+    const boss = BOSS_SPAWNS[this.nextBoss];
+    if (boss && now >= boss.time) {
       this.nextBoss++;
-      this.spawnAt(BOSS_TYPE, 1, 1, playerX, playerY); // le boss ne suit pas les paliers
+      // Chaque boss a ses propres multiplicateurs (pas ceux de la vague en cours).
+      this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
     }
 
     this.recycleFarEnemies(playerX, playerY);
