@@ -38,9 +38,9 @@ function weapon(def: WeaponDef, player: Player, mutation = -1): Weapon {
 }
 
 describe('nouveaux passifs : données', () => {
-  it('Taille +7 %, Vélocité +10 % (5 niveaux), Duplicateur +1 (3 niveaux)', () => {
-    expect(passive('size')).toMatchObject({ amount: 0.07, maxLevel: 5 });
-    expect(passive('velocity')).toMatchObject({ amount: 0.1, maxLevel: 5 });
+  it('Taille +4 %, Vélocité +5 % (5 niveaux), Duplicateur +1 (3 niveaux)', () => {
+    expect(passive('size')).toMatchObject({ amount: 0.04, maxLevel: 5 });
+    expect(passive('velocity')).toMatchObject({ amount: 0.05, maxLevel: 5 });
     expect(passive('duplicator')).toMatchObject({ amount: 1, maxLevel: 3 });
   });
 
@@ -50,19 +50,19 @@ describe('nouveaux passifs : données', () => {
 });
 
 describe('Taille', () => {
-  it('grossit projectiles, orbes, aura et explosions (+35 % au niveau 5) ; l’orbite un peu', () => {
+  it('grossit projectiles, orbes, aura et explosions (+20 % au niveau 5) ; l’orbite un peu', () => {
     const p = playerWith('size', 5);
     const n = new Player();
     const bolt = weapon(WEAPONS.arcaneBolt, p);
-    expect(bolt.projectileRadius).toBeCloseTo(WEAPONS.arcaneBolt.projectileRadius * 1.35);
+    expect(bolt.projectileRadius).toBeCloseTo(WEAPONS.arcaneBolt.projectileRadius * 1.2);
     const aura = weapon(WEAPONS.burningAura, p);
-    expect(aura.radius).toBeCloseTo(weapon(WEAPONS.burningAura, n).radius * 1.35);
+    expect(aura.radius).toBeCloseTo(weapon(WEAPONS.burningAura, n).radius * 1.2);
     const orbs = weapon(WEAPONS.runicOrbs, p);
-    expect(orbs.orbRadius).toBeCloseTo(WEAPONS.runicOrbs.orbRadius * 1.35);
-    // Orbite : +35 % × 0,3 = +10,5 % seulement.
-    expect(orbs.orbitDistance).toBeCloseTo(weapon(WEAPONS.runicOrbs, n).orbitDistance * 1.105);
+    expect(orbs.orbRadius).toBeCloseTo(WEAPONS.runicOrbs.orbRadius * 1.2);
+    // Orbite : +20 % × 0,3 = +6 % seulement.
+    expect(orbs.orbitDistance).toBeCloseTo(weapon(WEAPONS.runicOrbs, n).orbitDistance * 1.06);
     const burst = weapon(WEAPONS.arcaneBolt, p, 1); // Trait éclaté
-    expect(burst.explosionRadius).toBeCloseTo(75 * 1.35);
+    expect(burst.explosionRadius).toBeCloseTo(75 * 1.2);
   });
 });
 
@@ -70,12 +70,12 @@ describe('Vélocité', () => {
   it('projectiles plus rapides et portée plus longue, orbes qui tournent plus vite', () => {
     const p = playerWith('velocity', 5);
     const bolt = weapon(WEAPONS.arcaneBolt, p);
-    expect(bolt.projectileSpeed).toBeCloseTo(WEAPONS.arcaneBolt.projectileSpeed * 1.5);
+    expect(bolt.projectileSpeed).toBeCloseTo(WEAPONS.arcaneBolt.projectileSpeed * 1.25);
     expect(bolt.range).toBeCloseTo(
-      WEAPONS.arcaneBolt.projectileSpeed * 1.5 * WEAPONS.arcaneBolt.projectileLifetime,
+      WEAPONS.arcaneBolt.projectileSpeed * 1.25 * WEAPONS.arcaneBolt.projectileLifetime,
     );
     const orbs = weapon(WEAPONS.runicOrbs, p);
-    expect(orbs.angularSpeed).toBeCloseTo(WEAPONS.runicOrbs.angularSpeed * 1.5);
+    expect(orbs.angularSpeed).toBeCloseTo(WEAPONS.runicOrbs.angularSpeed * 1.25);
   });
 });
 

@@ -174,7 +174,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 |---|---|---|---|---|---|
 | Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile |
-| Tank | 66 | 60 | 10 | 5 | Lent, résistant |
+| Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV (`BOSS_SPAWNS` dans waves.ts) |
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
@@ -319,7 +319,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
 - [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
 - [ ] **4e arme : l'Épée** <!-- TODO: comportement (coup en arc devant le joueur ? épées qui tournent ? lancer ?), stats, niveaux, 2 mutations, perso de départ associé et son défi -->
-- [x] Nouveaux passifs : **Taille** (+7 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +10,5 % au max), **Vélocité** (+10 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
+- [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
@@ -422,6 +422,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Persos : écran de choix après Jouer ; perso gardé pour « Rejouer » ; défi Pyromancien lu dans le profil (kills d'Aura cumulés), défi Runiste noté pendant la partie (boss n° 1 de BOSS_SPAWNS tué avec les Orbes niv ≥ 5, mutation comprise) puis gardé dans `profile.challenges` ; déblocage annoncé sur l'écran de fin (calculé sur une copie du profil) | Design validé (§ 5.9). Annonce immédiate même si une victoire n'est enregistrée qu'en quittant l'écran |
 | 2026-11-11 | Trait perçant 3 → 5 ennemis (dégâts inchangés) ; Trait éclaté rayon 60 → 75 px ; tank 60 → 66 PV et vitesse 50 → 60 ; rapide vitesse 150 → 135 | Retour de jeu (vitesse du tank : d'abord baissée à 45 par erreur, corrigée à 60) |
 | 2026-11-11 | Passifs Taille (+7 %/niv), Vélocité (+10 %/niv), Duplicateur (+1, 3 niv max) ; la Taille éloigne l'orbite de 30 % de son bonus seulement (`SIZE_ORBIT_SHARE`) ; le Duplicateur s'ajoute après la mutation ; les projectiles prennent vitesse et taille de l'arme (`Weapon.projectileSpeed`, `range`, `explosionRadius`) ; enchantements = niveau 6 des passifs | Valeurs proposées puis ajustées ("taille 7 %, duplicateur niv max 3"). Tempête + Duplicateur 3 = 12 orbes = MAX_ORBS |
+| 2026-11-11 | Gros nerf : Taille 7 → 4 %/niv, Vélocité 10 → 5 %/niv ; gros buff du tank : 66 → 90 PV, vitesse 60 → 72 | Retour de jeu |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

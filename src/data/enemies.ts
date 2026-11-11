@@ -36,8 +36,8 @@ export const ENEMY_TYPES = {
   },
   tank: {
     id: 'tank',
-    hp: 66, // 60 → 66 : très léger buff
-    speed: 60, // 50 → 60 : buff demandé en jouant
+    hp: 90, // 60 → 66 → 90 : gros buff (retour de jeu)
+    speed: 72, // 50 → 60 → 72 : gros buff
     contactDamage: 10,
     xp: 5,
     radius: 24,

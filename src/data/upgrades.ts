@@ -88,20 +88,20 @@ export const PASSIVES: readonly PassiveDef[] = [
     id: 'size',
     name: 'Taille',
     short: 'Ta',
-    description: '+7 % taille des projectiles, orbes, aura et explosions',
+    description: '+4 % taille des projectiles, orbes, aura et explosions',
     maxLevel: 5,
     stat: 'sizePct',
-    // 7 % (pas 10) : sur l'aura, ça se cumule avec le Brasier (×1,6).
-    amount: 0.07,
+    // 7 % → 4 % : gros nerf (retour de jeu). Sur l'aura, ça se cumule avec le Brasier (×1,6).
+    amount: 0.04,
   },
   {
     id: 'velocity',
     name: 'Vélocité',
     short: 'Vé',
-    description: '+10 % vitesse des projectiles (et portée) et rotation des orbes',
+    description: '+5 % vitesse des projectiles (et portée) et rotation des orbes',
     maxLevel: 5,
     stat: 'velocityPct',
-    amount: 0.1,
+    amount: 0.05, // 10 % → 5 % : gros nerf (retour de jeu)
   },
   {
     id: 'duplicator',
@@ -116,8 +116,8 @@ export const PASSIVES: readonly PassiveDef[] = [
 ];
 
 /**
- * Part du bonus de Taille appliquée à la distance des orbes : 0,3 → au niveau 5 (+35 % de taille),
- * l'orbite s'éloigne de +10,5 % (105 → ~116 px). Demandé : "légèrement, mais un peu quand même".
+ * Part du bonus de Taille appliquée à la distance des orbes : 0,3 → au niveau 5 (+20 % de taille),
+ * l'orbite s'éloigne de +6 % (105 → ~111 px). Demandé : "légèrement, mais un peu quand même".
  */
 export const SIZE_ORBIT_SHARE = 0.3;
 
