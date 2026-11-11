@@ -35,9 +35,7 @@ import { XpSystem } from '../systems/XpSystem';
 import {
   applyUpgrade,
   availableUpgrades,
-  mutationChoices,
   rollUpgradeChoices,
-  weaponReadyToMutate,
   type Build,
   type UpgradeChoice,
 } from '../systems/upgrades';
@@ -294,15 +292,6 @@ export class GameScene implements Scene, Build {
     // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
     const level = this.progression.level - this.pendingLevelUps + 1;
 
-    // Une arme au niveau max pas encore mutée : ce level up devient le choix de sa mutation
-    // (garanti, plutôt qu'une carte perdue au milieu du tirage).
-    const mutating = weaponReadyToMutate(this);
-    if (mutating) {
-      this.choices = mutationChoices(mutating);
-      this.deps.levelUpOverlay.show(level, this.choices, `MUTATION — ${mutating.def.name}`);
-      return;
-    }
-
     this.choices = rollUpgradeChoices(
       availableUpgrades(this),
       this.rng,
@@ -330,8 +319,8 @@ export class GameScene implements Scene, Build {
     applyUpgrade(choice, this);
     this.recomputeWeapons();
     this.buildVersion++;
-    // Plus rien à améliorer ni à faire muter : les prochains niveaux demandent ×4 d'XP.
-    const maxedOut = availableUpgrades(this).length === 0 && !weaponReadyToMutate(this);
+    // Plus rien à améliorer (mutations comprises) : les prochains niveaux demandent ×4 d'XP.
+    const maxedOut = availableUpgrades(this).length === 0;
     this.progression.xpMult = maxedOut ? MAXED_XP_MULT : 1;
     // Noté une seule fois, pour l'équilibrage : à quel moment le build a été complet.
     if (maxedOut && this.maxedAt === null) this.maxedAt = this.elapsed;

@@ -145,9 +145,14 @@ describe('upgrades — options et tirage', () => {
     const build = makeBuild();
     build.weapons.push(new Weapon(WEAPONS.burningAura), new Weapon(WEAPONS.runicOrbs));
     for (const w of build.weapons) w.level = weaponMaxLevel(w.def);
-    const bolt = build.weapons[0] as Weapon;
-    bolt.level = weaponMaxLevel(BOLT);
     for (const p of PASSIVES) build.passiveLevels.set(p.id, p.maxLevel);
+    // Armes au niveau 5 : il reste leurs mutations (le niveau 6).
+    expect(availableUpgrades(build).every((o) => o.kind === 'mutation')).toBe(true);
+    expect(availableUpgrades(build)).toHaveLength(6);
+    for (const w of build.weapons) {
+      w.mutation = w.def.mutations?.[0] ?? null;
+      w.level++;
+    }
     expect(availableUpgrades(build)).toHaveLength(0);
     const choices = rollUpgradeChoices([], new Rng(1), 3);
     expect(choices).toHaveLength(1);

@@ -300,7 +300,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 **✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
 
 ### Après le MVP — idées validées, à planifier
-- [x] **Mutations d'armes** : au level up qui suit le niveau 5, choix définitif entre 2 variantes (écran "MUTATION", ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
+- [x] **Mutations d'armes** : le niveau 6 de chaque arme ; ses 2 variantes entrent dans le tirage normal du level up une fois l'arme au niveau 5 (choix définitif, ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
   - [x] Aura (les 2 brûlent toutes les 0,6 s) : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
   - [x] Trait arcanique : **Trait perçant** (traverse 3 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 60 px, 70 % des dégâts, anneau visuel)
@@ -418,6 +418,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Mode sans fin : C sur l'écran de victoire ; montée continue (PV ×1,25/min, +2/s par min, vitesse +3 %/min plafonnée ×1,8), boss toutes les 3 min (×1,5 PV chacun) ; une partie = un seul enregistrement au profil (victoire enregistrée en quittant l'écran, ou à la mort en sans fin, ou en quittant le sans fin par le menu pause) | Demandé ("mode sans fin dès que tu tues le boss"). Pas de double comptage de la même partie ; quitter le sans fin ne fait pas perdre la victoire |
 | 2026-11-11 | Profil : un seul « Meilleur temps » (sans fin compris) ; Aura : +2 dégâts au niveau 2, rayon aux niveaux 3-4 ; Tempête d'orbes : recul ×0,3, dégâts ×0,7 → ×0,8 ; Trait arcanique 10 → 11 dégâts | Retour de jeu (sans fin jusqu'à 16:09) : au-delà du dernier boss c'est forcément du sans fin ; Tempête repoussait tout (immobile 12 min sans contact) car le recul tombe à chaque coup d'orbe |
 | 2026-11-11 | Trait arcanique 11 → 14 dégâts ; orbes : recul 350 → 200 et dégâts 8 → 10 ; Tempête dégâts ×0,8 → ×1 ; Brasier et Aura toxique brûlent toutes les 0,6 s au lieu de 0,5 s (`cooldownMult` de mutation, la Hâte compte toujours) | Retour de jeu : Trait toujours dernier du damage meter ; le recul des orbes reste trop fort avec un délai par orbe ; l'aura mutée dominait (62-67 %) |
+| 2026-11-11 | Mutation = niveau 6 de l'arme : ses 2 variantes sont des cartes du tirage normal (plus d'écran de mutation forcé), l'arme passe niveau 6 | Demandé. Remplace « le level up qui suit le niveau max est remplacé par la mutation » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

@@ -36,6 +36,12 @@ export interface Build {
 export function availableUpgrades(build: Build): UpgradeChoice[] {
   const options: UpgradeChoice[] = [];
   for (const weapon of build.weapons) {
+    // Arme au niveau 5 : son niveau 6, c'est la mutation. Ses 2 variantes entrent dans le tirage
+    // comme n'importe quelle carte (plus d'écran de mutation forcé).
+    if (weapon.canMutate) {
+      options.push(...mutationChoices(weapon));
+      continue;
+    }
     const bonus = weapon.def.levels[weapon.level - 1]; // bonus du niveau suivant
     if (!bonus || weapon.level >= weaponMaxLevel(weapon.def)) continue;
     options.push({
@@ -124,11 +130,6 @@ function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number)
   return pool.slice(0, n);
 }
 
-/** Première arme prête à muter (niveau max, mutations disponibles, pas encore mutée), ou null. */
-export function weaponReadyToMutate(build: Build): Weapon | null {
-  return build.weapons.find((w) => w.canMutate) ?? null;
-}
-
 /** Les 2 variantes proposées pour une arme prête à muter. */
 export function mutationChoices(weapon: Weapon): UpgradeChoice[] {
   return (weapon.def.mutations ?? []).map((mutation) => ({
@@ -137,7 +138,7 @@ export function mutationChoices(weapon: Weapon): UpgradeChoice[] {
     mutation,
     title: `★ ${mutation.name}`,
     description: mutation.description,
-    levelText: 'Mutation',
+    levelText: `Niv ${weapon.level + 1} · Mutation`,
   }));
 }
 
@@ -152,6 +153,7 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
       return;
     case 'mutation':
       choice.weapon.mutation = choice.mutation;
+      choice.weapon.level++; // la mutation est le niveau 6
       return;
     case 'passive': {
       const level = build.passiveLevels.get(choice.passive.id) ?? 0;

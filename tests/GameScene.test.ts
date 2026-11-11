@@ -322,16 +322,22 @@ describe('GameScene — level up', () => {
     expect(scene.isChoosingUpgrade).toBe(false);
   });
 
-  it('mutation : arme au max → le level up suivant propose ses 2 variantes', () => {
-    const { scene, ui, press } = newScene({ armed: false });
+  it('mutation = niveau 6 : ses 2 variantes sont des cartes du tirage normal', () => {
+    const { scene, press } = newScene({ armed: false });
     const aura = new Weapon(WEAPONS.burningAura);
     aura.level = weaponMaxLevel(WEAPONS.burningAura);
     scene.weapons.push(aura);
+    // Tous les passifs au max : il ne reste que les 2 mutations (et les nouvelles armes).
+    for (const p of PASSIVES.slice(0, MAX_PASSIVES)) scene.passiveLevels.set(p.id, p.maxLevel);
     giveXp(scene, scene.progression.xpForNext);
-    expect(ui.levelUpShown?.titles).toEqual(['★ Brasier', '★ Aura toxique']);
+    const titles = scene.currentChoices.map((c) => c.title);
+    const toxic = titles.indexOf('★ Aura toxique');
+    expect(toxic).toBeGreaterThanOrEqual(0);
+    expect(scene.currentChoices[toxic]?.levelText).toBe('Niv 6 · Mutation');
 
-    press('Digit2', scene);
+    press(`Digit${toxic + 1}`, scene);
     expect(aura.mutation?.name).toBe('Aura toxique');
+    expect(aura.level).toBe(6);
     expect(scene.isChoosingUpgrade).toBe(false);
 
     // Le level up d'après redevient normal (l'arme ne peut muter qu'une fois).
