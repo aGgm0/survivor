@@ -3,7 +3,7 @@ import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
-import { xpToNext } from '../src/data/progression';
+import { MAX_PASSIVES, MAX_WEAPONS, xpToNext } from '../src/data/progression';
 import { HEAL_UPGRADE, PASSIVES } from '../src/data/upgrades';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
@@ -31,11 +31,17 @@ function makeBuild(): Build {
 }
 
 describe('XpSystem', () => {
-  it('suit la formule : 5 + niveau × 7', () => {
+  it('suit la formule : 5 + niveau × 7 jusqu’au niveau 10 (début de partie inchangé)', () => {
     expect(xpToNext(1)).toBe(12);
     expect(xpToNext(2)).toBe(19);
     expect(xpToNext(10)).toBe(75);
     expect(new XpSystem().xpForNext).toBe(12);
+  });
+
+  it('se durcit après le niveau 10 : + 0,6 × (niveau − 10)²', () => {
+    expect(xpToNext(11)).toBe(83); // 82 + 0,6 arrondi
+    expect(xpToNext(20)).toBe(205);
+    expect(xpToNext(30)).toBe(455);
   });
 
   it('monte de niveau et garde le surplus', () => {
@@ -119,6 +125,20 @@ describe('upgrades — options et tirage', () => {
     expect(build.weapons.map((w) => w.def.id)).toEqual(['arcaneBolt', 'burningAura']);
     const again = availableUpgrades(build).filter((o) => o.kind === 'newWeapon');
     expect(again.map((o) => o.title)).toEqual([WEAPONS.runicOrbs.name]);
+  });
+
+  it('4 passifs possédés : plus de nouveau passif, mais les possédés montent encore', () => {
+    const build = makeBuild();
+    const owned = PASSIVES.slice(0, MAX_PASSIVES);
+    for (const p of owned) build.passiveLevels.set(p.id, 1);
+    const passives = availableUpgrades(build).filter((o) => o.kind === 'passive');
+    expect(passives.map((o) => o.title)).toEqual(owned.map((p) => p.name));
+  });
+
+  it('4 armes possédées : plus de nouvelle arme proposée', () => {
+    const build = makeBuild();
+    while (build.weapons.length < MAX_WEAPONS) build.weapons.push(new Weapon(BOLT));
+    expect(availableUpgrades(build).some((o) => o.kind === 'newWeapon')).toBe(false);
   });
 
   it('exclut ce qui est au maximum, et propose le soin quand tout est au max', () => {

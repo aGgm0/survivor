@@ -1,6 +1,6 @@
 import type { Rng } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
-import { MAX_WEAPONS } from '../data/progression';
+import { MAX_PASSIVES, MAX_WEAPONS } from '../data/progression';
 import { HEAL_UPGRADE, PASSIVES, type PassiveDef } from '../data/upgrades';
 import { WEAPON_LIST, weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 import type { Player } from '../entities/Player';
@@ -58,9 +58,12 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
       });
     }
   }
+  // Emplacements de passifs pleins : plus de nouveau passif, seulement les niveaux des possédés.
+  const passiveSlotsFull = build.passiveLevels.size >= MAX_PASSIVES;
   for (const passive of PASSIVES) {
     const level = build.passiveLevels.get(passive.id) ?? 0;
     if (level >= passive.maxLevel) continue;
+    if (level === 0 && passiveSlotsFull) continue;
     options.push({
       kind: 'passive',
       passive,

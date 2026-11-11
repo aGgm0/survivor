@@ -5,7 +5,7 @@ import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
 import type { RunReport } from '../src/systems/runReport';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
-import { MAXED_XP_MULT } from '../src/data/progression';
+import { MAX_PASSIVES, MAXED_XP_MULT } from '../src/data/progression';
 import { PASSIVES } from '../src/data/upgrades';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
@@ -321,14 +321,24 @@ describe('GameScene — level up', () => {
       w.mutation = def.mutations[0];
       scene.weapons.push(w);
     }
-    for (const p of PASSIVES) scene.passiveLevels.set(p.id, p.maxLevel);
+    // 4 emplacements de passifs pleins : 3 au max + Impact à 4/5.
+    for (const p of PASSIVES.slice(0, MAX_PASSIVES - 1)) scene.passiveLevels.set(p.id, p.maxLevel);
     scene.passiveLevels.set('impact', 4);
     expect(scene.progression.xpMult).toBe(1);
 
     giveXp(scene, scene.progression.xpForNext);
-    const last = scene.currentChoices.findIndex((c) => c.title === 'Impact');
-    press(`Digit${last + 1}`, scene);
+    // Seul Impact reste améliorable : les autres passifs n'ont plus d'emplacement.
+    expect(scene.currentChoices.map((c) => c.title)).toEqual(['Impact']);
+    press('Digit1', scene);
     expect(scene.progression.xpMult).toBe(MAXED_XP_MULT);
+    const maxedAt = scene.runTime;
+
+    // Le bilan de fin note quand le build a été complet (pour l'équilibrage).
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    scene.update(DT);
+    expect(scene.result?.maxedAt).toBe(maxedAt);
+    expect(scene.runTime).toBeGreaterThan(maxedAt);
   });
 
   it('Échap ne met pas en pause pendant le choix', () => {

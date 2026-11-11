@@ -19,6 +19,8 @@ export interface RunReport {
   readonly time: number;
   readonly kills: number;
   readonly level: number;
+  /** s : moment où le build était complet (tout au max), null s'il ne l'a jamais été */
+  readonly maxedAt: number | null;
   /** Armes triées de la plus efficace à la moins efficace */
   readonly weapons: readonly WeaponReport[];
 }

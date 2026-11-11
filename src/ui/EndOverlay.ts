@@ -14,7 +14,9 @@ export class EndOverlay {
     this.el.classList.toggle('overlay-victory', report.victory);
     this.el.classList.toggle('overlay-death', !report.victory);
     this.titleEl.textContent = report.victory ? 'VICTOIRE' : 'MORT';
-    this.infoEl.textContent = `Survécu ${formatTime(report.time)} · ${report.kills} kills · niveau ${report.level}`;
+    const maxed =
+      report.maxedAt === null ? 'build incomplet' : `build complet à ${formatTime(report.maxedAt)}`;
+    this.infoEl.textContent = `Survécu ${formatTime(report.time)} · ${report.kills} kills · niveau ${report.level} · ${maxed}`;
 
     // Créer des éléments est sans risque ici : une seule fois, en fin de partie.
     this.meterEl.replaceChildren(

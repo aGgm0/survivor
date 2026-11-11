@@ -120,6 +120,8 @@ export class GameScene implements Scene, Build {
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
   private killCount = 0;
+  /** s : moment où plus rien n'était améliorable ; null = build pas encore complet */
+  private maxedAt: number | null = null;
   private readonly runDuration: number;
 
   /**
@@ -309,6 +311,8 @@ export class GameScene implements Scene, Build {
     // Plus rien à améliorer ni à faire muter : les prochains niveaux demandent ×4 d'XP.
     const maxedOut = availableUpgrades(this).length === 0 && !weaponReadyToMutate(this);
     this.progression.xpMult = maxedOut ? MAXED_XP_MULT : 1;
+    // Noté une seule fois, pour l'équilibrage : à quel moment le build a été complet.
+    if (maxedOut && this.maxedAt === null) this.maxedAt = this.elapsed;
     this.pendingLevelUps--;
     if (this.pendingLevelUps > 0) {
       this.openLevelUp();
@@ -365,6 +369,7 @@ export class GameScene implements Scene, Build {
       time: this.elapsed,
       kills: this.killCount,
       level: this.progression.level,
+      maxedAt: this.maxedAt,
       weapons: buildDamageReport(this.weapons),
     };
     this.deps.endOverlay.show(this.report);

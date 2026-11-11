@@ -154,7 +154,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 
 ### 5.4 Armes `[MVP : 3 armes]`
 
-Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5 (max 6 armes en même temps `[LATER]`).
+Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Emplacements limités : 4 armes et 4 passifs maximum** en même temps (décidé le 2026-11-11 : la run de 10 min n'est qu'une première partie, les runs s'allongeront).
 
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
@@ -182,7 +182,8 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 ### 5.6 XP & level up
 
 - Les ennemis lâchent des gemmes d'XP, attirées par le joueur quand il est dans le rayon de ramassage.
-- XP requise : `xpToNext(level) = 5 + level * 7` (était `× 10`, trop lent en jeu).
+- XP requise : `xpToNext(level) = 5 + level × 7 + 0,6 × max(0, level − 10)²`, arrondi (`XP_CURVE` dans `data/progression.ts`). Les 10 premiers niveaux gardent l'ancienne courbe ; ensuite elle se durcit (niv 20 : 205, niv 30 : 455).
+- L'écran de fin affiche **« build complet à mm:ss »** (moment où plus rien n'est améliorable) pour régler la courbe sur du concret.
 - Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP).
 - Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
 - Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme, stat passive (PV, vitesse, aimant, dégâts %, cooldown %).
@@ -198,7 +199,19 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 - **Victoire** : survivre jusqu'au timer (10 min pour le MVP) → tout se fige, écran de victoire avec le même bilan.
 - Bouton "Rejouer" qui relance une run propre (aucun état qui fuit d'une run à l'autre).
 
-### 5.9 Méta-progression `[LATER]`
+### 5.9 Méta-progression
+
+**Persos de départ** (validé le 2026-11-11) : au clic sur « Jouer », on choisit un perso. Pour l'instant, un perso = **seulement son arme de départ** (mêmes stats pour tous). Les persos verrouillés se débloquent par un **défi** réussi avec leur arme ramassée en partie. Déblocages sauvegardés en `localStorage`.
+
+| Perso (nom provisoire) | Arme de départ | Déblocage (chiffres à ajuster en jouant) |
+|---|---|---|
+| Arcaniste | Trait arcanique | Disponible dès le début |
+| Pyromancien | Aura ardente | 5 000 kills avec l'Aura ardente <!-- TODO: cumulés sur toutes les parties, ou en une seule ? --> |
+| Runiste | Orbes runiques | Tuer le boss de 9:00 en ayant les Orbes runiques au niveau 5 |
+
+`[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
+
+**Or et mobilier** (idée validée, design à préciser) : du mobilier cassable sur la map lâche de l'**or** ou de la **nourriture** (+20 PV). L'or sert à acheter des bonus. <!-- TODO: bonus permanents achetés au menu entre deux parties (comme Vampire Survivors) ou utilisables pendant la partie ? Quels bonus, quels prix ? -->
 
 <!-- TODO: monnaie gagnée par run → upgrades permanentes en menu ? déblocage de persos/armes ? -->
 
@@ -295,8 +308,12 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
 - [x] Menu pause complet (Reprendre, Rejouer, Quitter vers le menu) : boutons + Échap/P, R, M
 - [ ] Options + sauvegarde des réglages (localStorage)
+- [x] Emplacements limités (4 armes, 4 passifs) + XP requise revue à la hausse (le build complet arrivait avant le boss de 9:00) + « build complet à mm:ss » sur l'écran de fin
+  - [ ] À régler en jouant : `steepFactor` (0,6), objectif build complet vers 9:00-9:30
 - [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
-- [ ] Méta-progression + sauvegarde localStorage <!-- TODO: design à définir (section 5.9) -->
+- [ ] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9)
+- [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
+- [ ] `[LATER]` Stats avancées par perso : armure physique / magique, dégâts physiques / magiques, vitesse...
 
 ### Phase 6 — Visuel & audio
 - [ ] Design de l'UI (HUD, menus, écrans de fin)
@@ -378,6 +395,10 @@ Format : date — décision — raison.
 | 2026-11-10 | Phase 5 découpée : 5 = contenu & systèmes (menus fonctionnels, options, équilibrage, méta-progression), 6 = visuel & audio (UI, sprites, shake, particules, sons), 7 = déploiement | Finir le fond avant la forme : pas de sprites pour des ennemis/armes qui changeront à l'équilibrage |
 | 2026-11-10 | Menu principal = `MenuScene` (une scène neuve à chaque retour) + overlay HTML ; le clic est mémorisé et lu dans l'update ; HUD masqué hors partie ; titre "SURVIVOR" provisoire ; M (code `KeyM` ou `Semicolon` pour AZERTY) = menu depuis l'écran de fin | Même principe que le level up et le "rejouer" : logique dans la game loop, aucun état qui fuit. Nom du jeu toujours en TODO (thème fantasy envisagé) |
 | 2026-11-11 | Menu pause : 3 boutons (Reprendre, Rejouer, Menu principal) avec les mêmes raccourcis que l'écran de fin (R, M) ; R et M n'agissent qu'en pause ou en fin de partie | Pas de raccourci qui fait perdre une partie en cours par erreur ; une seule logique de touches pour les deux écrans |
+| 2026-11-11 | Méta-progression = persos de départ (seulement l'arme pour l'instant) débloqués par des défis faits avec leur arme ; noms provisoires Arcaniste / Pyromancien / Runiste ; stats avancées (armures et dégâts physiques / magiques) plus tard ; mobilier cassable → or / nourriture | Idées validées ("ok reco"). Persos après l'étape Options (qui met en place la sauvegarde) |
+| 2026-11-11 | 4 armes et 4 passifs maximum | La run de 10 min n'est qu'une première partie ; des emplacements limités obligent à choisir son build |
+| 2026-11-11 | Courbe d'XP : + 0,6 × (niv − 10)² après le niveau 10 ; « build complet à » sur l'écran de fin | Avec 4 passifs, le build complet demande 37 level up au lieu de 47 (−37 % d'XP avec l'ancienne formule) alors qu'il arrivait déjà avant 9:00. Terme au carré : début de partie inchangé (retour "trop lent" d'avant), ≈ 9 300 XP pour tout maxer |
+| 2026-11-11 | Défis : Pyromancien = 5 000 kills avec l'Aura ; Runiste = tuer le boss de 9:00 avec les Orbes niv 5 | Demandé (remplace 500 kills / survivre 5:00) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

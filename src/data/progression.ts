@@ -4,11 +4,23 @@
 export const RUN_DURATION = 600;
 
 /**
- * XP nécessaire pour passer du niveau `level` au suivant.
- * 5 + niveau × 10 au départ → × 7 : retour de jeu "l'XP monte trop lentement".
+ * Courbe d'XP : `base + niveau × perLevel`, plus un terme qui grandit au carré après `steepFrom`.
+ * Historique : × 10 → × 7 ("l'XP monte trop lentement" au début), puis terme au carré
+ * (build complet atteint avant le boss de 9:00, surtout avec 4 passifs max).
  */
+export const XP_CURVE = {
+  base: 5,
+  perLevel: 7,
+  /** Les niveaux jusqu'à celui-ci gardent l'ancienne courbe : le début de partie ne change pas */
+  steepFrom: 10,
+  /** XP en plus par (niveau − steepFrom)² */
+  steepFactor: 0.6,
+} as const;
+
+/** XP nécessaire pour passer du niveau `level` au suivant (entier). */
 export function xpToNext(level: number): number {
-  return 5 + level * 7;
+  const over = Math.max(0, level - XP_CURVE.steepFrom);
+  return Math.round(XP_CURVE.base + level * XP_CURVE.perLevel + XP_CURVE.steepFactor * over * over);
 }
 
 /**
@@ -27,5 +39,9 @@ export const UPGRADE_CHOICE_COUNT = 3;
  */
 export const NEW_WEAPON_GUARANTEE_BELOW = 3;
 
-/** Armes maximum en même temps (le brief prévoit 6). */
-export const MAX_WEAPONS = 6;
+/**
+ * Emplacements : armes et passifs maximum en même temps. Une fois pleins, seuls ceux déjà
+ * possédés peuvent encore monter de niveau : il faut choisir son build.
+ */
+export const MAX_WEAPONS = 4;
+export const MAX_PASSIVES = 4;
