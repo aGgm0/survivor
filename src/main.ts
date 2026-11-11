@@ -43,6 +43,7 @@ const endOverlay = new EndOverlay(
   getElement('end-title', HTMLParagraphElement),
   getElement('end-info', HTMLParagraphElement),
   getElement('end-meter', HTMLDivElement),
+  getElement('end-hint', HTMLParagraphElement),
 );
 const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-overlay', HTMLDivElement),
@@ -73,6 +74,7 @@ const hud = new Hud({
   hpFill: getElement('hud-hpfill', HTMLDivElement),
   hpText: getElement('hud-hptext', HTMLSpanElement),
   kills: getElement('hud-kills', HTMLDivElement),
+  endless: getElement('hud-endless', HTMLDivElement),
   weapons: getElement('hud-weapons', HTMLDivElement),
   passives: getElement('hud-passives', HTMLDivElement),
 });

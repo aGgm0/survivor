@@ -198,6 +198,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
 - **Défaite** : PV à 0 → écran Game Over (temps survécu, kills, niveau atteint, damage meter).
 - **Victoire** : survivre jusqu'au timer (10 min pour le MVP) **et** que le boss de 9:00 soit mort → tout se fige, écran de victoire avec le même bilan. Boss encore en vie à 10:00 → **prolongations** : le timer continue (vagues de fin toujours actives) jusqu'à la mort du boss (victoire) ou du joueur (défaite).
+- **Mode sans fin** : sur l'écran de victoire, **C** = continuer. Le timer continue, et chaque minute (depuis le début du sans fin) la dernière vague se durcit : PV ×1,25 cumulés, +2 ennemis/s, vitesse +3 % (plafond ×1,8). Un boss toutes les 3 min, 50 % plus résistant à chaque fois (`ENDLESS` dans waves.ts). Seule la mort termine la partie, qui compte comme **victoire + sans fin** (profil : « meilleur temps en sans fin »).
 - Bouton "Rejouer" qui relance une run propre (aucun état qui fuit d'une run à l'autre).
 
 ### 5.9 Méta-progression
@@ -313,6 +314,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [ ] À régler en jouant : `steepFactor` (0,75), objectif build complet vers 9:00-9:30
 - [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
 - [x] **Profil / statistiques** : bouton Profil du menu ; parties, victoires, meilleur temps, temps total, kills totaux, meilleur niveau, arme la plus jouée, et par arme parties / dégâts / kills cumulés (`data/profile.ts`, sauvegarde versionnée). Seules les parties terminées (mort ou victoire) comptent
+- [x] **Mode sans fin** après la victoire (C sur l'écran de victoire) : difficulté qui monte chaque minute, boss toutes les 3 min, « SANS FIN » dans le HUD, meilleur temps en sans fin dans le profil
 - [ ] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
 - [ ] Enchantements (idée) : passifs jusqu'au niveau 12 ; à partir du niveau 6, chaque niveau de passif « enchante » une arme au choix, avec une variante du bonus propre à cette arme <!-- TODO: effets par couple passif × arme, coût en XP (48 niveaux de passifs au lieu de 20 → runs plus longues) -->
@@ -413,6 +415,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Orbes géants : rotation ×0,85, recul ×1,8 → ×1,6 ; recul de base des orbes 370 → 350 | Retour de jeu : légèrement trop forts. 4e arme (Épée) ajoutée à la Roadmap |
 | 2026-11-11 | Options : 3 réglages (nombres de dégâts, compteur FPS, pause quand l'onglet est caché), enregistrés à chaque clic ; `core/SaveStore` (JSON dans localStorage, ne lève jamais) + `data/settings` (version + validation champ par champ, valeurs par défaut sinon) | Pas encore de son pour un volume : réglages utiles dès maintenant. Sauvegarde versionnée pour les persos et l'or à venir |
 | 2026-11-11 | Profil : stats cumulées des parties **terminées** (une partie quittée en cours ne compte pas) ; une arme mutée compte sous son arme de base ; arme la plus jouée = le plus de parties, puis le plus de dégâts ; armes inconnues ignorées à la lecture | Demandé. Prépare les défis des persos (kills cumulés par arme). Quitter ne doit pas permettre de gonfler ou fausser les stats |
+| 2026-11-11 | Mode sans fin : C sur l'écran de victoire ; montée continue (PV ×1,25/min, +2/s par min, vitesse +3 %/min plafonnée ×1,8), boss toutes les 3 min (×1,5 PV chacun) ; une partie = un seul enregistrement au profil (victoire enregistrée en quittant l'écran, ou à la mort en sans fin, ou en quittant le sans fin par le menu pause) | Demandé ("mode sans fin dès que tu tues le boss"). Pas de double comptage de la même partie ; quitter le sans fin ne fait pas perdre la victoire |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

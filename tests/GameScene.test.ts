@@ -25,6 +25,9 @@ function makeDeps() {
     menus: 0,
     /** Fins de partie signalées (pour le profil) */
     runEnds: 0,
+    /** Dernier bilan envoyé au profil */
+    recorded: null as RunReport | null,
+    endlessShown: false,
     /** Clic simulé sur un bouton du menu pause */
     pauseClick: null as PauseAction | null,
     hudVisible: false,
@@ -60,6 +63,7 @@ function makeDeps() {
     },
     hud: {
       setVisible: (v) => (ui.hudVisible = v),
+      setEndless: (v) => (ui.endlessShown = v),
       setTime: () => {},
       setProgress: () => {},
       setHp: () => {},
@@ -70,7 +74,10 @@ function makeDeps() {
     settings: { ...DEFAULT_SETTINGS },
     onRestart: () => ui.restarts++,
     onMenu: () => ui.menus++,
-    onRunEnd: () => ui.runEnds++,
+    onRunEnd: (report) => {
+      ui.runEnds++;
+      ui.recorded = report;
+    },
   };
   /** Simule un appui unique (vu par une seule update, comme Input.endUpdate). */
   const press = (code: string, scene: GameScene) => {
@@ -413,10 +420,13 @@ describe('GameScene — victoire et bilan', () => {
     expect(ui.end?.time).toBeGreaterThan(1.5); // temps réel, prolongations comprises
   });
 
-  it('la fin de partie est signalée une seule fois (profil), même si le jeu continue de tourner', () => {
-    const { scene, ui } = newScene({ runDuration: 1 });
-    for (let i = 0; i < 3 * 60; i++) scene.update(DT);
-    expect(scene.isOver).toBe(true);
+  it('défaite : envoyée au profil tout de suite, une seule fois', () => {
+    const { scene, ui } = newScene();
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(ui.runEnds).toBe(1);
+    scene.exit();
     expect(ui.runEnds).toBe(1);
   });
 
@@ -556,5 +566,73 @@ describe('GameScene — onglet caché', () => {
     scene.update(DT);
     scene.onHidden();
     expect(ui.paused).toBe(false);
+  });
+});
+
+describe('GameScene — mode sans fin', () => {
+  /** Partie gagnée (timer court, pas de boss) : on est sur l'écran de victoire. */
+  function won() {
+    const ctx = newScene({ runDuration: 1, armed: false });
+    for (let i = 0; i < 70; i++) ctx.scene.update(DT);
+    expect(ctx.ui.end?.victory).toBe(true);
+    return ctx;
+  }
+
+  it('victoire : pas encore envoyée au profil (on peut continuer), puis une fois en quittant', () => {
+    const { scene, ui } = won();
+    expect(ui.runEnds).toBe(0);
+    scene.exit(); // R ou M : main.ts change de scène
+    expect(ui.runEnds).toBe(1);
+    expect(ui.recorded?.endless).toBe(false);
+  });
+
+  it('C sur l’écran de victoire : la partie reprend, le timer continue, plus de victoire', () => {
+    const { scene, ui, press } = won();
+    press('KeyC', scene);
+    expect(scene.isEndless).toBe(true);
+    expect(scene.isOver).toBe(false);
+    expect(ui.end).toBeNull();
+    expect(ui.endlessShown).toBe(true);
+    const time = scene.runTime;
+    for (let i = 0; i < 120; i++) scene.update(DT);
+    expect(scene.runTime).toBeGreaterThan(time);
+    expect(scene.isOver).toBe(false); // le timer dépassé ne redonne pas la victoire
+  });
+
+  it('mort en sans fin : victoire + sans fin, temps total, envoyée une seule fois', () => {
+    const { scene, ui, press } = won();
+    press('KeyC', scene);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    scene.update(DT);
+    expect(ui.end?.victory).toBe(true);
+    expect(ui.end?.endless).toBe(true);
+    expect(ui.end?.time).toBeGreaterThan(1.5);
+    expect(ui.runEnds).toBe(1);
+    press('KeyC', scene); // plus de continuer après une mort
+    expect(scene.isOver).toBe(true);
+    scene.exit();
+    expect(ui.runEnds).toBe(1);
+  });
+
+  it('sans fin quitté par le menu pause : compte quand même comme une victoire', () => {
+    const { scene, ui, press } = won();
+    press('KeyC', scene);
+    for (let i = 0; i < 30; i++) scene.update(DT);
+    scene.exit();
+    expect(ui.runEnds).toBe(1);
+    expect(ui.recorded?.victory).toBe(true);
+    expect(ui.recorded?.endless).toBe(true);
+  });
+
+  it('C ne fait rien sur l’écran de défaite', () => {
+    const { scene, press } = newScene();
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    scene.update(DT);
+    press('KeyC', scene);
+    expect(scene.isEndless).toBe(false);
+    expect(scene.isOver).toBe(true);
   });
 });

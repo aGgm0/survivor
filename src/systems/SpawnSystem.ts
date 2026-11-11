@@ -3,7 +3,18 @@ import type { Pool } from '../core/Pool';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import type { EnemyType } from '../data/enemies';
 import { SPAWN } from '../data/spawn';
-import { BONUS_WAVES, BOSS_SPAWNS, BOSS_TYPE, waveAt, type WaveDef } from '../data/waves';
+import {
+  BONUS_WAVES,
+  BOSS_SPAWNS,
+  BOSS_TYPE,
+  ENDLESS,
+  WAVES,
+  endlessBossHpMult,
+  endlessWave,
+  waveAt,
+  type MutableWave,
+  type WaveDef,
+} from '../data/waves';
 import type { Enemy } from '../entities/Enemy';
 
 /**
@@ -14,6 +25,9 @@ export const SPAWN_RADIUS = Math.hypot(LOGICAL_WIDTH, LOGICAL_HEIGHT) / 2 + SPAW
 const RECYCLE_DISTANCE = SPAWN_RADIUS * SPAWN.recycleDistanceFactor;
 const FLOAT_EPSILON = 1e-9;
 
+/** Ce qu'il faut pour faire apparaître un ennemi de vague (vague normale ou vague du sans fin). */
+type SpawnParams = Pick<WaveDef, 'weights' | 'hpMult' | 'speedMult'>;
+
 /** Fait apparaître les ennemis selon la vague en cours, et les boss à leurs instants. */
 export class SpawnSystem {
   private timer = 0;
@@ -21,15 +35,36 @@ export class SpawnSystem {
   private nextBoss = 0;
   /** Un compteur par rush de BONUS_WAVES (tableau typé créé une fois : pas d'allocation) */
   private readonly bonusTimers = new Float64Array(BONUS_WAVES.length);
+  /** s : début du mode sans fin ; null = partie normale */
+  private endlessStart: number | null = null;
+  /** Boss du sans fin déjà envoyés */
+  private endlessBosses = 0;
+  /** Vague du sans fin, recalculée sur place à chaque update (pas d'allocation) */
+  private readonly endlessCurrent: MutableWave = {
+    perSecond: 0,
+    weights: WAVES[0]?.weights ?? [],
+    hpMult: 1,
+    speedMult: 1,
+  };
 
   constructor(
     private readonly enemies: Pool<Enemy>,
     private readonly rng: Rng,
   ) {}
 
+  /** Le joueur continue après la victoire : la difficulté monte à partir de `now`. */
+  startEndless(now: number): void {
+    this.endlessStart = now;
+    this.endlessBosses = 0;
+  }
+
   /** `now` = temps de partie (s) : détermine la vague active et l'arrivée des boss. */
   update(dt: number, now: number, playerX: number, playerY: number): void {
-    const wave = waveAt(now);
+    const base = waveAt(now);
+    const wave =
+      this.endlessStart === null
+        ? base
+        : endlessWave(base, (now - this.endlessStart) / 60, this.endlessCurrent);
     const interval = 1 / wave.perSecond;
     this.timer += dt;
     // Tolérance : un intervalle comme 0,4 s ajouté plusieurs fois n'est pas exact en virgule
@@ -47,15 +82,32 @@ export class SpawnSystem {
       // Chaque boss a ses propres multiplicateurs (pas ceux de la vague en cours).
       this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
     }
+    this.updateEndlessBosses(now, playerX, playerY);
 
     this.recycleFarEnemies(playerX, playerY);
+  }
+
+  /** Sans fin : un boss toutes les `ENDLESS.bossInterval` s, plus résistant à chaque fois. */
+  private updateEndlessBosses(now: number, playerX: number, playerY: number): void {
+    if (this.endlessStart === null) return;
+    const next = this.endlessStart + ENDLESS.bossInterval * (this.endlessBosses + 1);
+    if (now < next) return;
+    this.endlessBosses++;
+    const lastBoss = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
+    this.spawnAt(
+      BOSS_TYPE,
+      endlessBossHpMult(this.endlessBosses),
+      lastBoss?.speedMult ?? 1,
+      playerX,
+      playerY,
+    );
   }
 
   /** Rushs actifs : chacun a son propre compteur, comme la vague normale. */
   private updateBonusWaves(
     dt: number,
     now: number,
-    wave: WaveDef,
+    wave: SpawnParams,
     playerX: number,
     playerY: number,
   ): void {
@@ -82,7 +134,7 @@ export class SpawnSystem {
     }
   }
 
-  private spawnFromWave(wave: WaveDef, playerX: number, playerY: number): boolean {
+  private spawnFromWave(wave: SpawnParams, playerX: number, playerY: number): boolean {
     const type = pickWeighted(wave.weights, this.rng.next());
     return this.spawnAt(type, wave.hpMult, wave.speedMult, playerX, playerY);
   }

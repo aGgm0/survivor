@@ -77,7 +77,10 @@ export interface GameSceneDeps {
   pauseOverlay: Pick<PauseOverlay, 'setVisible' | 'takeAction'>;
   endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
-  hud: Pick<Hud, 'setVisible' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
+  hud: Pick<
+    Hud,
+    'setVisible' | 'setEndless' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'
+  >;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Réglages du joueur (écran Options), lus en direct */
   settings: Readonly<Settings>;
@@ -127,6 +130,10 @@ export class GameScene implements Scene, Build {
   private killCount = 0;
   /** s : moment où plus rien n'était améliorable ; null = build pas encore complet */
   private maxedAt: number | null = null;
+  /** Mode sans fin lancé depuis l'écran de victoire */
+  private endless = false;
+  /** La partie a déjà été ajoutée au profil */
+  private recorded = false;
   private readonly runDuration: number;
 
   /**
@@ -175,6 +182,7 @@ export class GameScene implements Scene, Build {
 
   enter(): void {
     this.deps.hud.setVisible(true);
+    this.deps.hud.setEndless(false);
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
@@ -183,6 +191,10 @@ export class GameScene implements Scene, Build {
   }
 
   exit(): void {
+    // Victoire sans avoir continué en sans fin : la partie se termine vraiment ici (R ou M).
+    // Sans fin quitté par le menu pause : la victoire était acquise, elle compte quand même.
+    if (this.endless && !this.report) this.report = this.buildReport(true);
+    this.recordRunOnce();
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
@@ -219,7 +231,8 @@ export class GameScene implements Scene, Build {
 
     if (this.report) {
       this.freeze();
-      if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+      if (this.canContinueEndless && input.wasPressed(CONTROLS.continue)) this.startEndless();
+      else if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
       else if (input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
       return;
     }
@@ -245,7 +258,8 @@ export class GameScene implements Scene, Build {
     this.elapsed += dt;
     // Survécu jusqu'au bout ET plus de boss en vie : tout se fige, écran de victoire.
     // Boss encore là à 10:00 → prolongations : la partie continue jusqu'à sa mort (ou la tienne).
-    if (this.elapsed >= this.runDuration && !this.isBossAlive()) {
+    // En sans fin, plus de victoire : seule la mort termine la partie.
+    if (!this.endless && this.elapsed >= this.runDuration && !this.isBossAlive()) {
       // Victoire pile au timer : on affiche 10:00, pas l'arrondi du dernier pas fixe.
       if (this.elapsed - dt < this.runDuration) this.elapsed = this.runDuration;
       this.endRun(true);
@@ -357,7 +371,7 @@ export class GameScene implements Scene, Build {
 
   /** Vrai pendant les prolongations : temps écoulé mais boss encore en vie. */
   get isOvertime(): boolean {
-    return !this.report && this.elapsed >= this.runDuration;
+    return !this.report && !this.endless && this.elapsed >= this.runDuration;
   }
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
@@ -386,17 +400,50 @@ export class GameScene implements Scene, Build {
   /** Fin de partie (mort ou victoire) : on fige tout et on affiche le bilan. */
   private endRun(victory: boolean): void {
     this.setPaused(false);
-    this.report = {
-      victory,
+    this.report = this.buildReport(victory);
+    this.deps.endOverlay.show(this.report, this.canContinueEndless);
+    // Victoire "normale" : le joueur peut encore continuer en sans fin, on attend pour
+    // l'enregistrer (sinon la même partie compterait deux fois). Sinon, c'est fini.
+    if (!this.canContinueEndless) this.recordRunOnce();
+  }
+
+  private buildReport(victory: boolean): RunReport {
+    return {
+      // Mourir en sans fin reste une victoire : le boss avait été tué avant.
+      victory: victory || this.endless,
+      endless: this.endless,
       time: this.elapsed,
       kills: this.killCount,
       level: this.progression.level,
       maxedAt: this.maxedAt,
       weapons: buildDamageReport(this.weapons),
     };
-    this.deps.endOverlay.show(this.report);
-    // Une seule fois par partie (endRun n'est plus rappelé ensuite) : statistiques du profil.
+  }
+
+  /** Vrai sur l'écran de victoire, tant que le sans fin n'a pas été lancé. */
+  private get canContinueEndless(): boolean {
+    return this.report !== null && this.report.victory && !this.endless;
+  }
+
+  /** C sur l'écran de victoire : la partie reprend, de plus en plus dure, jusqu'à la mort. */
+  private startEndless(): void {
+    this.endless = true;
+    this.report = null;
+    this.deps.endOverlay.hide();
+    this.deps.hud.setEndless(true);
+    this.spawner.startEndless(this.elapsed);
+  }
+
+  /** Une partie ne compte qu'une fois dans le profil, quelle que soit la façon dont elle finit. */
+  private recordRunOnce(): void {
+    if (!this.report || this.recorded) return;
+    this.recorded = true;
     this.deps.onRunEnd(this.report);
+  }
+
+  /** Vrai en mode sans fin (après avoir continué depuis l'écran de victoire). */
+  get isEndless(): boolean {
+    return this.endless;
   }
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */

@@ -8,15 +8,21 @@ export class EndOverlay {
     private readonly titleEl: HTMLElement,
     private readonly infoEl: HTMLElement,
     private readonly meterEl: HTMLElement,
+    private readonly hintEl: HTMLElement,
   ) {}
 
-  show(report: RunReport): void {
+  /** `canContinue` : écran de victoire d'où l'on peut lancer le mode sans fin (touche C). */
+  show(report: RunReport, canContinue = false): void {
     this.el.classList.toggle('overlay-victory', report.victory);
     this.el.classList.toggle('overlay-death', !report.victory);
-    this.titleEl.textContent = report.victory ? 'VICTOIRE' : 'MORT';
+    this.titleEl.textContent = report.endless ? 'SANS FIN' : report.victory ? 'VICTOIRE' : 'MORT';
     const maxed =
       report.maxedAt === null ? 'build incomplet' : `build complet à ${formatTime(report.maxedAt)}`;
-    this.infoEl.textContent = `Survécu ${formatTime(report.time)} · ${report.kills} kills · niveau ${report.level} · ${maxed}`;
+    const survived = report.endless ? 'Victoire + sans fin : survécu' : 'Survécu';
+    this.infoEl.textContent = `${survived} ${formatTime(report.time)} · ${report.kills} kills · niveau ${report.level} · ${maxed}`;
+    this.hintEl.textContent = canContinue
+      ? 'C pour continuer en sans fin · R pour rejouer · M pour le menu'
+      : 'R pour rejouer · M pour le menu';
 
     // Créer des éléments est sans risque ici : une seule fois, en fin de partie.
     this.meterEl.replaceChildren(

@@ -12,6 +12,8 @@ export interface HudElements {
   hpFill: HTMLElement;
   hpText: HTMLElement;
   kills: HTMLElement;
+  /** Mention "SANS FIN" (mode sans fin) */
+  endless: HTMLElement;
   /** Rangée des armes possédées */
   weapons: HTMLElement;
   /** Rangée des passifs possédés */
@@ -37,6 +39,10 @@ export class Hud {
   private shownWeapons: readonly Weapon[] | null = null;
 
   constructor(private readonly el: HudElements) {}
+
+  setEndless(endless: boolean): void {
+    this.el.endless.hidden = !endless;
+  }
 
   /** Masqué dans le menu, visible en partie. */
   setVisible(visible: boolean): void {

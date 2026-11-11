@@ -26,6 +26,10 @@ export class ProfileOverlay {
         ['Parties', String(profile.runs)],
         ['Victoires', `${profile.victories} (${winRate} %)`],
         ['Meilleur temps', formatTime(profile.bestTime)],
+        [
+          'Meilleur temps en sans fin',
+          profile.bestEndlessTime > 0 ? formatTime(profile.bestEndlessTime) : '—',
+        ],
         ['Temps total survécu', formatTime(profile.totalTime)],
         ['Kills totaux', String(profile.totalKills)],
         ['Meilleur niveau', String(profile.bestLevel)],

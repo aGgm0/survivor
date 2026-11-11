@@ -12,6 +12,7 @@ import type { RunReport } from '../src/systems/runReport';
 function report(overrides: Partial<RunReport> = {}): RunReport {
   return {
     victory: false,
+    endless: false,
     time: 300,
     kills: 1000,
     level: 20,
@@ -59,6 +60,18 @@ describe('recordRun', () => {
     recordRun(profile, report());
     expect(profile.weapons.burningAura).toEqual({ runs: 2, damage: 10000, kills: 1400 });
     expect(profile.weapons.arcaneBolt?.runs).toBe(2);
+  });
+});
+
+describe('recordRun — sans fin', () => {
+  it('seules les parties en sans fin comptent pour le meilleur temps en sans fin', () => {
+    const profile = emptyProfile();
+    recordRun(profile, report({ victory: true, time: 600 }));
+    expect(profile.bestEndlessTime).toBe(0);
+    recordRun(profile, report({ victory: true, endless: true, time: 812 }));
+    expect(profile.bestEndlessTime).toBe(812);
+    expect(profile.bestTime).toBe(812);
+    expect(profile.runs).toBe(2);
   });
 });
 

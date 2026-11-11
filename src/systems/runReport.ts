@@ -17,6 +17,8 @@ export interface WeaponReport {
 /** Bilan affiché sur l'écran de fin (victoire ou défaite). */
 export interface RunReport {
   readonly victory: boolean;
+  /** Vrai si le joueur a continué en mode sans fin après la victoire */
+  readonly endless: boolean;
   /** s survécues */
   readonly time: number;
   readonly kills: number;

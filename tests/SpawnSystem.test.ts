@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
-import { BONUS_WAVES, BOSS_SPAWNS, WAVES, waveAt } from '../src/data/waves';
+import {
+  BONUS_WAVES,
+  BOSS_SPAWNS,
+  ENDLESS,
+  WAVES,
+  endlessBossHpMult,
+  endlessWave,
+  waveAt,
+  type MutableWave,
+} from '../src/data/waves';
 
 const BOSS_TIMES = BOSS_SPAWNS.map((b) => b.time);
 import { Enemy } from '../src/entities/Enemy';
@@ -182,5 +191,48 @@ describe('SpawnSystem — placement', () => {
     b.spawner.spawnBatch(10, 0, 0, 0);
     const pos = (p: Pool<Enemy>) => activeEnemies(p).map((e) => [e.x, e.y, e.type.id]);
     expect(pos(a.pool)).toEqual(pos(b.pool));
+  });
+});
+
+describe('mode sans fin', () => {
+  const last = WAVES[WAVES.length - 1]!;
+  const out = (): MutableWave => ({ perSecond: 0, weights: [], hpMult: 0, speedMult: 0 });
+
+  it('au début du sans fin : la dernière vague telle quelle', () => {
+    const w = endlessWave(last, 0, out());
+    expect(w.perSecond).toBe(last.perSecond);
+    expect(w.hpMult).toBe(last.hpMult);
+    expect(w.speedMult).toBe(last.speedMult);
+    expect(w.weights).toBe(last.weights);
+  });
+
+  it('chaque minute : PV ×1,25 cumulés, +2 ennemis/s, +3 % de vitesse', () => {
+    const w = endlessWave(last, 2, out());
+    expect(w.hpMult).toBeCloseTo(last.hpMult * 1.25 * 1.25);
+    expect(w.perSecond).toBe(last.perSecond + 4);
+    expect(w.speedMult).toBeCloseTo(last.speedMult * 1.06);
+  });
+
+  it('la vitesse est plafonnée', () => {
+    expect(endlessWave(last, 60, out()).speedMult).toBe(ENDLESS.maxSpeedMult);
+  });
+
+  it('un boss toutes les 3 min, 50 % plus résistant à chaque fois', () => {
+    expect(endlessBossHpMult(1)).toBeCloseTo((BOSS_SPAWNS[1]?.hpMult ?? 0) * 1.5);
+    expect(endlessBossHpMult(2)).toBeCloseTo(endlessBossHpMult(1) * 1.5);
+
+    const { pool, spawner } = setup(2000);
+    // On saute après les boss normaux (un par update), puis on lance le sans fin à 10:00.
+    for (let i = 0; i < BOSS_SPAWNS.length; i++) spawner.update(1 / 60, 600, 0, 0);
+    spawner.startEndless(600);
+    const bossesBefore = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss).length;
+    spawner.update(1 / 60, 600 + ENDLESS.bossInterval - 1, 0, 0);
+    expect(activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss).length).toBe(
+      bossesBefore,
+    );
+    spawner.update(1 / 60, 600 + ENDLESS.bossInterval, 0, 0);
+    const bosses = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
+    expect(bosses.length).toBe(bossesBefore + 1);
+    expect(bosses.some((b) => b.maxHp === ENEMY_TYPES.boss.hp * endlessBossHpMult(1))).toBe(true);
   });
 });

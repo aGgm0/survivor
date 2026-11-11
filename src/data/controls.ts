@@ -7,6 +7,8 @@ export const CONTROLS = {
   right: ['KeyD', 'ArrowRight'],
   pause: ['Escape', 'KeyP'],
   restart: ['KeyR'],
+  /** Continuer en mode sans fin depuis l'écran de victoire (même touche en AZERTY et QWERTY) */
+  continue: ['KeyC'],
   /** Revenir en arrière (écran Options → menu principal) */
   back: ['Escape'],
   /** Valider (menu principal) */

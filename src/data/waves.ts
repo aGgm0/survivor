@@ -132,3 +132,52 @@ export function waveAt(time: number): WaveDef {
   if (!current) throw new Error('WAVES vide');
   return current;
 }
+
+/**
+ * Mode sans fin (après la victoire, si le joueur choisit de continuer) : chaque minute écoulée
+ * depuis le début du sans fin durcit la dernière vague. Sans ça, un build complet raserait tout.
+ */
+export const ENDLESS = {
+  /** PV ×1,25 par minute, cumulé (×1,56 après 2 min, ×3 vers 5 min) */
+  hpGrowthPerMinute: 1.25,
+  /** ennemis par seconde en plus, par minute */
+  extraPerSecondPerMinute: 2,
+  /** vitesse +3 % par minute... */
+  speedGrowthPerMinute: 0.03,
+  /** ...plafonnée, pour rester jouable */
+  maxSpeedMult: 1.8,
+  /** s entre deux boss du sans fin (le 1er arrive 3 min après le début) */
+  bossInterval: 180,
+  /** PV du 1er boss du sans fin = ceux du dernier boss normal × ce facteur, puis × encore à chaque boss */
+  bossHpGrowth: 1.5,
+} as const;
+
+/** Une vague modifiable : le sans fin la recalcule sur place (pas d'allocation en jeu). */
+export interface MutableWave {
+  perSecond: number;
+  weights: WaveDef['weights'];
+  hpMult: number;
+  speedMult: number;
+}
+
+/**
+ * Écrit dans `out` la vague du sans fin `minutes` minutes après son début (peut être décimal :
+ * la difficulté monte en continu, pas par paliers).
+ */
+export function endlessWave(base: WaveDef, minutes: number, out: MutableWave): MutableWave {
+  const m = Math.max(0, minutes);
+  out.weights = base.weights;
+  out.perSecond = base.perSecond + ENDLESS.extraPerSecondPerMinute * m;
+  out.hpMult = base.hpMult * ENDLESS.hpGrowthPerMinute ** m;
+  out.speedMult = Math.min(
+    ENDLESS.maxSpeedMult,
+    base.speedMult * (1 + ENDLESS.speedGrowthPerMinute * m),
+  );
+  return out;
+}
+
+/** Multiplicateur de PV du n-ième boss du sans fin (n = 1, 2, 3...). */
+export function endlessBossHpMult(n: number): number {
+  const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
+  return (last?.hpMult ?? 1) * ENDLESS.bossHpGrowth ** n;
+}
