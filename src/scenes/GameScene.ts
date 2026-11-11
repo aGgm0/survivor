@@ -15,7 +15,14 @@ import {
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_TYPE } from '../data/waves';
-import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
+import {
+  PROJECTILE_POOL_SIZE,
+  WEAPON_LIST,
+  WEAPONS,
+  weaponMaxLevel,
+  type WeaponDef,
+} from '../data/weapons';
+import { PASSIVES } from '../data/upgrades';
 import { BOSS_CHALLENGES } from '../data/characters';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
@@ -36,6 +43,7 @@ import { XpSystem } from '../systems/XpSystem';
 import {
   applyUpgrade,
   availableUpgrades,
+  rebuildPassiveStats,
   rollUpgradeChoices,
   type Build,
   type UpgradeChoice,
@@ -45,6 +53,7 @@ import { buildDamageReport, type RunReport } from '../systems/runReport';
 import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
+import type { DevAction, DevPanel, DevView } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
 
 /** px entre deux lignes de la grille de fond */
@@ -78,7 +87,14 @@ export interface GameSceneDeps {
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
   hud: Pick<
     Hud,
-    'setVisible' | 'setEndless' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'
+    | 'setVisible'
+    | 'setEndless'
+    | 'setTest'
+    | 'setTime'
+    | 'setProgress'
+    | 'setHp'
+    | 'setKills'
+    | 'setInventory'
   >;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Réglages du joueur (écran Options), lus en direct */
@@ -89,6 +105,8 @@ export interface GameSceneDeps {
   onMenu: () => void;
   /** Appelé une fois quand la partie se termine (mort ou victoire) : main.ts met le profil à jour. */
   onRunEnd: (report: RunReport) => void;
+  /** Menu de test (F2), seulement en dev : absent du build et des tests qui n'en ont pas besoin. */
+  devPanel?: Pick<DevPanel, 'setVisible' | 'takeActions' | 'refresh'>;
   /** Noms des persos que cette partie débloque (annoncés sur l'écran de fin) */
   unlocksFor: (report: RunReport) => readonly string[];
 }
@@ -135,6 +153,12 @@ export class GameScene implements Scene, Build {
   private endless = false;
   /** Défis réussis pendant cette partie (ids) */
   private readonly challenges: string[] = [];
+  /** Menu de test ouvert (F2) */
+  private devOpen = false;
+  /** Menu de test : le joueur ne prend plus de dégâts */
+  private god = false;
+  /** Le menu de test a servi : la partie ne compte pas au profil */
+  private testRun = false;
   /** La partie a déjà été ajoutée au profil */
   private recorded = false;
   private readonly runDuration: number;
@@ -190,6 +214,8 @@ export class GameScene implements Scene, Build {
   enter(): void {
     this.deps.hud.setVisible(true);
     this.deps.hud.setEndless(false);
+    this.deps.hud.setTest(false);
+    this.deps.devPanel?.setVisible(false);
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
@@ -249,6 +275,13 @@ export class GameScene implements Scene, Build {
       this.freeze();
       const index = this.readChoiceInput();
       if (index !== null) this.chooseUpgrade(index);
+      return;
+    }
+
+    // Menu de test (F2, dev seulement) : le jeu est figé pendant qu'on règle.
+    if (this.deps.devPanel && (this.devOpen || input.wasPressed(CONTROLS.devPanel))) {
+      this.freeze();
+      this.updateDevPanel(this.deps.devPanel);
       return;
     }
 
@@ -406,6 +439,7 @@ export class GameScene implements Scene, Build {
    * On compare à `elapsed` (temps de partie) : rien à décompter sur chaque ennemi.
    */
   private applyContactDamage(): void {
+    if (this.god) return; // menu de test : invincible
     for (let i = 0; i < this.touchingCount; i++) {
       const e = this.touching[i];
       if (!e || this.elapsed < e.nextContactHitAt) continue;
@@ -423,7 +457,7 @@ export class GameScene implements Scene, Build {
     this.deps.endOverlay.show(
       this.report,
       this.canContinueEndless,
-      this.deps.unlocksFor(this.report),
+      this.testRun ? [] : this.deps.unlocksFor(this.report),
     );
     // Victoire "normale" : le joueur peut encore continuer en sans fin, on attend pour
     // l'enregistrer (sinon la même partie compterait deux fois). Sinon, c'est fini.
@@ -462,7 +496,8 @@ export class GameScene implements Scene, Build {
   private recordRunOnce(): void {
     if (!this.report || this.recorded) return;
     this.recorded = true;
-    this.deps.onRunEnd(this.report);
+    // Partie de test (menu F2) : rien n'est enregistré (stats, défis, déblocages).
+    if (!this.testRun) this.deps.onRunEnd(this.report);
   }
 
   /** Vrai en mode sans fin (après avoir continué depuis l'écran de victoire). */
@@ -622,6 +657,125 @@ export class GameScene implements Scene, Build {
     ctx.strokeStyle = HITBOX_COLOR;
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+
+  /** F2 ouvre/ferme ; Échap ferme aussi. Les actions cliquées sont appliquées ici, dans l'update. */
+  private updateDevPanel(panel: NonNullable<GameSceneDeps['devPanel']>): void {
+    const { input } = this.deps;
+    if (!this.devOpen) {
+      this.devOpen = true;
+      panel.setVisible(true);
+      panel.refresh(this.devView());
+      return;
+    }
+    let close = input.wasPressed(CONTROLS.devPanel) || input.wasPressed(CONTROLS.back);
+    for (const action of panel.takeActions()) {
+      if (action.kind === 'close') close = true;
+      else this.applyDevAction(action);
+    }
+    panel.refresh(this.devView());
+    // +N niveaux : on ferme pour laisser place à l'écran de level up.
+    if (close || this.choices) {
+      this.devOpen = false;
+      panel.setVisible(false);
+    }
+  }
+
+  /** Applique une action du menu de test. Toute action fait de la partie une partie de test. */
+  applyDevAction(action: DevAction): void {
+    this.testRun = true;
+    this.deps.hud.setTest(true);
+    const player = this.player;
+    switch (action.kind) {
+      case 'god':
+        this.god = !this.god;
+        return;
+      case 'heal':
+        player.hp = player.maxHp;
+        return;
+      case 'levels':
+        this.progression.level += action.count;
+        this.pendingLevelUps += action.count;
+        if (!this.choices) this.openLevelUp();
+        return;
+      case 'weaponToggle': {
+        const index = this.weapons.findIndex((w) => w.def.id === action.id);
+        const def = WEAPON_LIST.find((d) => d.id === action.id);
+        if (index >= 0) this.weapons.splice(index, 1);
+        else if (def) this.weapons.push(new Weapon(def));
+        break;
+      }
+      case 'weaponLevel': {
+        const w = this.weapons.find((x) => x.def.id === action.id);
+        if (!w) return;
+        // Les niveaux normaux seulement (1 à 5) ; la mutation (niveau 6) a ses propres boutons.
+        w.mutation = null;
+        w.level = Math.max(1, Math.min(weaponMaxLevel(w.def), w.level + action.delta));
+        break;
+      }
+      case 'mutation': {
+        const w = this.weapons.find((x) => x.def.id === action.id);
+        if (!w) return;
+        w.mutation = w.def.mutations?.[action.index] ?? null;
+        w.level = weaponMaxLevel(w.def) + (w.mutation ? 1 : 0);
+        break;
+      }
+      case 'passive': {
+        const passive = PASSIVES.find((p) => p.id === action.id);
+        if (!passive) return;
+        const level = Math.max(
+          0,
+          Math.min(passive.maxLevel, (this.passiveLevels.get(passive.id) ?? 0) + action.delta),
+        );
+        if (level > 0) this.passiveLevels.set(passive.id, level);
+        else this.passiveLevels.delete(passive.id);
+        rebuildPassiveStats(player, this.passiveLevels);
+        break;
+      }
+      case 'time':
+        this.elapsed = action.seconds;
+        this.spawner.jumpTo(action.seconds);
+        return;
+      case 'endless':
+        if (this.endless) return;
+        this.elapsed = Math.max(this.elapsed, this.runDuration);
+        this.startEndless();
+        return;
+      case 'spawn':
+        this.spawner.spawnBatch(action.count, this.elapsed, player.x, player.y);
+        return;
+      case 'killAll':
+        for (const e of this.enemies.items) {
+          if (e.active && e.type !== BOSS_TYPE) this.killEnemy(e);
+        }
+        return;
+      case 'boss':
+        this.spawner.spawnBoss(player.x, player.y);
+        return;
+      case 'close':
+        return;
+    }
+    // Armes ou passifs changés : stats recalculées, inventaire du HUD redessiné.
+    this.recomputeWeapons();
+    this.buildVersion++;
+  }
+
+  /** Ce que le menu de test affiche. Créé seulement quand il est ouvert (pas en jeu). */
+  private devView(): DevView {
+    return {
+      god: this.god,
+      weapons: WEAPON_LIST.map((def) => {
+        const w = this.weapons.find((x) => x.def.id === def.id);
+        const mutation = w?.mutation ? (def.mutations?.indexOf(w.mutation) ?? -1) : -1;
+        return { id: def.id, owned: !!w, level: w?.level ?? 0, mutation };
+      }),
+      passives: PASSIVES.map((p) => ({ id: p.id, level: this.passiveLevels.get(p.id) ?? 0 })),
+    };
+  }
+
+  /** Vrai si le menu de test a servi pendant cette partie. */
+  get isTestRun(): boolean {
+    return this.testRun;
   }
 
   /** Menu pause : clic sur un bouton, ou raccourci clavier (Échap/P, R, M). */

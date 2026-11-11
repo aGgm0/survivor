@@ -23,4 +23,6 @@ export const CONTROLS = {
   choice4: ['Digit4', 'Numpad4'],
   /** debug : ajoute un paquet d'ennemis (test de perf) */
   debugSpawn: ['F4'],
+  /** dev : menu de test */
+  devPanel: ['F2'],
 } as const;

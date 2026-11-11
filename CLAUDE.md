@@ -235,6 +235,7 @@ Ce sont les points où un jeu Survivor rame si c'est mal fait. **À respecter st
 8. **Random seedé** (`core/math.ts`) pour pouvoir reproduire un bug.
 9. Pause automatique quand l'onglet perd le focus (`visibilitychange`).
 10. Un **overlay debug** (touche F3) : FPS, nombre d'entités actives, hitboxes.
+11. Un **menu de test** (touche F2, `npm run dev` seulement, absent du build) : armes (ajout, niveau, mutation), passifs, niveaux, invincibilité, sauts dans le temps, sans fin, ennemis, boss. Toute action fait de la partie une **partie de test** (badge TEST) qui n'est **jamais** enregistrée au profil.
 
 ---
 
@@ -427,6 +428,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Gros nerf : Taille 7 → 4 %/niv, Vélocité 10 → 5 %/niv ; gros buff du tank : 66 → 90 PV, vitesse 60 → 72 | Retour de jeu |
 | 2026-11-11 | Boss : résistance de 85 % aux ralentissements (`slowResist`, le Brasier −30 % ne le ralentit plus que de 4,5 %) ; basique 20 → 23 PV et vitesse 80 → 88 | Retour de jeu : le Brasier ralentissait beaucoup trop le boss. Basique toujours tué en 2 coups de Trait (14) |
 | 2026-11-11 | Épée (mêlée) : 22 dégâts, 1,2 s, 110 px, 120°, recul 260 ; Tourbillon / Lame d'onde ; Duplicateur = combo de coups enchaînés (0,12 s), y compris pour le Tourbillon (un tour de plus) et la Lame d'onde (une vague de plus) ; Taille = portée (pas l'ouverture) ; direction = dernière direction de marche ; perso Lame-mage (3 000 kills) | Design proposé et validé ; « combo » choisi plutôt que « directions » pour que le Duplicateur ne rende pas le Tourbillon inutile |
+| 2026-11-11 | Menu de test F2 (`ui/DevPanel.ts`) : dev seulement (`import.meta.env.DEV`, vérifié absent du build) ; jeu figé pendant le réglage ; actions mémorisées puis appliquées dans l'update ; partie de test jamais enregistrée (stats, défis, déblocages) ; saut dans le temps qui saute les boss déjà passés ; baisser un passif recalcule toutes les stats (`rebuildPassiveStats`) | Demandé pour tester plus vite. Une partie trafiquée ne doit pas débloquer de perso ni fausser le profil |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

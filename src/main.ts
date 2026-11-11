@@ -14,6 +14,7 @@ import { SaveStore } from './core/SaveStore';
 import { SETTINGS_KEY, parseSettings, serializeSettings } from './data/settings';
 import { PROFILE_KEY, parseProfile, recordRun, serializeProfile } from './data/profile';
 import { ProfileOverlay } from './ui/ProfileOverlay';
+import { DevPanel } from './ui/DevPanel';
 import { CharacterOverlay } from './ui/CharacterOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
@@ -83,10 +84,17 @@ const hud = new Hud({
   hpText: getElement('hud-hptext', HTMLSpanElement),
   kills: getElement('hud-kills', HTMLDivElement),
   endless: getElement('hud-endless', HTMLDivElement),
+  test: getElement('hud-test', HTMLDivElement),
   weapons: getElement('hud-weapons', HTMLDivElement),
   passives: getElement('hud-passives', HTMLDivElement),
 });
 const game = new Game(renderer, debug, input);
+
+// Menu de test (F2) : seulement avec `npm run dev`. Dans le build, `import.meta.env.DEV` vaut
+// false et Vite retire ce code : un joueur ne peut pas l'ouvrir.
+const devPanel = import.meta.env.DEV
+  ? new DevPanel(getElement('dev-panel', HTMLDivElement))
+  : undefined;
 
 /**
  * Lance une partie neuve. "Rejouer" rappelle cette fonction : on recrée une scène entière
@@ -111,6 +119,7 @@ function startRun(chosen: CharacterDef = character): void {
       onRestart: () => startRun(),
       onMenu: showMenu,
       onRunEnd,
+      devPanel,
       unlocksFor: (report) => newUnlocks(profile, report).map((c) => c.name),
     },
     seed,

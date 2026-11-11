@@ -127,6 +127,21 @@ export class SpawnSystem {
     }
   }
 
+  /**
+   * Menu de test : saut dans le temps. Les boss prévus AVANT `now` sont sautés (sinon aller à
+   * 9:00 ferait apparaître aussi celui de 5:00) ; celui prévu pile à `now` arrivera.
+   */
+  jumpTo(now: number): void {
+    this.nextBoss = 0;
+    while ((BOSS_SPAWNS[this.nextBoss]?.time ?? Infinity) < now) this.nextBoss++;
+  }
+
+  /** Menu de test : un boss tout de suite, avec les multiplicateurs du dernier boss prévu. */
+  spawnBoss(playerX: number, playerY: number): void {
+    const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
+    this.spawnAt(BOSS_TYPE, last?.hpMult ?? 1, last?.speedMult ?? 1, playerX, playerY);
+  }
+
   /** Debug (F4) : fait apparaître `count` ennemis d'un coup, tirés selon la vague en cours. */
   spawnBatch(count: number, now: number, playerX: number, playerY: number): void {
     const wave = waveAt(now);

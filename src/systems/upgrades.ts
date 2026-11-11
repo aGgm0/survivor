@@ -200,3 +200,29 @@ function applyPassive(player: Player, passive: PassiveDef): void {
       return;
   }
 }
+
+/**
+ * Recalcule toutes les stats du joueur données par les passifs, à partir de leurs niveaux
+ * (menu de test : on peut BAISSER un passif, ce que le level up ne fait jamais). Les PV
+ * actuels sont gardés, sans dépasser le nouveau maximum.
+ */
+export function rebuildPassiveStats(
+  player: Player,
+  passiveLevels: ReadonlyMap<string, number>,
+): void {
+  const hp = player.hp;
+  player.maxHp = PLAYER_BASE.maxHp;
+  player.speed = PLAYER_BASE.speed;
+  player.pickupRadius = PLAYER_BASE.pickupRadius;
+  player.damageMult = 1;
+  player.cooldownMult = 1;
+  player.knockbackMult = 1;
+  player.sizeMult = 1;
+  player.projectileSpeedMult = 1;
+  player.extraCount = 0;
+  for (const passive of PASSIVES) {
+    const level = passiveLevels.get(passive.id) ?? 0;
+    for (let i = 0; i < level; i++) applyPassive(player, passive);
+  }
+  player.hp = Math.min(hp, player.maxHp);
+}

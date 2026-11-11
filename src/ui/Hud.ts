@@ -14,6 +14,8 @@ export interface HudElements {
   kills: HTMLElement;
   /** Mention "SANS FIN" (mode sans fin) */
   endless: HTMLElement;
+  /** Badge "TEST" (menu de test utilisé : partie non enregistrée) */
+  test: HTMLElement;
   /** Rangée des armes possédées */
   weapons: HTMLElement;
   /** Rangée des passifs possédés */
@@ -42,6 +44,10 @@ export class Hud {
 
   setEndless(endless: boolean): void {
     this.el.endless.hidden = !endless;
+  }
+
+  setTest(test: boolean): void {
+    this.el.test.hidden = !test;
   }
 
   /** Masqué dans le menu, visible en partie. */

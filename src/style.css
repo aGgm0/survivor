@@ -352,6 +352,80 @@ body {
   color: #4fc3f7;
 }
 
+/* Menu de test (F2, dev seulement) : colonne à droite, défilable */
+#dev-panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: 380px;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 12px monospace;
+  color: #ddd;
+  background: rgba(10, 12, 20, 0.92);
+  border: 1px solid #ff9800;
+}
+
+.dev-title {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.dev-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dev-section-title {
+  width: 100%;
+  color: #4fc3f7;
+  margin-top: 4px;
+}
+
+.dev-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-name {
+  width: 110px;
+}
+
+.dev-state {
+  flex: 1;
+  color: #ffd54f;
+}
+
+.dev-button {
+  padding: 2px 6px;
+  font: inherit;
+  color: #fff;
+  background: #1d2236;
+  border: 1px solid #3a4470;
+  cursor: pointer;
+}
+
+.dev-button:hover {
+  border-color: #ff9800;
+}
+
+/* Badge "TEST" dans le HUD : la partie ne compte pas au profil */
+#hud-test {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  font: bold 14px monospace;
+  color: #ff9800;
+  pointer-events: none;
+}
+
 /* Petit compteur FPS permanent (réglage "Compteur FPS"), coin bas gauche */
 #fps-counter {
   position: absolute;

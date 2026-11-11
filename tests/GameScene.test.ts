@@ -11,6 +11,7 @@ import { BOSS_TYPE } from '../src/data/waves';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
+import type { DevAction, DevView } from '../src/ui/DevPanel';
 
 const DT = 1 / 60;
 
@@ -28,6 +29,7 @@ function makeDeps() {
     /** Dernier bilan envoyé au profil */
     recorded: null as RunReport | null,
     endlessShown: false,
+    testShown: false,
     /** Clic simulé sur un bouton du menu pause */
     pauseClick: null as PauseAction | null,
     hudVisible: false,
@@ -64,6 +66,7 @@ function makeDeps() {
     hud: {
       setVisible: (v) => (ui.hudVisible = v),
       setEndless: (v) => (ui.endlessShown = v),
+      setTest: (v) => (ui.testShown = v),
       setTime: () => {},
       setProgress: () => {},
       setHp: () => {},
@@ -686,5 +689,108 @@ describe('GameScene — persos et défis', () => {
   it('pas réussi avec les Orbes niveau 4, ni sur le boss de 5:00', () => {
     expect(killBoss(4, 1)).toEqual([]);
     expect(killBoss(5, 0)).toEqual([]);
+  });
+});
+
+describe('GameScene — menu de test (F2)', () => {
+  /** Partie avec un faux panneau : on lui « clique » des actions. */
+  function withPanel() {
+    const ctx = makeDeps();
+    const panel = {
+      visible: false,
+      queue: [] as DevAction[],
+      view: null as DevView | null,
+      setVisible(v: boolean) {
+        this.visible = v;
+      },
+      takeActions() {
+        return this.queue.splice(0, this.queue.length);
+      },
+      refresh(v: DevView) {
+        this.view = v;
+      },
+    };
+    ctx.deps.devPanel = panel;
+    const scene = new GameScene(ctx.deps, 1234);
+    scene.enter();
+    /** Clique des actions puis laisse passer une update. */
+    const click = (...actions: DevAction[]) => {
+      panel.queue.push(...actions);
+      scene.update(DT);
+    };
+    return { scene, panel, click, ...ctx };
+  }
+
+  it('F2 ouvre le menu et fige la partie ; F2 le referme', () => {
+    const { scene, panel, press } = withPanel();
+    press('F2', scene);
+    expect(panel.visible).toBe(true);
+    const time = scene.runTime;
+    for (let i = 0; i < 30; i++) scene.update(DT);
+    expect(scene.runTime).toBe(time);
+    press('F2', scene);
+    expect(panel.visible).toBe(false);
+    scene.update(DT);
+    expect(scene.runTime).toBeGreaterThan(time);
+  });
+
+  it('armes : ajouter, régler le niveau, muter ; passifs : monter et redescendre', () => {
+    const { scene, panel, press, click } = withPanel();
+    press('F2', scene);
+    click({ kind: 'weaponToggle', id: 'sword' }, { kind: 'weaponLevel', id: 'sword', delta: 3 });
+    const sword = scene.weapons.find((w) => w.def.id === 'sword');
+    expect(sword?.level).toBe(4);
+    click({ kind: 'mutation', id: 'sword', index: 0 });
+    expect(sword?.mutation?.name).toBe('Tourbillon');
+    expect(sword?.level).toBe(6);
+    expect(panel.view?.weapons.find((w) => w.id === 'sword')?.mutation).toBe(0);
+
+    click(
+      { kind: 'passive', id: 'vitality', delta: 1 },
+      { kind: 'passive', id: 'vitality', delta: 1 },
+    );
+    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 40);
+    click({ kind: 'passive', id: 'vitality', delta: -2 });
+    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp);
+    expect(scene.passiveLevels.has('vitality')).toBe(false);
+  });
+
+  it('aller à 9:00 fait venir le boss de 9:00 seulement (pas celui de 5:00)', () => {
+    const { scene, press, click } = withPanel();
+    press('F2', scene);
+    click({ kind: 'time', seconds: 540 });
+    press('F2', scene);
+    for (let i = 0; i < 5; i++) scene.update(DT);
+    const bosses = scene.enemies.items.filter((e) => e.active && e.type === BOSS_TYPE);
+    expect(bosses).toHaveLength(1);
+    expect(bosses[0]?.bossIndex).toBe(1);
+  });
+
+  it('partie de test : badge TEST, invincible possible, et rien n’est enregistré au profil', () => {
+    const { scene, ui, press, click } = withPanel();
+    press('F2', scene);
+    click({ kind: 'god' });
+    expect(ui.testShown).toBe(true);
+    press('F2', scene);
+    enemyOnPlayer(scene);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(scene.player.hp).toBe(scene.player.maxHp); // invincible
+    expect(scene.isTestRun).toBe(true);
+
+    scene.applyDevAction({ kind: 'god' }); // plus invincible
+    scene.player.hp = 1;
+    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    expect(scene.isOver).toBe(true);
+    expect(ui.runEnds).toBe(0);
+    scene.exit();
+    expect(ui.runEnds).toBe(0);
+  });
+
+  it('sans panneau (build de prod, tests) : F2 ne fait rien', () => {
+    const { scene, press } = newScene();
+    const time = scene.runTime;
+    press('F2', scene);
+    expect(scene.runTime).toBeGreaterThan(time);
+    expect(scene.isTestRun).toBe(false);
   });
 });
