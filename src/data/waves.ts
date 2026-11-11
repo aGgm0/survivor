@@ -93,11 +93,13 @@ export interface BossSpawn {
 
 /**
  * Boss de la partie, triés par instant. Retour de jeu : à 1000 PV ils mouraient trop vite face
- * à des armes mutées → 3000 PV à 5:00, 8000 PV (et +20 % de vitesse) à 9:00.
+ * à des armes mutées → 3000 PV à 5:00, 8000 PV (et +20 % de vitesse) à 9:00. Puis −20 % sur
+ * les deux (2400 et 6400 PV) : avec 4 passifs max et la courbe d'XP plus dure, le build est
+ * moins fort.
  */
 export const BOSS_SPAWNS: readonly BossSpawn[] = [
-  { time: 300, hpMult: 3, speedMult: 1 },
-  { time: 540, hpMult: 8, speedMult: 1.2 },
+  { time: 300, hpMult: 2.4, speedMult: 1 },
+  { time: 540, hpMult: 6.4, speedMult: 1.2 },
 ];
 export const BOSS_TYPE = ENEMY_TYPES.boss;
 

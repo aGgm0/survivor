@@ -69,7 +69,7 @@ describe('SpawnSystem — vagues', () => {
     spawner.update(1 / 60, BOSS_SPAWNS[0]?.time ?? 0, 0, 0);
     spawner.update(1 / 60, BOSS_SPAWNS[1]?.time ?? 0, 0, 0);
     const bosses = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
-    expect(bosses.map((b) => b.maxHp)).toEqual([3000, 8000]);
+    expect(bosses.map((b) => b.maxHp)).toEqual([2400, 6400]);
     expect(bosses.map((b) => b.speedMult)).toEqual([1, 1.2]);
   });
 

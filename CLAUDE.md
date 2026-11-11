@@ -175,7 +175,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 | Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 150 | 3 | 1 | Fonce, fragile |
 | Tank | 60 | 50 | 10 | 5 | Lent, résistant |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×8 PV = 8000, vitesse ×1,2**) ; rayon 48 px, barre de PV (`BOSS_SPAWNS` dans waves.ts) |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×2,4 PV = 2400**) et 9:00 (**×6,4 PV = 6400, vitesse ×1,2**) ; rayon 48 px, barre de PV (`BOSS_SPAWNS` dans waves.ts) |
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
@@ -206,7 +206,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 | Perso (nom provisoire) | Arme de départ | Déblocage (chiffres à ajuster en jouant) |
 |---|---|---|
 | Arcaniste | Trait arcanique | Disponible dès le début |
-| Pyromancien | Aura ardente | 5 000 kills avec l'Aura ardente <!-- TODO: cumulés sur toutes les parties, ou en une seule ? --> |
+| Pyromancien | Aura ardente | 5 000 kills avec l'Aura ardente, cumulés sur toutes les parties |
 | Runiste | Orbes runiques | Tuer le boss de 9:00 en ayant les Orbes runiques au niveau 5 |
 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
@@ -398,7 +398,8 @@ Format : date — décision — raison.
 | 2026-11-11 | Méta-progression = persos de départ (seulement l'arme pour l'instant) débloqués par des défis faits avec leur arme ; noms provisoires Arcaniste / Pyromancien / Runiste ; stats avancées (armures et dégâts physiques / magiques) plus tard ; mobilier cassable → or / nourriture | Idées validées ("ok reco"). Persos après l'étape Options (qui met en place la sauvegarde) |
 | 2026-11-11 | 4 armes et 4 passifs maximum | La run de 10 min n'est qu'une première partie ; des emplacements limités obligent à choisir son build |
 | 2026-11-11 | Courbe d'XP : + 0,6 × (niv − 10)² après le niveau 10 ; « build complet à » sur l'écran de fin | Avec 4 passifs, le build complet demande 37 level up au lieu de 47 (−37 % d'XP avec l'ancienne formule) alors qu'il arrivait déjà avant 9:00. Terme au carré : début de partie inchangé (retour "trop lent" d'avant), ≈ 9 300 XP pour tout maxer |
-| 2026-11-11 | Défis : Pyromancien = 5 000 kills avec l'Aura ; Runiste = tuer le boss de 9:00 avec les Orbes niv 5 | Demandé (remplace 500 kills / survivre 5:00) |
+| 2026-11-11 | Défis : Pyromancien = 5 000 kills avec l'Aura ; Runiste = tuer le boss de 9:00 avec les Orbes niv 5 | Demandé (remplace 500 kills / survivre 5:00). Les 5 000 kills sont cumulés sur toutes les parties |
+| 2026-11-11 | Boss −20 % de PV : 5:00 ×3 → ×2,4 (2400), 9:00 ×8 → ×6,4 (6400) ; vitesse ×1,2 du 2e inchangée | Retour de jeu après les emplacements 4+4 et la courbe d'XP : 2e boss pas atteint, build moins fort |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
