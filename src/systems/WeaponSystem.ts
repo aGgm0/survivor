@@ -183,8 +183,8 @@ export class WeaponSystem {
     const orbs = Math.min(weapon.count, MAX_ORBS);
     const reach = weapon.orbRadius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     for (let o = 0; o < orbs; o++) {
-      const ox = WeaponSystem.orbX(x, weapon.angle, o, orbs, def.orbitDistance);
-      const oy = WeaponSystem.orbY(y, weapon.angle, o, orbs, def.orbitDistance);
+      const ox = WeaponSystem.orbX(x, weapon.angle, o, orbs, weapon.orbitDistance);
+      const oy = WeaponSystem.orbY(y, weapon.angle, o, orbs, weapon.orbitDistance);
       const count = this.collisions.queryNeighbors(ox, oy, reach, this.candidates);
       for (let i = 0; i < count; i++) {
         const e = this.candidates[i];

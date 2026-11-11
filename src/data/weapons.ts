@@ -13,6 +13,8 @@ export interface WeaponLevelBonus {
   readonly cooldownPct?: number;
   /** px ajoutés au rayon (aura) */
   readonly radius?: number;
+  /** px ajoutés à la distance joueur → orbes (orbite) */
+  readonly orbitDistance?: number;
 }
 
 /**
@@ -50,6 +52,8 @@ export interface MutationDef {
   readonly orbRadiusMult?: number;
   /** Orbite : multiplicateur de la vitesse de rotation */
   readonly angularSpeedMult?: number;
+  /** Orbite : multiplicateur de la distance joueur → orbes */
+  readonly orbitDistanceMult?: number;
 }
 
 interface WeaponDefBase {
@@ -223,17 +227,20 @@ export const WEAPONS = {
       { description: '+1 orbe', count: 1 },
       { description: '+1 orbe', count: 1 },
       { description: '+1 orbe, +3 dégâts', count: 1, damage: 3 },
-      { description: '+1 orbe', count: 1 },
+      // Retour de jeu : les orbes étaient trop collés au joueur. Vaut pour les 2 mutations.
+      { description: '+1 orbe, orbite plus large', count: 1, orbitDistance: 25 },
     ],
     mutations: [
       {
         id: 'giantOrbs',
         name: 'Orbes géants',
         short: 'Og',
-        description: '3 orbes énormes (×2,2) : dégâts ×2, recul ×1,8',
+        description: '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×2, recul ×1,8',
         color: '#e040fb',
         count: 3,
         orbRadiusMult: 2.2,
+        // 105 → ~131 px : des orbes de 29 px à 105 px laissaient trop peu d'air au joueur
+        orbitDistanceMult: 1.25,
         damageMult: 2,
         knockbackMult: 1.8,
       },

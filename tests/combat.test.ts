@@ -134,10 +134,16 @@ describe('Orbes runiques', () => {
   });
 
   it('délai par orbe : plusieurs orbes sur un boss frappent tous (Tempête d’orbes)', () => {
-    const { hits, run, weapon } = setup([[ENEMY_TYPES.boss, ORBS.orbitDistance, 0]], ORBS);
+    const { hits, run, weapon, enemies, active } = setup([[ENEMY_TYPES.boss, 0, 0]], ORBS);
     weapon.level = 5;
     weapon.mutation = ORBS.mutations[1]; // Tempête : 9 orbes
     weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
+    // Sur l'orbite, à mi-chemin entre les orbes n° 0 et n° 1 : il chevauche les deux.
+    const between = Math.PI / weapon.count;
+    active(enemies)[0]?.teleport(
+      Math.cos(between) * weapon.orbitDistance,
+      Math.sin(between) * weapon.orbitDistance,
+    );
     run(DT);
     // Le boss (rayon 48) chevauche plusieurs orbes à la fois : chacun frappe.
     expect(hits.length).toBeGreaterThan(1);
@@ -145,6 +151,22 @@ describe('Orbes runiques', () => {
     const first = hits.length;
     run(ORBS.rehitCooldown * 0.5);
     expect(hits.length).toBeLessThanOrEqual(first + weapon.count);
+  });
+
+  it('orbite plus large au niveau 5, et encore plus large en Orbes géants', () => {
+    const w = new Weapon(ORBS);
+    const mods = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
+    w.recompute(mods);
+    expect(w.orbitDistance).toBe(80);
+    w.level = 5;
+    w.recompute(mods);
+    expect(w.orbitDistance).toBe(105);
+    w.mutation = ORBS.mutations[1]; // Tempête : garde l'orbite du niveau 5
+    w.recompute(mods);
+    expect(w.orbitDistance).toBe(105);
+    w.mutation = ORBS.mutations[0]; // Géants : ×1,25
+    w.recompute(mods);
+    expect(w.orbitDistance).toBeCloseTo(131.25);
   });
 
   it('les orbes maximum tiennent dans le tableau de délais', () => {

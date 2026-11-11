@@ -15,7 +15,7 @@ import {
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_TYPE } from '../data/waves';
-import { PROJECTILE_POOL_SIZE, WEAPONS, type OrbitWeaponDef } from '../data/weapons';
+import { PROJECTILE_POOL_SIZE, WEAPONS } from '../data/weapons';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -476,12 +476,11 @@ export class GameScene implements Scene, Build {
     const py = this.player.renderY(alpha);
     for (const w of this.weapons) {
       if (w.def.kind !== 'orbit') continue;
-      const def: OrbitWeaponDef = w.def;
       const angle = lerp(w.prevAngle, w.angle, alpha);
       ctx.beginPath();
       for (let o = 0; o < w.count; o++) {
-        const x = WeaponSystem.orbX(px, angle, o, w.count, def.orbitDistance);
-        const y = WeaponSystem.orbY(py, angle, o, w.count, def.orbitDistance);
+        const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
+        const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
         ctx.moveTo(x + w.orbRadius, y);
         ctx.arc(x, y, w.orbRadius, 0, Math.PI * 2);
       }

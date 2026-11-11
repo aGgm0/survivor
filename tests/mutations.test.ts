@@ -179,11 +179,12 @@ describe('mutations des Orbes runiques', () => {
   });
 
   it('les orbes géants touchent plus loin de leur trajectoire (hitbox agrandie)', () => {
-    // Basique (rayon 14) à 35 px du cercle des orbes : hors de portée d'un orbe normal
-    // (13 + 14 = 27 px), mais dans celle d'un orbe géant (13 × 2,2 + 14 ≈ 43 px).
+    // Basique (rayon 14) à 35 px du cercle des orbes (de CETTE arme : l'orbite des géants est
+    // plus large) : hors de portée d'un orbe normal (13 + 14 = 27 px), mais dans celle d'un
+    // orbe géant (13 × 2,2 + 14 ≈ 43 px).
     const hitWith = (w: Weapon) => {
       const enemies = new Pool(10, (i) => new Enemy(i));
-      enemies.acquire()?.spawn(ENEMY_TYPES.basic, ORBS.orbitDistance + 35, 0);
+      enemies.acquire()?.spawn(ENEMY_TYPES.basic, w.orbitDistance + 35, 0);
       const collisions = new CollisionSystem(10);
       let hits = 0;
       const system = new WeaponSystem(10, collisions, new Pool(1, () => new Projectile()), {

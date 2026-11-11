@@ -41,6 +41,8 @@ export class Weapon {
   /** Orbite : taille d'un orbe (px) et vitesse de rotation (rad/s) ; 0 pour les autres armes */
   orbRadius: number;
   angularSpeed: number;
+  /** Orbite : distance joueur → centre des orbes (px) ; 0 pour les autres armes */
+  orbitDistance: number;
 
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
@@ -50,6 +52,7 @@ export class Weapon {
     this.radius = def.kind === 'aura' ? def.radius : 0;
     this.orbRadius = def.kind === 'orbit' ? def.orbRadius : 0;
     this.angularSpeed = def.kind === 'orbit' ? def.angularSpeed : 0;
+    this.orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */
@@ -80,6 +83,7 @@ export class Weapon {
     let count = def.kind === 'aura' ? 0 : def.count;
     let radius = def.kind === 'aura' ? def.radius : 0;
     let cooldownPct = 0;
+    let orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
     // Bonus des niveaux 2 à `level` (index 0 = niveau 2).
     for (let i = 0; i < this.level - 1; i++) {
       const bonus = def.levels[i];
@@ -88,6 +92,7 @@ export class Weapon {
       count += bonus.count ?? 0;
       radius += bonus.radius ?? 0;
       cooldownPct += bonus.cooldownPct ?? 0;
+      orbitDistance += bonus.orbitDistance ?? 0;
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;
@@ -99,6 +104,7 @@ export class Weapon {
     if (def.kind === 'orbit') {
       this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1);
       this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1);
+      this.orbitDistance = orbitDistance * (m?.orbitDistanceMult ?? 1);
     }
     // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =

@@ -99,10 +99,10 @@ export interface BonusWaveDef {
 
 /** Demandé : des déferlantes courtes de petits ennemis, pour casser le rythme. */
 export const BONUS_WAVES: readonly BonusWaveDef[] = [
-  // 2:00 – 2:30 : nuée de rapides (≈ 240), juste quand les tanks arrivent
-  { start: 120, end: 150, type: fast, perSecond: 8 },
-  // 6:00 – 6:30 : marée de basiques (≈ 360), avec le 1er palier de vitesse
-  { start: 360, end: 390, type: basic, perSecond: 12 },
+  // 2:00 – 2:30 : nuée de rapides (≈ 150), juste quand les tanks arrivent (8/s → 5/s : trop dense)
+  { start: 120, end: 150, type: fast, perSecond: 5 },
+  // 6:00 – 6:30 : marée de basiques (≈ 210), avec le 1er palier de vitesse (12/s → 7/s)
+  { start: 360, end: 390, type: basic, perSecond: 7 },
 ];
 
 export interface BossSpawn {
