@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
-import { WEAPONS, weaponRange, type WeaponDef } from '../src/data/weapons';
+import { MAX_ORBS, WEAPONS, weaponRange, type WeaponDef } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Projectile } from '../src/entities/Projectile';
 import { Weapon } from '../src/entities/Weapon';
@@ -131,6 +131,26 @@ describe('Orbes runiques', () => {
     // Sur ~3,45 s avec 0,5 s de délai : au plus ~7 coups, jamais un par update (207 updates).
     expect(hits.length).toBeGreaterThan(1);
     expect(hits.length).toBeLessThanOrEqual(Math.ceil(3.45 / ORBS.rehitCooldown) + 1);
+  });
+
+  it('délai par orbe : plusieurs orbes sur un boss frappent tous (Tempête d’orbes)', () => {
+    const { hits, run, weapon } = setup([[ENEMY_TYPES.boss, ORBS.orbitDistance, 0]], ORBS);
+    weapon.level = 5;
+    weapon.mutation = ORBS.mutations[1]; // Tempête : 9 orbes
+    weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
+    run(DT);
+    // Le boss (rayon 48) chevauche plusieurs orbes à la fois : chacun frappe.
+    expect(hits.length).toBeGreaterThan(1);
+    // Mais un même orbe ne frappe toujours qu'une fois par délai (pas 60 coups/s).
+    const first = hits.length;
+    run(ORBS.rehitCooldown * 0.5);
+    expect(hits.length).toBeLessThanOrEqual(first + weapon.count);
+  });
+
+  it('les orbes maximum tiennent dans le tableau de délais', () => {
+    const maxBase = ORBS.count + ORBS.levels.reduce((n, l) => n + l.count, 0);
+    for (const m of ORBS.mutations) expect(m.count).toBeLessThanOrEqual(MAX_ORBS);
+    expect(maxBase).toBeLessThanOrEqual(MAX_ORBS);
   });
 
   it('un ennemi loin des orbes n’est jamais touché', () => {

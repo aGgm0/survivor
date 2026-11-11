@@ -160,7 +160,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 10 | 1 s | +1 projectile aux niv 3 et 5 |
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Rayon +15/+15/+20 px et +2/+3 dégâts selon les niveaux |
-| **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
+| **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4 |
 
 **Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 160 (sens du tir), Aura ardente 50 (depuis le joueur), Orbes runiques 320 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins, boss ~12× moins). Passif **Impact** : +25 % de recul par niveau.
 
@@ -313,6 +313,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
 - [ ] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
+- [ ] Enchantements (idée) : passifs jusqu'au niveau 12 ; à partir du niveau 6, chaque niveau de passif « enchante » une arme au choix, avec une variante du bonus propre à cette arme <!-- TODO: effets par couple passif × arme, coût en XP (48 niveaux de passifs au lieu de 20 → runs plus longues) -->
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, dégâts physiques / magiques, vitesse...
 
 ### Phase 6 — Visuel & audio
@@ -400,6 +401,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Courbe d'XP : + 0,6 × (niv − 10)² après le niveau 10 ; « build complet à » sur l'écran de fin | Avec 4 passifs, le build complet demande 37 level up au lieu de 47 (−37 % d'XP avec l'ancienne formule) alors qu'il arrivait déjà avant 9:00. Terme au carré : début de partie inchangé (retour "trop lent" d'avant), ≈ 9 300 XP pour tout maxer |
 | 2026-11-11 | Défis : Pyromancien = 5 000 kills avec l'Aura ; Runiste = tuer le boss de 9:00 avec les Orbes niv 5 | Demandé (remplace 500 kills / survivre 5:00). Les 5 000 kills sont cumulés sur toutes les parties |
 | 2026-11-11 | Boss −20 % de PV : 5:00 ×3 → ×2,4 (2400), 9:00 ×8 → ×6,4 (6400) ; vitesse ×1,2 du 2e inchangée | Retour de jeu après les emplacements 4+4 et la courbe d'XP : 2e boss pas atteint, build moins fort |
+| 2026-11-11 | Orbes : délai de re-touche de 0,5 s **par orbe** et par ennemi (tableau `orbitHitAt` de `MAX_ORBS` cases sur chaque ennemi), dégâts inchangés | Retour de jeu : avec un délai commun à toute l'arme, 9 orbes sur le boss = 2 coups/s, comme 2 orbes (Tempête à 12 % du damage meter). Dégâts gardés tels quels, à rééquilibrer en jouant |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

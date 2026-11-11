@@ -114,7 +114,10 @@ export interface OrbitWeaponDef extends WeaponDefBase {
   readonly orbRadius: number;
   /** radians/s : vitesse de rotation */
   readonly angularSpeed: number;
-  /** s avant qu'un même ennemi puisse être retouché par les orbes (sinon 8 × 60 = 480 dégâts/s) */
+  /**
+   * s avant qu'un même orbe puisse retoucher le même ennemi (sinon 8 × 60 = 480 dégâts/s).
+   * Délai par orbe : 9 orbes sur un boss = 9 coups, pas un seul.
+   */
   readonly rehitCooldown: number;
 }
 
@@ -247,6 +250,12 @@ export const WEAPONS = {
     ],
   },
 } as const satisfies Record<string, WeaponDef>;
+
+/**
+ * Orbes maximum pour une arme d'orbite (Tempête d'orbes : 9). Chaque ennemi garde un délai de
+ * re-touche PAR orbe, dans un tableau de cette taille réservé une fois pour toutes.
+ */
+export const MAX_ORBS = 12;
 
 /** Toutes les armes du jeu (ordre d'affichage, armes à débloquer au level up...). */
 export const WEAPON_LIST: readonly WeaponDef[] = Object.values(WEAPONS);

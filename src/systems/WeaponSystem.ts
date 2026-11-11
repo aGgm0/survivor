@@ -1,5 +1,10 @@
 import type { Pool } from '../core/Pool';
-import { weaponRange, type OrbitWeaponDef, type ProjectileWeaponDef } from '../data/weapons';
+import {
+  MAX_ORBS,
+  weaponRange,
+  type OrbitWeaponDef,
+  type ProjectileWeaponDef,
+} from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
 import type { Weapon } from '../entities/Weapon';
@@ -160,8 +165,9 @@ export class WeaponSystem {
   }
 
   /**
-   * Les orbes tournent ; chacun blesse les ennemis qu'il touche. Un même ennemi ne peut être
-   * retouché qu'après `rehitCooldown` (sinon il prendrait des dégâts à chaque update).
+   * Les orbes tournent ; chacun blesse les ennemis qu'il touche. Un même orbe ne peut retoucher
+   * le même ennemi qu'après `rehitCooldown` (sinon il prendrait des dégâts à chaque update).
+   * Le délai est propre à chaque orbe : plusieurs orbes sur un même ennemi frappent tous.
    */
   private updateOrbit(
     weapon: Weapon,
@@ -174,7 +180,7 @@ export class WeaponSystem {
     weapon.prevAngle = weapon.angle;
     weapon.angle += weapon.angularSpeed * dt;
 
-    const orbs = weapon.count;
+    const orbs = Math.min(weapon.count, MAX_ORBS);
     const reach = weapon.orbRadius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     for (let o = 0; o < orbs; o++) {
       const ox = WeaponSystem.orbX(x, weapon.angle, o, orbs, def.orbitDistance);
@@ -182,12 +188,12 @@ export class WeaponSystem {
       const count = this.collisions.queryNeighbors(ox, oy, reach, this.candidates);
       for (let i = 0; i < count; i++) {
         const e = this.candidates[i];
-        if (!e?.active || now < e.nextOrbitHitAt) continue;
+        if (!e?.active || now < (e.orbitHitAt[o] ?? 0)) continue;
         const touch = weapon.orbRadius + e.type.radius;
         const dx = e.x - ox;
         const dy = e.y - oy;
         if (dx * dx + dy * dy > touch * touch) continue;
-        e.nextOrbitHitAt = now + def.rehitCooldown;
+        e.orbitHitAt[o] = now + def.rehitCooldown;
         // Recul toujours vers l'extérieur, depuis le joueur. (Depuis le centre de l'orbe, un
         // ennemi frappé côté intérieur du cercle était renvoyé... sur le joueur.)
         const ex = e.x - x;

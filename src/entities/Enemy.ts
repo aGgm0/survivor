@@ -1,6 +1,7 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../data/enemies';
+import { MAX_ORBS } from '../data/weapons';
 import type { Weapon } from './Weapon';
 
 /** Un ennemi. Les instances vivent dans un Pool : on ne les crée jamais en cours de partie. */
@@ -25,8 +26,11 @@ export class Enemy implements Poolable {
   nextContactHitAt = 0;
   /** Instant (temps de partie, en s) jusqu'auquel il est affiché en blanc (vient d'être touché). */
   flashUntil = 0;
-  /** Instant (temps de partie, en s) à partir duquel les orbes peuvent de nouveau le toucher. */
-  nextOrbitHitAt = 0;
+  /**
+   * Pour chaque orbe (index = n° de l'orbe) : instant à partir duquel il peut de nouveau le
+   * toucher. Tableau typé créé une seule fois avec l'ennemi : aucune allocation en jeu.
+   */
+  readonly orbitHitAt = new Float64Array(MAX_ORBS);
   /** Instant (temps de partie, en s) à partir duquel l'aura peut de nouveau le brûler. */
   nextAuraHitAt = 0;
 
@@ -61,7 +65,7 @@ export class Enemy implements Poolable {
     this.xpMult = hpMult;
     this.nextContactHitAt = 0;
     this.flashUntil = 0;
-    this.nextOrbitHitAt = 0;
+    this.orbitHitAt.fill(0);
     this.nextAuraHitAt = 0;
     this.slowAmount = 0;
     this.slowUntil = 0;
