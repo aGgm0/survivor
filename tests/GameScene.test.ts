@@ -857,3 +857,20 @@ describe('GameScene — bonus de boutique', () => {
     expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 10);
   });
 });
+
+describe('GameScene — mini-boss', () => {
+  it('un mini-boss tué rapporte +10 or et compte comme un kill', () => {
+    const { scene } = newScene({ armed: false });
+    const elite = scene.enemies.acquire();
+    if (!elite) throw new Error();
+    elite.spawn(ENEMY_TYPES.fastElite, scene.player.x + 300, scene.player.y);
+    elite.hp = 0.01;
+    const orbs = new Weapon(WEAPONS.runicOrbs);
+    scene.weapons.push(orbs);
+    elite.teleport(scene.player.x + orbs.orbitDistance, scene.player.y);
+    for (let i = 0; i < 120 && elite.active; i++) scene.update(DT);
+    expect(elite.active).toBe(false);
+    expect(scene.gold).toBe(10);
+    expect(scene.kills).toBe(1);
+  });
+});

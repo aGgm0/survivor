@@ -1,4 +1,5 @@
 import type { Pool } from '../core/Pool';
+import { BOSS_ABILITIES } from '../data/waves';
 import { CROWD } from '../data/physics';
 import type { Enemy } from '../entities/Enemy';
 import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
@@ -66,6 +67,14 @@ export class MovementSystem {
     if (e.type.prop) {
       this.nextVx[index] = 0;
       this.nextVy[index] = 0;
+      return;
+    }
+    // Boss en charge : arrêt pendant l'annonce, puis ligne droite à grande vitesse (pas de foule).
+    if (e.chargeState !== 'none') {
+      const dash = e.chargeState === 'dash';
+      const speed = dash ? e.type.speed * e.speedMult * BOSS_ABILITIES.charge.speedMult : 0;
+      this.nextVx[index] = e.chargeDirX * speed;
+      this.nextVy[index] = e.chargeDirY * speed;
       return;
     }
     // 1. Envie : direction unitaire (px, py) vers le joueur.

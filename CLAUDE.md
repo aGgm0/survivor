@@ -178,6 +178,18 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 | Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
 
+**Mini-boss (élites)** : anneau doré pulsant, barre de PV, pas de recul, +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
+
+| Élite | Arrive à | PV (base) | Vitesse | Dégâts | Rayon |
+|---|---|---|---|---|---|
+| Rapide élite (orange) | 3:00 | 300 (×60) × vague | 135 | 12 (×4) | 18 |
+| Basique élite (rouge) | 7:00 | 1150 (×50) × vague | 97 | 20 (×4) | 25 |
+
+**Capacités des boss** (`BOSS_ABILITIES`), toujours annoncées pour pouvoir les esquiver :
+- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s avec une ligne rouge sur la trajectoire, puis ligne droite à 4× la vitesse pendant 0,5 s.
+- **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 2 basiques élites autour du boss.
+- Boss du sans fin : délais ×0,9 à chaque nouveau boss.
+
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
 ### 5.6 XP & level up
@@ -336,7 +348,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
 - [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur = combo ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
-- [ ] **Boss avec sorts et capacités spéciales** (idée) : chaque boss a ses propres attaques en plus du contact (ex. charge, projectiles, invocation de sbires, zone au sol à éviter...) <!-- TODO: quelles capacités pour le boss de 5:00, celui de 9:00 et ceux du sans fin ; fréquence ; signes visuels pour les esquiver -->
+- [x] **Capacités des boss** : charge annoncée (tous), invocation annoncée (9:00 et sans fin) (§ 5.5)
+- [x] **Mini-boss** : rapide élite à 3:00, basique élite à 7:00 (§ 5.5)
+- [ ] `[LATER]` Autres capacités de boss (projectiles, zones au sol...) et capacités propres aux élites
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
@@ -447,6 +461,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Épée : dégâts 22 → 16 (niv 2 +8 → +5, niv 5 +10 → +7 : 40 → 28 au niv 5), recul 260 → 140 | Retour de jeu : gros nerf demandé. La vague de la Lame d'onde suit (60 % des dégâts) |
 | 2026-11-11 | Mobilier = type d'ennemi `crate` avec `prop: true` (immobile, inoffensif, immunisé au recul, ignoré par la visée, hors kills et damage meter) ; cassé aussi en marchant dessus ; pièces et nourriture dans un `PickupSystem` en pool (même aimant que les gemmes) ; boss tué = +25 or ; or ajouté au profil seulement pour une partie terminée et non test | Réutiliser le type ennemi : toutes les armes le touchent sans code en plus. Marcher dessus : sinon le Trait seul ne pouvait pas le casser. Boutique (prix et rangs réduits validés) = étape 2 |
 | 2026-11-11 | Boutique : rangs dans `profile.shop` (bornés au max, bonus inconnus ignorés à la lecture) ; achat = fonction pure `buyShopItem` ; bonus appliqués au début de la partie (`applyShopBonuses`, % de la valeur de base) puis PV pleins ; Sagesse multiplie l'XP des gemmes ; le menu de test les remet après un recalcul des passifs | Design validé (rangs réduits) ; les bonus ne prennent pas d'emplacement de passif |
+| 2026-11-11 | Mini-boss = types d'ennemis `fastElite` / `basicElite` (flag `elite`) à 3:00 et 7:00 ; capacités de boss dans `BossAbilitySystem` (état et dates sur l'ennemi, mouvement de charge dans MovementSystem) ; direction de la charge fixée au début de l'annonce ; invocation = 5 basiques + 2 basiques élites ; boss de 5:00 sans invocation | Demandé ; « 5 basiques et 2 élites » à la place de 8 basiques. Annonces obligatoires : une capacité qu'on ne peut pas voir venir n'est pas esquivable |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

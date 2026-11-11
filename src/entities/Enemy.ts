@@ -24,6 +24,20 @@ export class Enemy implements Poolable {
   type: EnemyType = ENEMY_TYPES.basic;
   /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
   bossIndex = -1;
+  // Capacités de boss (voir BossAbilitySystem). Dates en temps de partie, comme les autres délais.
+  /** Charge : rien, arrêt annoncé (ligne rouge), ou charge en ligne droite */
+  chargeState: 'none' | 'windup' | 'dash' = 'none';
+  /** Fin de l'étape de charge en cours */
+  chargeUntil = 0;
+  nextChargeAt = Infinity;
+  /** Direction de la charge, fixée au début de l'annonce (longueur 1) */
+  chargeDirX = 0;
+  chargeDirY = 0;
+  /** Invocation : prochaine, et fin de l'annonce en cours (0 = pas d'annonce) */
+  nextSummonAt = Infinity;
+  summonAt = 0;
+  /** Délais des capacités × ce facteur (boss du sans fin : de plus en plus rapides) */
+  abilityRate = 1;
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
   /** Instant (temps de partie, en s) jusqu'auquel il est affiché en blanc (vient d'être touché). */
@@ -62,6 +76,12 @@ export class Enemy implements Poolable {
     this.speedMult = speedMult;
     this.type = type;
     this.bossIndex = -1;
+    this.chargeState = 'none';
+    this.chargeUntil = 0;
+    this.nextChargeAt = Infinity;
+    this.nextSummonAt = Infinity;
+    this.summonAt = 0;
+    this.abilityRate = 1;
     this.maxHp = type.hp * hpMult;
     this.hp = this.maxHp;
     // Plus de PV à percer = plus d'XP : sinon monter de niveau ralentit à chaque vague.

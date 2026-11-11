@@ -105,6 +105,17 @@ export const BONUS_WAVES: readonly BonusWaveDef[] = [
   { start: 360, end: 390, type: basic, perSecond: 7 },
 ];
 
+/** Mini-boss : un ennemi élite à une heure précise, avec les PV et la vitesse de la vague en cours. */
+export interface EliteSpawn {
+  readonly time: number;
+  readonly type: EnemyType;
+}
+
+export const ELITE_SPAWNS: readonly EliteSpawn[] = [
+  { time: 180, type: ENEMY_TYPES.fastElite }, // 3:00
+  { time: 420, type: ENEMY_TYPES.basicElite }, // 7:00
+];
+
 export interface BossSpawn {
   /** s : instant d'apparition */
   readonly time: number;
@@ -181,3 +192,40 @@ export function endlessBossHpMult(n: number): number {
   const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
   return (last?.hpMult ?? 1) * ENDLESS.bossHpGrowth ** n;
 }
+
+/**
+ * Capacités des boss (voir CLAUDE.md § 5.5). Chacune est ANNONCÉE avant d'arriver, pour pouvoir
+ * l'esquiver : ligne rouge avant la charge, cercle violet avant l'invocation.
+ */
+export const BOSS_ABILITIES = {
+  charge: {
+    /** s entre deux charges */
+    interval: 6,
+    /** s d'arrêt avec la ligne rouge, avant de foncer */
+    windup: 0.8,
+    /** s de charge, en ligne droite (sans corriger sa course) */
+    duration: 0.5,
+    /** × la vitesse normale du boss pendant la charge */
+    speedMult: 4,
+    /** s avant la 1re charge, après l'apparition */
+    firstDelay: 3,
+  },
+  summon: {
+    /** s entre deux invocations */
+    interval: 10,
+    /** s de cercle violet qui grandit, avant l'apparition des sbires */
+    cast: 1,
+    /** sbires par invocation */
+    basics: 5,
+    elites: 2,
+    /** px : rayon du cercle où ils apparaissent */
+    radius: 80,
+    firstDelay: 5,
+  },
+  /** Le boss n° (index dans BOSS_SPAWNS) à partir duquel il invoque (0 = 5:00, 1 = 9:00) */
+  summonFromBossIndex: 1,
+  /** Boss du sans fin : les délais × ce facteur à chaque nouveau boss (10 % plus rapide) */
+  endlessIntervalFactor: 0.9,
+  /** Or donné à la mort d'un mini-boss */
+  eliteGold: 10,
+} as const;

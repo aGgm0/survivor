@@ -8,6 +8,8 @@ import {
   BONUS_WAVES,
   BOSS_SPAWNS,
   BOSS_TYPE,
+  BOSS_ABILITIES,
+  ELITE_SPAWNS,
   ENDLESS,
   WAVES,
   endlessBossHpMult,
@@ -40,6 +42,8 @@ export class SpawnSystem {
   private endlessStart: number | null = null;
   /** Boss du sans fin déjà envoyés */
   private endlessBosses = 0;
+  /** Prochain mini-boss de ELITE_SPAWNS */
+  private nextElite = 0;
   /** s accumulées depuis la dernière apparition de mobilier */
   private furnitureTimer = 0;
   /** Vague du sans fin, recalculée sur place à chaque update (pas d'allocation) */
@@ -84,7 +88,16 @@ export class SpawnSystem {
       this.nextBoss++;
       // Chaque boss a ses propres multiplicateurs (pas ceux de la vague en cours).
       const spawned = this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
-      if (spawned) spawned.bossIndex = this.nextBoss - 1;
+      if (spawned) {
+        spawned.bossIndex = this.nextBoss - 1;
+        armBoss(spawned, now, spawned.bossIndex >= BOSS_ABILITIES.summonFromBossIndex, 1);
+      }
+    }
+    // Mini-boss : PV et vitesse de la vague en cours (l'XP suit, comme pour les autres).
+    const elite = ELITE_SPAWNS[this.nextElite];
+    if (elite && now >= elite.time) {
+      this.nextElite++;
+      this.spawnAt(elite.type, wave.hpMult, wave.speedMult, playerX, playerY);
     }
     this.updateEndlessBosses(now, playerX, playerY);
     this.updateFurniture(dt, playerX, playerY);
@@ -99,13 +112,15 @@ export class SpawnSystem {
     if (now < next) return;
     this.endlessBosses++;
     const lastBoss = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
-    this.spawnAt(
+    const boss = this.spawnAt(
       BOSS_TYPE,
       endlessBossHpMult(this.endlessBosses),
       lastBoss?.speedMult ?? 1,
       playerX,
       playerY,
     );
+    // Les deux capacités, de plus en plus fréquentes à chaque boss.
+    if (boss) armBoss(boss, now, true, BOSS_ABILITIES.endlessIntervalFactor ** this.endlessBosses);
   }
 
   /** Mobilier : un nouveau toutes les `FURNITURE.spawnInterval` s, hors écran, s'il en manque. */
@@ -149,12 +164,47 @@ export class SpawnSystem {
   jumpTo(now: number): void {
     this.nextBoss = 0;
     while ((BOSS_SPAWNS[this.nextBoss]?.time ?? Infinity) < now) this.nextBoss++;
+    this.nextElite = 0;
+    while ((ELITE_SPAWNS[this.nextElite]?.time ?? Infinity) < now) this.nextElite++;
   }
 
-  /** Menu de test : un boss tout de suite, avec les multiplicateurs du dernier boss prévu. */
-  spawnBoss(playerX: number, playerY: number): void {
+  /** Menu de test : un boss tout de suite, comme le dernier boss prévu (charge + invocation). */
+  spawnBoss(playerX: number, playerY: number, now: number): void {
     const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
-    this.spawnAt(BOSS_TYPE, last?.hpMult ?? 1, last?.speedMult ?? 1, playerX, playerY);
+    const boss = this.spawnAt(BOSS_TYPE, last?.hpMult ?? 1, last?.speedMult ?? 1, playerX, playerY);
+    if (boss) armBoss(boss, now, true, 1);
+  }
+
+  /** Menu de test : un mini-boss tout de suite (index dans ELITE_SPAWNS). */
+  spawnElite(index: number, playerX: number, playerY: number, now: number): void {
+    const elite = ELITE_SPAWNS[index];
+    if (!elite) return;
+    const wave = waveAt(now);
+    this.spawnAt(elite.type, wave.hpMult, wave.speedMult, playerX, playerY);
+  }
+
+  /**
+   * Invocation d'un boss : des basiques et des basiques élites en cercle autour de (x, y),
+   * avec les PV et la vitesse de la vague en cours. Respecte le plafond d'ennemis.
+   */
+  summonAround(x: number, y: number, now: number): void {
+    const wave = waveAt(now);
+    const { basics, elites, radius } = BOSS_ABILITIES.summon;
+    const total = basics + elites;
+    for (let i = 0; i < total; i++) {
+      if (this.enemies.activeCount >= SPAWN.maxEnemies) return;
+      const e = this.enemies.acquire();
+      if (!e) return;
+      const angle = (i / total) * Math.PI * 2;
+      const type = i < elites ? ENEMY_TYPES.basicElite : ENEMY_TYPES.basic;
+      e.spawn(
+        type,
+        x + Math.cos(angle) * radius,
+        y + Math.sin(angle) * radius,
+        wave.hpMult,
+        wave.speedMult,
+      );
+    }
   }
 
   /** Debug (F4) : fait apparaître `count` ennemis d'un coup, tirés selon la vague en cours. */
@@ -215,4 +265,14 @@ export class SpawnSystem {
       e.teleport(playerX - dx * k, playerY - dy * k);
     }
   }
+}
+
+/**
+ * Arme un boss qui vient d'apparaître : 1re charge (et 1re invocation s'il en a le droit) après
+ * un court délai, pour que le joueur le voie arriver. `rate` < 1 = capacités plus fréquentes.
+ */
+export function armBoss(boss: Enemy, now: number, canSummon: boolean, rate: number): void {
+  boss.abilityRate = rate;
+  boss.nextChargeAt = now + BOSS_ABILITIES.charge.firstDelay * rate;
+  boss.nextSummonAt = canSummon ? now + BOSS_ABILITIES.summon.firstDelay * rate : Infinity;
 }

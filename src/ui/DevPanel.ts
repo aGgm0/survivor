@@ -17,6 +17,8 @@ export type DevAction =
   | { readonly kind: 'killAll' }
   | { readonly kind: 'boss' }
   | { readonly kind: 'gold'; readonly amount: number }
+  /** index dans ELITE_SPAWNS (0 = 3:00, 1 = 7:00) */
+  | { readonly kind: 'elite'; readonly index: number }
   | { readonly kind: 'close' };
 
 /** État affiché par le panneau (fourni par la scène après chaque action). */
@@ -35,8 +37,10 @@ export interface DevView {
 /** Sauts dans le temps proposés : [libellé, secondes] */
 const TIME_JUMPS: readonly (readonly [string, number])[] = [
   ['2:00 rush', 120],
+  ['3:00 élite', 180],
   ['5:00 boss', 300],
   ['6:00 rush', 360],
+  ['7:00 élite', 420],
   ['9:00 boss', 540],
   ['10:00', 600],
 ];
@@ -137,6 +141,8 @@ export class DevPanel {
       this.button('+100', { kind: 'spawn', count: 100 }),
       this.button('Tuer tout (sauf boss)', { kind: 'killAll' }),
       this.button('Boss', { kind: 'boss' }),
+      this.button('Élite orange', { kind: 'elite', index: 0 }),
+      this.button('Élite rouge', { kind: 'elite', index: 1 }),
       this.button('+100 or', { kind: 'gold', amount: 100 }),
     );
 

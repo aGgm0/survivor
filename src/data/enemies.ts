@@ -20,6 +20,8 @@ export interface EnemyType {
    * ni comme kill ni dans le damage meter ; une fois cassé, il lâche de l'or ou de la nourriture.
    */
   readonly prop?: boolean;
+  /** Mini-boss (élite) : anneau doré, barre de PV, +or à sa mort */
+  readonly elite?: boolean;
 }
 
 export const ENEMY_TYPES = {
@@ -61,6 +63,30 @@ export const ENEMY_TYPES = {
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
     slowResist: 0.85, // retour de jeu : le Brasier (−30 %) le ralentissait beaucoup trop
+  },
+  /** Mini-boss de 3:00 : un rapide très boosté (PV ×60, dégâts ×4, taille ×1,8). */
+  fastElite: {
+    id: 'fastElite',
+    hp: 300,
+    speed: 135,
+    contactDamage: 12,
+    xp: 20,
+    radius: 18,
+    color: '#f0ad4e',
+    knockbackImmune: true,
+    elite: true,
+  },
+  /** Mini-boss de 7:00 : un basique très boosté (PV ×50, dégâts ×4, taille ×1,8, vitesse ×1,1). */
+  basicElite: {
+    id: 'basicElite',
+    hp: 1150,
+    speed: 97,
+    contactDamage: 20,
+    xp: 20,
+    radius: 25,
+    color: '#d9534f',
+    knockbackImmune: true,
+    elite: true,
   },
   /** Mobilier cassable (voir data/furniture.ts) : apparaît hors écran, ne bouge pas. */
   crate: {

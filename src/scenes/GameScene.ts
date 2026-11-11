@@ -14,7 +14,7 @@ import {
   UPGRADE_CHOICE_COUNT,
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
-import { BOSS_TYPE } from '../data/waves';
+import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
 import {
   PROJECTILE_POOL_SIZE,
   WEAPON_LIST,
@@ -27,6 +27,7 @@ import { BOSS_CHALLENGES } from '../data/characters';
 import { FURNITURE } from '../data/furniture';
 import { applyShopBonuses } from '../data/shop';
 import { PickupSystem } from '../systems/PickupSystem';
+import { BossAbilitySystem } from '../systems/BossAbilitySystem';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -76,6 +77,22 @@ const VISUAL_SEED_SALT = 0x9e3779b9;
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
 const AURA_STROKE_ALPHA = 0.5;
+/** Mini-boss : anneau doré pulsant (réglages purement visuels) */
+const ELITE_LOOK = {
+  ringColor: '#ffd54f',
+  ringWidth: 3,
+  ringGap: 5,
+  ringPulse: 4,
+  pulseSpeed: 6,
+  barScale: 0.6,
+} as const;
+/** Annonces des capacités de boss (purement visuel) */
+const TELEGRAPH = {
+  chargeColor: '#ff3b3b',
+  summonColor: '#b14cff',
+  summonWidth: 4,
+  alpha: 0.35,
+} as const;
 /** Barre de PV au-dessus du boss */
 const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a1a' } as const;
 
@@ -138,6 +155,7 @@ export class GameScene implements Scene, Build {
   /** Rangs de boutique de cette partie, et le bonus d'XP qu'ils donnent (Sagesse) */
   private readonly shopRanks: Readonly<Record<string, number>>;
   private readonly xpGainMult: number;
+  private readonly bossAbilities = new BossAbilitySystem();
   /** Pièces d'or et nourriture lâchées par le mobilier */
   readonly pickups = new PickupSystem();
   /** Or gagné pendant cette partie (ajouté au total du profil à la fin) */
@@ -334,6 +352,13 @@ export class GameScene implements Scene, Build {
       this.spawner.spawnBatch(SPAWN.debugBatch, this.elapsed, this.player.x, this.player.y);
     }
     this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
+    this.bossAbilities.update(
+      this.enemies,
+      this.elapsed,
+      this.player.x,
+      this.player.y,
+      this.spawner,
+    );
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
@@ -461,6 +486,7 @@ export class GameScene implements Scene, Build {
     }
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
+    if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
     this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
@@ -580,7 +606,9 @@ export class GameScene implements Scene, Build {
     this.gems.render(ctx, alpha, this.camera);
     this.pickups.render(ctx, alpha, this.camera);
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
+    this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
     this.renderEnemies(ctx, alpha);
+    this.renderEliteRings(ctx, alpha);
     this.renderBossBars(ctx, alpha);
     this.player.render(ctx, alpha);
     this.renderOrbs(ctx, alpha);
@@ -608,17 +636,73 @@ export class GameScene implements Scene, Build {
     const items = this.enemies.items;
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
-      if (!e?.active || e.type !== BOSS_TYPE) continue;
+      // Barre de PV pour les boss et les mini-boss (plus courte pour ces derniers).
+      if (!e?.active || (e.type !== BOSS_TYPE && !e.type.elite)) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       if (!this.isOnScreen(x, y, e.type.radius + BOSS_BAR.offset + BOSS_BAR.height)) continue;
-      const barX = x - BOSS_BAR.width / 2;
+      const width = e.type.elite ? BOSS_BAR.width * ELITE_LOOK.barScale : BOSS_BAR.width;
+      const barX = x - width / 2;
       const barY = y - e.type.radius - BOSS_BAR.offset - BOSS_BAR.height;
       ctx.fillStyle = BOSS_BAR.bg;
-      ctx.fillRect(barX, barY, BOSS_BAR.width, BOSS_BAR.height);
+      ctx.fillRect(barX, barY, width, BOSS_BAR.height);
       ctx.fillStyle = BOSS_BAR.fill;
-      ctx.fillRect(barX, barY, BOSS_BAR.width * Math.max(0, e.hp / e.maxHp), BOSS_BAR.height);
+      ctx.fillRect(barX, barY, width * Math.max(0, e.hp / e.maxHp), BOSS_BAR.height);
     }
+  }
+
+  /** Anneau doré qui pulse autour des mini-boss : on les repère au milieu de la horde. */
+  private renderEliteRings(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const pulse = 0.5 + 0.5 * Math.sin(this.elapsed * ELITE_LOOK.pulseSpeed);
+    ctx.strokeStyle = ELITE_LOOK.ringColor;
+    ctx.lineWidth = ELITE_LOOK.ringWidth;
+    ctx.globalAlpha = 0.5 + 0.5 * pulse;
+    ctx.beginPath();
+    for (const e of this.enemies.items) {
+      if (!e.active || !e.type.elite) continue;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      const r = e.type.radius + ELITE_LOOK.ringGap + pulse * ELITE_LOOK.ringPulse;
+      if (!this.isOnScreen(x, y, r)) continue;
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Annonces des capacités de boss : ligne rouge (trajectoire de la charge) et cercle violet
+   * qui grandit (invocation). Lisibles même en pleine horde : c'est ce qui permet d'esquiver.
+   */
+  private renderBossTelegraphs(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const charge = BOSS_ABILITIES.charge;
+    const summon = BOSS_ABILITIES.summon;
+    for (const e of this.enemies.items) {
+      if (!e.active || e.type !== BOSS_TYPE) continue;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      if (e.chargeState === 'windup') {
+        const length = e.type.speed * e.speedMult * charge.speedMult * charge.duration;
+        ctx.strokeStyle = TELEGRAPH.chargeColor;
+        ctx.lineWidth = e.type.radius * 2;
+        ctx.globalAlpha = TELEGRAPH.alpha;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + e.chargeDirX * length, y + e.chargeDirY * length);
+        ctx.stroke();
+      }
+      if (e.summonAt > 0) {
+        const progress = 1 - Math.max(0, e.summonAt - this.elapsed) / summon.cast;
+        ctx.strokeStyle = TELEGRAPH.summonColor;
+        ctx.lineWidth = TELEGRAPH.summonWidth;
+        ctx.globalAlpha = TELEGRAPH.alpha + (1 - TELEGRAPH.alpha) * progress;
+        ctx.beginPath();
+        ctx.arc(x, y, summon.radius * progress + e.type.radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   /** Disque translucide autour du joueur pour chaque aura possédée. */
@@ -806,10 +890,13 @@ export class GameScene implements Scene, Build {
         }
         return;
       case 'boss':
-        this.spawner.spawnBoss(player.x, player.y);
+        this.spawner.spawnBoss(player.x, player.y, this.elapsed);
         return;
       case 'gold':
         this.gold += action.amount;
+        return;
+      case 'elite':
+        this.spawner.spawnElite(action.index, player.x, player.y, this.elapsed);
         return;
       case 'close':
         return;
