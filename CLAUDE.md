@@ -162,7 +162,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Rayon +15/+15/+20 px et +2/+3 dégâts selon les niveaux |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
-**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 370 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
+**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 350 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
 
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
@@ -303,7 +303,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
   - [x] Aura : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
   - [x] Trait arcanique : **Trait perçant** (traverse 3 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 60 px, 70 % des dégâts, anneau visuel)
-  - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, recul ×1,8) / **Tempête d'orbes** (9 orbes, rotation ×1,6, dégâts ×0,7)
+  - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, rotation ×0,85, recul ×1,6) / **Tempête d'orbes** (9 orbes, rotation ×1,6, dégâts ×0,7)
 
 ### Phase 5 — Contenu & systèmes (pas de visuel)
 - [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
@@ -315,6 +315,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
 - [ ] Enchantements (idée) : passifs jusqu'au niveau 12 ; à partir du niveau 6, chaque niveau de passif « enchante » une arme au choix, avec une variante du bonus propre à cette arme <!-- TODO: effets par couple passif × arme, coût en XP (48 niveaux de passifs au lieu de 20 → runs plus longues) -->
+- [ ] **4e arme : l'Épée** <!-- TODO: comportement (coup en arc devant le joueur ? épées qui tournent ? lancer ?), stats, niveaux, 2 mutations, perso de départ associé et son défi -->
 - [ ] Nouveaux passifs (idée) : **Taille** (taille des projectiles, orbes, aura), **Vélocité** (vitesse des projectiles et rotation des orbes), **Duplicateur** (+1 projectile / +1 orbe) <!-- TODO: valeurs par niveau, niveau max (Duplicateur très fort → 2 niveaux ?) -->
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
@@ -407,6 +408,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Victoire = timer atteint **et** aucun boss en vie ; sinon prolongations (timer qui continue, dernière vague active) jusqu'à la mort du boss | Retour de jeu : boss tué à 9:59, la partie aurait pu se gagner sans le tuer. Choix "Prolongations" plutôt que défaite à 10:00 ou boss enragé |
 | 2026-11-11 | Rushs (`BONUS_WAVES`) 2:00-2:30 rapides +8/s et 6:00-6:30 basiques +12/s ; boss 3000 / 9000 PV ; Impact 25 % → 8 %/niv, recul de base +15 % (185 / 60 / 370), boss immunisé au recul ; courbe d'XP 0,6 → 0,75 | Retour de jeu (victoire, build complet à 08:44, boss trop faible depuis le délai par orbe) ; rushs demandés pour casser le rythme ; +0,75 pour compenser l'XP des rushs |
 | 2026-11-11 | Rushs réduits (rapides 8 → 5/s, basiques 12 → 7/s) ; orbite des orbes 80 → 105 px au niveau 5, ×1,25 (≈ 131 px) pour les Orbes géants | Retour de jeu (mort à 7:14) : rushs trop denses, orbes trop collés au joueur surtout en géants. Le reste "pas mal, plus dur" |
+| 2026-11-11 | Orbes géants : rotation ×0,85, recul ×1,8 → ×1,6 ; recul de base des orbes 370 → 350 | Retour de jeu : légèrement trop forts. 4e arme (Épée) ajoutée à la Roadmap |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

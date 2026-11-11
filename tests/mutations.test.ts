@@ -162,12 +162,13 @@ describe('mutations des Orbes runiques', () => {
     return { base: make(), w };
   }
 
-  it('Orbes géants : 3 orbes 2,2× plus gros, dégâts ×2, recul ×1,8', () => {
+  it('Orbes géants : 3 orbes 2,2× plus gros, dégâts ×2, rotation ×0,85, recul ×1,6', () => {
     const { base, w } = mutated(GIANT);
     expect(w.count).toBe(3);
     expect(w.orbRadius).toBeCloseTo(ORBS.orbRadius * 2.2);
     expect(w.damage).toBeCloseTo(base.damage * 2);
-    expect(w.knockback).toBeCloseTo(base.knockback * 1.8);
+    expect(w.knockback).toBeCloseTo(base.knockback * 1.6);
+    expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 0.85);
   });
 
   it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×0,7', () => {

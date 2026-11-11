@@ -216,7 +216,7 @@ export const WEAPONS = {
     short: 'OR',
     description: 'Des orbes tournent autour de toi',
     damage: 8,
-    knockback: 370, // fort : les orbes "frappent", leur rôle est d'écarter la horde (320 → 370)
+    knockback: 350, // fort : les orbes "frappent", leur rôle est d'écarter la horde (320 → 370 → 350)
     count: 2,
     orbitDistance: 80,
     orbRadius: 13, // 10 → 13 : retour de jeu, "vraiment petit"
@@ -235,14 +235,17 @@ export const WEAPONS = {
         id: 'giantOrbs',
         name: 'Orbes géants',
         short: 'Og',
-        description: '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×2, recul ×1,8',
+        description:
+          '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×2, rotation ×0,85, recul ×1,6',
         color: '#e040fb',
         count: 3,
         orbRadiusMult: 2.2,
         // 105 → ~131 px : des orbes de 29 px à 105 px laissaient trop peu d'air au joueur
         orbitDistanceMult: 1.25,
+        // Retour de jeu : un peu trop forts. Rotation ralentie, recul 1,8 → 1,6
+        angularSpeedMult: 0.85,
         damageMult: 2,
-        knockbackMult: 1.8,
+        knockbackMult: 1.6,
       },
       {
         id: 'orbStorm',
