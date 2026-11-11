@@ -237,9 +237,11 @@ export class GameScene implements Scene, Build {
     }
 
     this.elapsed += dt;
-    if (this.elapsed >= this.runDuration) {
-      // Survécu jusqu'au bout : tout se fige et l'écran de victoire s'affiche.
-      this.elapsed = this.runDuration;
+    // Survécu jusqu'au bout ET plus de boss en vie : tout se fige, écran de victoire.
+    // Boss encore là à 10:00 → prolongations : la partie continue jusqu'à sa mort (ou la tienne).
+    if (this.elapsed >= this.runDuration && !this.isBossAlive()) {
+      // Victoire pile au timer : on affiche 10:00, pas l'arrondi du dernier pas fixe.
+      if (this.elapsed - dt < this.runDuration) this.elapsed = this.runDuration;
       this.endRun(true);
       return;
     }
@@ -336,6 +338,17 @@ export class GameScene implements Scene, Build {
     }
     e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
     this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
+  }
+
+  /** Vrai si un boss est encore actif. Parcours du pool, seulement après le temps de victoire. */
+  private isBossAlive(): boolean {
+    for (const e of this.enemies.items) if (e.active && e.type === BOSS_TYPE) return true;
+    return false;
+  }
+
+  /** Vrai pendant les prolongations : temps écoulé mais boss encore en vie. */
+  get isOvertime(): boolean {
+    return !this.report && this.elapsed >= this.runDuration;
   }
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */

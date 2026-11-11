@@ -7,6 +7,7 @@ import type { RunReport } from '../src/systems/runReport';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT } from '../src/data/progression';
 import { PASSIVES } from '../src/data/upgrades';
+import { BOSS_TYPE } from '../src/data/waves';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
 
@@ -375,6 +376,22 @@ describe('GameScene — victoire et bilan', () => {
     const x = enemy?.x;
     for (let i = 0; i < 60; i++) scene.update(DT);
     expect(enemy?.x).toBe(x); // les ennemis restent figés
+  });
+
+  it('boss encore en vie au timer : prolongations, puis victoire à sa mort', () => {
+    const { scene, ui } = newScene({ runDuration: 1, armed: false });
+    const boss = scene.enemies.acquire();
+    if (!boss) throw new Error();
+    boss.spawn(BOSS_TYPE, scene.player.x + 600, scene.player.y);
+    for (let i = 0; i < 90; i++) scene.update(DT); // 1,5 s : timer dépassé
+    expect(scene.isOver).toBe(false);
+    expect(scene.isOvertime).toBe(true);
+    expect(scene.runTime).toBeGreaterThan(1); // le timer continue
+
+    scene.enemies.release(boss); // le boss meurt
+    scene.update(DT);
+    expect(ui.end?.victory).toBe(true);
+    expect(ui.end?.time).toBeGreaterThan(1.5); // temps réel, prolongations comprises
   });
 
   it('R après la victoire relance une partie', () => {
