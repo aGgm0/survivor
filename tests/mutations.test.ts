@@ -171,11 +171,12 @@ describe('mutations des Orbes runiques', () => {
     expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 0.85);
   });
 
-  it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×0,7', () => {
+  it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×0,8, recul ×0,3', () => {
     const { base, w } = mutated(STORM);
     expect(w.count).toBe(9);
     expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 1.6);
-    expect(w.damage).toBeCloseTo(base.damage * 0.7);
+    expect(w.damage).toBeCloseTo(base.damage * 0.8);
+    expect(w.knockback).toBeCloseTo(base.knockback * 0.3);
     expect(w.orbRadius).toBe(ORBS.orbRadius);
   });
 

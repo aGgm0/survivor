@@ -201,16 +201,16 @@ describe('Weapon — stats par niveau', () => {
     const w = new Weapon(BOLT);
     const mods = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
     w.recompute(mods);
-    expect([w.damage, w.count, w.cooldown]).toEqual([10, 1, 1]);
+    expect([w.damage, w.count, w.cooldown]).toEqual([BOLT.damage, 1, 1]);
 
     w.level = 5; // +5 dégâts, +2 projectiles, cooldown -20 %
     w.recompute(mods);
-    expect(w.damage).toBe(15);
+    expect(w.damage).toBe(BOLT.damage + 5);
     expect(w.count).toBe(3);
     expect(w.cooldown).toBeCloseTo(0.8);
 
     w.recompute({ damageMult: 1.5, cooldownMult: 0.5, knockbackMult: 1 });
-    expect(w.damage).toBeCloseTo(22.5);
+    expect(w.damage).toBeCloseTo((BOLT.damage + 5) * 1.5);
     expect(w.cooldown).toBeCloseTo(0.4);
   });
 });

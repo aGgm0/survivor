@@ -134,7 +134,7 @@ export const WEAPONS = {
     name: 'Trait arcanique',
     short: 'TA',
     description: "Tire sur l'ennemi le plus proche",
-    damage: 10,
+    damage: 11, // 10 → 11 : petit buff (un basique de 20 PV tombe toujours en 2 coups)
     knockback: 185, // moyen, dans la direction du tir (160 → 185 avec le nerf d'Impact)
     cooldown: 1,
     count: 1,
@@ -181,8 +181,9 @@ export const WEAPONS = {
     radius: 70,
     color: '#ff7a3d',
     levels: [
-      { description: 'Rayon +15 px', radius: 15 },
+      // Dégâts d'abord (retour de jeu) : au niveau 2, l'aura doit déjà tuer plus, pas juste grandir.
       { description: '+2 dégâts', damage: 2 },
+      { description: 'Rayon +15 px', radius: 15 },
       { description: 'Rayon +15 px', radius: 15 },
       { description: '+3 dégâts, rayon +20 px', damage: 3, radius: 20 },
     ],
@@ -251,11 +252,14 @@ export const WEAPONS = {
         id: 'orbStorm',
         name: 'Tempête d’orbes',
         short: 'To',
-        description: '9 orbes, rotation ×1,6, dégâts ×0,7',
+        description: '9 orbes, rotation ×1,6, dégâts ×0,8, recul ×0,3',
         color: '#b388ff',
         count: 9,
         angularSpeedMult: 1.6,
-        damageMult: 0.7,
+        damageMult: 0.8, // 0,7 → 0,8
+        // Gros nerf : chaque orbe frappe (délai par orbe), donc le recul tombe ~7 fois/s.
+        // Retour de jeu : immobile 12 min sans qu'aucun ennemi n'arrive au contact.
+        knockbackMult: 0.3,
       },
     ],
   },

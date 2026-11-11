@@ -19,15 +19,13 @@ export interface Profile {
   /** Parties terminées (mort ou victoire). Une partie quittée en cours ne compte pas. */
   runs: number;
   victories: number;
-  /** s : plus longue survie */
+  /** s : plus longue survie (sans fin compris : au-delà du dernier boss, c'est forcément du sans fin) */
   bestTime: number;
   /** s : temps survécu, toutes parties confondues */
   totalTime: number;
   totalKills: number;
   /** Plus haut niveau atteint */
   bestLevel: number;
-  /** s : plus longue survie en mode sans fin (0 = jamais joué) */
-  bestEndlessTime: number;
   /** Par id d'arme de base */
   weapons: Record<string, WeaponStats>;
 }
@@ -40,7 +38,6 @@ export function emptyProfile(): Profile {
     totalTime: 0,
     totalKills: 0,
     bestLevel: 0,
-    bestEndlessTime: 0,
     weapons: {},
   };
 }
@@ -53,7 +50,6 @@ export function recordRun(profile: Profile, report: RunReport): Profile {
   profile.totalTime += report.time;
   profile.totalKills += report.kills;
   profile.bestLevel = Math.max(profile.bestLevel, report.level);
-  if (report.endless) profile.bestEndlessTime = Math.max(profile.bestEndlessTime, report.time);
   for (const w of report.weapons) {
     const stats = (profile.weapons[w.id] ??= { runs: 0, damage: 0, kills: 0 });
     stats.runs++;
@@ -102,7 +98,6 @@ export function parseProfile(raw: unknown): Profile {
   profile.totalTime = count(raw.totalTime);
   profile.totalKills = count(raw.totalKills);
   profile.bestLevel = count(raw.bestLevel);
-  profile.bestEndlessTime = count(raw.bestEndlessTime);
   if (isRecord(raw.weapons)) {
     for (const [id, stats] of Object.entries(raw.weapons)) {
       // Une arme retirée du jeu (ou un id inventé) est ignorée.

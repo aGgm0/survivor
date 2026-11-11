@@ -64,12 +64,11 @@ describe('recordRun', () => {
 });
 
 describe('recordRun — sans fin', () => {
-  it('seules les parties en sans fin comptent pour le meilleur temps en sans fin', () => {
+  it('le meilleur temps compte le temps passé en sans fin', () => {
     const profile = emptyProfile();
     recordRun(profile, report({ victory: true, time: 600 }));
-    expect(profile.bestEndlessTime).toBe(0);
+    expect(profile.bestTime).toBe(600);
     recordRun(profile, report({ victory: true, endless: true, time: 812 }));
-    expect(profile.bestEndlessTime).toBe(812);
     expect(profile.bestTime).toBe(812);
     expect(profile.runs).toBe(2);
   });
