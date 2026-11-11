@@ -42,7 +42,12 @@
         </div>
         <div id="pause-overlay" class="overlay" hidden>
           <p class="overlay-title">PAUSE</p>
-          <p class="overlay-hint">Échap ou P pour reprendre</p>
+          <div class="menu-buttons">
+            <button id="pause-resume" type="button" class="menu-button">Reprendre (Échap)</button>
+            <button id="pause-restart" type="button" class="menu-button">Rejouer (R)</button>
+            <button id="pause-menu" type="button" class="menu-button">Menu principal (M)</button>
+          </div>
+          <p class="overlay-hint">La partie en cours sera perdue si tu rejoues ou quittes</p>
         </div>
         <div id="end-overlay" class="overlay" hidden>
           <p id="end-title" class="overlay-title">MORT</p>

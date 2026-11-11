@@ -8,6 +8,7 @@ import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAXED_XP_MULT } from '../src/data/progression';
 import { PASSIVES } from '../src/data/upgrades';
 import { Weapon } from '../src/entities/Weapon';
+import type { PauseAction } from '../src/ui/PauseOverlay';
 
 const DT = 1 / 60;
 
@@ -20,6 +21,8 @@ function makeDeps() {
     end: null as RunReport | null,
     restarts: 0,
     menus: 0,
+    /** Clic simulé sur un bouton du menu pause */
+    pauseClick: null as PauseAction | null,
     hudVisible: false,
     levelUpShown: null as { level: number; titles: string[] } | null,
     /** Clic simulé sur une carte de level up (lu une fois par la scène) */
@@ -30,7 +33,14 @@ function makeDeps() {
       isDown: () => false,
       wasPressed: (codes) => codes.some((c) => pressed.has(c)),
     },
-    pauseOverlay: { setVisible: (v) => (ui.paused = v) },
+    pauseOverlay: {
+      setVisible: (v) => (ui.paused = v),
+      takeAction: () => {
+        const a = ui.pauseClick;
+        ui.pauseClick = null;
+        return a;
+      },
+    },
     endOverlay: {
       show: (report) => (ui.end = report),
       hide: () => (ui.end = null),
@@ -411,6 +421,62 @@ describe('GameScene — rejouer sans fuite d’état', () => {
       return scene.enemies.items.filter((e) => e.active).map((e) => [e.x, e.y, e.type.id]);
     };
     expect(run()).toEqual(run());
+  });
+});
+
+describe('GameScene — menu pause', () => {
+  /** Partie mise en pause avec Échap. */
+  function pausedScene() {
+    const ctx = newScene();
+    ctx.press('Escape', ctx.scene);
+    expect(ctx.ui.paused).toBe(true);
+    return ctx;
+  }
+
+  it('Échap ou P met en pause puis reprend ; le temps ne bouge pas pendant la pause', () => {
+    const { scene, ui, press } = pausedScene();
+    const time = scene.runTime;
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(scene.runTime).toBe(time);
+    press('KeyP', scene);
+    expect(ui.paused).toBe(false);
+    scene.update(DT);
+    expect(scene.runTime).toBeGreaterThan(time);
+  });
+
+  it('le bouton Reprendre enlève la pause', () => {
+    const { scene, ui } = pausedScene();
+    ui.pauseClick = 'resume';
+    scene.update(DT);
+    expect(ui.paused).toBe(false);
+  });
+
+  it('Rejouer (bouton ou R) demande une partie neuve', () => {
+    const { scene, ui, press } = pausedScene();
+    ui.pauseClick = 'restart';
+    scene.update(DT);
+    expect(ui.restarts).toBe(1);
+    press('KeyR', scene);
+    expect(ui.restarts).toBe(2);
+    expect(ui.menus).toBe(0);
+  });
+
+  it('Menu principal (bouton ou M) ramène au menu', () => {
+    const { scene, ui, press } = pausedScene();
+    ui.pauseClick = 'menu';
+    scene.update(DT);
+    expect(ui.menus).toBe(1);
+    press('KeyM', scene);
+    expect(ui.menus).toBe(2);
+    expect(ui.restarts).toBe(0);
+  });
+
+  it('R et M ne font rien hors pause', () => {
+    const { scene, ui, press } = newScene();
+    press('KeyR', scene);
+    press('KeyM', scene);
+    expect(ui.restarts).toBe(0);
+    expect(ui.menus).toBe(0);
   });
 });
 

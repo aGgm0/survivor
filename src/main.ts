@@ -19,7 +19,11 @@ function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
 const renderer = new Renderer(getElement('game', HTMLCanvasElement));
 const debug = new DebugOverlay(getElement('debug-overlay', HTMLDivElement));
 const input = new Input(window);
-const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement));
+const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement), {
+  resume: getElement('pause-resume', HTMLButtonElement),
+  restart: getElement('pause-restart', HTMLButtonElement),
+  menu: getElement('pause-menu', HTMLButtonElement),
+});
 const endOverlay = new EndOverlay(
   getElement('end-overlay', HTMLDivElement),
   getElement('end-title', HTMLParagraphElement),

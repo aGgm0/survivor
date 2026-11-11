@@ -73,14 +73,14 @@ const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a
  */
 export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
-  pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
+  pauseOverlay: Pick<PauseOverlay, 'setVisible' | 'takeAction'>;
   endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
   hud: Pick<Hud, 'setVisible' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
-  /** Appelé quand le joueur demande le menu principal depuis l'écran de fin. */
+  /** Appelé quand le joueur demande le menu principal (écran de fin ou pause). */
   onMenu: () => void;
 }
 
@@ -197,6 +197,11 @@ export class GameScene implements Scene, Build {
     return this.report;
   }
 
+  /** Temps de partie écoulé, en secondes (figé pendant la pause et les choix). */
+  get runTime(): number {
+    return this.elapsed;
+  }
+
   get isPaused(): boolean {
     return this.paused;
   }
@@ -219,9 +224,13 @@ export class GameScene implements Scene, Build {
       return;
     }
 
-    if (input.wasPressed(CONTROLS.pause)) this.setPaused(!this.paused);
     if (this.paused) {
       this.freeze();
+      this.updatePauseMenu();
+      return;
+    }
+    if (input.wasPressed(CONTROLS.pause)) {
+      this.setPaused(true);
       return;
     }
 
@@ -514,6 +523,16 @@ export class GameScene implements Scene, Build {
     ctx.strokeStyle = HITBOX_COLOR;
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+
+  /** Menu pause : clic sur un bouton, ou raccourci clavier (Échap/P, R, M). */
+  private updatePauseMenu(): void {
+    const { input, pauseOverlay } = this.deps;
+    // Le clic d'abord : `takeAction` le consomme même si une touche est aussi pressée.
+    const clicked = pauseOverlay.takeAction();
+    if (clicked === 'resume' || input.wasPressed(CONTROLS.pause)) this.setPaused(false);
+    else if (clicked === 'restart' || input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+    else if (clicked === 'menu' || input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
   }
 
   private setPaused(paused: boolean): void {
