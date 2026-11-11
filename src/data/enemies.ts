@@ -37,7 +37,7 @@ export const ENEMY_TYPES = {
   tank: {
     id: 'tank',
     hp: 66, // 60 → 66 : très léger buff
-    speed: 45, // 50 → 45
+    speed: 60, // 50 → 60 : buff demandé (il restait trop loin derrière la horde)
     contactDamage: 10,
     xp: 5,
     radius: 24,

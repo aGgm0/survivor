@@ -174,7 +174,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 |---|---|---|---|---|---|
 | Basique | 20 | 80 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile |
-| Tank | 66 | 45 | 10 | 5 | Lent, résistant |
+| Tank | 66 | 60 | 10 | 5 | Lent, résistant |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV (`BOSS_SPAWNS` dans waves.ts) |
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
@@ -420,7 +420,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Trait arcanique 11 → 14 dégâts ; orbes : recul 350 → 200 et dégâts 8 → 10 ; Tempête dégâts ×0,8 → ×1 ; Brasier et Aura toxique brûlent toutes les 0,6 s au lieu de 0,5 s (`cooldownMult` de mutation, la Hâte compte toujours) | Retour de jeu : Trait toujours dernier du damage meter ; le recul des orbes reste trop fort avec un délai par orbe ; l'aura mutée dominait (62-67 %) |
 | 2026-11-11 | Mutation = niveau 6 de l'arme : ses 2 variantes sont des cartes du tirage normal (plus d'écran de mutation forcé), l'arme passe niveau 6 | Demandé. Remplace « le level up qui suit le niveau max est remplacé par la mutation » |
 | 2026-11-11 | Persos : écran de choix après Jouer ; perso gardé pour « Rejouer » ; défi Pyromancien lu dans le profil (kills d'Aura cumulés), défi Runiste noté pendant la partie (boss n° 1 de BOSS_SPAWNS tué avec les Orbes niv ≥ 5, mutation comprise) puis gardé dans `profile.challenges` ; déblocage annoncé sur l'écran de fin (calculé sur une copie du profil) | Design validé (§ 5.9). Annonce immédiate même si une victoire n'est enregistrée qu'en quittant l'écran |
-| 2026-11-11 | Trait perçant 3 → 5 ennemis (dégâts inchangés) ; Trait éclaté rayon 60 → 75 px ; tank 60 → 66 PV et vitesse 50 → 45 ; rapide vitesse 150 → 135 | Retour de jeu |
+| 2026-11-11 | Trait perçant 3 → 5 ennemis (dégâts inchangés) ; Trait éclaté rayon 60 → 75 px ; tank 60 → 66 PV et vitesse 50 → 60 ; rapide vitesse 150 → 135 | Retour de jeu (vitesse du tank : d'abord baissée à 45 par erreur, corrigée à 60) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
