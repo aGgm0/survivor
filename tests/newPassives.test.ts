@@ -50,7 +50,7 @@ describe('nouveaux passifs : données', () => {
 });
 
 describe('Taille', () => {
-  it('grossit projectiles, orbes, aura et explosions (+35 % au niveau 5), pas l’orbite', () => {
+  it('grossit projectiles, orbes, aura et explosions (+35 % au niveau 5) ; l’orbite un peu', () => {
     const p = playerWith('size', 5);
     const n = new Player();
     const bolt = weapon(WEAPONS.arcaneBolt, p);
@@ -59,7 +59,8 @@ describe('Taille', () => {
     expect(aura.radius).toBeCloseTo(weapon(WEAPONS.burningAura, n).radius * 1.35);
     const orbs = weapon(WEAPONS.runicOrbs, p);
     expect(orbs.orbRadius).toBeCloseTo(WEAPONS.runicOrbs.orbRadius * 1.35);
-    expect(orbs.orbitDistance).toBe(weapon(WEAPONS.runicOrbs, n).orbitDistance);
+    // Orbite : +35 % × 0,3 = +10,5 % seulement.
+    expect(orbs.orbitDistance).toBeCloseTo(weapon(WEAPONS.runicOrbs, n).orbitDistance * 1.105);
     const burst = weapon(WEAPONS.arcaneBolt, p, 1); // Trait éclaté
     expect(burst.explosionRadius).toBeCloseTo(75 * 1.35);
   });

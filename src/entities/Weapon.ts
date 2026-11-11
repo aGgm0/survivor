@@ -1,3 +1,4 @@
+import { SIZE_ORBIT_SHARE } from '../data/upgrades';
 import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 
 /** Multiplicateurs venant du joueur (passifs), appliqués à toutes ses armes. */
@@ -124,8 +125,9 @@ export class Weapon {
     if (def.kind === 'orbit') {
       this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1) * size;
       this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1) * velocity;
-      // L'orbite ne grandit pas avec la Taille : seuls les orbes grossissent.
-      this.orbitDistance = orbitDistance * (m?.orbitDistanceMult ?? 1);
+      // L'orbite ne s'éloigne qu'avec une petite part du bonus de Taille (les orbes, eux, grossissent).
+      this.orbitDistance =
+        orbitDistance * (m?.orbitDistanceMult ?? 1) * (1 + (size - 1) * SIZE_ORBIT_SHARE);
     }
     if (def.kind === 'projectile') {
       this.projectileSpeed = def.projectileSpeed * velocity;

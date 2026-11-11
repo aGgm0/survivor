@@ -115,6 +115,12 @@ export const PASSIVES: readonly PassiveDef[] = [
   },
 ];
 
+/**
+ * Part du bonus de Taille appliquée à la distance des orbes : 0,3 → au niveau 5 (+35 % de taille),
+ * l'orbite s'éloigne de +10,5 % (105 → ~116 px). Demandé : "légèrement, mais un peu quand même".
+ */
+export const SIZE_ORBIT_SHARE = 0.3;
+
 /** Choix de secours quand tout est au maximum : un level up n'est jamais vide. */
 export const HEAL_UPGRADE = {
   name: 'Soin',
