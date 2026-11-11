@@ -231,6 +231,51 @@ body {
   color: #aaa;
 }
 
+/* Pas de boîte à lui : ses enfants restent en absolute par rapport à #stage */
+#hud {
+  display: contents;
+}
+
+/* Menu principal : opaque, il n'y a pas de partie derrière */
+.overlay-menu {
+  background: #14141c;
+  gap: 32px;
+}
+
+.menu-title {
+  font-size: 64px;
+  letter-spacing: 12px;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 260px;
+}
+
+.menu-button {
+  padding: 12px;
+  font: inherit;
+  font-size: 18px;
+  color: #fff;
+  background: #1d2236;
+  border: 2px solid #3a4470;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.menu-button:hover:not(:disabled) {
+  border-color: #4fc3f7;
+  background: #242b45;
+}
+
+.menu-button:disabled {
+  color: #666;
+  border-color: #2a2f45;
+  cursor: default;
+}
+
 .overlay-levelup {
   background: rgba(10, 20, 40, 0.75);
 }

@@ -55,7 +55,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Tests | **Vitest** | Tester la logique pure (dégâts, XP, spawn) |
 | Lint / format | ESLint + Prettier | |
 | Sauvegarde | `localStorage` (méta-progression, settings) | Pas de backend |
-| Déploiement | Local uniquement pour l'instant (`npm run dev`) | En ligne = Phase 5 |
+| Déploiement | Local uniquement pour l'instant (`npm run dev`) | En ligne = Phase 7 |
 
 > Tranché : **Canvas natif** plutôt que Phaser 3 (voir Journal des décisions).
 
@@ -291,11 +291,20 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Trait arcanique : **Trait perçant** (traverse 3 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 60 px, 70 % des dégâts, anneau visuel)
   - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, recul ×1,8) / **Tempête d'orbes** (9 orbes, rotation ×1,6, dégâts ×0,7)
 
-### Phase 5 — Polish `[LATER]`
-- [ ] Sprites et animations, sons et musique
-- [ ] Screen shake, particules
-- [ ] Menu principal, pause, options (volume)
-- [ ] Méta-progression + sauvegarde localStorage
+### Phase 5 — Contenu & systèmes (pas de visuel)
+- [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
+- [ ] Menu pause complet (Reprendre, Rejouer, Quitter vers le menu)
+- [ ] Options + sauvegarde des réglages (localStorage)
+- [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
+- [ ] Méta-progression + sauvegarde localStorage <!-- TODO: design à définir (section 5.9) -->
+
+### Phase 6 — Visuel & audio
+- [ ] Design de l'UI (HUD, menus, écrans de fin)
+- [ ] Sprites et animations
+- [ ] Screen shake, particules (plan déjà proposé : trauma dans la Camera, `ParticleSystem` en pool)
+- [ ] Sons et musique + option volume
+
+### Phase 7 — Déploiement
 - [ ] Déploiement en ligne
 
 ---
@@ -366,6 +375,8 @@ Format : date — décision — raison.
 | 2026-11-10 | Toutes les armes infligent leurs dégâts via une seule fonction (`damageEnemy`) | Damage meter cohérent, quel que soit le type d'arme |
 | 2026-11-10 | Trait arcanique multi-projectiles : éventail de 12° centré sur la cible | Le brief dit "+1 projectile" sans préciser la forme |
 | 2026-11-10 | Choix de level up tirés avec l'aléatoire du jeu ; l'UI ne fait que mémoriser le clic, lu par la scène dans son update | Partie reproductible ; toute la logique reste dans la game loop |
+| 2026-11-10 | Phase 5 découpée : 5 = contenu & systèmes (menus fonctionnels, options, équilibrage, méta-progression), 6 = visuel & audio (UI, sprites, shake, particules, sons), 7 = déploiement | Finir le fond avant la forme : pas de sprites pour des ennemis/armes qui changeront à l'équilibrage |
+| 2026-11-10 | Menu principal = `MenuScene` (une scène neuve à chaque retour) + overlay HTML ; le clic est mémorisé et lu dans l'update ; HUD masqué hors partie ; titre "SURVIVOR" provisoire ; M (code `KeyM` ou `Semicolon` pour AZERTY) = menu depuis l'écran de fin | Même principe que le level up et le "rejouer" : logique dans la game loop, aucun état qui fuit. Nom du jeu toujours en TODO (thème fantasy envisagé) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

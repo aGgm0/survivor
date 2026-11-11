@@ -7,6 +7,8 @@ import { PauseOverlay } from './ui/PauseOverlay';
 import { EndOverlay } from './ui/EndOverlay';
 import { Hud } from './ui/Hud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
+import { MenuOverlay } from './ui/MenuOverlay';
+import { MenuScene } from './scenes/MenuScene';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -29,7 +31,12 @@ const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-title', HTMLParagraphElement),
   getElement('levelup-choices', HTMLDivElement),
 );
+const menuOverlay = new MenuOverlay(
+  getElement('menu-overlay', HTMLDivElement),
+  getElement('menu-play', HTMLButtonElement),
+);
 const hud = new Hud({
+  root: getElement('hud', HTMLDivElement),
   timer: getElement('hud-timer', HTMLDivElement),
   level: getElement('hud-level', HTMLDivElement),
   xpFill: getElement('hud-xpfill', HTMLDivElement),
@@ -50,7 +57,16 @@ function startRun(): void {
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
   const seed = Date.now() >>> 0;
   const scene = new GameScene(
-    { input, pauseOverlay, endOverlay, levelUpOverlay, hud, debug, onRestart: startRun },
+    {
+      input,
+      pauseOverlay,
+      endOverlay,
+      levelUpOverlay,
+      hud,
+      debug,
+      onRestart: startRun,
+      onMenu: showMenu,
+    },
     seed,
   );
   game.setScene(scene);
@@ -62,5 +78,10 @@ function startRun(): void {
   }
 }
 
-startRun();
+/** Menu principal. Une scène neuve à chaque fois, comme pour les parties. */
+function showMenu(): void {
+  game.setScene(new MenuScene({ input, menuOverlay, hud, onPlay: startRun }));
+}
+
+showMenu();
 game.start();

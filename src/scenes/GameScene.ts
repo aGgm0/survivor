@@ -76,10 +76,12 @@ export interface GameSceneDeps {
   pauseOverlay: Pick<PauseOverlay, 'setVisible'>;
   endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
-  hud: Pick<Hud, 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
+  hud: Pick<Hud, 'setVisible' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
+  /** Appelé quand le joueur demande le menu principal depuis l'écran de fin. */
+  onMenu: () => void;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -165,6 +167,7 @@ export class GameScene implements Scene, Build {
   }
 
   enter(): void {
+    this.deps.hud.setVisible(true);
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
@@ -204,6 +207,7 @@ export class GameScene implements Scene, Build {
     if (this.report) {
       this.freeze();
       if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+      else if (input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
       return;
     }
 

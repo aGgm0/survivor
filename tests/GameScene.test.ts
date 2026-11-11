@@ -19,6 +19,8 @@ function makeDeps() {
     /** Bilan affiché sur l'écran de fin (null = masqué) */
     end: null as RunReport | null,
     restarts: 0,
+    menus: 0,
+    hudVisible: false,
     levelUpShown: null as { level: number; titles: string[] } | null,
     /** Clic simulé sur une carte de level up (lu une fois par la scène) */
     click: null as number | null,
@@ -43,6 +45,7 @@ function makeDeps() {
       },
     },
     hud: {
+      setVisible: (v) => (ui.hudVisible = v),
       setTime: () => {},
       setProgress: () => {},
       setHp: () => {},
@@ -51,6 +54,7 @@ function makeDeps() {
     },
     debug: { setStat: () => {}, showHitboxes: false },
     onRestart: () => ui.restarts++,
+    onMenu: () => ui.menus++,
   };
   /** Simule un appui unique (vu par une seule update, comme Input.endUpdate). */
   const press = (code: string, scene: GameScene) => {
@@ -143,6 +147,19 @@ describe('GameScene — dégâts et mort', () => {
     scene.update(DT);
     press('KeyR', scene);
     expect(ui.restarts).toBe(1);
+  });
+
+  it('M après la mort ramène au menu (M AZERTY = Semicolon) ; M en partie ne fait rien', () => {
+    const { scene, ui, press } = newScene();
+    expect(ui.hudVisible).toBe(true);
+    press('KeyM', scene);
+    expect(ui.menus).toBe(0);
+
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    scene.update(DT);
+    press('Semicolon', scene);
+    expect(ui.menus).toBe(1);
   });
 
   it('la pause est désactivée après la mort', () => {

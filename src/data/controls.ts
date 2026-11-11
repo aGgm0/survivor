@@ -7,6 +7,10 @@ export const CONTROLS = {
   right: ['KeyD', 'ArrowRight'],
   pause: ['Escape', 'KeyP'],
   restart: ['KeyR'],
+  /** Valider (menu principal) */
+  confirm: ['Enter', 'NumpadEnter', 'Space'],
+  // Retour au menu. Le M d'un clavier AZERTY est à la place du ; QWERTY (code `Semicolon`).
+  menu: ['KeyM', 'Semicolon'],
   // Choix au level up. Touches physiques : sur AZERTY, ce sont les touches & é " (sans Maj).
   choice1: ['Digit1', 'Numpad1'],
   choice2: ['Digit2', 'Numpad2'],

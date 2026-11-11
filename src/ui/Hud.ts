@@ -4,6 +4,8 @@ import { formatTime } from './formatTime';
 
 /** Éléments du HUD (HTML par-dessus le canvas). */
 export interface HudElements {
+  /** Conteneur de tout le HUD (pour le masquer d'un coup) */
+  root: HTMLElement;
   timer: HTMLElement;
   level: HTMLElement;
   xpFill: HTMLElement;
@@ -35,6 +37,11 @@ export class Hud {
   private shownWeapons: readonly Weapon[] | null = null;
 
   constructor(private readonly el: HudElements) {}
+
+  /** Masqué dans le menu, visible en partie. */
+  setVisible(visible: boolean): void {
+    this.el.root.hidden = !visible;
+  }
 
   /**
    * Inventaire : une case par arme et par passif, avec son niveau.
