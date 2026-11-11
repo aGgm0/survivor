@@ -9,10 +9,16 @@ export class EndOverlay {
     private readonly infoEl: HTMLElement,
     private readonly meterEl: HTMLElement,
     private readonly hintEl: HTMLElement,
+    private readonly unlocksEl: HTMLElement,
   ) {}
 
   /** `canContinue` : écran de victoire d'où l'on peut lancer le mode sans fin (touche C). */
-  show(report: RunReport, canContinue = false): void {
+  show(report: RunReport, canContinue = false, unlocks: readonly string[] = []): void {
+    this.unlocksEl.hidden = unlocks.length === 0;
+    // Annonce des persos débloqués par cette partie (une ligne par perso).
+    this.unlocksEl.textContent = unlocks
+      .map((name) => `Nouveau perso débloqué : ${name} !`)
+      .join('\n');
     this.el.classList.toggle('overlay-victory', report.victory);
     this.el.classList.toggle('overlay-death', !report.victory);
     this.titleEl.textContent = report.endless ? 'SANS FIN' : report.victory ? 'VICTOIRE' : 'MORT';

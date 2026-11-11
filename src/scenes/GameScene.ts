@@ -15,7 +15,8 @@ import {
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_TYPE } from '../data/waves';
-import { PROJECTILE_POOL_SIZE, WEAPONS } from '../data/weapons';
+import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
+import { BOSS_CHALLENGES } from '../data/characters';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -88,6 +89,8 @@ export interface GameSceneDeps {
   onMenu: () => void;
   /** Appelé une fois quand la partie se termine (mort ou victoire) : main.ts met le profil à jour. */
   onRunEnd: (report: RunReport) => void;
+  /** Noms des persos que cette partie débloque (annoncés sur l'écran de fin) */
+  unlocksFor: (report: RunReport) => readonly string[];
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -103,7 +106,7 @@ export class GameScene implements Scene, Build {
   private readonly touching = new Array<Enemy>(ENEMY_POOL_SIZE);
   private touchingCount = 0;
   /** Armes du joueur. Une seule au départ ; les autres se gagneront en montant de niveau (Phase 4b). */
-  readonly weapons: Weapon[] = [new Weapon(WEAPONS.arcaneBolt)];
+  readonly weapons: Weapon[];
   readonly projectiles = new Pool(PROJECTILE_POOL_SIZE, () => new Projectile());
   private readonly weaponSystem: WeaponSystem;
   private readonly projectileSystem: ProjectileSystem;
@@ -130,6 +133,8 @@ export class GameScene implements Scene, Build {
   private maxedAt: number | null = null;
   /** Mode sans fin lancé depuis l'écran de victoire */
   private endless = false;
+  /** Défis réussis pendant cette partie (ids) */
+  private readonly challenges: string[] = [];
   /** La partie a déjà été ajoutée au profil */
   private recorded = false;
   private readonly runDuration: number;
@@ -141,8 +146,10 @@ export class GameScene implements Scene, Build {
   constructor(
     private readonly deps: GameSceneDeps,
     seed: number,
-    options: { runDuration?: number } = {},
+    options: { runDuration?: number; startWeapon?: WeaponDef } = {},
   ) {
+    // L'arme de départ dépend du perso choisi (Trait arcanique par défaut).
+    this.weapons = [new Weapon(options.startWeapon ?? WEAPONS.arcaneBolt)];
     this.runDuration = options.runDuration ?? RUN_DURATION;
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
@@ -352,6 +359,18 @@ export class GameScene implements Scene, Build {
     if (showNumbers) this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
+  /**
+   * Défis des persos du type « tuer tel boss avec telle arme au niveau N » (le Runiste).
+   * Le niveau compte la mutation (niveau 6), donc une arme mutée remplit aussi le défi.
+   */
+  private checkBossChallenges(bossIndex: number): void {
+    for (const c of BOSS_CHALLENGES) {
+      if (c.bossIndex !== bossIndex || this.challenges.includes(c.id)) continue;
+      const weapon = this.weapons.find((w) => w.def.id === c.weaponId);
+      if (weapon && weapon.level >= c.minLevel) this.challenges.push(c.id);
+    }
+  }
+
   /** Vrai si un boss est encore actif. Parcours du pool, seulement après le temps de victoire. */
   private isBossAlive(): boolean {
     for (const e of this.enemies.items) if (e.active && e.type === BOSS_TYPE) return true;
@@ -365,6 +384,7 @@ export class GameScene implements Scene, Build {
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
+    if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
@@ -390,7 +410,11 @@ export class GameScene implements Scene, Build {
   private endRun(victory: boolean): void {
     this.setPaused(false);
     this.report = this.buildReport(victory);
-    this.deps.endOverlay.show(this.report, this.canContinueEndless);
+    this.deps.endOverlay.show(
+      this.report,
+      this.canContinueEndless,
+      this.deps.unlocksFor(this.report),
+    );
     // Victoire "normale" : le joueur peut encore continuer en sans fin, on attend pour
     // l'enregistrer (sinon la même partie compterait deux fois). Sinon, c'est fini.
     if (!this.canContinueEndless) this.recordRunOnce();
@@ -404,6 +428,7 @@ export class GameScene implements Scene, Build {
       time: this.elapsed,
       kills: this.killCount,
       level: this.progression.level,
+      challenges: this.challenges.slice(),
       maxedAt: this.maxedAt,
       weapons: buildDamageReport(this.weapons),
     };

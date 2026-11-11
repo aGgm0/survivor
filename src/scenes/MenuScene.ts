@@ -1,7 +1,9 @@
 import type { Input } from '../core/Input';
 import type { Scene } from '../core/Scene';
 import { CONTROLS } from '../data/controls';
+import { CHARACTERS, isUnlocked, type CharacterDef } from '../data/characters';
 import type { Profile } from '../data/profile';
+import type { CharacterOverlay } from '../ui/CharacterOverlay';
 import type { Settings } from '../data/settings';
 import type { Hud } from '../ui/Hud';
 import type { MenuOverlay } from '../ui/MenuOverlay';
@@ -14,6 +16,7 @@ export interface MenuSceneDeps {
   menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction'>;
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack'>;
+  characterOverlay: Pick<CharacterOverlay, 'show' | 'hide' | 'takeChoice' | 'takeBack'>;
   hud: Pick<Hud, 'setVisible'>;
   /** Réglages partagés par tout le jeu : la scène les modifie sur place. */
   settings: Settings;
@@ -21,14 +24,14 @@ export interface MenuSceneDeps {
   profile: Readonly<Profile>;
   /** Appelé après chaque changement de réglage : main.ts sauvegarde et applique. */
   onSettingsChanged: () => void;
-  /** Lance une partie : main.ts crée une GameScene neuve. */
-  onPlay: () => void;
+  /** Lance une partie avec ce perso : main.ts crée une GameScene neuve. */
+  onPlay: (character: CharacterDef) => void;
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
-export type MenuScreen = 'main' | 'options' | 'profile';
+export type MenuScreen = 'main' | 'characters' | 'options' | 'profile';
 
-/** Écran d'accueil, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
+/** Écran d'accueil, choix du perso, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
 export class MenuScene implements Scene {
   private screen: MenuScreen = 'main';
 
@@ -49,12 +52,15 @@ export class MenuScene implements Scene {
     this.deps.menuOverlay.hide();
     this.deps.optionsOverlay.hide();
     this.deps.profileOverlay.hide();
+    this.deps.characterOverlay.hide();
   }
 
   update(): void {
     switch (this.screen) {
       case 'main':
         return this.updateMain();
+      case 'characters':
+        return this.updateCharacters();
       case 'options':
         return this.updateOptions();
       case 'profile':
@@ -70,7 +76,24 @@ export class MenuScene implements Scene {
     // `takeAction` d'abord : il vide le clic mémorisé même si on joue au clavier.
     const action = menuOverlay.takeAction();
     if (action === 'options' || action === 'profile') this.open(action);
-    else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.deps.onPlay();
+    else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.open('characters');
+  }
+
+  /** Choix du perso : clic ou 1-2-3 ; un perso verrouillé ne se lance pas. Échap = retour. */
+  private updateCharacters(): void {
+    const { input, characterOverlay, profile } = this.deps;
+    let index = characterOverlay.takeChoice();
+    if (index === null) {
+      if (input.wasPressed(CONTROLS.choice1)) index = 0;
+      else if (input.wasPressed(CONTROLS.choice2)) index = 1;
+      else if (input.wasPressed(CONTROLS.choice3)) index = 2;
+    }
+    const character = index === null ? undefined : CHARACTERS[index];
+    if (character && isUnlocked(character, profile)) {
+      this.deps.onPlay(character);
+    } else if (characterOverlay.takeBack() || input.wasPressed(CONTROLS.back)) {
+      this.open('main');
+    }
   }
 
   private updateOptions(): void {
@@ -92,12 +115,14 @@ export class MenuScene implements Scene {
 
   /** Affiche un écran et masque les autres. */
   private open(screen: MenuScreen): void {
-    const { menuOverlay, optionsOverlay, profileOverlay } = this.deps;
+    const { menuOverlay, optionsOverlay, profileOverlay, characterOverlay } = this.deps;
     this.screen = screen;
     menuOverlay.hide();
     optionsOverlay.hide();
     profileOverlay.hide();
+    characterOverlay.hide();
     if (screen === 'main') menuOverlay.show();
+    else if (screen === 'characters') characterOverlay.show(CHARACTERS, this.deps.profile);
     else if (screen === 'options') optionsOverlay.show(this.deps.settings);
     else profileOverlay.show(this.deps.profile);
   }

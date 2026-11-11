@@ -80,7 +80,8 @@ export class SpawnSystem {
     if (boss && now >= boss.time) {
       this.nextBoss++;
       // Chaque boss a ses propres multiplicateurs (pas ceux de la vague en cours).
-      this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
+      const spawned = this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
+      if (spawned) spawned.bossIndex = this.nextBoss - 1;
     }
     this.updateEndlessBosses(now, playerX, playerY);
 
@@ -136,19 +137,19 @@ export class SpawnSystem {
 
   private spawnFromWave(wave: SpawnParams, playerX: number, playerY: number): boolean {
     const type = pickWeighted(wave.weights, this.rng.next());
-    return this.spawnAt(type, wave.hpMult, wave.speedMult, playerX, playerY);
+    return this.spawnAt(type, wave.hpMult, wave.speedMult, playerX, playerY) !== null;
   }
 
-  /** Place un ennemi sur le cercle de spawn, hors écran. Faux si la réserve est vide. */
+  /** Place un ennemi sur le cercle de spawn, hors écran. null si la réserve est vide. */
   private spawnAt(
     type: EnemyType,
     hpMult: number,
     speedMult: number,
     playerX: number,
     playerY: number,
-  ): boolean {
+  ): Enemy | null {
     const enemy = this.enemies.acquire();
-    if (!enemy) return false;
+    if (!enemy) return null;
     const angle = this.rng.range(0, Math.PI * 2);
     enemy.spawn(
       type,
@@ -157,7 +158,7 @@ export class SpawnSystem {
       hpMult,
       speedMult,
     );
-    return true;
+    return enemy;
   }
 
   /**

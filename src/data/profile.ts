@@ -28,6 +28,8 @@ export interface Profile {
   bestLevel: number;
   /** Par id d'arme de base */
   weapons: Record<string, WeaponStats>;
+  /** Défis tout-ou-rien déjà réussis (ex. boss tué avec une arme), par id */
+  challenges: string[];
 }
 
 export function emptyProfile(): Profile {
@@ -39,6 +41,7 @@ export function emptyProfile(): Profile {
     totalKills: 0,
     bestLevel: 0,
     weapons: {},
+    challenges: [],
   };
 }
 
@@ -50,6 +53,9 @@ export function recordRun(profile: Profile, report: RunReport): Profile {
   profile.totalTime += report.time;
   profile.totalKills += report.kills;
   profile.bestLevel = Math.max(profile.bestLevel, report.level);
+  for (const id of report.challenges) {
+    if (!profile.challenges.includes(id)) profile.challenges.push(id);
+  }
   for (const w of report.weapons) {
     const stats = (profile.weapons[w.id] ??= { runs: 0, damage: 0, kills: 0 });
     stats.runs++;
@@ -107,6 +113,11 @@ export function parseProfile(raw: unknown): Profile {
         damage: count(stats.damage),
         kills: count(stats.kills),
       };
+    }
+  }
+  if (Array.isArray(raw.challenges)) {
+    for (const id of raw.challenges) {
+      if (typeof id === 'string' && !profile.challenges.includes(id)) profile.challenges.push(id);
     }
   }
   return profile;

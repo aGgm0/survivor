@@ -78,6 +78,7 @@ function makeDeps() {
       ui.runEnds++;
       ui.recorded = report;
     },
+    unlocksFor: () => [],
   };
   /** Simule un appui unique (vu par une seule update, comme Input.endUpdate). */
   const press = (code: string, scene: GameScene) => {
@@ -640,5 +641,43 @@ describe('GameScene — mode sans fin', () => {
     press('KeyC', scene);
     expect(scene.isEndless).toBe(false);
     expect(scene.isOver).toBe(true);
+  });
+});
+
+describe('GameScene — persos et défis', () => {
+  it('commence avec l’arme du perso choisi', () => {
+    const ctx = makeDeps();
+    const scene = new GameScene(ctx.deps, 1, { startWeapon: WEAPONS.runicOrbs });
+    expect(scene.weapons.map((w) => w.def.id)).toEqual(['runicOrbs']);
+  });
+
+  /** Partie avec un boss n°  au contact des orbes, tué net, puis mort du joueur. */
+  function killBoss(orbLevel: number, bossIndex: number) {
+    const { scene, ui } = newScene({ armed: false });
+    const orbs = new Weapon(WEAPONS.runicOrbs);
+    orbs.level = orbLevel;
+    scene.weapons.push(orbs);
+    const boss = scene.enemies.acquire();
+    if (!boss) throw new Error();
+    boss.spawn(BOSS_TYPE, scene.player.x + 400, scene.player.y);
+    boss.bossIndex = bossIndex;
+    boss.hp = 0.01;
+    // Le premier coup d'orbe qui le touche le tue : on le place sur l'orbite.
+    boss.teleport(scene.player.x + orbs.orbitDistance, scene.player.y);
+    for (let i = 0; i < 120 && boss.active; i++) scene.update(DT);
+    expect(boss.active).toBe(false);
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    return ui.end?.challenges ?? [];
+  }
+
+  it('Runiste : boss de 9:00 tué avec les Orbes niveau 5 → défi réussi', () => {
+    expect(killBoss(5, 1)).toEqual(['runistBoss']);
+  });
+
+  it('pas réussi avec les Orbes niveau 4, ni sur le boss de 5:00', () => {
+    expect(killBoss(4, 1)).toEqual([]);
+    expect(killBoss(5, 0)).toEqual([]);
   });
 });

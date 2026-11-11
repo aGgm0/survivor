@@ -22,6 +22,8 @@ export class Enemy implements Poolable {
   /** Multiplicateur de vitesse de la vague au spawn (paliers de fin de partie) */
   speedMult = 1;
   type: EnemyType = ENEMY_TYPES.basic;
+  /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
+  bossIndex = -1;
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
   /** Instant (temps de partie, en s) jusqu'auquel il est affiché en blanc (vient d'être touché). */
@@ -59,6 +61,7 @@ export class Enemy implements Poolable {
   spawn(type: EnemyType, x: number, y: number, hpMult = 1, speedMult = 1): void {
     this.speedMult = speedMult;
     this.type = type;
+    this.bossIndex = -1;
     this.maxHp = type.hp * hpMult;
     this.hp = this.maxHp;
     // Plus de PV à percer = plus d'XP : sinon monter de niveau ralentit à chaque vague.

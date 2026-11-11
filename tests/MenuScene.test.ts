@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { emptyProfile } from '../src/data/profile';
+import { CHARACTERS, type CharacterDef } from '../src/data/characters';
+import { emptyProfile, type Profile } from '../src/data/profile';
 import { DEFAULT_SETTINGS, type Settings } from '../src/data/settings';
 import { MenuScene } from '../src/scenes/MenuScene';
 import type { MenuAction } from '../src/ui/MenuOverlay';
 import type { OptionsAction } from '../src/ui/OptionsOverlay';
 
 /** Faux menus et faux clavier : on simule un clic ou une touche, puis une update. */
-function newMenu() {
+function newMenu(profile: Profile = emptyProfile()) {
   const pressed = new Set<string>();
   const settings: Settings = { ...DEFAULT_SETTINGS };
   const ui = {
@@ -16,6 +17,11 @@ function newMenu() {
     profileBack: false,
     hudVisible: true,
     plays: 0,
+    /** Perso de la dernière partie lancée */
+    played: null as CharacterDef | null,
+    charactersVisible: false,
+    characterClick: null as number | null,
+    characterBack: false,
     saves: 0,
     menuClick: null as MenuAction | null,
     optionsClick: null as OptionsAction | null,
@@ -55,11 +61,28 @@ function newMenu() {
         return b;
       },
     },
+    characterOverlay: {
+      show: () => (ui.charactersVisible = true),
+      hide: () => (ui.charactersVisible = false),
+      takeChoice: () => {
+        const c = ui.characterClick;
+        ui.characterClick = null;
+        return c;
+      },
+      takeBack: () => {
+        const b = ui.characterBack;
+        ui.characterBack = false;
+        return b;
+      },
+    },
     hud: { setVisible: (v) => (ui.hudVisible = v) },
     settings,
-    profile: emptyProfile(),
+    profile,
     onSettingsChanged: () => ui.saves++,
-    onPlay: () => ui.plays++,
+    onPlay: (c) => {
+      ui.plays++;
+      ui.played = c;
+    },
   });
   const press = (code: string) => {
     pressed.add(code);
@@ -87,19 +110,66 @@ describe('MenuScene', () => {
     expect(ui.plays).toBe(0);
   });
 
-  it('lance une partie au clic sur Jouer, une seule fois', () => {
-    const { scene, ui } = newMenu();
-    ui.menuClick = 'play';
-    scene.update();
-    scene.update();
+  it('Jouer (clic, Entrée ou Espace) ouvre le choix du perso, sans lancer de partie', () => {
+    for (const how of ['click', 'Enter', 'Space']) {
+      const { scene, ui, press } = newMenu();
+      if (how === 'click') {
+        ui.menuClick = 'play';
+        scene.update();
+      } else press(how);
+      expect(scene.currentScreen).toBe('characters');
+      expect(ui.charactersVisible).toBe(true);
+      expect(ui.plays).toBe(0);
+    }
+  });
+});
+
+describe('MenuScene — choix du perso', () => {
+  function inCharacters(profile?: Profile) {
+    const ctx = newMenu(profile);
+    ctx.ui.menuClick = 'play';
+    ctx.scene.update();
+    return ctx;
+  }
+
+  it('touche 1 ou clic : lance la partie avec ce perso, une seule fois', () => {
+    const { scene, ui, press } = inCharacters();
+    press('Digit1');
     expect(ui.plays).toBe(1);
+    expect(ui.played).toBe(CHARACTERS[0]);
+
+    const other = inCharacters();
+    other.ui.characterClick = 0;
+    other.scene.update();
+    other.scene.update();
+    expect(other.ui.plays).toBe(1);
+    expect(scene.currentScreen).toBe('characters');
   });
 
-  it('lance une partie avec Entrée ou Espace', () => {
-    const { ui, press } = newMenu();
-    press('Enter');
-    press('Space');
-    expect(ui.plays).toBe(2);
+  it('un perso verrouillé ne se lance pas', () => {
+    const { ui, press } = inCharacters();
+    press('Digit2'); // Pyromancien, profil vide
+    press('Digit3'); // Runiste
+    expect(ui.plays).toBe(0);
+  });
+
+  it('un perso débloqué se lance avec son arme', () => {
+    const profile = emptyProfile();
+    profile.challenges.push('runistBoss');
+    const { ui, press } = inCharacters(profile);
+    press('Digit3');
+    expect(ui.played?.weapon.id).toBe('runicOrbs');
+  });
+
+  it('Retour ou Échap revient au menu principal', () => {
+    const { scene, ui, press } = inCharacters();
+    ui.characterBack = true;
+    scene.update();
+    expect(scene.currentScreen).toBe('main');
+    ui.menuClick = 'play';
+    scene.update();
+    press('Escape');
+    expect(scene.currentScreen).toBe('main');
   });
 });
 

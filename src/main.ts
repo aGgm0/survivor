@@ -14,6 +14,8 @@ import { SaveStore } from './core/SaveStore';
 import { SETTINGS_KEY, parseSettings, serializeSettings } from './data/settings';
 import { PROFILE_KEY, parseProfile, recordRun, serializeProfile } from './data/profile';
 import { ProfileOverlay } from './ui/ProfileOverlay';
+import { CharacterOverlay } from './ui/CharacterOverlay';
+import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
@@ -44,6 +46,7 @@ const endOverlay = new EndOverlay(
   getElement('end-info', HTMLParagraphElement),
   getElement('end-meter', HTMLDivElement),
   getElement('end-hint', HTMLParagraphElement),
+  getElement('end-unlocks', HTMLParagraphElement),
 );
 const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-overlay', HTMLDivElement),
@@ -55,6 +58,11 @@ const menuOverlay = new MenuOverlay(getElement('menu-overlay', HTMLDivElement), 
   options: getElement('menu-options', HTMLButtonElement),
   profile: getElement('menu-profile', HTMLButtonElement),
 });
+const characterOverlay = new CharacterOverlay(
+  getElement('character-overlay', HTMLDivElement),
+  getElement('character-cards', HTMLDivElement),
+  getElement('character-back', HTMLButtonElement),
+);
 const profileOverlay = new ProfileOverlay(
   getElement('profile-overlay', HTMLDivElement),
   getElement('profile-summary', HTMLDivElement),
@@ -83,9 +91,12 @@ const game = new Game(renderer, debug, input);
 /**
  * Lance une partie neuve. "Rejouer" rappelle cette fonction : on recrée une scène entière
  * plutôt que de remettre à zéro l'ancienne, ce qui garantit qu'aucun état ne fuit d'une partie
- * à l'autre (ennemis, timer, PV...).
+ * à l'autre (ennemis, timer, PV...). Le perso choisi est gardé pour "Rejouer".
  */
-function startRun(): void {
+let character: CharacterDef = DEFAULT_CHARACTER;
+
+function startRun(chosen: CharacterDef = character): void {
+  character = chosen;
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
   const seed = Date.now() >>> 0;
   const scene = new GameScene(
@@ -97,11 +108,13 @@ function startRun(): void {
       hud,
       debug,
       settings,
-      onRestart: startRun,
+      onRestart: () => startRun(),
       onMenu: showMenu,
       onRunEnd,
+      unlocksFor: (report) => newUnlocks(profile, report).map((c) => c.name),
     },
     seed,
+    { startWeapon: character.weapon },
   );
   game.setScene(scene);
 
@@ -120,6 +133,7 @@ function showMenu(): void {
       menuOverlay,
       optionsOverlay,
       profileOverlay,
+      characterOverlay,
       hud,
       settings,
       profile,

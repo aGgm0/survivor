@@ -23,6 +23,8 @@ export interface RunReport {
   readonly time: number;
   readonly kills: number;
   readonly level: number;
+  /** Défis tout-ou-rien réussis pendant la partie (ids, voir data/characters.ts) */
+  readonly challenges: readonly string[];
   /** s : moment où le build était complet (tout au max), null s'il ne l'a jamais été */
   readonly maxedAt: number | null;
   /** Armes triées de la plus efficace à la moins efficace */

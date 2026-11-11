@@ -234,6 +234,15 @@ body {
   letter-spacing: 8px;
 }
 
+/* "Nouveau perso débloqué" sur l'écran de fin */
+.overlay-unlocks {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffd54f;
+  white-space: pre-line;
+  text-align: center;
+}
+
 .overlay-info {
   font-size: 20px;
 }
@@ -390,6 +399,17 @@ body {
 .choice:hover {
   border-color: #4fc3f7;
   background: #242b45;
+}
+
+/* Carte de perso verrouillé : grisée, pas cliquable */
+.character-card:disabled {
+  opacity: 0.5;
+  cursor: default;
+  border-color: #2a2f45;
+}
+
+.character-card:disabled:hover {
+  background: #1d2236;
 }
 
 .choice-key {

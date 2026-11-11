@@ -16,6 +16,7 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
     time: 300,
     kills: 1000,
     level: 20,
+    challenges: [],
     maxedAt: null,
     weapons: [
       {
@@ -114,6 +115,12 @@ describe('parseProfile', () => {
     });
     expect(Object.keys(profile.weapons)).toEqual(['runicOrbs']);
     expect(profile.weapons.runicOrbs).toEqual({ runs: 2, damage: 0, kills: 0 });
+  });
+
+  it('défis : garde les textes, ignore le reste et les doublons', () => {
+    const profile = parseProfile({ challenges: ['runistBoss', 42, null, 'runistBoss'] });
+    expect(profile.challenges).toEqual(['runistBoss']);
+    expect(parseProfile({ challenges: 'runistBoss' }).challenges).toEqual([]);
   });
 
   it('version plus récente que le jeu : profil vide', () => {
