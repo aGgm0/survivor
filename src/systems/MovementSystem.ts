@@ -61,10 +61,11 @@ export class MovementSystem {
     dt: number,
     now: number,
   ): void {
-    // Mobilier : ne bouge jamais (le joueur peut le pousser, mais il s'arrête net ensuite).
+    // Mobilier : ne bouge jamais. On écrit bien 0 dans nextVx/nextVy : sinon la case gardait la
+    // vitesse de l'ennemi qui occupait cette place du pool avant, et la caisse glissait.
     if (e.type.prop) {
-      e.vx = 0;
-      e.vy = 0;
+      this.nextVx[index] = 0;
+      this.nextVy[index] = 0;
       return;
     }
     // 1. Envie : direction unitaire (px, py) vers le joueur.

@@ -205,6 +205,11 @@ export class SpawnSystem {
       const dy = e.y - playerY;
       const dist = Math.hypot(dx, dy);
       if (dist <= RECYCLE_DISTANCE) continue;
+      // Mobilier laissé loin derrière : il disparaît (un autre apparaîtra), il ne se « téléporte » pas.
+      if (e.type.prop) {
+        this.enemies.release(e);
+        continue;
+      }
       // Direction opposée (-dx, -dy), ramenée à la longueur SPAWN_RADIUS.
       const k = SPAWN_RADIUS / dist;
       e.teleport(playerX - dx * k, playerY - dy * k);

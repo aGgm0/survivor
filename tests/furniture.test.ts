@@ -13,6 +13,7 @@ import { PickupSystem } from '../src/systems/PickupSystem';
 import { SpawnSystem } from '../src/systems/SpawnSystem';
 import type { RunReport } from '../src/systems/runReport';
 import { WeaponSystem } from '../src/systems/WeaponSystem';
+import { MovementSystem } from '../src/systems/MovementSystem';
 import { Projectile } from '../src/entities/Projectile';
 
 const CRATE = ENEMY_TYPES.crate;
@@ -98,5 +99,41 @@ describe('or au profil', () => {
     recordRun(profile, report);
     recordRun(profile, report);
     expect(profile.gold).toBe(84);
+  });
+});
+
+describe('mobilier — immobile', () => {
+  it('ne glisse pas, même dans une case du pool qui avait un ennemi rapide avant', () => {
+    const pool = new Pool(10, (i) => new Enemy(i));
+    const collisions = new CollisionSystem(10);
+    const movement = new MovementSystem(10, collisions);
+    // Un rapide fonce vers le joueur, puis meurt : sa case du pool est réutilisée par une caisse.
+    const fast = pool.acquire();
+    if (!fast) throw new Error();
+    fast.spawn(ENEMY_TYPES.fast, 300, 0);
+    for (let i = 0; i < 30; i++) {
+      collisions.rebuild(pool);
+      movement.update(pool, 0, 0, 1 / 60);
+    }
+    pool.release(fast);
+    const crate = pool.acquire();
+    if (!crate) throw new Error();
+    crate.spawn(CRATE, 200, 0);
+    for (let i = 0; i < 60; i++) {
+      collisions.rebuild(pool);
+      movement.update(pool, 0, 0, 1 / 60);
+    }
+    expect(crate.x).toBe(200);
+    expect(crate.y).toBe(0);
+  });
+
+  it('laissé très loin derrière : il disparaît au lieu de revenir devant', () => {
+    const pool = new Pool(10, (i) => new Enemy(i));
+    const spawner = new SpawnSystem(pool, new Rng(1));
+    const crate = pool.acquire();
+    if (!crate) throw new Error();
+    crate.spawn(CRATE, 5000, 0);
+    spawner.update(1 / 60, 1, 0, 0);
+    expect(crate.active).toBe(false);
   });
 });
