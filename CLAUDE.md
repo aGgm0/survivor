@@ -158,11 +158,11 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
-| **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 11 | 1 s | +1 projectile aux niv 3 et 5 |
+| **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 14 | 1 s | +1 projectile aux niv 3 et 5 |
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px |
-| **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 8 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
+| **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
-**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 350 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
+**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
 
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
@@ -302,9 +302,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 ### Après le MVP — idées validées, à planifier
 - [x] **Mutations d'armes** : au level up qui suit le niveau 5, choix définitif entre 2 variantes (écran "MUTATION", ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
-  - [x] Aura : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
+  - [x] Aura (les 2 brûlent toutes les 0,6 s) : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
   - [x] Trait arcanique : **Trait perçant** (traverse 3 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 60 px, 70 % des dégâts, anneau visuel)
-  - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, rotation ×0,85, recul ×1,6) / **Tempête d'orbes** (9 orbes, rotation ×1,6, dégâts ×0,8, recul ×0,3)
+  - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, rotation ×0,85, recul ×1,6) / **Tempête d'orbes** (9 orbes, rotation ×1,6, recul ×0,3)
 
 ### Phase 5 — Contenu & systèmes (pas de visuel)
 - [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
@@ -417,6 +417,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Profil : stats cumulées des parties **terminées** (une partie quittée en cours ne compte pas) ; une arme mutée compte sous son arme de base ; arme la plus jouée = le plus de parties, puis le plus de dégâts ; armes inconnues ignorées à la lecture | Demandé. Prépare les défis des persos (kills cumulés par arme). Quitter ne doit pas permettre de gonfler ou fausser les stats |
 | 2026-11-11 | Mode sans fin : C sur l'écran de victoire ; montée continue (PV ×1,25/min, +2/s par min, vitesse +3 %/min plafonnée ×1,8), boss toutes les 3 min (×1,5 PV chacun) ; une partie = un seul enregistrement au profil (victoire enregistrée en quittant l'écran, ou à la mort en sans fin, ou en quittant le sans fin par le menu pause) | Demandé ("mode sans fin dès que tu tues le boss"). Pas de double comptage de la même partie ; quitter le sans fin ne fait pas perdre la victoire |
 | 2026-11-11 | Profil : un seul « Meilleur temps » (sans fin compris) ; Aura : +2 dégâts au niveau 2, rayon aux niveaux 3-4 ; Tempête d'orbes : recul ×0,3, dégâts ×0,7 → ×0,8 ; Trait arcanique 10 → 11 dégâts | Retour de jeu (sans fin jusqu'à 16:09) : au-delà du dernier boss c'est forcément du sans fin ; Tempête repoussait tout (immobile 12 min sans contact) car le recul tombe à chaque coup d'orbe |
+| 2026-11-11 | Trait arcanique 11 → 14 dégâts ; orbes : recul 350 → 200 et dégâts 8 → 10 ; Tempête dégâts ×0,8 → ×1 ; Brasier et Aura toxique brûlent toutes les 0,6 s au lieu de 0,5 s (`cooldownMult` de mutation, la Hâte compte toujours) | Retour de jeu : Trait toujours dernier du damage meter ; le recul des orbes reste trop fort avec un délai par orbe ; l'aura mutée dominait (62-67 %) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

@@ -33,6 +33,8 @@ export interface MutationDef {
   readonly color: string;
   readonly damageMult?: number;
   readonly knockbackMult?: number;
+  /** Multiplicateur du délai entre deux tirs / brûlures (1,2 = 20 % plus lent) */
+  readonly cooldownMult?: number;
   /** Aura : multiplicateur du rayon */
   readonly radiusMult?: number;
   /** Aura : chaque ennemi brûlé est ralenti de `amount` (0,3 = 30 %) pendant `duration` s */
@@ -134,7 +136,8 @@ export const WEAPONS = {
     name: 'Trait arcanique',
     short: 'TA',
     description: "Tire sur l'ennemi le plus proche",
-    damage: 11, // 10 → 11 : petit buff (un basique de 20 PV tombe toujours en 2 coups)
+    // 10 → 11 → 14 : restait dernier du damage meter. Un basique (20 PV) tombe toujours en 2 coups.
+    damage: 14,
     knockback: 185, // moyen, dans la direction du tir (160 → 185 avec le nerf d'Impact)
     cooldown: 1,
     count: 1,
@@ -192,21 +195,26 @@ export const WEAPONS = {
         id: 'blaze',
         name: 'Brasier',
         short: 'Br',
-        description: 'Rayon ×1,6, dégâts ×0,6, ralentit de 30 % les ennemis dedans',
+        description:
+          'Rayon ×1,6, dégâts ×0,6, brûle toutes les 0,6 s, ralentit de 30 % les ennemis dedans',
         color: '#ffb347',
         radiusMult: 1.6,
         damageMult: 0.6,
-        // 0,6 s > 0,5 s entre deux brûlures : l'ennemi reste ralenti tant qu'il est dedans.
-        slow: { amount: 0.3, duration: 0.6 },
+        // Retour de jeu : les 2 mutations de l'aura brûlaient trop souvent. 0,5 → 0,6 s.
+        cooldownMult: 1.2,
+        // 0,7 s > 0,6 s entre deux brûlures : l'ennemi reste ralenti tant qu'il est dedans.
+        slow: { amount: 0.3, duration: 0.7 },
       },
       {
         id: 'toxicAura',
         name: 'Aura toxique',
         short: 'At',
-        description: 'Même taille, empoisonne pendant 3 s : 60 % des dégâts de l’aura par seconde',
+        description:
+          'Même taille, brûle toutes les 0,6 s, empoisonne pendant 3 s : 60 % des dégâts de l’aura par seconde',
         color: '#7cfc00',
         // Au niveau 5 sans bonus : 10 dégâts × 0,6 = 6/s. Grandit avec Puissance.
         poison: { dpsRatio: 0.6, duration: 3 },
+        cooldownMult: 1.2, // 0,5 → 0,6 s entre deux brûlures (voir Brasier)
       },
     ],
   },
@@ -216,8 +224,9 @@ export const WEAPONS = {
     name: 'Orbes runiques',
     short: 'OR',
     description: 'Des orbes tournent autour de toi',
-    damage: 8,
-    knockback: 350, // fort : les orbes "frappent", leur rôle est d'écarter la horde (320 → 370 → 350)
+    damage: 10, // 8 → 10 : compense le gros nerf du recul
+    // 320 → 370 → 350 → 200 : chaque orbe frappe (délai par orbe), le recul s'additionnait trop
+    knockback: 200,
     count: 2,
     orbitDistance: 80,
     orbRadius: 13, // 10 → 13 : retour de jeu, "vraiment petit"
@@ -252,11 +261,10 @@ export const WEAPONS = {
         id: 'orbStorm',
         name: 'Tempête d’orbes',
         short: 'To',
-        description: '9 orbes, rotation ×1,6, dégâts ×0,8, recul ×0,3',
+        description: '9 orbes, rotation ×1,6, recul ×0,3',
         color: '#b388ff',
         count: 9,
         angularSpeedMult: 1.6,
-        damageMult: 0.8, // 0,7 → 0,8
         // Gros nerf : chaque orbe frappe (délai par orbe), donc le recul tombe ~7 fois/s.
         // Retour de jeu : immobile 12 min sans qu'aucun ennemi n'arrive au contact.
         knockbackMult: 0.3,

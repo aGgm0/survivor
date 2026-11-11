@@ -110,6 +110,9 @@ export class Weapon {
     this.cooldown =
       def.kind === 'orbit'
         ? 0
-        : Math.max(MIN_COOLDOWN, def.cooldown * (1 + cooldownPct) * mods.cooldownMult);
+        : Math.max(
+            MIN_COOLDOWN,
+            def.cooldown * (1 + cooldownPct) * (m?.cooldownMult ?? 1) * mods.cooldownMult,
+          );
   }
 }

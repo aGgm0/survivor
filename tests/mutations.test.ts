@@ -53,6 +53,17 @@ describe('mutation — effets sur les stats', () => {
     expect(w.color).toBe(BLAZE.color);
   });
 
+  it('les 2 mutations de l’aura brûlent toutes les 0,6 s au lieu de 0,5 s (la Hâte compte encore)', () => {
+    for (const m of [BLAZE, TOXIC]) {
+      const w = maxedAura();
+      w.mutation = m;
+      w.recompute(NO_MODS);
+      expect(w.cooldown).toBeCloseTo(0.6);
+      w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
+      expect(w.cooldown).toBeCloseTo(0.3);
+    }
+  });
+
   it('Aura toxique : mêmes rayon et dégâts', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
@@ -171,11 +182,11 @@ describe('mutations des Orbes runiques', () => {
     expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 0.85);
   });
 
-  it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×0,8, recul ×0,3', () => {
+  it('Tempête d’orbes : 9 orbes, rotation ×1,6, dégâts ×1, recul ×0,3', () => {
     const { base, w } = mutated(STORM);
     expect(w.count).toBe(9);
     expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 1.6);
-    expect(w.damage).toBeCloseTo(base.damage * 0.8);
+    expect(w.damage).toBeCloseTo(base.damage);
     expect(w.knockback).toBeCloseTo(base.knockback * 0.3);
     expect(w.orbRadius).toBe(ORBS.orbRadius);
   });
