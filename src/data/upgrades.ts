@@ -2,7 +2,15 @@
 
 /** Stat du joueur modifiée par un passif. */
 export type PassiveStat =
-  'maxHp' | 'speedPct' | 'pickupPct' | 'damagePct' | 'cooldownPct' | 'knockbackPct';
+  | 'maxHp'
+  | 'speedPct'
+  | 'pickupPct'
+  | 'damagePct'
+  | 'cooldownPct'
+  | 'knockbackPct'
+  | 'sizePct'
+  | 'velocityPct'
+  | 'extraCount';
 
 export interface PassiveDef {
   readonly id: string;
@@ -75,6 +83,35 @@ export const PASSIVES: readonly PassiveDef[] = [
     stat: 'knockbackPct',
     // 25 % → 8 % : +125 % au niveau 5 repoussait la horde hors de portée. Recul de base +15 %.
     amount: 0.08,
+  },
+  {
+    id: 'size',
+    name: 'Taille',
+    short: 'Ta',
+    description: '+7 % taille des projectiles, orbes, aura et explosions',
+    maxLevel: 5,
+    stat: 'sizePct',
+    // 7 % (pas 10) : sur l'aura, ça se cumule avec le Brasier (×1,6).
+    amount: 0.07,
+  },
+  {
+    id: 'velocity',
+    name: 'Vélocité',
+    short: 'Vé',
+    description: '+10 % vitesse des projectiles (et portée) et rotation des orbes',
+    maxLevel: 5,
+    stat: 'velocityPct',
+    amount: 0.1,
+  },
+  {
+    id: 'duplicator',
+    name: 'Duplicateur',
+    short: 'Du',
+    description: '+1 projectile et +1 orbe',
+    // Le plus fort des passifs : seulement 3 niveaux (Tempête : 9 + 3 = 12 orbes, le maximum).
+    maxLevel: 3,
+    stat: 'extraCount',
+    amount: 1,
   },
 ];
 

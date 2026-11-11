@@ -39,6 +39,12 @@ export class Player {
   damageMult = 1;
   cooldownMult = 1;
   knockbackMult = 1;
+  /** Taille des projectiles, orbes, aura, explosions (passif Taille) */
+  sizeMult = 1;
+  /** Vitesse des projectiles et rotation des orbes (passif Vélocité) */
+  projectileSpeedMult = 1;
+  /** Projectiles / orbes en plus (passif Duplicateur) */
+  extraCount = 0;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
 

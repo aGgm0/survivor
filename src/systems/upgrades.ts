@@ -189,5 +189,14 @@ function applyPassive(player: Player, passive: PassiveDef): void {
     case 'knockbackPct':
       player.knockbackMult += passive.amount;
       return;
+    case 'sizePct':
+      player.sizeMult += passive.amount;
+      return;
+    case 'velocityPct':
+      player.projectileSpeedMult += passive.amount;
+      return;
+    case 'extraCount':
+      player.extraCount += passive.amount;
+      return;
   }
 }

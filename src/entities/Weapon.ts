@@ -5,6 +5,12 @@ export interface WeaponModifiers {
   readonly damageMult: number;
   readonly cooldownMult: number;
   readonly knockbackMult: number;
+  /** Taille (passif Taille). Absent = ×1 */
+  readonly sizeMult?: number;
+  /** Vitesse des projectiles et rotation des orbes (passif Vélocité). Absent = ×1 */
+  readonly projectileSpeedMult?: number;
+  /** Projectiles / orbes en plus (passif Duplicateur). Absent = 0 */
+  readonly extraCount?: number;
 }
 
 /** En dessous, le cooldown deviendrait absurde (tir à chaque update). */
@@ -43,6 +49,12 @@ export class Weapon {
   angularSpeed: number;
   /** Orbite : distance joueur → centre des orbes (px) ; 0 pour les autres armes */
   orbitDistance: number;
+  /** Projectile : vitesse (px/s), taille (px) et portée (px) ; 0 pour les autres armes */
+  projectileSpeed: number;
+  projectileRadius: number;
+  range: number;
+  /** Trait éclaté : rayon de l'explosion (px) ; 0 sans explosion */
+  explosionRadius = 0;
 
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
@@ -53,6 +65,9 @@ export class Weapon {
     this.orbRadius = def.kind === 'orbit' ? def.orbRadius : 0;
     this.angularSpeed = def.kind === 'orbit' ? def.angularSpeed : 0;
     this.orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
+    this.projectileSpeed = def.kind === 'projectile' ? def.projectileSpeed : 0;
+    this.projectileRadius = def.kind === 'projectile' ? def.projectileRadius : 0;
+    this.range = def.kind === 'projectile' ? def.projectileSpeed * def.projectileLifetime : 0;
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */
@@ -98,13 +113,26 @@ export class Weapon {
     const m = this.mutation;
     this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
-    // Une mutation peut imposer un nombre (3 orbes géants, 9 orbes de tempête).
-    this.count = m?.count ?? count;
-    this.radius = radius * (m?.radiusMult ?? 1);
+    // Passifs Taille, Vélocité, Duplicateur (neutres s'ils sont absents).
+    const size = mods.sizeMult ?? 1;
+    const velocity = mods.projectileSpeedMult ?? 1;
+    const extra = mods.extraCount ?? 0;
+    // Une mutation peut imposer un nombre (3 orbes géants, 9 orbes de tempête) ; le Duplicateur
+    // s'ajoute APRÈS, donc aussi aux mutations. L'aura n'a rien à dupliquer.
+    this.count = def.kind === 'aura' ? 0 : (m?.count ?? count) + extra;
+    this.radius = radius * (m?.radiusMult ?? 1) * size;
     if (def.kind === 'orbit') {
-      this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1);
-      this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1);
+      this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1) * size;
+      this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1) * velocity;
+      // L'orbite ne grandit pas avec la Taille : seuls les orbes grossissent.
       this.orbitDistance = orbitDistance * (m?.orbitDistanceMult ?? 1);
+    }
+    if (def.kind === 'projectile') {
+      this.projectileSpeed = def.projectileSpeed * velocity;
+      this.projectileRadius = def.projectileRadius * size;
+      // Durée de vie fixe : plus rapide = porte plus loin (et vise plus loin).
+      this.range = this.projectileSpeed * def.projectileLifetime;
+      this.explosionRadius = (m?.explosion?.radius ?? 0) * size;
     }
     // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =

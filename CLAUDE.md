@@ -186,7 +186,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 - L'écran de fin affiche **« build complet à mm:ss »** (moment où plus rien n'est améliorable) pour régler la courbe sur du concret.
 - Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP).
 - Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
-- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme, stat passive (PV, vitesse, aimant, dégâts %, cooldown %).
+- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité, Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur).
 
 ### 5.7 Vagues & difficulté
 
@@ -317,9 +317,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] **Mode sans fin** après la victoire (C sur l'écran de victoire) : difficulté qui monte chaque minute, boss toutes les 3 min, « SANS FIN » dans le HUD
 - [x] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9) : écran de choix après Jouer (clic ou 1-2-3), cartes verrouillées avec défi et progression, « Nouveau perso débloqué » sur l'écran de fin (`data/characters.ts`)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
-- [ ] Enchantements (idée) : passifs jusqu'au niveau 12 ; à partir du niveau 6, chaque niveau de passif « enchante » une arme au choix, avec une variante du bonus propre à cette arme <!-- TODO: effets par couple passif × arme, coût en XP (48 niveaux de passifs au lieu de 20 → runs plus longues) -->
+- [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
 - [ ] **4e arme : l'Épée** <!-- TODO: comportement (coup en arc devant le joueur ? épées qui tournent ? lancer ?), stats, niveaux, 2 mutations, perso de départ associé et son défi -->
-- [ ] Nouveaux passifs (idée) : **Taille** (taille des projectiles, orbes, aura), **Vélocité** (vitesse des projectiles et rotation des orbes), **Duplicateur** (+1 projectile / +1 orbe) <!-- TODO: valeurs par niveau, niveau max (Duplicateur très fort → 2 niveaux ?) -->
+- [x] Nouveaux passifs : **Taille** (+7 %/niv, 5 niv : projectiles, orbes, aura, explosions ; pas l'orbite), **Vélocité** (+10 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
@@ -421,6 +421,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Mutation = niveau 6 de l'arme : ses 2 variantes sont des cartes du tirage normal (plus d'écran de mutation forcé), l'arme passe niveau 6 | Demandé. Remplace « le level up qui suit le niveau max est remplacé par la mutation » |
 | 2026-11-11 | Persos : écran de choix après Jouer ; perso gardé pour « Rejouer » ; défi Pyromancien lu dans le profil (kills d'Aura cumulés), défi Runiste noté pendant la partie (boss n° 1 de BOSS_SPAWNS tué avec les Orbes niv ≥ 5, mutation comprise) puis gardé dans `profile.challenges` ; déblocage annoncé sur l'écran de fin (calculé sur une copie du profil) | Design validé (§ 5.9). Annonce immédiate même si une victoire n'est enregistrée qu'en quittant l'écran |
 | 2026-11-11 | Trait perçant 3 → 5 ennemis (dégâts inchangés) ; Trait éclaté rayon 60 → 75 px ; tank 60 → 66 PV et vitesse 50 → 60 ; rapide vitesse 150 → 135 | Retour de jeu (vitesse du tank : d'abord baissée à 45 par erreur, corrigée à 60) |
+| 2026-11-11 | Passifs Taille (+7 %/niv), Vélocité (+10 %/niv), Duplicateur (+1, 3 niv max) ; la Taille ne grossit pas l'orbite ; le Duplicateur s'ajoute après la mutation ; les projectiles prennent vitesse et taille de l'arme (`Weapon.projectileSpeed`, `range`, `explosionRadius`) ; enchantements = niveau 6 des passifs | Valeurs proposées puis ajustées ("taille 7 %, duplicateur niv max 3"). Tempête + Duplicateur 3 = 12 orbes = MAX_ORBS |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

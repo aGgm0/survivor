@@ -1,10 +1,5 @@
 import type { Pool } from '../core/Pool';
-import {
-  MAX_ORBS,
-  weaponRange,
-  type OrbitWeaponDef,
-  type ProjectileWeaponDef,
-} from '../data/weapons';
+import { MAX_ORBS, type OrbitWeaponDef, type ProjectileWeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
 import type { Weapon } from '../entities/Weapon';
@@ -94,7 +89,7 @@ export class WeaponSystem {
   ): void {
     weapon.cooldownTimer -= dt;
     if (weapon.cooldownTimer > 0) return;
-    const target = this.findNearest(x, y, weaponRange(def));
+    const target = this.findNearest(x, y, weapon.range);
     if (!target) {
       // Personne à portée : l'arme reste prête (sans accumuler de tirs en retard).
       weapon.cooldownTimer = 0;

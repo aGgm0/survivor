@@ -66,7 +66,8 @@ export class ProjectileSystem {
 
       const explosion = source.mutation?.explosion;
       if (explosion) {
-        this.explode(p, e, explosion.radius, p.damage * explosion.damageRatio);
+        // Rayon de l'arme (passif Taille compris), pas celui de base.
+        this.explode(p, e, source.explosionRadius, p.damage * explosion.damageRatio);
         return true;
       }
       p.hitEnemies[p.hitCount++] = e;
