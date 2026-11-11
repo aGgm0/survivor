@@ -323,6 +323,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
 - [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur = combo ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
+- [ ] **Boss avec sorts et capacités spéciales** (idée) : chaque boss a ses propres attaques en plus du contact (ex. charge, projectiles, invocation de sbires, zone au sol à éviter...) <!-- TODO: quelles capacités pour le boss de 5:00, celui de 9:00 et ceux du sans fin ; fréquence ; signes visuels pour les esquiver -->
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
