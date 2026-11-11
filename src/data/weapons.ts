@@ -313,8 +313,9 @@ export const WEAPONS = {
     name: 'Épée',
     short: 'ÉP',
     description: 'Frappe en arc devant toi, dans la direction où tu marches',
-    damage: 22, // un basique (23 PV) y survit tout juste, un rapide meurt
-    knockback: 260, // un coup d'épée repousse fort
+    // 22 → 16 et recul 260 → 140 : gros nerf (retour de jeu, l'Épée dominait).
+    damage: 16,
+    knockback: 140,
     cooldown: 1.2,
     count: 1,
     comboDelay: 0.12,
@@ -322,10 +323,10 @@ export const WEAPONS = {
     arcDeg: 120,
     color: '#e8e8f0',
     levels: [
-      { description: '+8 dégâts', damage: 8 },
+      { description: '+5 dégâts', damage: 5 },
       { description: 'Arc +40°', arcDeg: 40 },
       { description: 'Délai -20 %', cooldownPct: -0.2 },
-      { description: '+10 dégâts, portée +25 px', damage: 10, range: 25 },
+      { description: '+7 dégâts, portée +25 px', damage: 7, range: 25 },
     ],
     mutations: [
       {

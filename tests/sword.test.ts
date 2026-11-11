@@ -80,11 +80,12 @@ describe('Épée — le coup', () => {
 });
 
 describe('Épée — niveaux et passifs', () => {
-  it('niveau 5 : 40 dégâts, arc 160°, délai −20 %, portée 135 px', () => {
+  it('niveau 5 : 28 dégâts, arc 160°, délai −20 %, portée 135 px', () => {
     const w = new Weapon(SWORD);
     w.level = weaponMaxLevel(SWORD);
     w.recompute(NEUTRAL);
-    expect(w.damage).toBe(40);
+    expect(w.damage).toBe(SWORD.damage + 5 + 7);
+    expect(w.damage).toBe(28);
     expect(w.arc).toBeCloseTo((160 * Math.PI) / 180);
     expect(w.cooldown).toBeCloseTo(0.96);
     expect(w.range).toBe(135);
@@ -119,7 +120,7 @@ describe('Épée — mutations', () => {
   it('Tourbillon : tout autour (360°), dégâts ×0,75', () => {
     const w = mutated(0);
     expect(WHIRL.name).toBe('Tourbillon');
-    expect(w.damage).toBeCloseTo(40 * 0.75);
+    expect(w.damage).toBeCloseTo(28 * 0.75);
     const { run, hits } = setup(
       [
         [80, 0],
