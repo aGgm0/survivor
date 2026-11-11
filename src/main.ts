@@ -9,6 +9,9 @@ import { Hud } from './ui/Hud';
 import { LevelUpOverlay } from './ui/LevelUpOverlay';
 import { MenuOverlay } from './ui/MenuOverlay';
 import { MenuScene } from './scenes/MenuScene';
+import { OptionsOverlay } from './ui/OptionsOverlay';
+import { SaveStore } from './core/SaveStore';
+import { SETTINGS_KEY, parseSettings, serializeSettings } from './data/settings';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -16,8 +19,15 @@ function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   return el;
 }
 
+// Réglages : lus une fois au lancement (sauvegarde validée champ par champ), puis partagés.
+const store = SaveStore.fromBrowser();
+const settings = parseSettings(store.load(SETTINGS_KEY));
+
 const renderer = new Renderer(getElement('game', HTMLCanvasElement));
-const debug = new DebugOverlay(getElement('debug-overlay', HTMLDivElement));
+const debug = new DebugOverlay(
+  getElement('debug-overlay', HTMLDivElement),
+  getElement('fps-counter', HTMLDivElement),
+);
 const input = new Input(window);
 const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement), {
   resume: getElement('pause-resume', HTMLButtonElement),
@@ -35,9 +45,14 @@ const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-title', HTMLParagraphElement),
   getElement('levelup-choices', HTMLDivElement),
 );
-const menuOverlay = new MenuOverlay(
-  getElement('menu-overlay', HTMLDivElement),
-  getElement('menu-play', HTMLButtonElement),
+const menuOverlay = new MenuOverlay(getElement('menu-overlay', HTMLDivElement), {
+  play: getElement('menu-play', HTMLButtonElement),
+  options: getElement('menu-options', HTMLButtonElement),
+});
+const optionsOverlay = new OptionsOverlay(
+  getElement('options-overlay', HTMLDivElement),
+  getElement('options-list', HTMLDivElement),
+  getElement('options-back', HTMLButtonElement),
 );
 const hud = new Hud({
   root: getElement('hud', HTMLDivElement),
@@ -68,6 +83,7 @@ function startRun(): void {
       levelUpOverlay,
       hud,
       debug,
+      settings,
       onRestart: startRun,
       onMenu: showMenu,
     },
@@ -84,8 +100,30 @@ function startRun(): void {
 
 /** Menu principal. Une scène neuve à chaque fois, comme pour les parties. */
 function showMenu(): void {
-  game.setScene(new MenuScene({ input, menuOverlay, hud, onPlay: startRun }));
+  game.setScene(
+    new MenuScene({
+      input,
+      menuOverlay,
+      optionsOverlay,
+      hud,
+      settings,
+      onSettingsChanged,
+      onPlay: startRun,
+    }),
+  );
 }
 
+/** Les réglages qui ne sont pas lus en direct par la partie s'appliquent ici. */
+function applySettings(): void {
+  debug.setFpsCounterVisible(settings.fpsCounter);
+}
+
+/** Un réglage vient de changer (écran Options) : on l'applique et on le sauvegarde. */
+function onSettingsChanged(): void {
+  applySettings();
+  store.save(SETTINGS_KEY, serializeSettings(settings));
+}
+
+applySettings();
 showMenu();
 game.start();

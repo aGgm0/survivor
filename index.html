@@ -31,9 +31,17 @@
           <p class="overlay-title menu-title">SURVIVOR</p>
           <div class="menu-buttons">
             <button id="menu-play" type="button" class="menu-button">Jouer</button>
-            <button type="button" class="menu-button" disabled>Options (bientôt)</button>
+            <button id="menu-options" type="button" class="menu-button">Options</button>
           </div>
           <p class="overlay-hint">Clic ou Entrée pour jouer</p>
+        </div>
+        <div id="options-overlay" class="overlay overlay-menu" hidden>
+          <p class="overlay-title">OPTIONS</p>
+          <div id="options-list" class="options-list"></div>
+          <div class="menu-buttons">
+            <button id="options-back" type="button" class="menu-button">Retour (Échap)</button>
+          </div>
+          <p class="overlay-hint">Les réglages sont enregistrés automatiquement</p>
         </div>
         <div id="levelup-overlay" class="overlay overlay-levelup" hidden>
           <p id="levelup-title" class="overlay-title">NIVEAU 2</p>
@@ -56,6 +64,7 @@
           <p class="overlay-hint">R pour rejouer · M pour le menu</p>
         </div>
         <div id="debug-overlay" hidden></div>
+        <div id="fps-counter" hidden></div>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

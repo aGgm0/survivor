@@ -8,6 +8,7 @@ import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT } from '../src/data/progression';
 import { PASSIVES } from '../src/data/upgrades';
 import { BOSS_TYPE } from '../src/data/waves';
+import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
 
@@ -64,6 +65,7 @@ function makeDeps() {
       setInventory: () => {},
     },
     debug: { setStat: () => {}, showHitboxes: false },
+    settings: { ...DEFAULT_SETTINGS },
     onRestart: () => ui.restarts++,
     onMenu: () => ui.menus++,
   };
@@ -203,6 +205,20 @@ describe('GameScene — combat', () => {
     }
     expect(flashed).toBe(true);
     expect(scene.damageNumbers.numbers.activeCount).toBeGreaterThan(0);
+  });
+
+  it('réglage « Nombres de dégâts » désactivé : flash, mais aucun nombre', () => {
+    const { scene, deps } = newScene();
+    deps.settings = { ...DEFAULT_SETTINGS, damageNumbers: false };
+    const tank = scene.enemies.acquire();
+    tank?.spawn(ENEMY_TYPES.tank, 200, 0);
+    let flashed = false;
+    for (let i = 0; i < 60 && !flashed; i++) {
+      scene.update(DT);
+      flashed = (tank?.flashUntil ?? 0) > 0;
+    }
+    expect(flashed).toBe(true);
+    expect(scene.damageNumbers.numbers.activeCount).toBe(0);
   });
 
   it('un ennemi tué lâche sa gemme ; la ramasser donne son XP', () => {
@@ -513,6 +529,14 @@ describe('GameScene — onglet caché', () => {
     scene.onHidden();
     expect(scene.isPaused).toBe(true);
     expect(ui.paused).toBe(true);
+  });
+
+  it('réglage « Pause quand l’onglet est caché » désactivé : pas de pause', () => {
+    const { scene, ui, deps } = newScene();
+    deps.settings = { ...DEFAULT_SETTINGS, pauseOnHidden: false };
+    scene.onHidden();
+    expect(scene.isPaused).toBe(false);
+    expect(ui.paused).toBe(false);
   });
 
   it('ne met pas en pause un joueur mort (l’écran de mort reste)', () => {

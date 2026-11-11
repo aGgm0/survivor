@@ -46,6 +46,7 @@ import { buildDamageReport, type RunReport } from '../systems/runReport';
 import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
+import type { Settings } from '../data/settings';
 
 /** px entre deux lignes de la grille de fond */
 const GRID_SIZE = 64;
@@ -78,6 +79,8 @@ export interface GameSceneDeps {
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
   hud: Pick<Hud, 'setVisible' | 'setTime' | 'setProgress' | 'setHp' | 'setKills' | 'setInventory'>;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
+  /** Réglages du joueur (écran Options), lus en direct */
+  settings: Readonly<Settings>;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
   /** Appelé quand le joueur demande le menu principal (écran de fin ou pause). */
@@ -186,7 +189,8 @@ export class GameScene implements Scene, Build {
   /** Onglet caché : on met en pause, pour ne pas reprendre en pleine horde au retour. */
   onHidden(): void {
     // Partie finie ou en plein choix d'upgrade : le jeu est déjà figé, pas besoin de pause.
-    if (!this.report && !this.choices) this.setPaused(true);
+    // Réglage désactivé : la partie reprend telle quelle au retour (la boucle s'arrête quand même).
+    if (!this.report && !this.choices && this.deps.settings.pauseOnHidden) this.setPaused(true);
   }
 
   /** Vrai quand la partie est terminée (mort ou victoire). */
@@ -331,13 +335,16 @@ export class GameScene implements Scene, Build {
 
   /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
   private onEnemyHit(e: Enemy, damage: number, kind: HitKind): void {
+    const showNumbers = this.deps.settings.damageNumbers; // réglage Options
     if (kind === 'poison') {
       // Poison : nombre vert, sans flash (sinon les empoisonnés clignoteraient sans arrêt).
-      this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage, STATUS.poisonColor);
+      if (showNumbers) {
+        this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage, STATUS.poisonColor);
+      }
       return;
     }
     e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
-    this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
+    if (showNumbers) this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
   /** Vrai si un boss est encore actif. Parcours du pool, seulement après le temps de victoire. */

@@ -1,19 +1,23 @@
+/** Ce que le joueur peut demander depuis le menu principal. */
+export type MenuAction = 'play' | 'options';
+
 /**
  * Menu principal en HTML. Comme pour le level up, un clic est seulement mémorisé :
- * c'est la scène qui le lit pendant son update (`takePlay`), la logique reste dans la game loop.
+ * c'est la scène qui le lit pendant son update (`takeAction`), la logique reste dans la game loop.
  */
 export class MenuOverlay {
-  private playClicked = false;
+  private action: MenuAction | null = null;
 
   constructor(
     private readonly el: HTMLElement,
-    playButton: HTMLButtonElement,
+    buttons: Readonly<Record<MenuAction, HTMLButtonElement>>,
   ) {
-    playButton.addEventListener('click', () => (this.playClicked = true));
+    buttons.play.addEventListener('click', () => (this.action = 'play'));
+    buttons.options.addEventListener('click', () => (this.action = 'options'));
   }
 
   show(): void {
-    this.playClicked = false;
+    this.action = null;
     this.el.hidden = false;
   }
 
@@ -21,10 +25,10 @@ export class MenuOverlay {
     this.el.hidden = true;
   }
 
-  /** Vrai une seule fois après un clic sur "Jouer". */
-  takePlay(): boolean {
-    const clicked = this.playClicked;
-    this.playClicked = false;
-    return clicked;
+  /** L'action cliquée depuis la dernière lecture, ou null. */
+  takeAction(): MenuAction | null {
+    const action = this.action;
+    this.action = null;
+    return action;
   }
 }

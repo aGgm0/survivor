@@ -308,7 +308,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 ### Phase 5 — Contenu & systèmes (pas de visuel)
 - [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
 - [x] Menu pause complet (Reprendre, Rejouer, Quitter vers le menu) : boutons + Échap/P, R, M
-- [ ] Options + sauvegarde des réglages (localStorage)
+- [x] Options + sauvegarde des réglages (localStorage) : nombres de dégâts, compteur FPS, pause quand l'onglet est caché (volume et screen shake en Phase 6)
 - [x] Emplacements limités (4 armes, 4 passifs) + XP requise revue à la hausse (le build complet arrivait avant le boss de 9:00) + « build complet à mm:ss » sur l'écran de fin
   - [ ] À régler en jouant : `steepFactor` (0,75), objectif build complet vers 9:00-9:30
 - [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
@@ -409,6 +409,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Rushs (`BONUS_WAVES`) 2:00-2:30 rapides +8/s et 6:00-6:30 basiques +12/s ; boss 3000 / 9000 PV ; Impact 25 % → 8 %/niv, recul de base +15 % (185 / 60 / 370), boss immunisé au recul ; courbe d'XP 0,6 → 0,75 | Retour de jeu (victoire, build complet à 08:44, boss trop faible depuis le délai par orbe) ; rushs demandés pour casser le rythme ; +0,75 pour compenser l'XP des rushs |
 | 2026-11-11 | Rushs réduits (rapides 8 → 5/s, basiques 12 → 7/s) ; orbite des orbes 80 → 105 px au niveau 5, ×1,25 (≈ 131 px) pour les Orbes géants | Retour de jeu (mort à 7:14) : rushs trop denses, orbes trop collés au joueur surtout en géants. Le reste "pas mal, plus dur" |
 | 2026-11-11 | Orbes géants : rotation ×0,85, recul ×1,8 → ×1,6 ; recul de base des orbes 370 → 350 | Retour de jeu : légèrement trop forts. 4e arme (Épée) ajoutée à la Roadmap |
+| 2026-11-11 | Options : 3 réglages (nombres de dégâts, compteur FPS, pause quand l'onglet est caché), enregistrés à chaque clic ; `core/SaveStore` (JSON dans localStorage, ne lève jamais) + `data/settings` (version + validation champ par champ, valeurs par défaut sinon) | Pas encore de son pour un volume : réglages utiles dès maintenant. Sauvegarde versionnée pour les persos et l'or à venir |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
@@ -424,4 +425,5 @@ Format : date — décision — raison.
 | **Object pool** | Réserve d'objets réutilisés au lieu d'en créer/détruire en continu |
 | **Spatial grid / hash** | Découpage de la map en cases pour ne tester les collisions qu'entre voisins |
 | **Data-driven** | Le contenu (armes, ennemis...) est décrit par des données, pas codé en dur |
+| **Sauvegarde versionnée** | Données rangées avec un numéro de version, relues sans leur faire confiance (validées champ par champ) pour ne jamais casser une ancienne sauvegarde |
 | **Bullet heaven** | Autre nom du genre Survivor : c'est le joueur qui remplit l'écran de projectiles |

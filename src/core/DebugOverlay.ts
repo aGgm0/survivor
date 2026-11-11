@@ -21,7 +21,13 @@ export class DebugOverlay {
   private mode = DebugMode.Off;
   private readonly stats = new Map<string, number | string>();
 
-  constructor(private readonly el: HTMLElement) {
+  /**
+   * @param fpsEl petit compteur FPS permanent, indépendant de F3 (réglage du joueur).
+   */
+  constructor(
+    private readonly el: HTMLElement,
+    private readonly fpsEl: HTMLElement | null = null,
+  ) {
     window.addEventListener('keydown', (e) => {
       if (e.code !== 'F3') return;
       // F3 ouvre la recherche dans certains navigateurs : on l'empêche.
@@ -34,6 +40,10 @@ export class DebugOverlay {
   /** Vrai quand le jeu doit dessiner les hitboxes (3e mode de F3). */
   get showHitboxes(): boolean {
     return this.mode === DebugMode.StatsAndHitboxes;
+  }
+
+  setFpsCounterVisible(visible: boolean): void {
+    if (this.fpsEl) this.fpsEl.hidden = !visible;
   }
 
   /** Valeur affichée sous les FPS. Appelable à chaque frame : seul l'affichage est limité. */
@@ -50,8 +60,9 @@ export class DebugOverlay {
     this.elapsed += frameTime;
     if (this.elapsed < REFRESH_INTERVAL) return;
 
+    const fps = Math.round(this.frames / this.elapsed);
+    if (this.fpsEl && !this.fpsEl.hidden) this.fpsEl.textContent = `${fps} FPS`;
     if (!this.el.hidden) {
-      const fps = Math.round(this.frames / this.elapsed);
       const ups = Math.round(this.updates / this.elapsed);
       let text = `FPS ${fps}${this.showHitboxes ? ' (hitboxes)' : ''}\nUPS ${ups}`;
       for (const [label, value] of this.stats) text += `\n${label} ${value}`;

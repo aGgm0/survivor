@@ -7,6 +7,8 @@ export const CONTROLS = {
   right: ['KeyD', 'ArrowRight'],
   pause: ['Escape', 'KeyP'],
   restart: ['KeyR'],
+  /** Revenir en arrière (écran Options → menu principal) */
+  back: ['Escape'],
   /** Valider (menu principal) */
   confirm: ['Enter', 'NumpadEnter', 'Space'],
   // Retour au menu. Le M d'un clavier AZERTY est à la place du ; QWERTY (code `Semicolon`).
