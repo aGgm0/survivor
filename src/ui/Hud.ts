@@ -14,6 +14,8 @@ export interface HudElements {
   kills: HTMLElement;
   /** Mention "SANS FIN" (mode sans fin) */
   endless: HTMLElement;
+  /** Or gagné pendant la partie */
+  gold: HTMLElement;
   /** Badge "TEST" (menu de test utilisé : partie non enregistrée) */
   test: HTMLElement;
   /** Rangée des armes possédées */
@@ -36,6 +38,7 @@ export class Hud {
   private shownHp = -1;
   private shownMaxHp = -1;
   private shownKills = -1;
+  private shownGold = -1;
   private shownInventoryVersion = -1;
   /** Liste d'armes affichée : une nouvelle partie en crée une nouvelle (voir setInventory). */
   private shownWeapons: readonly Weapon[] | null = null;
@@ -44,6 +47,12 @@ export class Hud {
 
   setEndless(endless: boolean): void {
     this.el.endless.hidden = !endless;
+  }
+
+  setGold(gold: number): void {
+    if (gold === this.shownGold) return;
+    this.shownGold = gold;
+    this.el.gold.textContent = `${gold} or`;
   }
 
   setTest(test: boolean): void {

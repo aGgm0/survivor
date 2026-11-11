@@ -215,7 +215,18 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
 
-**Or et mobilier** (idée validée, design à préciser) : du mobilier cassable sur la map lâche de l'**or** ou de la **nourriture** (+20 PV). L'or sert à acheter des bonus. <!-- TODO: bonus permanents achetés au menu entre deux parties (comme Vampire Survivors) ou utilisables pendant la partie ? Quels bonus, quels prix ? -->
+**Or et mobilier** (validé le 2026-11-11) :
+- **Mobilier** : tonneaux / caisses immobiles, cassés par n'importe quelle arme (10 PV) **ou en marchant dessus** (la visée automatique du Trait les ignore). Un nouveau toutes les 15 s hors écran, 8 au maximum. Lâche **85 % or** (1 à 3 pièces, un peu plus en fin de partie) ou **15 % nourriture** (+20 PV), ramassés à l'aimant. **Boss tué = +25 or.** Ne compte ni comme kill, ni dans le damage meter.
+- L'or de la partie s'ajoute au total **seulement si elle est terminée** (et jamais en partie de test).
+- **Boutique** au menu (bonus permanents, appliqués au début de chaque partie, sans prendre d'emplacement de passif) :
+
+| Bonus | Par rang | Rangs | Prix (rang 1 → max) |
+|---|---|---|---|
+| Vitalité de départ | +5 PV max | 5 | 50 → 250 |
+| Puissance de départ | +3 % dégâts | 5 | 80 → 400 |
+| Célérité de départ | +2 % vitesse | 3 | 60 → 180 |
+| Attraction de départ | +10 % aimant | 3 | 40 → 120 |
+| Sagesse | +3 % d'XP gagnée | 5 | 100 → 500 |
 
 <!-- TODO: monnaie gagnée par run → upgrades permanentes en menu ? déblocage de persos/armes ? -->
 
@@ -319,7 +330,8 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] **Profil / statistiques** : bouton Profil du menu ; parties, victoires, meilleur temps, temps total, kills totaux, meilleur niveau, arme la plus jouée, et par arme parties / dégâts / kills cumulés (`data/profile.ts`, sauvegarde versionnée). Seules les parties terminées (mort ou victoire) comptent
 - [x] **Mode sans fin** après la victoire (C sur l'écran de victoire) : difficulté qui monte chaque minute, boss toutes les 3 min, « SANS FIN » dans le HUD
 - [x] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9) : écran de choix après Jouer (clic ou 1-2-3), cartes verrouillées avec défi et progression, « Nouveau perso débloqué » sur l'écran de fin (`data/characters.ts`)
-- [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
+- [x] Mobilier cassable : or et nourriture (+20 PV) (§ 5.9) — étape 1 : caisses (type d'ennemi « objet »), pièces et nourriture à l'aimant, or dans le HUD, l'écran de fin et le profil, +100 or dans le menu de test
+- [ ] Boutique de bonus permanents au menu (§ 5.9) — étape 2, prix à régler après avoir vu l'or gagné par partie
 - [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
 - [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur = combo ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
@@ -432,6 +444,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Menu de test F2 (`ui/DevPanel.ts`) : dev seulement (`import.meta.env.DEV`, vérifié absent du build) ; jeu figé pendant le réglage ; actions mémorisées puis appliquées dans l'update ; partie de test jamais enregistrée (stats, défis, déblocages) ; saut dans le temps qui saute les boss déjà passés ; baisser un passif recalcule toutes les stats (`rebuildPassiveStats`) | Demandé pour tester plus vite. Une partie trafiquée ne doit pas débloquer de perso ni fausser le profil |
 | 2026-11-11 | Vite : `server.watch.usePolling` (200 ms) | Sous Windows, le serveur de dev a raté des modifications et servait l'ancien code (Lame d'onde « sans effet » en jeu) |
 | 2026-11-11 | Épée : dégâts 22 → 16 (niv 2 +8 → +5, niv 5 +10 → +7 : 40 → 28 au niv 5), recul 260 → 140 | Retour de jeu : gros nerf demandé. La vague de la Lame d'onde suit (60 % des dégâts) |
+| 2026-11-11 | Mobilier = type d'ennemi `crate` avec `prop: true` (immobile, inoffensif, immunisé au recul, ignoré par la visée, hors kills et damage meter) ; cassé aussi en marchant dessus ; pièces et nourriture dans un `PickupSystem` en pool (même aimant que les gemmes) ; boss tué = +25 or ; or ajouté au profil seulement pour une partie terminée et non test | Réutiliser le type ennemi : toutes les armes le touchent sans code en plus. Marcher dessus : sinon le Trait seul ne pouvait pas le casser. Boutique (prix et rangs réduits validés) = étape 2 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

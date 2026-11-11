@@ -25,7 +25,7 @@ export class EndOverlay {
     const maxed =
       report.maxedAt === null ? 'build incomplet' : `build complet à ${formatTime(report.maxedAt)}`;
     const survived = report.endless ? 'Victoire + sans fin : survécu' : 'Survécu';
-    this.infoEl.textContent = `${survived} ${formatTime(report.time)} · ${report.kills} kills · niveau ${report.level} · ${maxed}`;
+    this.infoEl.textContent = `${survived} ${formatTime(report.time)} · ${report.kills} kills · +${report.gold} or · niveau ${report.level} · ${maxed}`;
     this.hintEl.textContent = canContinue
       ? 'C pour continuer en sans fin · R pour rejouer · M pour le menu'
       : 'R pour rejouer · M pour le menu';

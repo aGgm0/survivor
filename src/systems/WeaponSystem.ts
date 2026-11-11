@@ -79,7 +79,8 @@ export class WeaponSystem {
     let bestDistSq = range * range;
     for (let i = 0; i < count; i++) {
       const e = this.candidates[i];
-      if (!e?.active) continue;
+      // La visée automatique ignore le mobilier (on ne gâche pas un tir sur un tonneau).
+      if (!e?.active || e.type.prop) continue;
       const dx = e.x - x;
       const dy = e.y - y;
       const distSq = dx * dx + dy * dy;

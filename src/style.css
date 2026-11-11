@@ -145,10 +145,21 @@ body {
   pointer-events: none;
 }
 
-/* Mention du mode sans fin, sous les kills */
+/* Or gagné, sous les kills */
+#hud-gold {
+  position: absolute;
+  top: 70px;
+  right: 16px;
+  font: bold 14px monospace;
+  color: #ffd54f;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+/* Mention du mode sans fin, sous l'or */
 #hud-endless {
   position: absolute;
-  top: 72px;
+  top: 92px;
   right: 16px;
   font: bold 14px monospace;
   letter-spacing: 2px;

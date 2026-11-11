@@ -83,6 +83,7 @@ const hud = new Hud({
   hpFill: getElement('hud-hpfill', HTMLDivElement),
   hpText: getElement('hud-hptext', HTMLSpanElement),
   kills: getElement('hud-kills', HTMLDivElement),
+  gold: getElement('hud-gold', HTMLDivElement),
   endless: getElement('hud-endless', HTMLDivElement),
   test: getElement('hud-test', HTMLDivElement),
   weapons: getElement('hud-weapons', HTMLDivElement),

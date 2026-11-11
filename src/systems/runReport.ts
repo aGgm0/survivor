@@ -22,6 +22,8 @@ export interface RunReport {
   /** s survécues */
   readonly time: number;
   readonly kills: number;
+  /** Or gagné pendant la partie */
+  readonly gold: number;
   readonly level: number;
   /** Défis tout-ou-rien réussis pendant la partie (ids, voir data/characters.ts) */
   readonly challenges: readonly string[];

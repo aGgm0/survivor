@@ -22,6 +22,7 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
     endless: false,
     time: 300,
     kills: 0,
+    gold: 0,
     level: 10,
     challenges: [],
     maxedAt: null,

@@ -67,6 +67,7 @@ function makeDeps() {
       setVisible: (v) => (ui.hudVisible = v),
       setEndless: (v) => (ui.endlessShown = v),
       setTest: (v) => (ui.testShown = v),
+      setGold: () => {},
       setTime: () => {},
       setProgress: () => {},
       setHp: () => {},
@@ -792,5 +793,49 @@ describe('GameScene — menu de test (F2)', () => {
     press('F2', scene);
     expect(scene.runTime).toBeGreaterThan(time);
     expect(scene.isTestRun).toBe(false);
+  });
+});
+
+describe('GameScene — mobilier et or', () => {
+  it('un meuble cassé lâche or ou nourriture, sans compter de kill', () => {
+    const { scene } = newScene();
+    const crate = scene.enemies.acquire();
+    if (!crate) throw new Error();
+    crate.spawn(ENEMY_TYPES.crate, scene.player.x + 60, scene.player.y);
+    scene.applyDevAction({ kind: 'killAll' });
+    expect(crate.active).toBe(false);
+    expect(scene.kills).toBe(0);
+    expect(scene.pickups.activeCount).toBe(1);
+  });
+
+  it('boss tué : +25 or ; l’or de la partie est dans le bilan', () => {
+    const { scene, ui } = newScene({ armed: false });
+    const boss = scene.enemies.acquire();
+    if (!boss) throw new Error();
+    boss.spawn(BOSS_TYPE, scene.player.x + 300, scene.player.y);
+    boss.hp = 0.01;
+    const orbs = new Weapon(WEAPONS.runicOrbs);
+    scene.weapons.push(orbs);
+    boss.teleport(scene.player.x + orbs.orbitDistance, scene.player.y);
+    for (let i = 0; i < 120 && boss.active; i++) scene.update(DT);
+    expect(scene.gold).toBe(25);
+    scene.player.hp = 1;
+    enemyOnPlayer(scene);
+    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    expect(ui.end?.gold).toBe(25);
+  });
+});
+
+describe('GameScene — casser le mobilier en marchant dessus', () => {
+  it('toucher un meuble le casse (même invincible) et lâche son butin', () => {
+    const { scene } = newScene({ armed: false });
+    scene.applyDevAction({ kind: 'god' });
+    const crate = scene.enemies.acquire();
+    if (!crate) throw new Error();
+    crate.spawn(ENEMY_TYPES.crate, scene.player.x + 10, scene.player.y);
+    scene.update(DT);
+    expect(crate.active).toBe(false);
+    expect(scene.pickups.activeCount).toBe(1);
+    expect(scene.player.hp).toBe(scene.player.maxHp);
   });
 });

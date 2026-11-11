@@ -16,6 +16,7 @@ export type DevAction =
   | { readonly kind: 'spawn'; readonly count: number }
   | { readonly kind: 'killAll' }
   | { readonly kind: 'boss' }
+  | { readonly kind: 'gold'; readonly amount: number }
   | { readonly kind: 'close' };
 
 /** État affiché par le panneau (fourni par la scène après chaque action). */
@@ -136,6 +137,7 @@ export class DevPanel {
       this.button('+100', { kind: 'spawn', count: 100 }),
       this.button('Tuer tout (sauf boss)', { kind: 'killAll' }),
       this.button('Boss', { kind: 'boss' }),
+      this.button('+100 or', { kind: 'gold', amount: 100 }),
     );
 
     this.el.append(

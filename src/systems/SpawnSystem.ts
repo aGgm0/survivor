@@ -1,7 +1,8 @@
 import { pickWeighted, type Rng } from '../core/math';
 import type { Pool } from '../core/Pool';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
-import type { EnemyType } from '../data/enemies';
+import { ENEMY_TYPES, type EnemyType } from '../data/enemies';
+import { FURNITURE } from '../data/furniture';
 import { SPAWN } from '../data/spawn';
 import {
   BONUS_WAVES,
@@ -39,6 +40,8 @@ export class SpawnSystem {
   private endlessStart: number | null = null;
   /** Boss du sans fin déjà envoyés */
   private endlessBosses = 0;
+  /** s accumulées depuis la dernière apparition de mobilier */
+  private furnitureTimer = 0;
   /** Vague du sans fin, recalculée sur place à chaque update (pas d'allocation) */
   private readonly endlessCurrent: MutableWave = {
     perSecond: 0,
@@ -84,6 +87,7 @@ export class SpawnSystem {
       if (spawned) spawned.bossIndex = this.nextBoss - 1;
     }
     this.updateEndlessBosses(now, playerX, playerY);
+    this.updateFurniture(dt, playerX, playerY);
 
     this.recycleFarEnemies(playerX, playerY);
   }
@@ -102,6 +106,17 @@ export class SpawnSystem {
       playerX,
       playerY,
     );
+  }
+
+  /** Mobilier : un nouveau toutes les `FURNITURE.spawnInterval` s, hors écran, s'il en manque. */
+  private updateFurniture(dt: number, playerX: number, playerY: number): void {
+    this.furnitureTimer += dt;
+    if (this.furnitureTimer < FURNITURE.spawnInterval) return;
+    this.furnitureTimer -= FURNITURE.spawnInterval;
+    // Compté seulement à chaque apparition (toutes les 15 s) : parcourir le pool est alors gratuit.
+    let props = 0;
+    for (const e of this.enemies.items) if (e.active && e.type.prop) props++;
+    if (props < FURNITURE.maxActive) this.spawnAt(ENEMY_TYPES.crate, 1, 1, playerX, playerY);
   }
 
   /** Rushs actifs : chacun a son propre compteur, comme la vague normale. */

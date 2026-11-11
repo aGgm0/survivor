@@ -28,6 +28,8 @@ export interface Profile {
   bestLevel: number;
   /** Par id d'arme de base */
   weapons: Record<string, WeaponStats>;
+  /** Or disponible (gagné en partie, dépensé à la boutique) */
+  gold: number;
   /** Défis tout-ou-rien déjà réussis (ex. boss tué avec une arme), par id */
   challenges: string[];
 }
@@ -42,6 +44,7 @@ export function emptyProfile(): Profile {
     bestLevel: 0,
     weapons: {},
     challenges: [],
+    gold: 0,
   };
 }
 
@@ -52,6 +55,7 @@ export function recordRun(profile: Profile, report: RunReport): Profile {
   profile.bestTime = Math.max(profile.bestTime, report.time);
   profile.totalTime += report.time;
   profile.totalKills += report.kills;
+  profile.gold += report.gold;
   profile.bestLevel = Math.max(profile.bestLevel, report.level);
   for (const id of report.challenges) {
     if (!profile.challenges.includes(id)) profile.challenges.push(id);
@@ -104,6 +108,7 @@ export function parseProfile(raw: unknown): Profile {
   profile.totalTime = count(raw.totalTime);
   profile.totalKills = count(raw.totalKills);
   profile.bestLevel = count(raw.bestLevel);
+  profile.gold = count(raw.gold);
   if (isRecord(raw.weapons)) {
     for (const [id, stats] of Object.entries(raw.weapons)) {
       // Une arme retirée du jeu (ou un id inventé) est ignorée.

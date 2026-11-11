@@ -24,6 +24,8 @@ import {
 } from '../data/weapons';
 import { PASSIVES } from '../data/upgrades';
 import { BOSS_CHALLENGES } from '../data/characters';
+import { FURNITURE } from '../data/furniture';
+import { PickupSystem } from '../systems/PickupSystem';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -90,6 +92,7 @@ export interface GameSceneDeps {
     | 'setVisible'
     | 'setEndless'
     | 'setTest'
+    | 'setGold'
     | 'setTime'
     | 'setProgress'
     | 'setHp'
@@ -131,6 +134,10 @@ export class GameScene implements Scene, Build {
   private readonly statusSystem: StatusSystem;
   readonly damageNumbers: DamageNumberSystem;
   readonly gems = new GemSystem();
+  /** Pièces d'or et nourriture lâchées par le mobilier */
+  readonly pickups = new PickupSystem();
+  /** Or gagné pendant cette partie (ajouté au total du profil à la fin) */
+  gold = 0;
   readonly effects = new EffectsSystem();
   readonly progression = new XpSystem();
   /** Niveau de chaque passif possédé (absent = 0) */
@@ -332,6 +339,9 @@ export class GameScene implements Scene, Build {
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
     this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
+    this.pickups.update(dt, this.player);
+    this.gold += this.pickups.gold;
+    if (this.pickups.heal > 0) this.player.heal(this.pickups.heal);
     this.damageNumbers.update(dt);
     this.effects.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
@@ -427,10 +437,27 @@ export class GameScene implements Scene, Build {
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
+    // Mobilier cassé : de l'or ou de la nourriture, pas d'XP ni de kill.
+    if (e.type.prop) {
+      this.dropLoot(e.x, e.y);
+      this.enemies.release(e);
+      return;
+    }
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
+    if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
+  }
+
+  /** Butin d'un meuble : or (un peu plus en fin de partie) ou nourriture. Tiré avec l'aléatoire du jeu. */
+  private dropLoot(x: number, y: number): void {
+    if (this.rng.next() < FURNITURE.goldChance) {
+      const bonus = Math.floor(this.elapsed / FURNITURE.goldBonusEvery);
+      this.pickups.drop('gold', this.rng.int(FURNITURE.goldMin, FURNITURE.goldMax) + bonus, x, y);
+    } else {
+      this.pickups.drop('food', FURNITURE.foodHeal, x, y);
+    }
   }
 
   /**
@@ -439,9 +466,15 @@ export class GameScene implements Scene, Build {
    * On compare à `elapsed` (temps de partie) : rien à décompter sur chaque ennemi.
    */
   private applyContactDamage(): void {
-    if (this.god) return; // menu de test : invincible
     for (let i = 0; i < this.touchingCount; i++) {
       const e = this.touching[i];
+      // Mobilier : on le casse en marchant dessus (sinon, avec le Trait seul, qui ne le vise pas,
+      // il serait presque impossible à casser).
+      if (e?.active && e.type.prop) {
+        this.killEnemy(e);
+        continue;
+      }
+      if (this.god) continue; // menu de test : invincible
       if (!e || this.elapsed < e.nextContactHitAt) continue;
       this.player.takeHit(e.type.contactDamage);
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
@@ -471,6 +504,7 @@ export class GameScene implements Scene, Build {
       endless: this.endless,
       time: this.elapsed,
       kills: this.killCount,
+      gold: this.gold,
       level: this.progression.level,
       challenges: this.challenges.slice(),
       maxedAt: this.maxedAt,
@@ -515,6 +549,7 @@ export class GameScene implements Scene, Build {
     }
     this.damageNumbers.freeze();
     this.gems.freeze();
+    this.pickups.freeze();
     for (const w of this.weapons) w.prevAngle = w.angle;
   }
 
@@ -527,6 +562,7 @@ export class GameScene implements Scene, Build {
     this.renderGrid(ctx);
     // Les gemmes sont au sol : dessinées sous les ennemis.
     this.gems.render(ctx, alpha, this.camera);
+    this.pickups.render(ctx, alpha, this.camera);
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderEnemies(ctx, alpha);
     this.renderBossBars(ctx, alpha);
@@ -542,6 +578,7 @@ export class GameScene implements Scene, Build {
     this.deps.hud.setProgress(this.progression.level, this.progression.progress);
     this.deps.hud.setHp(this.player.hp, this.player.maxHp);
     this.deps.hud.setKills(this.killCount);
+    this.deps.hud.setGold(this.gold);
     this.deps.hud.setInventory(this.buildVersion, this.weapons, this.passiveLevels);
     this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
@@ -752,6 +789,9 @@ export class GameScene implements Scene, Build {
         return;
       case 'boss':
         this.spawner.spawnBoss(player.x, player.y);
+        return;
+      case 'gold':
+        this.gold += action.amount;
         return;
       case 'close':
         return;

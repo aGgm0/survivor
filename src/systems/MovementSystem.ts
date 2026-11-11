@@ -61,6 +61,12 @@ export class MovementSystem {
     dt: number,
     now: number,
   ): void {
+    // Mobilier : ne bouge jamais (le joueur peut le pousser, mais il s'arrête net ensuite).
+    if (e.type.prop) {
+      e.vx = 0;
+      e.vy = 0;
+      return;
+    }
     // 1. Envie : direction unitaire (px, py) vers le joueur.
     const toTargetX = targetX - e.x;
     const toTargetY = targetY - e.y;

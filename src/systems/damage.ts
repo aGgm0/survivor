@@ -40,11 +40,13 @@ export function damageEnemy(
   kind: HitKind = 'direct',
 ): void {
   // Seuls les dégâts réellement utiles comptent : 10 sur un ennemi à 3 PV = 3.
-  source.totalDamage += Math.min(amount, enemy.hp);
+  // Le mobilier ne compte ni dans le damage meter ni dans les kills (défis des persos).
+  const prop = enemy.type.prop === true;
+  if (!prop) source.totalDamage += Math.min(amount, enemy.hp);
   enemy.hp -= amount;
   events.onHit(enemy, amount, kind);
   if (enemy.hp <= 0) {
-    source.kills++;
+    if (!prop) source.kills++;
     events.onKill(enemy);
     return;
   }

@@ -15,6 +15,11 @@ export interface EnemyType {
   readonly knockbackImmune?: boolean;
   /** Part des ralentissements ignorée (0,85 = ne subit que 15 % du ralentissement). Absent = 0 */
   readonly slowResist?: number;
+  /**
+   * Objet du décor (mobilier) : immobile, inoffensif, ignoré par la visée automatique, ne compte
+   * ni comme kill ni dans le damage meter ; une fois cassé, il lâche de l'or ou de la nourriture.
+   */
+  readonly prop?: boolean;
 }
 
 export const ENEMY_TYPES = {
@@ -56,6 +61,18 @@ export const ENEMY_TYPES = {
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
     slowResist: 0.85, // retour de jeu : le Brasier (−30 %) le ralentissait beaucoup trop
+  },
+  /** Mobilier cassable (voir data/furniture.ts) : apparaît hors écran, ne bouge pas. */
+  crate: {
+    id: 'crate',
+    hp: 10, // un seul coup de presque n'importe quelle arme
+    speed: 0,
+    contactDamage: 0,
+    xp: 0,
+    radius: 14,
+    color: '#8d6e63',
+    knockbackImmune: true,
+    prop: true,
   },
 } as const satisfies Record<string, EnemyType>;
 
