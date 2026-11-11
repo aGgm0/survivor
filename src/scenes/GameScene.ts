@@ -610,7 +610,8 @@ export class GameScene implements Scene, Build {
   private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
     const items = this.projectiles.items;
     for (const weapon of this.weapons) {
-      if (weapon.def.kind !== 'projectile') continue;
+      // Projectiles du Trait, et vagues de la Lame d'onde (l'Épée lance aussi des projectiles).
+      if (weapon.def.kind !== 'projectile' && !weapon.mutation?.wave) continue;
       for (const pass of PROJECTILE_PASSES) {
         ctx.beginPath();
         for (let i = 0; i < items.length; i++) {
