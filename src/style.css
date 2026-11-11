@@ -337,6 +337,44 @@ body {
   cursor: pointer;
 }
 
+/* Boutique */
+.shop-gold {
+  color: #ffd54f;
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 620px;
+}
+
+.shop-row {
+  display: grid;
+  grid-template-columns: 230px 1fr 120px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  background: #1d2236;
+  border: 2px solid #3a4470;
+  border-radius: 8px;
+}
+
+.shop-effect {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.shop-buy {
+  padding: 6px;
+  font-size: 15px;
+}
+
+.shop-buy:disabled {
+  color: #666;
+  cursor: default;
+}
+
 /* Écran Profil */
 .profile-list {
   display: flex;

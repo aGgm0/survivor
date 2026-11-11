@@ -25,6 +25,7 @@ import {
 import { PASSIVES } from '../data/upgrades';
 import { BOSS_CHALLENGES } from '../data/characters';
 import { FURNITURE } from '../data/furniture';
+import { applyShopBonuses } from '../data/shop';
 import { PickupSystem } from '../systems/PickupSystem';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
@@ -134,6 +135,9 @@ export class GameScene implements Scene, Build {
   private readonly statusSystem: StatusSystem;
   readonly damageNumbers: DamageNumberSystem;
   readonly gems = new GemSystem();
+  /** Rangs de boutique de cette partie, et le bonus d'XP qu'ils donnent (Sagesse) */
+  private readonly shopRanks: Readonly<Record<string, number>>;
+  private readonly xpGainMult: number;
   /** Pièces d'or et nourriture lâchées par le mobilier */
   readonly pickups = new PickupSystem();
   /** Or gagné pendant cette partie (ajouté au total du profil à la fin) */
@@ -177,8 +181,17 @@ export class GameScene implements Scene, Build {
   constructor(
     private readonly deps: GameSceneDeps,
     seed: number,
-    options: { runDuration?: number; startWeapon?: WeaponDef } = {},
+    options: {
+      runDuration?: number;
+      startWeapon?: WeaponDef;
+      /** Rangs achetés à la boutique (bonus de départ) */
+      shopRanks?: Readonly<Record<string, number>>;
+    } = {},
   ) {
+    // Bonus de boutique : appliqués avant tout, sans prendre d'emplacement de passif.
+    this.shopRanks = options.shopRanks ?? {};
+    this.xpGainMult = applyShopBonuses(this.player, this.shopRanks);
+    this.player.hp = this.player.maxHp;
     // L'arme de départ dépend du perso choisi (Trait arcanique par défaut).
     this.weapons = [new Weapon(options.startWeapon ?? WEAPONS.arcaneBolt)];
     this.runDuration = options.runDuration ?? RUN_DURATION;
@@ -338,7 +351,10 @@ export class GameScene implements Scene, Build {
     );
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
-    this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));
+    // Sagesse (boutique) : plus d'XP par gemme.
+    this.pendingLevelUps += this.progression.addXp(
+      this.gems.update(dt, this.player) * this.xpGainMult,
+    );
     this.pickups.update(dt, this.player);
     this.gold += this.pickups.gold;
     if (this.pickups.heal > 0) this.player.heal(this.pickups.heal);
@@ -768,6 +784,8 @@ export class GameScene implements Scene, Build {
         if (level > 0) this.passiveLevels.set(passive.id, level);
         else this.passiveLevels.delete(passive.id);
         rebuildPassiveStats(player, this.passiveLevels);
+        // Le recalcul repart des stats de base : on remet les bonus de boutique par-dessus.
+        applyShopBonuses(player, this.shopRanks);
         break;
       }
       case 'time':

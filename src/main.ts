@@ -16,6 +16,7 @@ import { PROFILE_KEY, parseProfile, recordRun, serializeProfile } from './data/p
 import { ProfileOverlay } from './ui/ProfileOverlay';
 import { DevPanel } from './ui/DevPanel';
 import { CharacterOverlay } from './ui/CharacterOverlay';
+import { ShopOverlay } from './ui/ShopOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
 
@@ -58,7 +59,14 @@ const menuOverlay = new MenuOverlay(getElement('menu-overlay', HTMLDivElement), 
   play: getElement('menu-play', HTMLButtonElement),
   options: getElement('menu-options', HTMLButtonElement),
   profile: getElement('menu-profile', HTMLButtonElement),
+  shop: getElement('menu-shop', HTMLButtonElement),
 });
+const shopOverlay = new ShopOverlay(
+  getElement('shop-overlay', HTMLDivElement),
+  getElement('shop-gold', HTMLParagraphElement),
+  getElement('shop-list', HTMLDivElement),
+  getElement('shop-back', HTMLButtonElement),
+);
 const characterOverlay = new CharacterOverlay(
   getElement('character-overlay', HTMLDivElement),
   getElement('character-cards', HTMLDivElement),
@@ -124,7 +132,7 @@ function startRun(chosen: CharacterDef = character): void {
       unlocksFor: (report) => newUnlocks(profile, report).map((c) => c.name),
     },
     seed,
-    { startWeapon: character.weapon },
+    { startWeapon: character.weapon, shopRanks: profile.shop },
   );
   game.setScene(scene);
 
@@ -144,10 +152,12 @@ function showMenu(): void {
       optionsOverlay,
       profileOverlay,
       characterOverlay,
+      shopOverlay,
       hud,
       settings,
       profile,
       onSettingsChanged,
+      onProfileChanged: saveProfile,
       onPlay: startRun,
     }),
   );
@@ -167,6 +177,10 @@ function onSettingsChanged(): void {
 /** Partie terminée (mort ou victoire) : on l'ajoute au profil et on sauvegarde aussitôt. */
 function onRunEnd(report: RunReport): void {
   recordRun(profile, report);
+  saveProfile();
+}
+
+function saveProfile(): void {
   store.save(PROFILE_KEY, serializeProfile(profile));
 }
 

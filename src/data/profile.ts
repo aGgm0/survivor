@@ -2,6 +2,7 @@
 // Même principe que les réglages (data/settings.ts) : format versionné, relu sans confiance.
 
 import type { RunReport } from '../systems/runReport';
+import { SHOP_ITEMS } from './shop';
 import { WEAPON_LIST } from './weapons';
 
 export const PROFILE_KEY = 'survivor.profile';
@@ -30,6 +31,8 @@ export interface Profile {
   weapons: Record<string, WeaponStats>;
   /** Or disponible (gagné en partie, dépensé à la boutique) */
   gold: number;
+  /** Rangs achetés à la boutique, par id de bonus (voir data/shop.ts) */
+  shop: Record<string, number>;
   /** Défis tout-ou-rien déjà réussis (ex. boss tué avec une arme), par id */
   challenges: string[];
 }
@@ -45,6 +48,7 @@ export function emptyProfile(): Profile {
     weapons: {},
     challenges: [],
     gold: 0,
+    shop: {},
   };
 }
 
@@ -109,6 +113,14 @@ export function parseProfile(raw: unknown): Profile {
   profile.totalKills = count(raw.totalKills);
   profile.bestLevel = count(raw.bestLevel);
   profile.gold = count(raw.gold);
+  if (isRecord(raw.shop)) {
+    for (const [id, rank] of Object.entries(raw.shop)) {
+      // Un bonus retiré du jeu (ou inventé) est ignoré ; le rang est borné au maximum.
+      const item = SHOP_ITEMS.find((i) => i.id === id);
+      const r = Math.floor(count(rank));
+      if (item && r > 0) profile.shop[id] = Math.min(r, item.prices.length);
+    }
+  }
   if (isRecord(raw.weapons)) {
     for (const [id, stats] of Object.entries(raw.weapons)) {
       // Une arme retirée du jeu (ou un id inventé) est ignorée.

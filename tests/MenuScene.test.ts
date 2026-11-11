@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type Settings } from '../src/data/settings';
 import { MenuScene } from '../src/scenes/MenuScene';
 import type { MenuAction } from '../src/ui/MenuOverlay';
 import type { OptionsAction } from '../src/ui/OptionsOverlay';
+import type { ShopAction } from '../src/ui/ShopOverlay';
 
 /** Faux menus et faux clavier : on simule un clic ou une touche, puis une update. */
 function newMenu(profile: Profile = emptyProfile()) {
@@ -22,6 +23,10 @@ function newMenu(profile: Profile = emptyProfile()) {
     charactersVisible: false,
     characterClick: null as number | null,
     characterBack: false,
+    shopVisible: false,
+    shopRefreshes: 0,
+    profileSaves: 0,
+    shopClick: null as ShopAction | null,
     saves: 0,
     menuClick: null as MenuAction | null,
     optionsClick: null as OptionsAction | null,
@@ -75,9 +80,20 @@ function newMenu(profile: Profile = emptyProfile()) {
         return b;
       },
     },
+    shopOverlay: {
+      show: () => (ui.shopVisible = true),
+      hide: () => (ui.shopVisible = false),
+      refresh: () => ui.shopRefreshes++,
+      takeAction: () => {
+        const a = ui.shopClick;
+        ui.shopClick = null;
+        return a;
+      },
+    },
     hud: { setVisible: (v) => (ui.hudVisible = v) },
     settings,
     profile,
+    onProfileChanged: () => ui.profileSaves++,
     onSettingsChanged: () => ui.saves++,
     onPlay: (c) => {
       ui.plays++;
@@ -238,5 +254,37 @@ describe('MenuScene — Profil', () => {
     press('Escape');
     expect(scene.currentScreen).toBe('main');
     expect(ui.plays).toBe(0);
+  });
+});
+
+describe('MenuScene — boutique', () => {
+  it('acheter retire l’or, monte le rang, sauvegarde ; trop cher : rien ne se passe', () => {
+    const profile = emptyProfile();
+    profile.gold = 60;
+    const { scene, ui } = newMenu(profile);
+    ui.menuClick = 'shop';
+    scene.update();
+    expect(scene.currentScreen).toBe('shop');
+    expect(ui.shopVisible).toBe(true);
+
+    ui.shopClick = { kind: 'buy', id: 'startVitality' }; // 50 or
+    scene.update();
+    expect(profile.gold).toBe(10);
+    expect(profile.shop.startVitality).toBe(1);
+    expect(ui.profileSaves).toBe(1);
+
+    ui.shopClick = { kind: 'buy', id: 'startVitality' }; // rang 2 : 100 or, pas assez
+    scene.update();
+    expect(profile.gold).toBe(10);
+    expect(profile.shop.startVitality).toBe(1);
+    expect(ui.profileSaves).toBe(1);
+  });
+
+  it('Retour ou Échap revient au menu', () => {
+    const { scene, ui, press } = newMenu();
+    ui.menuClick = 'shop';
+    scene.update();
+    press('Escape');
+    expect(scene.currentScreen).toBe('main');
   });
 });

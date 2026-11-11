@@ -4,6 +4,8 @@ import { CONTROLS } from '../data/controls';
 import { CHARACTERS, isUnlocked, type CharacterDef } from '../data/characters';
 import type { Profile } from '../data/profile';
 import type { CharacterOverlay } from '../ui/CharacterOverlay';
+import type { ShopOverlay } from '../ui/ShopOverlay';
+import { buyShopItem } from '../data/shop';
 import type { Settings } from '../data/settings';
 import type { Hud } from '../ui/Hud';
 import type { MenuOverlay } from '../ui/MenuOverlay';
@@ -17,11 +19,14 @@ export interface MenuSceneDeps {
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack'>;
   characterOverlay: Pick<CharacterOverlay, 'show' | 'hide' | 'takeChoice' | 'takeBack'>;
+  shopOverlay: Pick<ShopOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   hud: Pick<Hud, 'setVisible'>;
   /** Réglages partagés par tout le jeu : la scène les modifie sur place. */
   settings: Settings;
-  /** Statistiques du joueur (lecture seule ici) */
-  profile: Readonly<Profile>;
+  /** Statistiques du joueur ; la boutique y dépense l'or */
+  profile: Profile;
+  /** Appelé après un achat : main.ts sauvegarde le profil. */
+  onProfileChanged: () => void;
   /** Appelé après chaque changement de réglage : main.ts sauvegarde et applique. */
   onSettingsChanged: () => void;
   /** Lance une partie avec ce perso : main.ts crée une GameScene neuve. */
@@ -29,7 +34,7 @@ export interface MenuSceneDeps {
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
-export type MenuScreen = 'main' | 'characters' | 'options' | 'profile';
+export type MenuScreen = 'main' | 'characters' | 'options' | 'profile' | 'shop';
 
 /** Écran d'accueil, choix du perso, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
 export class MenuScene implements Scene {
@@ -53,6 +58,7 @@ export class MenuScene implements Scene {
     this.deps.optionsOverlay.hide();
     this.deps.profileOverlay.hide();
     this.deps.characterOverlay.hide();
+    this.deps.shopOverlay.hide();
   }
 
   update(): void {
@@ -65,6 +71,8 @@ export class MenuScene implements Scene {
         return this.updateOptions();
       case 'profile':
         return this.updateProfile();
+      case 'shop':
+        return this.updateShop();
     }
   }
 
@@ -75,7 +83,7 @@ export class MenuScene implements Scene {
     const { input, menuOverlay } = this.deps;
     // `takeAction` d'abord : il vide le clic mémorisé même si on joue au clavier.
     const action = menuOverlay.takeAction();
-    if (action === 'options' || action === 'profile') this.open(action);
+    if (action === 'options' || action === 'profile' || action === 'shop') this.open(action);
     else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.open('characters');
   }
 
@@ -109,6 +117,18 @@ export class MenuScene implements Scene {
     }
   }
 
+  /** Boutique : achat (si assez d'or), sauvegarde, liste à jour. Échap ou Retour = menu. */
+  private updateShop(): void {
+    const { input, shopOverlay, profile } = this.deps;
+    const action = shopOverlay.takeAction();
+    if (action?.kind === 'back' || input.wasPressed(CONTROLS.back)) {
+      this.open('main');
+    } else if (action?.kind === 'buy' && buyShopItem(profile, action.id)) {
+      this.deps.onProfileChanged();
+      shopOverlay.refresh(profile);
+    }
+  }
+
   private updateProfile(): void {
     const back = this.deps.profileOverlay.takeBack();
     if (back || this.deps.input.wasPressed(CONTROLS.back)) this.open('main');
@@ -116,13 +136,16 @@ export class MenuScene implements Scene {
 
   /** Affiche un écran et masque les autres. */
   private open(screen: MenuScreen): void {
-    const { menuOverlay, optionsOverlay, profileOverlay, characterOverlay } = this.deps;
+    const { menuOverlay, optionsOverlay, profileOverlay, characterOverlay, shopOverlay } =
+      this.deps;
     this.screen = screen;
     menuOverlay.hide();
     optionsOverlay.hide();
     profileOverlay.hide();
     characterOverlay.hide();
+    shopOverlay.hide();
     if (screen === 'main') menuOverlay.show();
+    else if (screen === 'shop') shopOverlay.show(this.deps.profile);
     else if (screen === 'characters') characterOverlay.show(CHARACTERS, this.deps.profile);
     else if (screen === 'options') optionsOverlay.show(this.deps.settings);
     else profileOverlay.show(this.deps.profile);

@@ -839,3 +839,21 @@ describe('GameScene — casser le mobilier en marchant dessus', () => {
     expect(scene.player.hp).toBe(scene.player.maxHp);
   });
 });
+
+describe('GameScene — bonus de boutique', () => {
+  it('la partie commence avec les bonus achetés, PV pleins', () => {
+    const ctx = makeDeps();
+    const scene = new GameScene(ctx.deps, 1, { shopRanks: { startVitality: 2, startPower: 1 } });
+    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 10);
+    expect(scene.player.hp).toBe(scene.player.maxHp);
+    expect(scene.player.damageMult).toBeCloseTo(1.03);
+  });
+
+  it('menu de test : baisser un passif garde les bonus de boutique', () => {
+    const ctx = makeDeps();
+    const scene = new GameScene(ctx.deps, 1, { shopRanks: { startVitality: 2 } });
+    scene.applyDevAction({ kind: 'passive', id: 'vitality', delta: 1 });
+    scene.applyDevAction({ kind: 'passive', id: 'vitality', delta: -1 });
+    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 10);
+  });
+});
