@@ -13,10 +13,12 @@ import { damageEnemy, type HitEvents } from './damage';
 /**
  * Ralentit de `amount` (0,3 = 30 %) pendant `duration` s. Si l'ennemi est déjà ralenti,
  * on garde le plus fort ralentissement et la fin la plus tardive (pas de cumul infini).
+ * Un ennemi résistant (boss) n'en subit qu'une partie : `slowResist` 0,85 = 85 % de moins.
  */
 export function applySlow(enemy: Enemy, amount: number, duration: number, now: number): void {
   if (now >= enemy.slowUntil) enemy.slowAmount = 0; // l'ancien ralentissement est terminé
-  enemy.slowAmount = Math.max(enemy.slowAmount, amount);
+  const effective = amount * (1 - (enemy.type.slowResist ?? 0));
+  enemy.slowAmount = Math.max(enemy.slowAmount, effective);
   enemy.slowUntil = Math.max(enemy.slowUntil, now + duration);
 }
 

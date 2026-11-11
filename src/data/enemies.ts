@@ -13,13 +13,15 @@ export interface EnemyType {
   readonly color: string;
   /** Vrai : aucune arme ne le fait reculer (boss) */
   readonly knockbackImmune?: boolean;
+  /** Part des ralentissements ignorée (0,85 = ne subit que 15 % du ralentissement). Absent = 0 */
+  readonly slowResist?: number;
 }
 
 export const ENEMY_TYPES = {
   basic: {
     id: 'basic',
-    hp: 20,
-    speed: 80,
+    hp: 23, // 20 → 23 : léger buff (toujours 2 coups de Trait arcanique à 14)
+    speed: 88, // 80 → 88 : léger buff
     contactDamage: 5,
     xp: 1,
     radius: 14,
@@ -53,6 +55,7 @@ export const ENEMY_TYPES = {
     radius: 48,
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
+    slowResist: 0.85, // retour de jeu : le Brasier (−30 %) le ralentissait beaucoup trop
   },
 } as const satisfies Record<string, EnemyType>;
 

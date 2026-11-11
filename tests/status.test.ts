@@ -12,7 +12,7 @@ function setup() {
   const pool = new Pool(10, (i) => new Enemy(i));
   const e = pool.acquire();
   if (!e) throw new Error();
-  e.spawn(ENEMY_TYPES.tank, 0, 0); // 60 PV
+  e.spawn(ENEMY_TYPES.tank, 0, 0);
   const hits: [number, HitKind][] = [];
   const killed: Enemy[] = [];
   const system = new StatusSystem({
@@ -49,6 +49,13 @@ describe('ralentissement', () => {
     expect(slowFactor(e, 1)).toBeCloseTo(0.7); // le 30 % reste
     expect(slowFactor(e, 5.5)).toBeCloseTo(0.7);
     expect(slowFactor(e, 6)).toBe(1);
+  });
+
+  it('le boss ne subit que 15 % du ralentissement (Brasier −30 % → −4,5 %)', () => {
+    const boss = new Enemy(0);
+    boss.spawn(ENEMY_TYPES.boss, 0, 0);
+    applySlow(boss, 0.3, 2, 0);
+    expect(slowFactor(boss, 0)).toBeCloseTo(1 - 0.3 * 0.15);
   });
 
   it('un nouveau ralentissement après la fin du précédent repart de zéro', () => {
