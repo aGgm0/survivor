@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { emptyProfile } from '../src/data/profile';
 import { DEFAULT_SETTINGS, type Settings } from '../src/data/settings';
 import { MenuScene } from '../src/scenes/MenuScene';
 import type { MenuAction } from '../src/ui/MenuOverlay';
@@ -11,6 +12,8 @@ function newMenu() {
   const ui = {
     menuVisible: false,
     optionsVisible: false,
+    profileVisible: false,
+    profileBack: false,
     hudVisible: true,
     plays: 0,
     saves: 0,
@@ -43,8 +46,18 @@ function newMenu() {
         return a;
       },
     },
+    profileOverlay: {
+      show: () => (ui.profileVisible = true),
+      hide: () => (ui.profileVisible = false),
+      takeBack: () => {
+        const b = ui.profileBack;
+        ui.profileBack = false;
+        return b;
+      },
+    },
     hud: { setVisible: (v) => (ui.hudVisible = v) },
     settings,
+    profile: emptyProfile(),
     onSettingsChanged: () => ui.saves++,
     onPlay: () => ui.plays++,
   });
@@ -100,7 +113,7 @@ describe('MenuScene — Options', () => {
 
   it('le bouton Options ouvre l’écran Options avec les réglages actuels', () => {
     const { scene, ui, settings } = inOptions();
-    expect(scene.isInOptions).toBe(true);
+    expect(scene.currentScreen).toBe('options');
     expect(ui.optionsVisible).toBe(true);
     expect(ui.menuVisible).toBe(false);
     expect(ui.shown).toEqual(settings);
@@ -125,13 +138,35 @@ describe('MenuScene — Options', () => {
     const { scene, ui, press } = inOptions();
     ui.optionsClick = { kind: 'back' };
     scene.update();
-    expect(scene.isInOptions).toBe(false);
+    expect(scene.currentScreen).toBe('main');
     expect(ui.menuVisible).toBe(true);
     expect(ui.optionsVisible).toBe(false);
 
     ui.menuClick = 'options';
     scene.update();
     press('Escape');
-    expect(scene.isInOptions).toBe(false);
+    expect(scene.currentScreen).toBe('main');
+  });
+});
+
+describe('MenuScene — Profil', () => {
+  it('le bouton Profil ouvre l’écran Profil ; Retour ou Échap revient au menu', () => {
+    const { scene, ui, press } = newMenu();
+    ui.menuClick = 'profile';
+    scene.update();
+    expect(scene.currentScreen).toBe('profile');
+    expect(ui.profileVisible).toBe(true);
+    expect(ui.menuVisible).toBe(false);
+
+    ui.profileBack = true;
+    scene.update();
+    expect(scene.currentScreen).toBe('main');
+    expect(ui.menuVisible).toBe(true);
+
+    ui.menuClick = 'profile';
+    scene.update();
+    press('Escape');
+    expect(scene.currentScreen).toBe('main');
+    expect(ui.plays).toBe(0);
   });
 });

@@ -1,5 +1,5 @@
 /** Ce que le joueur peut demander depuis le menu principal. */
-export type MenuAction = 'play' | 'options';
+export type MenuAction = 'play' | 'options' | 'profile';
 
 /**
  * Menu principal en HTML. Comme pour le level up, un clic est seulement mémorisé :
@@ -14,6 +14,7 @@ export class MenuOverlay {
   ) {
     buttons.play.addEventListener('click', () => (this.action = 'play'));
     buttons.options.addEventListener('click', () => (this.action = 'options'));
+    buttons.profile.addEventListener('click', () => (this.action = 'profile'));
   }
 
   show(): void {

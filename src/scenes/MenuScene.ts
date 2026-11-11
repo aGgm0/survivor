@@ -1,51 +1,65 @@
 import type { Input } from '../core/Input';
 import type { Scene } from '../core/Scene';
 import { CONTROLS } from '../data/controls';
+import type { Profile } from '../data/profile';
 import type { Settings } from '../data/settings';
 import type { Hud } from '../ui/Hud';
 import type { MenuOverlay } from '../ui/MenuOverlay';
 import type { OptionsOverlay } from '../ui/OptionsOverlay';
+import type { ProfileOverlay } from '../ui/ProfileOverlay';
 
 /** Comme pour GameScene : seulement les méthodes utilisées, pour tester sans navigateur. */
 export interface MenuSceneDeps {
   input: Pick<Input, 'wasPressed'>;
   menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction'>;
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
+  profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack'>;
   hud: Pick<Hud, 'setVisible'>;
   /** Réglages partagés par tout le jeu : la scène les modifie sur place. */
   settings: Settings;
+  /** Statistiques du joueur (lecture seule ici) */
+  profile: Readonly<Profile>;
   /** Appelé après chaque changement de réglage : main.ts sauvegarde et applique. */
   onSettingsChanged: () => void;
   /** Lance une partie : main.ts crée une GameScene neuve. */
   onPlay: () => void;
 }
 
-/** Écran d'accueil et écran Options. Tout est en HTML : la scène lit les clics et les touches. */
+/** Les écrans du menu. Un seul visible à la fois. */
+export type MenuScreen = 'main' | 'options' | 'profile';
+
+/** Écran d'accueil, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
 export class MenuScene implements Scene {
-  private inOptions = false;
+  private screen: MenuScreen = 'main';
 
   constructor(private readonly deps: MenuSceneDeps) {}
 
-  /** Vrai quand l'écran Options est ouvert (pour les tests). */
-  get isInOptions(): boolean {
-    return this.inOptions;
+  /** L'écran affiché (pour les tests). */
+  get currentScreen(): MenuScreen {
+    return this.screen;
   }
 
   enter(): void {
     // Le HUD n'a rien à afficher hors d'une partie.
     this.deps.hud.setVisible(false);
-    this.deps.optionsOverlay.hide();
-    this.deps.menuOverlay.show();
+    this.open('main');
   }
 
   exit(): void {
     this.deps.menuOverlay.hide();
     this.deps.optionsOverlay.hide();
+    this.deps.profileOverlay.hide();
   }
 
   update(): void {
-    if (this.inOptions) this.updateOptions();
-    else this.updateMain();
+    switch (this.screen) {
+      case 'main':
+        return this.updateMain();
+      case 'options':
+        return this.updateOptions();
+      case 'profile':
+        return this.updateProfile();
+    }
   }
 
   /** Rien à dessiner : le menu HTML couvre le canvas (déjà effacé par la boucle). */
@@ -55,7 +69,7 @@ export class MenuScene implements Scene {
     const { input, menuOverlay } = this.deps;
     // `takeAction` d'abord : il vide le clic mémorisé même si on joue au clavier.
     const action = menuOverlay.takeAction();
-    if (action === 'options') this.setOptionsOpen(true);
+    if (action === 'options' || action === 'profile') this.open(action);
     else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.deps.onPlay();
   }
 
@@ -63,7 +77,7 @@ export class MenuScene implements Scene {
     const { input, optionsOverlay, settings } = this.deps;
     const action = optionsOverlay.takeAction();
     if (action?.kind === 'back' || input.wasPressed(CONTROLS.back)) {
-      this.setOptionsOpen(false);
+      this.open('main');
     } else if (action?.kind === 'toggle') {
       settings[action.key] = !settings[action.key];
       optionsOverlay.refresh(settings);
@@ -71,14 +85,20 @@ export class MenuScene implements Scene {
     }
   }
 
-  private setOptionsOpen(open: boolean): void {
-    this.inOptions = open;
-    if (open) {
-      this.deps.menuOverlay.hide();
-      this.deps.optionsOverlay.show(this.deps.settings);
-    } else {
-      this.deps.optionsOverlay.hide();
-      this.deps.menuOverlay.show();
-    }
+  private updateProfile(): void {
+    const back = this.deps.profileOverlay.takeBack();
+    if (back || this.deps.input.wasPressed(CONTROLS.back)) this.open('main');
+  }
+
+  /** Affiche un écran et masque les autres. */
+  private open(screen: MenuScreen): void {
+    const { menuOverlay, optionsOverlay, profileOverlay } = this.deps;
+    this.screen = screen;
+    menuOverlay.hide();
+    optionsOverlay.hide();
+    profileOverlay.hide();
+    if (screen === 'main') menuOverlay.show();
+    else if (screen === 'options') optionsOverlay.show(this.deps.settings);
+    else profileOverlay.show(this.deps.profile);
   }
 }

@@ -305,6 +305,32 @@ body {
   cursor: pointer;
 }
 
+/* Écran Profil */
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 460px;
+  font-size: 15px;
+}
+
+.profile-row,
+.profile-weapon {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profile-weapon {
+  padding: 6px 10px;
+  background: #1d2236;
+  border-left: 4px solid #3a4470;
+}
+
+.profile-value {
+  color: #4fc3f7;
+}
+
 /* Petit compteur FPS permanent (réglage "Compteur FPS"), coin bas gauche */
 #fps-counter {
   position: absolute;

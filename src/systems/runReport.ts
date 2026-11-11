@@ -2,6 +2,8 @@ import type { Weapon } from '../entities/Weapon';
 
 /** Une ligne du damage meter. */
 export interface WeaponReport {
+  /** id de l'arme de base (même mutée) : sert aux statistiques du profil */
+  readonly id: string;
   readonly name: string;
   readonly color: string;
   readonly level: number;
@@ -33,6 +35,7 @@ export function buildDamageReport(weapons: readonly Weapon[]): WeaponReport[] {
   const total = weapons.reduce((sum, w) => sum + w.totalDamage, 0);
   return weapons
     .map((w) => ({
+      id: w.def.id,
       name: w.mutation ? `★ ${w.displayName}` : w.displayName,
       color: w.color,
       level: w.level,

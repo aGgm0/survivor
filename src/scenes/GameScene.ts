@@ -85,6 +85,8 @@ export interface GameSceneDeps {
   onRestart: () => void;
   /** Appelé quand le joueur demande le menu principal (écran de fin ou pause). */
   onMenu: () => void;
+  /** Appelé une fois quand la partie se termine (mort ou victoire) : main.ts met le profil à jour. */
+  onRunEnd: (report: RunReport) => void;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -393,6 +395,8 @@ export class GameScene implements Scene, Build {
       weapons: buildDamageReport(this.weapons),
     };
     this.deps.endOverlay.show(this.report);
+    // Une seule fois par partie (endRun n'est plus rappelé ensuite) : statistiques du profil.
+    this.deps.onRunEnd(this.report);
   }
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */

@@ -12,6 +12,9 @@ import { MenuScene } from './scenes/MenuScene';
 import { OptionsOverlay } from './ui/OptionsOverlay';
 import { SaveStore } from './core/SaveStore';
 import { SETTINGS_KEY, parseSettings, serializeSettings } from './data/settings';
+import { PROFILE_KEY, parseProfile, recordRun, serializeProfile } from './data/profile';
+import { ProfileOverlay } from './ui/ProfileOverlay';
+import type { RunReport } from './systems/runReport';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -22,6 +25,7 @@ function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
 // Réglages : lus une fois au lancement (sauvegarde validée champ par champ), puis partagés.
 const store = SaveStore.fromBrowser();
 const settings = parseSettings(store.load(SETTINGS_KEY));
+const profile = parseProfile(store.load(PROFILE_KEY));
 
 const renderer = new Renderer(getElement('game', HTMLCanvasElement));
 const debug = new DebugOverlay(
@@ -48,7 +52,14 @@ const levelUpOverlay = new LevelUpOverlay(
 const menuOverlay = new MenuOverlay(getElement('menu-overlay', HTMLDivElement), {
   play: getElement('menu-play', HTMLButtonElement),
   options: getElement('menu-options', HTMLButtonElement),
+  profile: getElement('menu-profile', HTMLButtonElement),
 });
+const profileOverlay = new ProfileOverlay(
+  getElement('profile-overlay', HTMLDivElement),
+  getElement('profile-summary', HTMLDivElement),
+  getElement('profile-weapons', HTMLDivElement),
+  getElement('profile-back', HTMLButtonElement),
+);
 const optionsOverlay = new OptionsOverlay(
   getElement('options-overlay', HTMLDivElement),
   getElement('options-list', HTMLDivElement),
@@ -86,6 +97,7 @@ function startRun(): void {
       settings,
       onRestart: startRun,
       onMenu: showMenu,
+      onRunEnd,
     },
     seed,
   );
@@ -105,8 +117,10 @@ function showMenu(): void {
       input,
       menuOverlay,
       optionsOverlay,
+      profileOverlay,
       hud,
       settings,
+      profile,
       onSettingsChanged,
       onPlay: startRun,
     }),
@@ -122,6 +136,12 @@ function applySettings(): void {
 function onSettingsChanged(): void {
   applySettings();
   store.save(SETTINGS_KEY, serializeSettings(settings));
+}
+
+/** Partie terminée (mort ou victoire) : on l'ajoute au profil et on sauvegarde aussitôt. */
+function onRunEnd(report: RunReport): void {
+  recordRun(profile, report);
+  store.save(PROFILE_KEY, serializeProfile(profile));
 }
 
 applySettings();

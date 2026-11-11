@@ -23,6 +23,8 @@ function makeDeps() {
     end: null as RunReport | null,
     restarts: 0,
     menus: 0,
+    /** Fins de partie signalées (pour le profil) */
+    runEnds: 0,
     /** Clic simulé sur un bouton du menu pause */
     pauseClick: null as PauseAction | null,
     hudVisible: false,
@@ -68,6 +70,7 @@ function makeDeps() {
     settings: { ...DEFAULT_SETTINGS },
     onRestart: () => ui.restarts++,
     onMenu: () => ui.menus++,
+    onRunEnd: () => ui.runEnds++,
   };
   /** Simule un appui unique (vu par une seule update, comme Input.endUpdate). */
   const press = (code: string, scene: GameScene) => {
@@ -408,6 +411,13 @@ describe('GameScene — victoire et bilan', () => {
     scene.update(DT);
     expect(ui.end?.victory).toBe(true);
     expect(ui.end?.time).toBeGreaterThan(1.5); // temps réel, prolongations comprises
+  });
+
+  it('la fin de partie est signalée une seule fois (profil), même si le jeu continue de tourner', () => {
+    const { scene, ui } = newScene({ runDuration: 1 });
+    for (let i = 0; i < 3 * 60; i++) scene.update(DT);
+    expect(scene.isOver).toBe(true);
+    expect(ui.runEnds).toBe(1);
   });
 
   it('R après la victoire relance une partie', () => {
