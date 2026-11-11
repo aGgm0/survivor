@@ -28,7 +28,7 @@ export const ENEMY_TYPES = {
   fast: {
     id: 'fast',
     hp: 5,
-    speed: 150,
+    speed: 135, // 150 → 135 : retour de jeu
     contactDamage: 3,
     xp: 1,
     radius: 10,
@@ -36,8 +36,8 @@ export const ENEMY_TYPES = {
   },
   tank: {
     id: 'tank',
-    hp: 60,
-    speed: 50,
+    hp: 66, // 60 → 66 : très léger buff
+    speed: 45, // 50 → 45
     contactDamage: 10,
     xp: 5,
     radius: 24,

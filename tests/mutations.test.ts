@@ -109,15 +109,17 @@ describe('mutations du Trait arcanique', () => {
     return { hits, explosions, projectiles, w };
   }
 
-  it('Trait perçant traverse 3 ennemis, puis disparaît (le 4e n’est pas touché)', () => {
+  it('Trait perçant traverse 5 ennemis, puis disparaît (le 6e n’est pas touché)', () => {
     const { hits, projectiles } = shoot(PIERCE, [
-      [100, 0],
-      [200, 0],
-      [300, 0],
+      [80, 0],
+      [160, 0],
+      [240, 0],
+      [320, 0],
       [400, 0],
+      [480, 0],
     ]);
-    expect(new Set(hits).size).toBe(3);
-    expect(hits).toHaveLength(3); // jamais deux fois le même
+    expect(new Set(hits).size).toBe(5);
+    expect(hits).toHaveLength(5); // jamais deux fois le même
     expect(projectiles.activeCount).toBe(0);
   });
 
@@ -134,7 +136,7 @@ describe('mutations du Trait arcanique', () => {
   it('Trait éclaté : explose sur le 1er ennemi et touche ceux autour (pas ceux loin)', () => {
     const { hits, explosions, projectiles } = shoot(BURST, [
       [150, 0], // cible
-      [180, 30], // à moins de 60 px de l'impact
+      [180, 30], // à moins de 75 px de l'impact
       [400, 0], // loin
     ]);
     expect(explosions).toEqual([BURST.explosion?.radius]);

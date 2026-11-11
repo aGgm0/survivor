@@ -157,18 +157,18 @@ export const WEAPONS = {
         id: 'piercingBolt',
         name: 'Trait perçant',
         short: 'Tp',
-        description: 'Traverse 3 ennemis avant de disparaître, dégâts ×0,9',
+        description: 'Traverse 5 ennemis avant de disparaître, dégâts ×0,9',
         color: '#9ad7ff',
-        pierce: 3,
+        pierce: 5, // 3 → 5 : retour de jeu, dégâts inchangés
         damageMult: 0.9,
       },
       {
         id: 'burstBolt',
         name: 'Trait éclaté',
         short: 'Té',
-        description: 'Explose à l’impact : 70 % des dégâts aux ennemis à moins de 60 px',
+        description: 'Explose à l’impact : 70 % des dégâts aux ennemis à moins de 75 px',
         color: '#ff8fd6',
-        explosion: { radius: 60, damageRatio: 0.7 },
+        explosion: { radius: 75, damageRatio: 0.7 }, // rayon 60 → 75
       },
     ],
   },
