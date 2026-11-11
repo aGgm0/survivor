@@ -1,6 +1,5 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
-import type { ProjectileWeaponDef } from '../data/weapons';
 import type { Enemy } from './Enemy';
 import type { Weapon } from './Weapon';
 
@@ -32,14 +31,20 @@ export class Projectile implements Poolable {
   readonly hitEnemies: (Enemy | null)[] = new Array<Enemy | null>(MAX_PIERCE).fill(null);
   hitCount = 0;
 
-  /** Réinitialise TOUT l'état (un projectile recyclé ne garde rien de sa vie précédente). */
+  /**
+   * Réinitialise TOUT l'état (un projectile recyclé ne garde rien de sa vie précédente).
+   * `lifetime` en s ; `damage` et `pierce` : ceux de l'arme par défaut (la vague de la Lame d'onde
+   * en a d'autres).
+   */
   launch(
     source: Weapon,
-    def: ProjectileWeaponDef,
+    lifetime: number,
     x: number,
     y: number,
     dirX: number,
     dirY: number,
+    damage: number = source.damage,
+    pierce: number = source.mutation?.pierce ?? 1,
   ): void {
     this.source = source;
     this.x = x;
@@ -49,12 +54,12 @@ export class Projectile implements Poolable {
     // Vitesse et taille actuelles de l'arme (passifs Vélocité et Taille compris).
     this.vx = dirX * source.projectileSpeed;
     this.vy = dirY * source.projectileSpeed;
-    this.life = def.projectileLifetime;
+    this.life = lifetime;
     // Dégâts actuels de l'arme (niveau + mutation + passifs), pas ceux de base.
-    this.damage = source.damage;
+    this.damage = damage;
     this.radius = source.projectileRadius;
     this.color = source.color;
-    this.pierceLeft = Math.min(MAX_PIERCE, source.mutation?.pierce ?? 1);
+    this.pierceLeft = Math.min(MAX_PIERCE, pierce);
     this.hitCount = 0;
     this.hitEnemies.fill(null);
   }

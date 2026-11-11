@@ -79,7 +79,7 @@ export class MenuScene implements Scene {
     else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.open('characters');
   }
 
-  /** Choix du perso : clic ou 1-2-3 ; un perso verrouillé ne se lance pas. Échap = retour. */
+  /** Choix du perso : clic ou 1-2-3-4 ; un perso verrouillé ne se lance pas. Échap = retour. */
   private updateCharacters(): void {
     const { input, characterOverlay, profile } = this.deps;
     let index = characterOverlay.takeChoice();
@@ -87,6 +87,7 @@ export class MenuScene implements Scene {
       if (input.wasPressed(CONTROLS.choice1)) index = 0;
       else if (input.wasPressed(CONTROLS.choice2)) index = 1;
       else if (input.wasPressed(CONTROLS.choice3)) index = 2;
+      else if (input.wasPressed(CONTROLS.choice4)) index = 3;
     }
     const character = index === null ? undefined : CHARACTERS[index];
     if (character && isUnlocked(character, profile)) {

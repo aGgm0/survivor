@@ -101,7 +101,7 @@ describe('mutations du Trait arcanique', () => {
     w.level = weaponMaxLevel(BOLT);
     w.mutation = mutation;
     w.recompute(NO_MODS);
-    projectiles.acquire()?.launch(w, BOLT, 0, 0, 1, 0);
+    projectiles.acquire()?.launch(w, BOLT.projectileLifetime, 0, 0, 1, 0);
     for (let i = 0; i < Math.round(seconds * 60); i++) {
       collisions.rebuild(enemies);
       flight.update(1 / 60, projectiles);

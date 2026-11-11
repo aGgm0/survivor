@@ -8,6 +8,10 @@ const RING_LIFETIME = 0.25;
 /** L'anneau part de cette fraction du rayon et grandit jusqu'au rayon complet */
 const RING_START = 0.4;
 const RING_WIDTH = 3;
+/** s : durée de l'arc d'un coup d'épée */
+const SLASH_LIFETIME = 0.15;
+/** Opacité de départ de l'arc (il s'efface ensuite) */
+const SLASH_ALPHA = 0.45;
 
 /** Un anneau d'explosion qui s'agrandit et s'efface. */
 class Ring implements Poolable {
@@ -19,9 +23,22 @@ class Ring implements Poolable {
   color = '';
 }
 
-/** Effets visuels éphémères (explosions). En pool, comme le reste : aucune allocation en jeu. */
+/** Un coup d'épée : une part de disque (direction, ouverture, portée) qui s'efface. */
+class Slash implements Poolable {
+  active = false;
+  x = 0;
+  y = 0;
+  angle = 0;
+  arc = 0;
+  range = 0;
+  age = 0;
+  color = '';
+}
+
+/** Effets visuels éphémères (explosions, coups d'épée). En pool : aucune allocation en jeu. */
 export class EffectsSystem {
   private readonly rings = new Pool(POOL_SIZE, () => new Ring());
+  private readonly slashes = new Pool(POOL_SIZE, () => new Slash());
 
   /** Réserve pleine : l'effet est sauté (purement visuel, rien n'est perdu). */
   explosion(x: number, y: number, radius: number, color: string): void {
@@ -34,8 +51,20 @@ export class EffectsSystem {
     ring.color = color;
   }
 
+  slash(x: number, y: number, angle: number, arc: number, range: number, color: string): void {
+    const s = this.slashes.acquire();
+    if (!s) return;
+    s.x = x;
+    s.y = y;
+    s.angle = angle;
+    s.arc = arc;
+    s.range = range;
+    s.age = 0;
+    s.color = color;
+  }
+
   get activeCount(): number {
-    return this.rings.activeCount;
+    return this.rings.activeCount + this.slashes.activeCount;
   }
 
   update(dt: number): void {
@@ -43,6 +72,11 @@ export class EffectsSystem {
       if (!ring.active) continue;
       ring.age += dt;
       if (ring.age >= RING_LIFETIME) this.rings.release(ring);
+    }
+    for (const s of this.slashes.items) {
+      if (!s.active) continue;
+      s.age += dt;
+      if (s.age >= SLASH_LIFETIME) this.slashes.release(s);
     }
   }
 
@@ -59,6 +93,16 @@ export class EffectsSystem {
       ctx.beginPath();
       ctx.arc(ring.x, ring.y, ring.radius * (RING_START + (1 - RING_START) * t), 0, Math.PI * 2);
       ctx.stroke();
+    }
+    for (const s of this.slashes.items) {
+      if (!s.active) continue;
+      ctx.globalAlpha = SLASH_ALPHA * (1 - s.age / SLASH_LIFETIME);
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.arc(s.x, s.y, s.range, s.angle - s.arc / 2, s.angle + s.arc / 2);
+      ctx.closePath();
+      ctx.fill();
     }
     ctx.globalAlpha = 1;
   }

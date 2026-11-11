@@ -61,6 +61,13 @@ export const CHARACTERS: readonly CharacterDef[] = [
     },
     challengeText: 'Tuer le boss de 9:00 avec les Orbes runiques au niveau 5',
   },
+  {
+    id: 'bladeMage',
+    name: 'Lame-mage',
+    weapon: WEAPONS.sword,
+    challenge: { kind: 'weaponKills', weaponId: WEAPONS.sword.id, count: 3000 },
+    challengeText: '3 000 kills avec l’Épée (toutes parties confondues)',
+  },
 ];
 
 /** Perso par défaut (toujours débloqué). */

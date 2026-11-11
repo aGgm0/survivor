@@ -152,7 +152,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 | Pause | Échap / P |
 | Choisir un upgrade | Clic ou touches 1-2-3 |
 
-### 5.4 Armes `[MVP : 3 armes]`
+### 5.4 Armes `[MVP : 3 armes, 4 depuis l'Épée]`
 
 Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Emplacements limités : 4 armes et 4 passifs maximum** en même temps (décidé le 2026-11-11 : la run de 10 min n'est qu'une première partie, les runs s'allongeront).
 
@@ -160,6 +160,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 14 | 1 s | +1 projectile aux niv 3 et 5 |
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px |
+| **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 110 px, 120°, chaque ennemi touché une fois par coup | 22 | 1,2 s | Niv 2 +8 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +10 dégâts et portée +25 px. Duplicateur = combo (+1 coup enchaîné à 0,12 s) |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
 **Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
@@ -210,6 +211,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 | Arcaniste | Trait arcanique | Disponible dès le début |
 | Pyromancien | Aura ardente | 5 000 kills avec l'Aura ardente, cumulés sur toutes les parties |
 | Runiste | Orbes runiques | Tuer le boss de 9:00 en ayant les Orbes runiques au niveau 5 |
+| Lame-mage | Épée | 3 000 kills avec l'Épée, cumulés sur toutes les parties |
 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
 
@@ -318,7 +320,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9) : écran de choix après Jouer (clic ou 1-2-3), cartes verrouillées avec défi et progression, « Nouveau perso débloqué » sur l'écran de fin (`data/characters.ts`)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
 - [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
-- [ ] **4e arme : l'Épée** <!-- TODO: comportement (coup en arc devant le joueur ? épées qui tournent ? lancer ?), stats, niveaux, 2 mutations, perso de départ associé et son défi -->
+- [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur = combo ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, pas l'aura)
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
@@ -424,6 +426,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Passifs Taille (+7 %/niv), Vélocité (+10 %/niv), Duplicateur (+1, 3 niv max) ; la Taille éloigne l'orbite de 30 % de son bonus seulement (`SIZE_ORBIT_SHARE`) ; le Duplicateur s'ajoute après la mutation ; les projectiles prennent vitesse et taille de l'arme (`Weapon.projectileSpeed`, `range`, `explosionRadius`) ; enchantements = niveau 6 des passifs | Valeurs proposées puis ajustées ("taille 7 %, duplicateur niv max 3"). Tempête + Duplicateur 3 = 12 orbes = MAX_ORBS |
 | 2026-11-11 | Gros nerf : Taille 7 → 4 %/niv, Vélocité 10 → 5 %/niv ; gros buff du tank : 66 → 90 PV, vitesse 60 → 72 | Retour de jeu |
 | 2026-11-11 | Boss : résistance de 85 % aux ralentissements (`slowResist`, le Brasier −30 % ne le ralentit plus que de 4,5 %) ; basique 20 → 23 PV et vitesse 80 → 88 | Retour de jeu : le Brasier ralentissait beaucoup trop le boss. Basique toujours tué en 2 coups de Trait (14) |
+| 2026-11-11 | Épée (mêlée) : 22 dégâts, 1,2 s, 110 px, 120°, recul 260 ; Tourbillon / Lame d'onde ; Duplicateur = combo de coups enchaînés (0,12 s), y compris pour le Tourbillon (un tour de plus) et la Lame d'onde (une vague de plus) ; Taille = portée (pas l'ouverture) ; direction = dernière direction de marche ; perso Lame-mage (3 000 kills) | Design proposé et validé ; « combo » choisi plutôt que « directions » pour que le Duplicateur ne rende pas le Tourbillon inutile |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

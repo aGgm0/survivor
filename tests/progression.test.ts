@@ -69,12 +69,13 @@ describe('XpSystem', () => {
 });
 
 describe('upgrades — options et tirage', () => {
-  it('au départ : Trait arcanique niv 2, les 2 autres armes et tous les passifs', () => {
+  it('au départ : Trait arcanique niv 2, les 3 autres armes et tous les passifs', () => {
     const options = availableUpgrades(makeBuild());
-    expect(options).toHaveLength(1 + 2 + PASSIVES.length);
+    expect(options).toHaveLength(1 + 3 + PASSIVES.length);
     expect(options.filter((o) => o.kind === 'newWeapon').map((o) => o.title)).toEqual([
       WEAPONS.burningAura.name,
       WEAPONS.runicOrbs.name,
+      WEAPONS.sword.name,
     ]);
     const bolt = options.find((o) => o.kind === 'weaponLevel');
     expect(bolt?.levelText).toBe('Niv 2');
@@ -124,7 +125,7 @@ describe('upgrades — options et tirage', () => {
     applyUpgrade(aura, build);
     expect(build.weapons.map((w) => w.def.id)).toEqual(['arcaneBolt', 'burningAura']);
     const again = availableUpgrades(build).filter((o) => o.kind === 'newWeapon');
-    expect(again.map((o) => o.title)).toEqual([WEAPONS.runicOrbs.name]);
+    expect(again.map((o) => o.title)).toEqual([WEAPONS.runicOrbs.name, WEAPONS.sword.name]);
   });
 
   it('4 passifs possédés : plus de nouveau passif, mais les possédés montent encore', () => {
@@ -143,12 +144,16 @@ describe('upgrades — options et tirage', () => {
 
   it('exclut ce qui est au maximum, et propose le soin quand tout est au max', () => {
     const build = makeBuild();
-    build.weapons.push(new Weapon(WEAPONS.burningAura), new Weapon(WEAPONS.runicOrbs));
+    build.weapons.push(
+      new Weapon(WEAPONS.burningAura),
+      new Weapon(WEAPONS.runicOrbs),
+      new Weapon(WEAPONS.sword),
+    );
     for (const w of build.weapons) w.level = weaponMaxLevel(w.def);
     for (const p of PASSIVES) build.passiveLevels.set(p.id, p.maxLevel);
-    // Armes au niveau 5 : il reste leurs mutations (le niveau 6).
+    // Armes au niveau 5 : il reste leurs mutations (le niveau 6), 2 par arme.
     expect(availableUpgrades(build).every((o) => o.kind === 'mutation')).toBe(true);
-    expect(availableUpgrades(build)).toHaveLength(6);
+    expect(availableUpgrades(build)).toHaveLength(8);
     for (const w of build.weapons) {
       w.mutation = w.def.mutations?.[0] ?? null;
       w.level++;

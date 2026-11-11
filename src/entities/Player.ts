@@ -48,6 +48,10 @@ export class Player {
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
 
+  /** Direction regardée (vecteur de longueur 1) : vers la droite au départ */
+  facingX = 1;
+  facingY = 0;
+
   // Réutilisé à chaque update pour ne pas allouer d'objet.
   private readonly dir: Vec2 = { x: 0, y: 0 };
 
@@ -64,6 +68,11 @@ export class Player {
     if (this.hitFlashTimer > 0) this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dt);
     // Sans normalisation, la diagonale (1, 1) a une longueur de ~1,41 : on irait 41 % plus vite.
     normalizeInto(axisX, axisY, this.dir);
+    // Direction du regard (Épée) : la dernière direction de marche, gardée à l'arrêt.
+    if (axisX !== 0 || axisY !== 0) {
+      this.facingX = this.dir.x;
+      this.facingY = this.dir.y;
+    }
     this.vx = this.dir.x * this.speed;
     this.vy = this.dir.y * this.speed;
     this.x += this.vx * dt;

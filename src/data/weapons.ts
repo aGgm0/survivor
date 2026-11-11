@@ -15,6 +15,10 @@ export interface WeaponLevelBonus {
   readonly radius?: number;
   /** px ajoutés à la distance joueur → orbes (orbite) */
   readonly orbitDistance?: number;
+  /** Degrés ajoutés à l'angle du coup (mêlée) */
+  readonly arcDeg?: number;
+  /** px ajoutés à la portée du coup (mêlée) */
+  readonly range?: number;
 }
 
 /**
@@ -56,6 +60,19 @@ export interface MutationDef {
   readonly angularSpeedMult?: number;
   /** Orbite : multiplicateur de la distance joueur → orbes */
   readonly orbitDistanceMult?: number;
+  /** Mêlée : angle du coup imposé, en degrés (360 = tout autour) */
+  readonly arcDeg?: number;
+  /**
+   * Mêlée : chaque coup lance aussi une vague tranchante devant le joueur, qui traverse jusqu'à
+   * `pierce` ennemis avec `damageRatio` × les dégâts. Portée = vitesse × durée de vie.
+   */
+  readonly wave?: {
+    readonly speed: number;
+    readonly lifetime: number;
+    readonly radius: number;
+    readonly damageRatio: number;
+    readonly pierce: number;
+  };
 }
 
 interface WeaponDefBase {
@@ -127,7 +144,26 @@ export interface OrbitWeaponDef extends WeaponDefBase {
   readonly rehitCooldown: number;
 }
 
-export type WeaponDef = ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef;
+/**
+ * Coup en arc devant le joueur, dans la direction où il marche (la dernière s'il est immobile).
+ * Chaque ennemi dans l'arc est touché une fois par coup. `count` = coups enchaînés par attaque
+ * (le Duplicateur en ajoute), espacés de `comboDelay`.
+ */
+export interface MeleeWeaponDef extends WeaponDefBase {
+  readonly kind: 'melee';
+  /** s entre deux attaques au niveau 1 */
+  readonly cooldown: number;
+  /** Coups enchaînés par attaque au niveau 1 */
+  readonly count: number;
+  /** s entre deux coups d'un même combo */
+  readonly comboDelay: number;
+  /** px depuis le centre du joueur */
+  readonly range: number;
+  /** Degrés : ouverture de l'arc au niveau 1 */
+  readonly arcDeg: number;
+}
+
+export type WeaponDef = ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef | MeleeWeaponDef;
 
 export const WEAPONS = {
   arcaneBolt: {
@@ -268,6 +304,47 @@ export const WEAPONS = {
         // Gros nerf : chaque orbe frappe (délai par orbe), donc le recul tombe ~7 fois/s.
         // Retour de jeu : immobile 12 min sans qu'aucun ennemi n'arrive au contact.
         knockbackMult: 0.3,
+      },
+    ],
+  },
+  sword: {
+    kind: 'melee',
+    id: 'sword',
+    name: 'Épée',
+    short: 'ÉP',
+    description: 'Frappe en arc devant toi, dans la direction où tu marches',
+    damage: 22, // un basique (23 PV) y survit tout juste, un rapide meurt
+    knockback: 260, // un coup d'épée repousse fort
+    cooldown: 1.2,
+    count: 1,
+    comboDelay: 0.12,
+    range: 110,
+    arcDeg: 120,
+    color: '#e8e8f0',
+    levels: [
+      { description: '+8 dégâts', damage: 8 },
+      { description: 'Arc +40°', arcDeg: 40 },
+      { description: 'Délai -20 %', cooldownPct: -0.2 },
+      { description: '+10 dégâts, portée +25 px', damage: 10, range: 25 },
+    ],
+    mutations: [
+      {
+        id: 'whirlwind',
+        name: 'Tourbillon',
+        short: 'Tb',
+        description: 'Le coup fait le tour complet (360°), dégâts ×0,75',
+        color: '#b0e0ff',
+        arcDeg: 360,
+        damageMult: 0.75,
+      },
+      {
+        id: 'waveBlade',
+        name: 'Lame d’onde',
+        short: 'Lo',
+        description:
+          'Chaque coup lance une vague qui traverse les ennemis (~300 px, 60 % des dégâts)',
+        color: '#9ff0d0',
+        wave: { speed: 500, lifetime: 0.6, radius: 22, damageRatio: 0.6, pierce: 8 },
       },
     ],
   },

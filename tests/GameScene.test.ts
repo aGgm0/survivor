@@ -328,7 +328,14 @@ describe('GameScene — level up', () => {
     const aura = new Weapon(WEAPONS.burningAura);
     aura.level = weaponMaxLevel(WEAPONS.burningAura);
     scene.weapons.push(aura);
-    // Tous les passifs au max : il ne reste que les 2 mutations (et les nouvelles armes).
+    // Les 3 autres armes déjà mutées (4 emplacements pleins) et les passifs au max :
+    // il ne reste que les 2 mutations de l'aura dans le tirage.
+    for (const def of [WEAPONS.arcaneBolt, WEAPONS.runicOrbs, WEAPONS.sword]) {
+      const w = new Weapon(def);
+      w.level = weaponMaxLevel(def) + 1;
+      w.mutation = def.mutations[0];
+      scene.weapons.push(w);
+    }
     for (const p of PASSIVES.slice(0, MAX_PASSIVES)) scene.passiveLevels.set(p.id, p.maxLevel);
     giveXp(scene, scene.progression.xpForNext);
     const titles = scene.currentChoices.map((c) => c.title);
@@ -349,7 +356,7 @@ describe('GameScene — level up', () => {
   it('tout au maximum : les niveaux suivants demandent ×4 d’XP', () => {
     const { scene, press } = newScene({ armed: false });
     // Tout au max sauf un passif à 4/5, toutes les armes mutées.
-    for (const def of [WEAPONS.arcaneBolt, WEAPONS.burningAura, WEAPONS.runicOrbs]) {
+    for (const def of [WEAPONS.arcaneBolt, WEAPONS.burningAura, WEAPONS.runicOrbs, WEAPONS.sword]) {
       const w = new Weapon(def);
       w.level = weaponMaxLevel(def);
       w.mutation = def.mutations[0];

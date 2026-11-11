@@ -1,5 +1,10 @@
 import type { Pool } from '../core/Pool';
-import { MAX_ORBS, type OrbitWeaponDef, type ProjectileWeaponDef } from '../data/weapons';
+import {
+  MAX_ORBS,
+  type MeleeWeaponDef,
+  type OrbitWeaponDef,
+  type ProjectileWeaponDef,
+} from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
 import type { Weapon } from '../entities/Weapon';
@@ -7,6 +12,9 @@ import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
 import { damageEnemy, type HitEvents } from './damage';
 import { applyPoison, applySlow } from './status';
 import { GRID_STALENESS_MARGIN } from './ProjectileSystem';
+
+/** Tolérance des comparaisons de temps et d'angle en virgule flottante */
+const FLOAT_EPSILON = 1e-9;
 
 /**
  * Fait agir chaque arme du joueur selon son type :
@@ -30,8 +38,17 @@ export class WeaponSystem {
   /**
    * `collisions.rebuild()` doit avoir été appelé dans cette update (grille à jour).
    * `now` = temps de partie (s), pour les délais de re-touche des orbes.
+   * (`facingX`, `facingY`) : direction regardée par le joueur (longueur 1), pour l'Épée.
    */
-  update(dt: number, weapons: readonly Weapon[], fromX: number, fromY: number, now: number): void {
+  update(
+    dt: number,
+    weapons: readonly Weapon[],
+    fromX: number,
+    fromY: number,
+    now: number,
+    facingX = 1,
+    facingY = 0,
+  ): void {
     for (const weapon of weapons) {
       const def = weapon.def;
       switch (def.kind) {
@@ -43,6 +60,9 @@ export class WeaponSystem {
           break;
         case 'orbit':
           this.updateOrbit(weapon, def, dt, fromX, fromY, now);
+          break;
+        case 'melee':
+          this.updateMelee(weapon, def, dt, fromX, fromY, facingX, facingY, now);
           break;
       }
     }
@@ -118,7 +138,7 @@ export class WeaponSystem {
       const projectile = this.projectiles.acquire();
       if (!projectile) break;
       const angle = baseAngle + (i - (count - 1) / 2) * spread;
-      projectile.launch(weapon, def, x, y, Math.cos(angle), Math.sin(angle));
+      projectile.launch(weapon, def.projectileLifetime, x, y, Math.cos(angle), Math.sin(angle));
       fired++;
     }
     return fired > 0;
@@ -196,6 +216,77 @@ export class WeaponSystem {
         const dist = Math.sqrt(ex * ex + ey * ey) || 1;
         damageEnemy(weapon, e, weapon.damage, this.events, ex / dist, ey / dist);
       }
+    }
+  }
+
+  /**
+   * Épée : une attaque = un combo de `weapon.count` coups (1 + Duplicateur), espacés de
+   * `comboDelay`. Le délai entre deux attaques (Hâte comprise) part du début du combo.
+   */
+  private updateMelee(
+    weapon: Weapon,
+    def: MeleeWeaponDef,
+    dt: number,
+    x: number,
+    y: number,
+    facingX: number,
+    facingY: number,
+    now: number,
+  ): void {
+    weapon.cooldownTimer -= dt;
+    if (weapon.cooldownTimer <= 0 && weapon.strikesLeft === 0) {
+      weapon.cooldownTimer = weapon.cooldown;
+      weapon.strikesLeft = weapon.count;
+      weapon.nextStrikeAt = now;
+    }
+    if (weapon.strikesLeft > 0 && now >= weapon.nextStrikeAt - FLOAT_EPSILON) {
+      weapon.strikesLeft--;
+      weapon.nextStrikeAt = now + def.comboDelay;
+      this.strike(weapon, x, y, facingX, facingY);
+    }
+  }
+
+  /**
+   * Un coup : chaque ennemi dans l'arc (portée + son rayon, ouverture autour du regard) est
+   * touché une fois. On compare des cosinus (produit scalaire) : pas d'atan2 par ennemi.
+   */
+  private strike(weapon: Weapon, x: number, y: number, facingX: number, facingY: number): void {
+    const range = weapon.range;
+    const fullCircle = weapon.arc >= Math.PI * 2 - FLOAT_EPSILON;
+    const minCos = Math.cos(weapon.arc / 2);
+    this.events.onSlash?.(x, y, Math.atan2(facingY, facingX), weapon.arc, range, weapon.color);
+
+    const reach = range + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
+    const count = this.collisions.queryNeighbors(x, y, reach, this.candidates);
+    for (let i = 0; i < count; i++) {
+      const e = this.candidates[i];
+      if (!e?.active) continue;
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > range + e.type.radius) continue;
+      // Un ennemi collé au joueur (dist ≈ 0) est toujours touché.
+      if (!fullCircle && dist > 0 && (dx * facingX + dy * facingY) / dist < minCos) continue;
+      const dirX = dist > 0 ? dx / dist : facingX;
+      const dirY = dist > 0 ? dy / dist : facingY;
+      damageEnemy(weapon, e, weapon.damage, this.events, dirX, dirY);
+    }
+
+    // Lame d'onde : une vague part devant, comme un projectile perçant.
+    const wave = weapon.mutation?.wave;
+    if (wave) {
+      this.projectiles
+        .acquire()
+        ?.launch(
+          weapon,
+          wave.lifetime,
+          x,
+          y,
+          facingX,
+          facingY,
+          weapon.damage * wave.damageRatio,
+          wave.pierce,
+        );
     }
   }
 }

@@ -158,6 +158,8 @@ export class GameScene implements Scene, Build {
       onKill: (e: Enemy) => this.killEnemy(e),
       onExplosion: (x: number, y: number, r: number, color: string) =>
         this.effects.explosion(x, y, r, color),
+      onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) =>
+        this.effects.slash(x, y, angle, arc, r, color),
     };
     this.weaponSystem = new WeaponSystem(
       ENEMY_POOL_SIZE,
@@ -285,7 +287,15 @@ export class GameScene implements Scene, Build {
     this.applyContactDamage();
     if (this.report) return;
 
-    this.weaponSystem.update(dt, this.weapons, this.player.x, this.player.y, this.elapsed);
+    this.weaponSystem.update(
+      dt,
+      this.weapons,
+      this.player.x,
+      this.player.y,
+      this.elapsed,
+      this.player.facingX,
+      this.player.facingY,
+    );
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
     this.pendingLevelUps += this.progression.addXp(this.gems.update(dt, this.player));

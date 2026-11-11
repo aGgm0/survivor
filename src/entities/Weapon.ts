@@ -56,6 +56,11 @@ export class Weapon {
   range: number;
   /** Trait éclaté : rayon de l'explosion (px) ; 0 sans explosion */
   explosionRadius = 0;
+  /** Mêlée : ouverture du coup en radians (2π = tout autour) ; 0 pour les autres armes */
+  arc: number;
+  /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */
+  strikesLeft = 0;
+  nextStrikeAt = 0;
 
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
@@ -68,7 +73,14 @@ export class Weapon {
     this.orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
     this.projectileSpeed = def.kind === 'projectile' ? def.projectileSpeed : 0;
     this.projectileRadius = def.kind === 'projectile' ? def.projectileRadius : 0;
-    this.range = def.kind === 'projectile' ? def.projectileSpeed * def.projectileLifetime : 0;
+    // Portée : distance parcourue par le projectile, ou rayon du coup de mêlée.
+    this.range =
+      def.kind === 'projectile'
+        ? def.projectileSpeed * def.projectileLifetime
+        : def.kind === 'melee'
+          ? def.range
+          : 0;
+    this.arc = def.kind === 'melee' ? (def.arcDeg * Math.PI) / 180 : 0;
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */
@@ -100,6 +112,8 @@ export class Weapon {
     let radius = def.kind === 'aura' ? def.radius : 0;
     let cooldownPct = 0;
     let orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
+    let arcDeg = def.kind === 'melee' ? def.arcDeg : 0;
+    let meleeRange = def.kind === 'melee' ? def.range : 0;
     // Bonus des niveaux 2 à `level` (index 0 = niveau 2).
     for (let i = 0; i < this.level - 1; i++) {
       const bonus = def.levels[i];
@@ -109,6 +123,8 @@ export class Weapon {
       radius += bonus.radius ?? 0;
       cooldownPct += bonus.cooldownPct ?? 0;
       orbitDistance += bonus.orbitDistance ?? 0;
+      arcDeg += bonus.arcDeg ?? 0;
+      meleeRange += bonus.range ?? 0;
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;
@@ -135,6 +151,15 @@ export class Weapon {
       // Durée de vie fixe : plus rapide = porte plus loin (et vise plus loin).
       this.range = this.projectileSpeed * def.projectileLifetime;
       this.explosionRadius = (m?.explosion?.radius ?? 0) * size;
+    }
+    if (def.kind === 'melee') {
+      // La Taille allonge la portée du coup, pas son ouverture. Tourbillon : 360° imposés.
+      this.range = meleeRange * size;
+      this.arc = (Math.min(360, m?.arcDeg ?? arcDeg) * Math.PI) / 180;
+      // Lame d'onde : la vague est un projectile, avec Vélocité et Taille comme le Trait.
+      const wave = m?.wave;
+      this.projectileSpeed = wave ? wave.speed * velocity : 0;
+      this.projectileRadius = wave ? wave.radius * size : 0;
     }
     // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =
