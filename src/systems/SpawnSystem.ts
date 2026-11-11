@@ -3,7 +3,7 @@ import type { Pool } from '../core/Pool';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import type { EnemyType } from '../data/enemies';
 import { SPAWN } from '../data/spawn';
-import { BOSS_SPAWNS, BOSS_TYPE, waveAt, type WaveDef } from '../data/waves';
+import { BONUS_WAVES, BOSS_SPAWNS, BOSS_TYPE, waveAt, type WaveDef } from '../data/waves';
 import type { Enemy } from '../entities/Enemy';
 
 /**
@@ -19,6 +19,8 @@ export class SpawnSystem {
   private timer = 0;
   /** Prochain boss de BOSS_SPAWNS à faire apparaître */
   private nextBoss = 0;
+  /** Un compteur par rush de BONUS_WAVES (tableau typé créé une fois : pas d'allocation) */
+  private readonly bonusTimers = new Float64Array(BONUS_WAVES.length);
 
   constructor(
     private readonly enemies: Pool<Enemy>,
@@ -37,6 +39,8 @@ export class SpawnSystem {
       if (this.enemies.activeCount < SPAWN.maxEnemies) this.spawnFromWave(wave, playerX, playerY);
     }
 
+    this.updateBonusWaves(dt, now, wave, playerX, playerY);
+
     const boss = BOSS_SPAWNS[this.nextBoss];
     if (boss && now >= boss.time) {
       this.nextBoss++;
@@ -45,6 +49,29 @@ export class SpawnSystem {
     }
 
     this.recycleFarEnemies(playerX, playerY);
+  }
+
+  /** Rushs actifs : chacun a son propre compteur, comme la vague normale. */
+  private updateBonusWaves(
+    dt: number,
+    now: number,
+    wave: WaveDef,
+    playerX: number,
+    playerY: number,
+  ): void {
+    for (let i = 0; i < BONUS_WAVES.length; i++) {
+      const bonus = BONUS_WAVES[i];
+      if (!bonus || now < bonus.start || now >= bonus.end) continue;
+      const interval = 1 / bonus.perSecond;
+      let timer = (this.bonusTimers[i] ?? 0) + dt;
+      while (timer >= interval - FLOAT_EPSILON) {
+        timer -= interval;
+        if (this.enemies.activeCount < SPAWN.maxEnemies) {
+          this.spawnAt(bonus.type, wave.hpMult, wave.speedMult, playerX, playerY);
+        }
+      }
+      this.bonusTimers[i] = timer;
+    }
   }
 
   /** Debug (F4) : fait apparaître `count` ennemis d'un coup, tirés selon la vague en cours. */

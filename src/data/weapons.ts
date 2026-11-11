@@ -131,7 +131,7 @@ export const WEAPONS = {
     short: 'TA',
     description: "Tire sur l'ennemi le plus proche",
     damage: 10,
-    knockback: 160, // moyen, dans la direction du tir
+    knockback: 185, // moyen, dans la direction du tir (160 → 185 avec le nerf d'Impact)
     cooldown: 1,
     count: 1,
     spreadDeg: 12,
@@ -172,7 +172,7 @@ export const WEAPONS = {
     short: 'AA',
     description: 'Brûle les ennemis autour de toi',
     damage: 5,
-    knockback: 50, // faible : une brûlure pousse peu
+    knockback: 60, // faible : une brûlure pousse peu (50 → 60)
     cooldown: 0.5,
     radius: 70,
     color: '#ff7a3d',
@@ -212,7 +212,7 @@ export const WEAPONS = {
     short: 'OR',
     description: 'Des orbes tournent autour de toi',
     damage: 8,
-    knockback: 320, // fort : les orbes "frappent", leur rôle est d'écarter la horde
+    knockback: 370, // fort : les orbes "frappent", leur rôle est d'écarter la horde (320 → 370)
     count: 2,
     orbitDistance: 80,
     orbRadius: 13, // 10 → 13 : retour de jeu, "vraiment petit"

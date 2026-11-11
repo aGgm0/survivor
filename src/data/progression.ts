@@ -6,7 +6,8 @@ export const RUN_DURATION = 600;
 /**
  * Courbe d'XP : `base + niveau × perLevel`, plus un terme qui grandit au carré après `steepFrom`.
  * Historique : × 10 → × 7 ("l'XP monte trop lentement" au début), puis terme au carré
- * (build complet atteint avant le boss de 9:00, surtout avec 4 passifs max).
+ * (build complet atteint avant le boss de 9:00, surtout avec 4 passifs max) : 0,6, puis 0,75
+ * (build complet à 08:44 et XP en plus des vagues bonus).
  */
 export const XP_CURVE = {
   base: 5,
@@ -14,7 +15,7 @@ export const XP_CURVE = {
   /** Les niveaux jusqu'à celui-ci gardent l'ancienne courbe : le début de partie ne change pas */
   steepFrom: 10,
   /** XP en plus par (niveau − steepFrom)² */
-  steepFactor: 0.6,
+  steepFactor: 0.75,
 } as const;
 
 /** XP nécessaire pour passer du niveau `level` au suivant (entier). */

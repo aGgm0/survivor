@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
-import { BOSS_SPAWNS, WAVES, waveAt } from '../src/data/waves';
+import { BONUS_WAVES, BOSS_SPAWNS, WAVES, waveAt } from '../src/data/waves';
 
 const BOSS_TIMES = BOSS_SPAWNS.map((b) => b.time);
 import { Enemy } from '../src/entities/Enemy';
@@ -64,12 +64,38 @@ describe('SpawnSystem — vagues', () => {
     expect(late.every((e) => e.speedMult === waveAt(480).speedMult)).toBe(true);
   });
 
+  it('rush de 2:00 : des rapides en plus de la vague normale, puis plus rien après 2:30', () => {
+    const rush = BONUS_WAVES[0];
+    if (!rush) throw new Error();
+    const { pool, spawner } = setup(2000);
+    const during = runBetween(spawner, pool, rush.start, rush.start + 10);
+    const fast = during.filter((e) => e.type === rush.type).length;
+    // 10 s : ≈ 80 du rush + une partie des 25 de la vague normale
+    expect(fast).toBeGreaterThanOrEqual(rush.perSecond * 10);
+    expect(during.length).toBeGreaterThanOrEqual(
+      (rush.perSecond + waveAt(rush.start).perSecond) * 10 - 2,
+    );
+
+    const after = runBetween(spawner, pool, rush.end, rush.end + 10);
+    expect(after.length).toBeLessThanOrEqual(waveAt(rush.end).perSecond * 10 + 1);
+  });
+
+  it('les rushs prennent les PV de la vague en cours', () => {
+    const rush = BONUS_WAVES[1];
+    if (!rush) throw new Error();
+    const { pool, spawner } = setup(2000);
+    const spawned = runBetween(spawner, pool, rush.start, rush.start + 5);
+    const rushers = spawned.filter((e) => e.type === rush.type);
+    expect(rushers.length).toBeGreaterThan(0);
+    expect(rushers.every((e) => e.xpMult === waveAt(rush.start).hpMult)).toBe(true);
+  });
+
   it('chaque boss a ses propres multiplicateurs, pas ceux de la vague', () => {
     const { pool, spawner } = setup();
     spawner.update(1 / 60, BOSS_SPAWNS[0]?.time ?? 0, 0, 0);
     spawner.update(1 / 60, BOSS_SPAWNS[1]?.time ?? 0, 0, 0);
     const bosses = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
-    expect(bosses.map((b) => b.maxHp)).toEqual([2400, 6400]);
+    expect(bosses.map((b) => b.maxHp)).toEqual([3000, 9000]);
     expect(bosses.map((b) => b.speedMult)).toEqual([1, 1.2]);
   });
 

@@ -11,6 +11,8 @@ export interface EnemyType {
   /** px, taille (affichage et hitbox) */
   readonly radius: number;
   readonly color: string;
+  /** Vrai : aucune arme ne le fait reculer (boss) */
+  readonly knockbackImmune?: boolean;
 }
 
 export const ENEMY_TYPES = {
@@ -50,6 +52,7 @@ export const ENEMY_TYPES = {
     xp: 50,
     radius: 48,
     color: '#8e2de2',
+    knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
   },
 } as const satisfies Record<string, EnemyType>;
 

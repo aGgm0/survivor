@@ -38,10 +38,10 @@ describe('XpSystem', () => {
     expect(new XpSystem().xpForNext).toBe(12);
   });
 
-  it('se durcit après le niveau 10 : + 0,6 × (niveau − 10)²', () => {
-    expect(xpToNext(11)).toBe(83); // 82 + 0,6 arrondi
-    expect(xpToNext(20)).toBe(205);
-    expect(xpToNext(30)).toBe(455);
+  it('se durcit après le niveau 10 : + 0,75 × (niveau − 10)²', () => {
+    expect(xpToNext(11)).toBe(83); // 82 + 0,75 arrondi
+    expect(xpToNext(20)).toBe(220);
+    expect(xpToNext(30)).toBe(515);
   });
 
   it('monte de niveau et garde le surplus', () => {

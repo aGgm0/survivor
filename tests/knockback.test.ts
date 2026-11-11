@@ -31,7 +31,14 @@ describe('applyKnockback', () => {
     expect(e.vy).toBeCloseTo(0);
   });
 
-  it('plus l’ennemi est lourd, moins il recule ; le boss recule à peine', () => {
+  it('le boss ne recule jamais', () => {
+    const e = enemyOf(ENEMY_TYPES.boss);
+    applyKnockback(e, 10_000, 1, 0);
+    expect(e.vx).toBe(0);
+    expect(e.vy).toBe(0);
+  });
+
+  it('plus l’ennemi est lourd, moins il recule', () => {
     const recoil = (type: EnemyType) => {
       const e = enemyOf(type);
       applyKnockback(e, 100, 1, 0);
@@ -40,7 +47,6 @@ describe('applyKnockback', () => {
     expect(recoil(ENEMY_TYPES.fast)).toBeGreaterThan(recoil(ENEMY_TYPES.basic));
     expect(recoil(ENEMY_TYPES.fast)).toBeLessThanOrEqual(100 * KNOCKBACK.maxFactor); // plafonné
     expect(recoil(ENEMY_TYPES.tank)).toBeLessThan(recoil(ENEMY_TYPES.basic) / 2);
-    expect(recoil(ENEMY_TYPES.boss)).toBeLessThan(recoil(ENEMY_TYPES.basic) / 10);
   });
 });
 

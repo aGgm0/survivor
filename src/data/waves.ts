@@ -83,6 +83,28 @@ export const WAVES: readonly WaveDef[] = [
   },
 ];
 
+/**
+ * Rushs : pendant [start, end[, un seul type d'ennemi apparaît EN PLUS de la vague normale.
+ * Ils prennent les PV et la vitesse de la vague en cours (et respectent le plafond d'ennemis).
+ */
+export interface BonusWaveDef {
+  /** s */
+  readonly start: number;
+  /** s (exclu) */
+  readonly end: number;
+  readonly type: EnemyType;
+  /** ennemis en plus par seconde */
+  readonly perSecond: number;
+}
+
+/** Demandé : des déferlantes courtes de petits ennemis, pour casser le rythme. */
+export const BONUS_WAVES: readonly BonusWaveDef[] = [
+  // 2:00 – 2:30 : nuée de rapides (≈ 240), juste quand les tanks arrivent
+  { start: 120, end: 150, type: fast, perSecond: 8 },
+  // 6:00 – 6:30 : marée de basiques (≈ 360), avec le 1er palier de vitesse
+  { start: 360, end: 390, type: basic, perSecond: 12 },
+];
+
 export interface BossSpawn {
   /** s : instant d'apparition */
   readonly time: number;
@@ -94,12 +116,12 @@ export interface BossSpawn {
 /**
  * Boss de la partie, triés par instant. Retour de jeu : à 1000 PV ils mouraient trop vite face
  * à des armes mutées → 3000 PV à 5:00, 8000 PV (et +20 % de vitesse) à 9:00. Puis −20 % sur
- * les deux (2400 et 6400 PV) : avec 4 passifs max et la courbe d'XP plus dure, le build est
- * moins fort.
+ * les deux (2400 et 6400 PV) avec 4 passifs max. Enfin 3000 et 9000 PV : depuis que chaque orbe
+ * frappe (délai par orbe), le boss fondait.
  */
 export const BOSS_SPAWNS: readonly BossSpawn[] = [
-  { time: 300, hpMult: 2.4, speedMult: 1 },
-  { time: 540, hpMult: 6.4, speedMult: 1.2 },
+  { time: 300, hpMult: 3, speedMult: 1 },
+  { time: 540, hpMult: 9, speedMult: 1.2 },
 ];
 export const BOSS_TYPE = ENEMY_TYPES.boss;
 

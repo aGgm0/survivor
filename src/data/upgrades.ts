@@ -70,10 +70,11 @@ export const PASSIVES: readonly PassiveDef[] = [
     id: 'impact',
     name: 'Impact',
     short: 'Im',
-    description: '+25 % recul (toutes armes)',
+    description: '+8 % recul (toutes armes)',
     maxLevel: 5,
     stat: 'knockbackPct',
-    amount: 0.25,
+    // 25 % → 8 % : +125 % au niveau 5 repoussait la horde hors de portée. Recul de base +15 %.
+    amount: 0.08,
   },
 ];
 
