@@ -312,6 +312,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Emplacements limités (4 armes, 4 passifs) + XP requise revue à la hausse (le build complet arrivait avant le boss de 9:00) + « build complet à mm:ss » sur l'écran de fin
   - [ ] À régler en jouant : `steepFactor` (0,75), objectif build complet vers 9:00-9:30
 - [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
+- [ ] **Profil / statistiques** (idée) : nombre de parties, victoires, temps total survécu, meilleur temps, kills totaux, arme la plus jouée avec ses dégâts et kills cumulés... Sauvegardé en localStorage (même principe que les Options). À faire avant les persos : leurs défis en ont besoin (5 000 kills cumulés avec l'Aura) <!-- TODO: liste exacte des stats, où afficher le profil (bouton du menu ?) -->
 - [ ] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9)
 - [ ] Mobilier cassable : or et nourriture (+20 PV) ; l'or achète des bonus (§ 5.9, design à préciser)
 - [ ] Enchantements (idée) : passifs jusqu'au niveau 12 ; à partir du niveau 6, chaque niveau de passif « enchante » une arme au choix, avec une variante du bonus propre à cette arme <!-- TODO: effets par couple passif × arme, coût en XP (48 niveaux de passifs au lieu de 20 → runs plus longues) -->
@@ -326,7 +327,8 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] Sons et musique + option volume
 
 ### Phase 7 — Déploiement
-- [ ] Déploiement en ligne
+- [ ] Déploiement en ligne (itch.io, GitHub Pages...)
+- [ ] `[LATER]` Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
 ---
 
