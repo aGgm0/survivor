@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
-import { ENEMY_TYPES } from '../src/data/enemies';
+import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
 import { BOSS_ABILITIES, BOSS_SPAWNS, BOSS_TYPE, ELITE_SPAWNS, waveAt } from '../src/data/waves';
 import { Enemy } from '../src/entities/Enemy';
 import { BossAbilitySystem } from '../src/systems/BossAbilitySystem';
 import { CollisionSystem } from '../src/systems/CollisionSystem';
 import { MovementSystem } from '../src/systems/MovementSystem';
 import { SpawnSystem, armBoss } from '../src/systems/SpawnSystem';
+import { applyKnockback } from '../src/systems/damage';
 
 const CHARGE = BOSS_ABILITIES.charge;
 const SUMMON = BOSS_ABILITIES.summon;
@@ -40,14 +41,24 @@ describe('mini-boss (élites)', () => {
     expect(red?.maxHp).toBeCloseTo(1150 * waveAt(420).hpMult);
   });
 
-  it('plus forts que leur version normale, et ne reculent pas', () => {
+  it('plus forts que leur version normale', () => {
     const { fast, fastElite, basic, basicElite } = ENEMY_TYPES;
     expect(fastElite.hp).toBe(fast.hp * 60);
     expect(basicElite.hp).toBe(basic.hp * 50);
     expect(fastElite.contactDamage).toBe(fast.contactDamage * 4);
     expect(basicElite.contactDamage).toBe(basic.contactDamage * 4);
     expect(fastElite.radius).toBe(fast.radius * 1.8);
-    expect(fastElite.knockbackImmune && basicElite.knockbackImmune).toBe(true);
+  });
+
+  it('reculent 50 % moins que leur version normale', () => {
+    const recoil = (type: EnemyType) => {
+      const e = new Enemy(0);
+      e.spawn(type, 0, 0);
+      applyKnockback(e, 100, 1, 0);
+      return e.vx;
+    };
+    expect(recoil(ENEMY_TYPES.fastElite)).toBeCloseTo(recoil(ENEMY_TYPES.fast) * 0.5);
+    expect(recoil(ENEMY_TYPES.basicElite)).toBeCloseTo(recoil(ENEMY_TYPES.basic) * 0.5);
   });
 });
 

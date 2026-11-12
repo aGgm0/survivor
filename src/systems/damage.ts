@@ -63,7 +63,8 @@ const REFERENCE_MASS = KNOCKBACK.referenceRadius * KNOCKBACK.referenceRadius;
  */
 export function applyKnockback(enemy: Enemy, force: number, dirX: number, dirY: number): void {
   if (force <= 0 || enemy.type.knockbackImmune) return;
-  const factor = Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass);
+  const factor =
+    enemy.type.knockbackFactor ?? Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass);
   enemy.vx += dirX * force * factor;
   enemy.vy += dirY * force * factor;
 }

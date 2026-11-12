@@ -22,6 +22,11 @@ export interface EnemyType {
   readonly prop?: boolean;
   /** Mini-boss (élite) : anneau doré, barre de PV, +or à sa mort */
   readonly elite?: boolean;
+  /**
+   * Recul imposé (× la force de l'arme), à la place du calcul par la masse. Sert aux élites :
+   * plus gros, ils reculeraient beaucoup moins qu'on ne le veut. Absent = calcul par la masse.
+   */
+  readonly knockbackFactor?: number;
 }
 
 export const ENEMY_TYPES = {
@@ -73,7 +78,8 @@ export const ENEMY_TYPES = {
     xp: 20,
     radius: 18,
     color: '#f0ad4e',
-    knockbackImmune: true,
+    // 50 % du recul d'un rapide normal (1,5, le plafond des ennemis légers)
+    knockbackFactor: 0.75,
     elite: true,
   },
   /** Mini-boss de 7:00 : un basique très boosté (PV ×50, dégâts ×4, taille ×1,8, vitesse ×1,1). */
@@ -85,7 +91,8 @@ export const ENEMY_TYPES = {
     xp: 20,
     radius: 25,
     color: '#d9534f',
-    knockbackImmune: true,
+    // 50 % du recul d'un basique normal (1, l'ennemi de référence)
+    knockbackFactor: 0.5,
     elite: true,
   },
   /** Mobilier cassable (voir data/furniture.ts) : apparaît hors écran, ne bouge pas. */
