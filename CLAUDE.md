@@ -186,8 +186,8 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 | Basique élite (rouge) | 7:00 | 1150 (×50) × vague | 97 | 20 (×4) | 25 |
 
 **Capacités des boss** (`BOSS_ABILITIES`), toujours annoncées pour pouvoir les esquiver :
-- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s avec une ligne rouge sur la trajectoire, puis ligne droite à 4× la vitesse pendant 0,5 s.
-- **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 2 basiques élites autour du boss.
+- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s avec une ligne rouge sur la trajectoire, puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00).
+- **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur.
@@ -462,6 +462,7 @@ Format : date — décision — raison.
 | 2026-11-11 | Mobilier = type d'ennemi `crate` avec `prop: true` (immobile, inoffensif, immunisé au recul, ignoré par la visée, hors kills et damage meter) ; cassé aussi en marchant dessus ; pièces et nourriture dans un `PickupSystem` en pool (même aimant que les gemmes) ; boss tué = +25 or ; or ajouté au profil seulement pour une partie terminée et non test | Réutiliser le type ennemi : toutes les armes le touchent sans code en plus. Marcher dessus : sinon le Trait seul ne pouvait pas le casser. Boutique (prix et rangs réduits validés) = étape 2 |
 | 2026-11-11 | Boutique : rangs dans `profile.shop` (bornés au max, bonus inconnus ignorés à la lecture) ; achat = fonction pure `buyShopItem` ; bonus appliqués au début de la partie (`applyShopBonuses`, % de la valeur de base) puis PV pleins ; Sagesse multiplie l'XP des gemmes ; le menu de test les remet après un recalcul des passifs | Design validé (rangs réduits) ; les bonus ne prennent pas d'emplacement de passif |
 | 2026-11-11 | Mini-boss = types d'ennemis `fastElite` / `basicElite` (flag `elite`) à 3:00 et 7:00 ; capacités de boss dans `BossAbilitySystem` (état et dates sur l'ennemi, mouvement de charge dans MovementSystem) ; direction de la charge fixée au début de l'annonce ; invocation = 5 basiques + 2 basiques élites ; boss de 5:00 sans invocation | Demandé ; « 5 basiques et 2 élites » à la place de 8 basiques. Annonces obligatoires : une capacité qu'on ne peut pas voir venir n'est pas esquivable |
+| 2026-11-12 | Charge : vitesse ×4 → ×5, durée 0,5 → 0,7 s (distance ×1,75) ; invocation : 2 → 1 basique élite | Retour de jeu |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

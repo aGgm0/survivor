@@ -204,9 +204,9 @@ export const BOSS_ABILITIES = {
     /** s d'arrêt avec la ligne rouge, avant de foncer */
     windup: 0.8,
     /** s de charge, en ligne droite (sans corriger sa course) */
-    duration: 0.5,
+    duration: 0.7, // 0,5 → 0,7 : charge plus longue (retour de jeu)
     /** × la vitesse normale du boss pendant la charge */
-    speedMult: 4,
+    speedMult: 5, // 4 → 5
     /** s avant la 1re charge, après l'apparition */
     firstDelay: 3,
   },
@@ -217,7 +217,7 @@ export const BOSS_ABILITIES = {
     cast: 1,
     /** sbires par invocation */
     basics: 5,
-    elites: 2,
+    elites: 1, // 2 → 1 (retour de jeu)
     /** px : rayon du cercle où ils apparaissent */
     radius: 80,
     firstDelay: 5,
