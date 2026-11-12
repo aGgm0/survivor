@@ -57,7 +57,12 @@ function fillPoly(grid, points, color) {
 function drawLine(grid, x0, y0, x1, y1, color) {
   const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
   for (let i = 0; i <= steps; i++) {
-    setPixel(grid, Math.round(x0 + ((x1 - x0) * i) / steps), Math.round(y0 + ((y1 - y0) * i) / steps), color);
+    setPixel(
+      grid,
+      Math.round(x0 + ((x1 - x0) * i) / steps),
+      Math.round(y0 + ((y1 - y0) * i) / steps),
+      color,
+    );
   }
 }
 
@@ -94,7 +99,10 @@ function shape(grid, tones, parts, { rim = 1, edge = true } = {}) {
 }
 
 /** Raccourcis pour décrire les parties d'une forme. */
-const poly = (...points) => (mask) => fillPoly(mask, points, 1);
+const poly =
+  (...points) =>
+  (mask) =>
+    fillPoly(mask, points, 1);
 const oval = (cx, cy, rx, ry) => (mask) => fillEllipse(mask, cx, cy, rx, ry, 1);
 
 /** Ajoute 1 pixel de marge et entoure la silhouette d'un contour sombre. */
@@ -105,11 +113,13 @@ function withOutline(grid) {
   for (let y = 0; y < grid.length; y++) {
     for (let x = 0; x < grid[0].length; x++) out[y + 1][x + 1] = grid[y][x];
   }
-  const filled = (x, y) => y >= 1 && y < height - 1 && x >= 1 && x < width - 1 && grid[y - 1][x - 1] !== null;
+  const filled = (x, y) =>
+    y >= 1 && y < height - 1 && x >= 1 && x < width - 1 && grid[y - 1][x - 1] !== null;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (out[y][x] !== null) continue;
-      if (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1)) out[y][x] = OUTLINE;
+      if (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1))
+        out[y][x] = OUTLINE;
     }
   }
   return out;
@@ -197,7 +207,6 @@ function gridToImage(grid) {
 
 // ---------------------------------------------------------------- sprites
 
-
 const BONE = ['#8f8068', '#d8ccb0', '#f6eedb'];
 const BONE_FAR = ['#6e6250', '#a39274', '#cdbfa0'];
 
@@ -220,7 +229,11 @@ function buildPlayer() {
   setPixel(g, 27, 9, gold[1]);
 
   // Bottes, robe, ceinture.
-  shape(g, ['#120e1c', '#241c33', '#3a2e52'], [poly([13, 38], [17, 38], [18, 41], [13, 41]), poly([19, 38], [23, 38], [25, 41], [19, 41])]);
+  shape(
+    g,
+    ['#120e1c', '#241c33', '#3a2e52'],
+    [poly([13, 38], [17, 38], [18, 41], [13, 41]), poly([19, 38], [23, 38], [25, 41], [19, 41])],
+  );
   shape(g, robe, [poly([12, 14], [21, 14], [23, 26], [25, 39], [10, 39], [11, 26])]);
   drawLine(g, 14, 28, 13, 38, robe[0]);
   drawLine(g, 18, 28, 18, 38, robe[0]);
@@ -254,7 +267,10 @@ function buildBasic() {
   const wing = ['#1a060c', '#3a0e17', '#5e1620'];
 
   // Queue à pointe, aile, corne et membres du fond.
-  shape(g, far, [poly([10, 21], [5, 23], [2, 19], [1, 12], [3, 12], [4, 18], [6, 20], [10, 19]), poly([0, 13], [2, 8], [5, 13])]);
+  shape(g, far, [
+    poly([10, 21], [5, 23], [2, 19], [1, 12], [3, 12], [4, 18], [6, 20], [10, 19]),
+    poly([0, 13], [2, 8], [5, 13]),
+  ]);
   shape(g, wing, [poly([14, 15], [5, 2], [3, 11], [6, 10], [6, 16], [9, 14], [11, 19])]);
   drawLine(g, 13, 15, 6, 5, wing[0]);
   drawLine(g, 12, 15, 7, 13, wing[0]);
@@ -306,10 +322,34 @@ function buildBoss() {
   const glow = ['#8e2de2', '#d86bff', '#fbe6ff'];
 
   // Aile du fond, puis aile proche avec ses nervures.
-  shape(g, wingFar, [poly([52, 40], [70, 14], [92, 5], [87, 22], [93, 28], [83, 34], [85, 45], [71, 42], [62, 52])], opt);
+  shape(
+    g,
+    wingFar,
+    [poly([52, 40], [70, 14], [92, 5], [87, 22], [93, 28], [83, 34], [85, 45], [71, 42], [62, 52])],
+    opt,
+  );
   drawLine(g, 56, 40, 90, 7, wingFar[0]);
   drawLine(g, 58, 42, 91, 28, wingFar[0]);
-  shape(g, wing, [poly([42, 40], [26, 16], [7, 3], [3, 10], [2, 31], [10, 26], [10, 45], [18, 38], [20, 55], [28, 46], [36, 58])], opt);
+  shape(
+    g,
+    wing,
+    [
+      poly(
+        [42, 40],
+        [26, 16],
+        [7, 3],
+        [3, 10],
+        [2, 31],
+        [10, 26],
+        [10, 45],
+        [18, 38],
+        [20, 55],
+        [28, 46],
+        [36, 58],
+      ),
+    ],
+    opt,
+  );
   drawLine(g, 38, 40, 8, 6, wing[0]);
   drawLine(g, 37, 41, 4, 29, wing[0]);
   drawLine(g, 37, 43, 11, 43, wing[0]);
@@ -324,12 +364,44 @@ function buildBoss() {
   drawLine(g, 88, 64, 93, 67, BONE_FAR[1]);
 
   // Robe en lambeaux, plis et runes.
-  shape(g, robe, [poly([30, 50], [68, 50], [73, 70], [79, 96], [71, 90], [66, 99], [59, 91], [52, 99], [46, 91], [40, 99], [34, 90], [26, 96], [28, 70])], opt);
-  for (const [x0, x1] of [[38, 35], [46, 45], [54, 54], [62, 64], [68, 72]]) {
+  shape(
+    g,
+    robe,
+    [
+      poly(
+        [30, 50],
+        [68, 50],
+        [73, 70],
+        [79, 96],
+        [71, 90],
+        [66, 99],
+        [59, 91],
+        [52, 99],
+        [46, 91],
+        [40, 99],
+        [34, 90],
+        [26, 96],
+        [28, 70],
+      ),
+    ],
+    opt,
+  );
+  for (const [x0, x1] of [
+    [38, 35],
+    [46, 45],
+    [54, 54],
+    [62, 64],
+    [68, 72],
+  ]) {
     drawLine(g, x0, 66, x1, 90, robe[0]);
     drawLine(g, x0 + 2, 68, x1 + 2, 88, robe[2]);
   }
-  for (const [x, y] of [[42, 78], [58, 82], [50, 72], [66, 76]]) {
+  for (const [x, y] of [
+    [42, 78],
+    [58, 82],
+    [50, 72],
+    [66, 76],
+  ]) {
     setPixel(g, x, y, glow[1]);
     setPixel(g, x, y + 1, glow[0]);
   }
@@ -392,6 +464,81 @@ function buildBoss() {
   }
   return g;
 }
+
+// ---------------------------------------------------------------- effets (atlas fx)
+// Ce que le pack 0x72 n'a pas. Le projectile et l'orbe sont en gris : le jeu les teinte à la
+// couleur de l'arme (filtre « multiply »), un seul sprite sert donc à toutes les variantes.
+
+/** Gemme d'XP taillée, vue de face : `width` px de large, facettes claires en haut à gauche. */
+function buildGem(width, tones) {
+  const height = Math.round(width * 1.3);
+  const g = createGrid(width, height);
+  const cx = width / 2;
+  const girdle = Math.round(height * 0.38);
+  shape(g, tones, [poly([cx, 0], [width, girdle], [cx, height], [0, girdle])], { edge: false });
+  drawLine(g, 0, girdle, width - 1, girdle, tones[0]); // arête de la taille
+  drawLine(g, Math.floor(cx), 1, Math.floor(cx), height - 2, tones[2]); // arête centrale
+  setPixel(g, Math.floor(cx) - 1, 2, '#ffffff'); // reflet
+  return withOutline(g);
+}
+
+/** Trait arcanique, tourné vers la droite : tête ronde et traînée qui s'effile. Deux images. */
+function buildBolt(frame) {
+  const g = createGrid(16, 8);
+  const tones = ['#6f6f6f', '#bdbdbd', '#ffffff'];
+  const tail = frame === 0 ? 0 : 2;
+  shape(g, ['#3a3a3a', '#6f6f6f', '#9a9a9a'], [poly([tail, 4], [10, 2], [10, 6])], { edge: false });
+  shape(g, tones, [oval(12, 4, 3.5, 3.5)], { edge: false });
+  setPixel(g, 12, 3, '#ffffff');
+  setPixel(g, 13, 3, '#ffffff');
+  setPixel(g, 4 + frame * 2, frame === 0 ? 3 : 5, '#bdbdbd'); // étincelle de la traînée
+  return g;
+}
+
+/** Orbe runique : sphère grise, rune claire qui pulse (deux images). */
+function buildOrb(frame) {
+  const g = createGrid(15, 15);
+  shape(g, ['#4a4a4a', '#9a9a9a', '#e0e0e0'], [oval(7.5, 7.5, 7, 7)], { rim: 2, edge: false });
+  const rune = frame === 0 ? '#ffffff' : '#d0d0d0';
+  drawLine(g, 7, 3, 7, 11, rune);
+  drawLine(g, 7, 3, 10, 6, rune);
+  drawLine(g, 7, 7, 4, 10, rune);
+  setPixel(g, 4, 4, '#ffffff');
+  return g;
+}
+
+/**
+ * Range des sprites côte à côte dans une seule image (1 px d'écart) et écrit la liste au même
+ * format que celle du pack 0x72 (`nom x y largeur hauteur`) : le jeu les lit de la même façon.
+ */
+function writeAtlas(dir, name, entries) {
+  const gap = 1;
+  const width = entries.reduce((w, [, grid]) => w + grid[0].length + gap, 0);
+  const height = Math.max(...entries.map(([, grid]) => grid.length));
+  const image = createImage(width, height);
+  const lines = [];
+  let x = 0;
+  for (const [id, grid] of entries) {
+    blit(image, grid, x + grid[0].length / 2, grid.length / 2, 1);
+    lines.push(`${id} ${x} 0 ${grid[0].length} ${grid.length}`);
+    x += grid[0].length + gap;
+  }
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${name}.png`), encodePng(image));
+  writeFileSync(join(dir, `${name}_list`), `${lines.join('\n')}\n`);
+  console.log(`${name}.png : ${entries.length} sprites, ${width} × ${height} px`);
+}
+
+writeAtlas(join(OUT_DIR, 'fx'), 'fx', [
+  // Largeurs = diamètre affiché / 2 (sprites dessinés ×2) : 14, 18 et 24 px dans le jeu.
+  ['gem_1', buildGem(7, ['#1f6f9a', '#4fc3f7', '#c8f0ff'])],
+  ['gem_2', buildGem(9, ['#5e3d9e', '#b388ff', '#e6d9ff'])],
+  ['gem_3', buildGem(12, ['#9a7414', '#ffd54f', '#fff3c4'])],
+  ['bolt_anim_f0', buildBolt(0)],
+  ['bolt_anim_f1', buildBolt(1)],
+  ['orb_anim_f0', buildOrb(0)],
+  ['orb_anim_f1', buildOrb(1)],
+]);
 
 // ---------------------------------------------------------------- sortie
 

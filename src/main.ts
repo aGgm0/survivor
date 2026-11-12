@@ -20,7 +20,8 @@ import { ShopOverlay } from './ui/ShopOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
 import { SpriteAtlas } from './core/SpriteAtlas';
-import { ATLAS_URLS } from './data/sprites';
+import { ATLAS_URLS, EFFECT_DIRS, FX_ATLAS_URLS, type EffectName } from './data/sprites';
+import { EffectSheet } from './core/EffectSheet';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -124,6 +125,26 @@ SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
   .catch((error: unknown) => {
     console.warn('Sprites non chargés, formes simples à la place :', error);
   });
+let fx: SpriteAtlas | null = null;
+SpriteAtlas.load(FX_ATLAS_URLS.image, FX_ATLAS_URLS.list)
+  .then((atlas) => {
+    fx = atlas;
+  })
+  .catch((error: unknown) => {
+    console.warn('Effets non chargés, formes simples à la place :', error);
+  });
+let effects: Record<EffectName, EffectSheet> | null = null;
+const effectNames = Object.keys(EFFECT_DIRS) as EffectName[];
+Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
+  .then((sheets) => {
+    effects = Object.fromEntries(effectNames.map((name, i) => [name, sheets[i]])) as Record<
+      EffectName,
+      EffectSheet
+    >;
+  })
+  .catch((error: unknown) => {
+    console.warn('Effets PVFX non chargés, formes simples à la place :', error);
+  });
 
 function startRun(chosen: CharacterDef = character): void {
   character = chosen;
@@ -144,6 +165,8 @@ function startRun(chosen: CharacterDef = character): void {
       devPanel,
       unlocksFor: (report) => newUnlocks(profile, report).map((c) => c.name),
       sprites,
+      fx,
+      effects,
     },
     seed,
     { startWeapon: character.weapon, shopRanks: profile.shop },

@@ -156,6 +156,39 @@ export class SpriteAtlas {
   }
 
   /**
+   * Dessine `frame` agrandi `scale` fois et tourné de `angle` (radians) autour du point
+   * (`pivotX`, milieu de la hauteur) du sprite, posé en (`x`, `y`). Pour les projectiles : le
+   * sprite regarde vers la droite, la rotation l'oriente dans le sens du tir.
+   */
+  drawRotated(
+    ctx: CanvasRenderingContext2D,
+    frame: SpriteFrame,
+    x: number,
+    y: number,
+    scale: number,
+    angle: number,
+    pivotX: number,
+    tint?: SpriteTint,
+  ): void {
+    const sheet = tint ? this.tinted(tint) : this.base;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.drawImage(
+      sheet.normal,
+      frame.x,
+      frame.y,
+      frame.w,
+      frame.h,
+      -pivotX * scale,
+      (-frame.h * scale) / 2,
+      frame.w * scale,
+      frame.h * scale,
+    );
+    ctx.restore();
+  }
+
+  /**
    * Assemble une grille de sprites fixes (`grid[ligne][colonne]` = nom) sur une image, agrandie
    * `scale` fois, puis assombrie de `darken` (0 à 1). Sert à préparer une fois un motif de sol.
    */

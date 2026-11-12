@@ -2,6 +2,8 @@ import type { Camera } from '../core/Camera';
 import { Pool } from '../core/Pool';
 import { GEM_MAGNET, GEM_POOL_SIZE, GEM_TIERS, RELOCATED_GEM_XP_FACTOR } from '../data/xp';
 import { Gem } from '../entities/Gem';
+import type { SpriteAtlas } from '../core/SpriteAtlas';
+import { GEM_SCALE, GEM_SPRITES } from '../data/sprites';
 
 /** Ce dont les gemmes ont besoin côté joueur. */
 export interface Collector {
@@ -75,8 +77,17 @@ export class GemSystem {
     }
   }
 
-  /** Gemmes en losange, groupées par palier (un chemin + un fill par couleur). */
-  render(ctx: CanvasRenderingContext2D, alpha: number, camera: Camera): void {
+  /**
+   * Gemmes : sprite de leur palier si l'atlas des effets est chargé, sinon losanges groupés par
+   * palier (un chemin + un fill par couleur).
+   */
+  render(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    camera: Camera,
+    fx?: SpriteAtlas | null,
+  ): void {
+    if (fx && this.renderSprites(ctx, alpha, camera, fx)) return;
     const items = this.gems.items;
     for (let t = 0; t < GEM_TIERS.length; t++) {
       const tier = GEM_TIERS[t];
@@ -101,6 +112,32 @@ export class GemSystem {
       ctx.fillStyle = tier.color;
       ctx.fill();
     }
+  }
+
+  /** Renvoie faux si un sprite de gemme manque (on retombe alors sur les losanges). */
+  private renderSprites(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    camera: Camera,
+    fx: SpriteAtlas,
+  ): boolean {
+    const items = this.gems.items;
+    for (let i = 0; i < items.length; i++) {
+      const g = items[i];
+      if (!g?.active) continue;
+      // Palier = le plus haut dont la valeur minimale est atteinte.
+      let t = 0;
+      while (t + 1 < GEM_TIERS.length && g.value >= (GEM_TIERS[t + 1]?.minValue ?? Infinity)) t++;
+      const frame = fx.animation(GEM_SPRITES[t] ?? GEM_SPRITES[0])[0];
+      if (!frame) return false;
+      const x = g.renderX(alpha);
+      const y = g.renderY(alpha);
+      const half = (frame.h * GEM_SCALE) / 2;
+      if (x + half < camera.left || x - half > camera.right) continue;
+      if (y + half < camera.top || y - half > camera.bottom) continue;
+      fx.draw(ctx, frame, x, y + half, GEM_SCALE, false);
+    }
+    return true;
   }
 
   /** Ne sert que quand la réserve est pleine : parcourir les 1000 gemmes est alors acceptable. */

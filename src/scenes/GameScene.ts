@@ -4,8 +4,18 @@ import type { Input } from '../core/Input';
 import { lerp, Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import type { Scene } from '../core/Scene';
-import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
 import {
+  frameAt,
+  type SpriteAnimation,
+  type SpriteAtlas,
+  type SpriteTint,
+} from '../core/SpriteAtlas';
+import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
+import {
+  WAVE_FX,
+  type EffectName,
+  BOLT_SPRITE,
+  ORB_SPRITE,
   ENEMY_ANIM_OFFSET,
   ENEMY_IDLE_SPEED,
   FLOOR,
@@ -89,6 +99,20 @@ const VISUAL_SEED_SALT = 0x9e3779b9;
 /** Idem pour le tirage des dalles du sol */
 const FLOOR_SEED_SALT = 0x85ebca6b;
 
+/**
+ * Teinte « multiply » à la couleur d'une arme. Une seule par couleur, créée la première fois puis
+ * gardée : c'est l'objet qui sert de clé à la copie teintée de l'atlas.
+ */
+const WEAPON_TINTS = new Map<string, SpriteTint>();
+function weaponTint(color: string): SpriteTint {
+  let tint = WEAPON_TINTS.get(color);
+  if (!tint) {
+    tint = { color, mode: 'multiply' };
+    WEAPON_TINTS.set(color, tint);
+  }
+  return tint;
+}
+
 /** Image du sol : FLOOR.size × FLOOR.size dalles tirées selon leur poids. */
 function buildFloor(sprites: SpriteAtlas, rng: Rng): HTMLCanvasElement {
   const total = FLOOR.tiles.reduce((sum, t) => sum + t.weight, 0);
@@ -161,6 +185,10 @@ export interface GameSceneDeps {
   unlocksFor: (report: RunReport) => readonly string[];
   /** Atlas des sprites. Absent (pas encore chargé, tests) : on dessine des formes simples. */
   sprites?: SpriteAtlas | null;
+  /** Atlas des effets (gemmes, projectiles, orbes). Absent : formes simples. */
+  fx?: SpriteAtlas | null;
+  /** Effets animés du pack PVFX (explosion, épée, auras, vague). Absents : formes simples. */
+  effects?: Readonly<Record<EffectName, EffectSheet>> | null;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -191,7 +219,7 @@ export class GameScene implements Scene, Build {
   readonly pickups = new PickupSystem();
   /** Or gagné pendant cette partie (ajouté au total du profil à la fin) */
   gold = 0;
-  readonly effects = new EffectsSystem();
+  readonly effects: EffectsSystem;
   readonly progression = new XpSystem();
   /** Niveau de chaque passif possédé (absent = 0) */
   readonly passiveLevels = new Map<string, number>();
@@ -241,6 +269,7 @@ export class GameScene implements Scene, Build {
       shopRanks?: Readonly<Record<string, number>>;
     } = {},
   ) {
+    this.effects = new EffectsSystem(deps.effects ?? null);
     // Bonus de boutique : appliqués avant tout, sans prendre d'emplacement de passif.
     this.shopRanks = options.shopRanks ?? {};
     this.xpGainMult = applyShopBonuses(this.player, this.shopRanks);
@@ -644,7 +673,7 @@ export class GameScene implements Scene, Build {
     this.camera.begin(ctx);
     this.renderGrid(ctx);
     // Les gemmes sont au sol : dessinées sous les ennemis.
-    this.gems.render(ctx, alpha, this.camera);
+    this.gems.render(ctx, alpha, this.camera, this.deps.fx);
     this.pickups.render(ctx, alpha, this.camera, this.deps.sprites, this.elapsed);
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
@@ -773,6 +802,20 @@ export class GameScene implements Scene, Build {
     for (const w of this.weapons) {
       if (w.def.kind !== 'orbit') continue;
       const angle = lerp(w.prevAngle, w.angle, alpha);
+      const fx = this.deps.fx;
+      const frame =
+        fx && frameAt(fx.animation(ORB_SPRITE.anim), this.elapsed, ORB_SPRITE.frameTime);
+      if (fx && frame) {
+        // Sprite à la taille exacte de la hitbox (niveaux, mutation, passif Taille compris).
+        const scale = (w.orbRadius * 2) / ORB_SPRITE.diameter;
+        const tint = weaponTint(w.color);
+        for (let o = 0; o < w.count; o++) {
+          const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
+          const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
+          fx.draw(ctx, frame, x, y + (frame.h * scale) / 2, scale, false, tint);
+        }
+        continue;
+      }
       ctx.beginPath();
       for (let o = 0; o < w.count; o++) {
         const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
@@ -791,7 +834,20 @@ export class GameScene implements Scene, Build {
     for (const weapon of this.weapons) {
       // Projectiles du Trait, et vagues de la Lame d'onde (l'Épée lance aussi des projectiles).
       if (weapon.def.kind !== 'projectile' && !weapon.mutation?.wave) continue;
+      // Trait arcanique : halo rond, puis sprite orienté. Vagues de la Lame d'onde : ronds.
+      const wave = weapon.mutation?.wave;
+      const waveSheet = this.deps.effects?.wave;
+      if (wave && waveSheet) {
+        this.renderWaves(ctx, alpha, weapon, waveSheet, wave.lifetime);
+        continue;
+      }
+      const fx = weapon.def.kind === 'projectile' ? this.deps.fx : null;
+      const bolt = fx?.animation(BOLT_SPRITE.anim);
       for (const pass of PROJECTILE_PASSES) {
+        if (fx && bolt && bolt.length > 0 && pass === 1) {
+          this.renderBolts(ctx, alpha, weapon, fx, bolt);
+          continue;
+        }
         ctx.beginPath();
         for (let i = 0; i < items.length; i++) {
           const p = items[i];
@@ -809,6 +865,56 @@ export class GameScene implements Scene, Build {
       }
     }
     ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Vagues de la Lame d'onde : lame de vent orientée dans le sens du tir, jouée sur la durée de
+   * vie de la vague, sa hauteur visible = le diamètre de la hitbox.
+   */
+  private renderWaves(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    weapon: Weapon,
+    sheet: EffectSheet,
+    lifetime: number,
+  ): void {
+    const items = this.projectiles.items;
+    for (let i = 0; i < items.length; i++) {
+      const p = items[i];
+      if (!p?.active || p.source !== weapon) continue;
+      const x = p.renderX(alpha);
+      const y = p.renderY(alpha);
+      const scale = (p.radius * 2) / WAVE_FX.artHeight;
+      if (!this.isOnScreen(x, y, sheet.clip.width * scale)) continue;
+      const progress = Math.min(0.999, Math.max(0, 1 - p.life / lifetime));
+      const index = clipFrameIndex(sheet.clip, progress * sheet.clip.totalMs);
+      sheet.draw(ctx, index, x, y, scale, Math.atan2(p.vy, p.vx), 'visibleCenter');
+    }
+  }
+
+  /** Projectiles d'une arme en sprites, tournés dans le sens du tir, tête = taille de la hitbox. */
+  private renderBolts(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    weapon: Weapon,
+    fx: SpriteAtlas,
+    bolt: SpriteAnimation,
+  ): void {
+    ctx.globalAlpha = 1;
+    const tint = weaponTint(weapon.color);
+    const items = this.projectiles.items;
+    for (let i = 0; i < items.length; i++) {
+      const p = items[i];
+      if (!p?.active || p.source !== weapon) continue;
+      const x = p.renderX(alpha);
+      const y = p.renderY(alpha);
+      const scale = (p.radius * 2) / BOLT_SPRITE.headDiameter;
+      if (!this.isOnScreen(x, y, BOLT_SPRITE.headCenterX * scale)) continue;
+      const frame = frameAt(bolt, this.elapsed + i * ENEMY_ANIM_OFFSET, BOLT_SPRITE.frameTime);
+      if (!frame) continue;
+      const angle = Math.atan2(p.vy, p.vx);
+      fx.drawRotated(ctx, frame, x, y, scale, angle, BOLT_SPRITE.headCenterX, tint);
+    }
   }
 
   private isOnScreen(x: number, y: number, r: number): boolean {

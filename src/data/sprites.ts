@@ -83,6 +83,61 @@ export const FLOOR = {
   darken: 0.55,
 } as const;
 
+/** Atlas des effets, généré par `node tools/sprites/build.mjs` (ce que le pack 0x72 n'a pas). */
+export const FX_ATLAS_URLS = {
+  image: `${import.meta.env.BASE_URL}assets/sprites/fx/fx.png`,
+  list: `${import.meta.env.BASE_URL}assets/sprites/fx/fx_list`,
+} as const;
+
+/** Gemme de chaque palier de GEM_TIERS (même ordre), dessinée ×2 */
+export const GEM_SPRITES = ['gem_1', 'gem_2', 'gem_3'] as const;
+export const GEM_SCALE = 2;
+
+/**
+ * Projectile du Trait arcanique (gris, teint à la couleur de l'arme). Sa taille suit le rayon
+ * de la hitbox : la tête du sprite (`headDiameter` px d'art) = le diamètre du projectile.
+ */
+export const BOLT_SPRITE = {
+  anim: 'bolt_anim',
+  headDiameter: 7,
+  /** px d'art : centre de la tête, posé sur la position du projectile */
+  headCenterX: 12,
+  frameTime: 0.08,
+} as const;
+
+/** Orbe runique (gris, teint) : son diamètre (`diameter` px d'art) = celui de la hitbox. */
+export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as const;
+
+// ---------------------------------------------------------------- effets PVFX Foundry (CC0)
+// Style « strict » (pixels nets). Chaque dossier contient sprite-sheet.png + manifest.json.
+
+const PVFX = `${import.meta.env.BASE_URL}assets/sprites/pvfx/`;
+
+export const EFFECT_DIRS = {
+  burst: `${PVFX}arcane-burst/`,
+  slash: `${PVFX}axe-smear/`,
+  wave: `${PVFX}wind-blade/`,
+} as const;
+export type EffectName = keyof typeof EFFECT_DIRS;
+
+/** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
+export const EXPLOSION_FX = {
+  /** s : l'animation (1,3 s dans le pack) est jouée en accéléré, sinon elles s'empilent */
+  duration: 0.5,
+} as const;
+
+/** Coup d'épée : l'arc du sprite (`artRadius` px d'art depuis son pivot) = la portée de l'épée. */
+export const SLASH_FX = {
+  /** s (0,72 s dans le pack) : 0,25 s était trop rapide (retour de jeu) */
+  duration: 0.45,
+  artRadius: 35,
+  /** Tourbillon (360°) : autant de coups répartis autour du joueur */
+  fullCircleCopies: 3,
+} as const;
+
+/** Lame d'onde : la hauteur du croissant formé (px d'art, mesurée dans le manifeste) = le diamètre de la hitbox */
+export const WAVE_FX = { artHeight: 33 } as const;
+
 /** Objets ramassables */
 export const PICKUP_SPRITES = {
   gold: { anim: 'coin_anim', scale: 2, frameTime: 0.12 },
