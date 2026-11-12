@@ -91,13 +91,13 @@ describe('Épée — niveaux et passifs', () => {
     expect(w.range).toBe(135);
   });
 
-  it('Duplicateur = combo : +1 coup enchaîné par niveau', () => {
+  it('Duplicateur : aucun effet sur l’Épée (nerf)', () => {
     const w = new Weapon(SWORD);
     w.recompute({ ...NEUTRAL, extraCount: 2 });
-    expect(w.count).toBe(3);
+    expect(w.count).toBe(1);
     const { run, hits } = setup([[80, 0]], w);
-    run(0.5); // 3 coups espacés de 0,12 s
-    expect(hits).toHaveLength(3);
+    run(0.5); // un seul coup par attaque
+    expect(hits).toHaveLength(1);
   });
 
   it('Taille : portée plus longue, même ouverture', () => {
@@ -133,11 +133,11 @@ describe('Épée — mutations', () => {
     expect(hits).toHaveLength(3);
   });
 
-  it('Tourbillon + Duplicateur : un tour de plus par niveau (rien n’est perdu)', () => {
+  it('Tourbillon + Duplicateur : toujours un seul tour (nerf)', () => {
     const w = mutated(0, { ...NEUTRAL, extraCount: 1 });
     const { run, hits } = setup([[-80, 0]], w);
     run(0.3);
-    expect(hits).toHaveLength(2);
+    expect(hits).toHaveLength(1);
   });
 
   it('Lame d’onde : chaque coup lance une vague perçante, à 60 % des dégâts', () => {

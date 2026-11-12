@@ -221,7 +221,7 @@ export class WeaponSystem {
   }
 
   /**
-   * Épée : une attaque = un combo de `weapon.count` coups (1 + Duplicateur), espacés de
+   * Épée : une attaque = un combo de `weapon.count` coups (1 : le Duplicateur ne compte plus), espacés de
    * `comboDelay`. Le délai entre deux attaques (Hâte comprise) part du début du combo.
    */
   private updateMelee(

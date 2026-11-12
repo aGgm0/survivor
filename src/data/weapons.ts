@@ -146,8 +146,8 @@ export interface OrbitWeaponDef extends WeaponDefBase {
 
 /**
  * Coup en arc devant le joueur, dans la direction où il marche (la dernière s'il est immobile).
- * Chaque ennemi dans l'arc est touché une fois par coup. `count` = coups enchaînés par attaque
- * (le Duplicateur en ajoute), espacés de `comboDelay`.
+ * Chaque ennemi dans l'arc est touché une fois par coup. `count` = coups enchaînés par attaque,
+ * espacés de `comboDelay` (le Duplicateur n'en ajoute plus).
  */
 export interface MeleeWeaponDef extends WeaponDefBase {
   readonly kind: 'melee';

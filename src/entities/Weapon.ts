@@ -135,8 +135,10 @@ export class Weapon {
     const velocity = mods.projectileSpeedMult ?? 1;
     const extra = mods.extraCount ?? 0;
     // Une mutation peut imposer un nombre (3 orbes géants, 9 orbes de tempête) ; le Duplicateur
-    // s'ajoute APRÈS, donc aussi aux mutations. L'aura n'a rien à dupliquer.
-    this.count = def.kind === 'aura' ? 0 : (m?.count ?? count) + extra;
+    // s'ajoute APRÈS, donc aussi aux mutations. L'aura n'a rien à dupliquer, et l'Épée n'en
+    // profite plus (nerf : le combo la rendait trop forte).
+    const duplicated = def.kind === 'melee' ? 0 : extra;
+    this.count = def.kind === 'aura' ? 0 : (m?.count ?? count) + duplicated;
     this.radius = radius * (m?.radiusMult ?? 1) * size;
     if (def.kind === 'orbit') {
       this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1) * size;
