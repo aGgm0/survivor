@@ -1,5 +1,6 @@
 import { challengeProgress, isUnlocked, type CharacterDef } from '../data/characters';
 import type { Profile } from '../data/profile';
+import { CHARACTER_SPRITES } from '../data/sprites';
 
 /**
  * Écran de choix du perso : une carte par perso. Un perso verrouillé est grisé et affiche son
@@ -29,7 +30,11 @@ export class CharacterOverlay {
         card.type = 'button';
         card.className = 'choice character-card';
         card.disabled = !unlocked;
-        card.style.borderColor = unlocked ? character.weapon.color : '';
+        // Portrait animé du perso (sprite de l'atlas, animation en CSS) : sa ligne dans l'atlas.
+        const portrait = document.createElement('span');
+        portrait.className = 'character-portrait';
+        const look = CHARACTER_SPRITES[character.id];
+        if (look) portrait.style.setProperty('--portrait-y', String(look.portraitY));
         card.addEventListener('click', () => (this.clicked = index));
 
         const key = document.createElement('span');
@@ -51,7 +56,7 @@ export class CharacterOverlay {
             ? `${character.challengeText} — ${Math.min(progress.current, progress.target)} / ${progress.target}`
             : character.challengeText;
         }
-        card.append(key, name, weapon, desc);
+        card.append(key, portrait, name, weapon, desc);
         return card;
       }),
     );

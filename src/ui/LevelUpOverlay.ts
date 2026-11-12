@@ -1,9 +1,24 @@
+import { iconElement } from './icons';
+
 /** Ce qu'il faut pour afficher un choix (le reste de l'upgrade ne concerne pas l'UI). */
 export interface ChoiceView {
   readonly title: string;
   readonly description: string;
   readonly levelText: string;
+  /** Sorte d'upgrade : donne le cadre et l'étiquette de la carte (absente : carte neutre) */
+  readonly kind?: string;
+  /** Icône (id de l'arme, de la mutation ou du passif) ; absente : pas d'icône */
+  readonly iconId?: string;
 }
+
+/** Étiquette et style de carte selon la sorte d'upgrade (voir UpgradeChoice). */
+const CARD_STYLES: Readonly<Record<string, { readonly tag: string; readonly css: string }>> = {
+  newWeapon: { tag: 'Arme', css: 'choice-weapon' }, // « Nouvelle arme » est déjà le texte de niveau
+  weaponLevel: { tag: 'Arme', css: 'choice-weapon' },
+  passive: { tag: 'Passif', css: 'choice-passive' },
+  mutation: { tag: 'Mutation', css: 'choice-mutation' },
+  heal: { tag: 'Soin', css: 'choice-heal' },
+};
 
 /**
  * Écran de level up : 3 cartes cliquables. L'UI ne modifie jamais le jeu elle-même :
@@ -32,10 +47,12 @@ export class LevelUpOverlay {
       ...choices.map((choice, index) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'choice';
+        const style = choice.kind ? CARD_STYLES[choice.kind] : undefined;
+        button.className = style ? `choice ${style.css}` : 'choice';
         const key = document.createElement('span');
         key.className = 'choice-key';
-        key.textContent = String(index + 1);
+        // Touche à presser, puis la sorte d'upgrade (« 1 · Passif »).
+        key.textContent = style ? `${index + 1} · ${style.tag}` : String(index + 1);
         const title = document.createElement('span');
         title.className = 'choice-title';
         title.textContent = choice.title;
@@ -45,7 +62,11 @@ export class LevelUpOverlay {
         const desc = document.createElement('span');
         desc.className = 'choice-desc';
         desc.textContent = choice.description;
-        button.append(key, title, level, desc);
+        const head = document.createElement('span');
+        head.className = 'choice-head';
+        if (choice.iconId) head.append(iconElement(choice.iconId, ''));
+        head.append(title);
+        button.append(key, head, level, desc);
         button.addEventListener('click', () => (this.clicked = index));
         return button;
       }),

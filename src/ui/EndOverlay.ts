@@ -1,6 +1,20 @@
 import type { RunReport } from '../systems/runReport';
 import { formatTime } from './formatTime';
 
+/** Une tuile du bilan : la valeur en gros, son libellé dessous. */
+function stat(value: string, label: string): HTMLElement {
+  const box = document.createElement('span');
+  box.className = 'end-stat';
+  const v = document.createElement('span');
+  v.className = 'end-stat-value';
+  v.textContent = value;
+  const l = document.createElement('span');
+  l.className = 'end-stat-label';
+  l.textContent = label;
+  box.append(v, l);
+  return box;
+}
+
 /** Écran de fin de partie : victoire ou défaite, bilan et damage meter. */
 export class EndOverlay {
   constructor(
@@ -22,10 +36,17 @@ export class EndOverlay {
     this.el.classList.toggle('overlay-victory', report.victory);
     this.el.classList.toggle('overlay-death', !report.victory);
     this.titleEl.textContent = report.endless ? 'SANS FIN' : report.victory ? 'VICTOIRE' : 'MORT';
-    const maxed =
-      report.maxedAt === null ? 'build incomplet' : `build complet à ${formatTime(report.maxedAt)}`;
-    const survived = report.endless ? 'Victoire + sans fin : survécu' : 'Survécu';
-    this.infoEl.textContent = `${survived} ${formatTime(report.time)} · ${report.kills} kills · +${report.gold} or · niveau ${report.level} · ${maxed}`;
+    // Bilan en tuiles (valeur en gros, libellé dessous) plutôt qu'en une longue phrase.
+    this.infoEl.replaceChildren(
+      stat(formatTime(report.time), report.endless ? 'survécu (sans fin)' : 'survécu'),
+      stat(String(report.kills), 'kills'),
+      stat(`+${report.gold}`, 'or'),
+      stat(String(report.level), 'niveau'),
+      stat(
+        report.maxedAt === null ? '—' : formatTime(report.maxedAt),
+        report.maxedAt === null ? 'build incomplet' : 'build complet',
+      ),
+    );
     this.hintEl.textContent = canContinue
       ? 'C pour continuer en sans fin · R pour rejouer · M pour le menu'
       : 'R pour rejouer · M pour le menu';

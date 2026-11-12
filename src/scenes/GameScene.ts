@@ -20,6 +20,7 @@ import {
   ENEMY_IDLE_SPEED,
   FLOOR,
   HIT_FLASH_TINT,
+  type SpriteDef,
   enemySprite,
 } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
@@ -67,6 +68,7 @@ import { XpSystem } from '../systems/XpSystem';
 import {
   applyUpgrade,
   availableUpgrades,
+  choiceIconId,
   rebuildPassiveStats,
   rollUpgradeChoices,
   type Build,
@@ -271,11 +273,14 @@ export class GameScene implements Scene, Build {
     options: {
       runDuration?: number;
       startWeapon?: WeaponDef;
+      /** Apparence du perso choisi (purement visuel) */
+      sprite?: SpriteDef;
       /** Rangs achetés à la boutique (bonus de départ) */
       shopRanks?: Readonly<Record<string, number>>;
     } = {},
   ) {
     this.effects = new EffectsSystem(deps.effects ?? null);
+    if (options.sprite) this.player.sprite = options.sprite;
     // Bonus de boutique : appliqués avant tout, sans prendre d'emplacement de passif.
     this.shopRanks = options.shopRanks ?? {};
     this.xpGainMult = applyShopBonuses(this.player, this.shopRanks);
@@ -496,7 +501,11 @@ export class GameScene implements Scene, Build {
       UPGRADE_CHOICE_COUNT,
       this.weapons.length < NEW_WEAPON_GUARANTEE_BELOW,
     );
-    this.deps.levelUpOverlay.show(level, this.choices);
+    // Créer ces petits objets est sans risque : seulement au level up.
+    this.deps.levelUpOverlay.show(
+      level,
+      this.choices.map((c) => ({ ...c, iconId: choiceIconId(c) })),
+    );
   }
 
   /** Index choisi (0, 1, 2) au clavier ou à la souris, ou null s'il n'y a rien de valide. */

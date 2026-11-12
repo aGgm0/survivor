@@ -1,6 +1,7 @@
 import { PASSIVES } from '../data/upgrades';
 import type { Weapon } from '../entities/Weapon';
 import { formatTime } from './formatTime';
+import { iconElement } from './icons';
 
 /** Éléments du HUD (HTML par-dessus le canvas). */
 export interface HudElements {
@@ -83,7 +84,8 @@ export class Hud {
 
     this.el.weapons.replaceChildren(
       ...weapons.map((w) => {
-        const box = slot(w.short, w.level, `${w.displayName} — niv ${w.level}`, w.color);
+        const icon = w.mutation?.id ?? w.def.id;
+        const box = slot(icon, w.short, w.level, `${w.displayName} — niv ${w.level}`, w.color);
         // Arme mutée : étoile à la place du niveau (elle est au max) et bordure dorée.
         if (w.mutation) {
           box.classList.add('slot-mutated');
@@ -97,7 +99,7 @@ export class Hud {
     this.el.passives.replaceChildren(
       ...owned.map((p) => {
         const level = passiveLevels.get(p.id) ?? 0;
-        return slot(p.short, level, `${p.name} — niv ${level}`, null);
+        return slot(p.id, p.short, level, `${p.name} — niv ${level}`, null);
       }),
     );
   }
@@ -144,15 +146,24 @@ export class Hud {
   }
 }
 
-/** Une case d'inventaire : 2 lettres, le niveau en petit, et le nom complet au survol. */
-function slot(short: string, level: number, tooltip: string, color: string | null): HTMLElement {
+/**
+ * Une case d'inventaire : l'icône (ou les 2 lettres si elle manque), le niveau en petit, et le
+ * nom complet au survol.
+ */
+function slot(
+  icon: string,
+  short: string,
+  level: number,
+  tooltip: string,
+  color: string | null,
+): HTMLElement {
   const box = document.createElement('div');
   box.className = color ? 'slot slot-weapon' : 'slot';
   box.title = tooltip;
   if (color) box.style.borderColor = color;
   const label = document.createElement('span');
   label.className = 'slot-label';
-  label.textContent = short;
+  label.append(iconElement(icon, short));
   if (color) label.style.color = color;
   const lvl = document.createElement('span');
   lvl.className = 'slot-level';

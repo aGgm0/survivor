@@ -6,6 +6,10 @@ Avant d'ajouter un pack : vérifier la licence sur sa page (pas de "non commerci
 | Dossier | Pack | Auteur | Source | Licence | Ajouté le |
 |---|---|---|---|---|---|
 | `sprites/0x72/` | 16x16 DungeonTileset II v1.7 | 0x72 | https://0x72.itch.io/dungeontileset-ii | CC0 1.0 (crédit facultatif) | 2026-11-12 |
-| `sprites/pvfx/` | PVFX Foundry Thirteen 1.0.0 (5 effets, style « strict », export « grid ») | Pixel VFX Studio (nerijs) | https://nerijs.itch.io/pvfx-foundry-thirteen | CC0 1.0 pour les `sprite-sheet.png` et `manifest.json` (crédit apprécié : "VFX from PVFX Foundry by Pixel VFX Studio") | 2026-11-12 |
+| `sprites/pvfx/` | PVFX Foundry Thirteen 1.0.0 (3 effets : arcane-burst, axe-smear, wind-blade ; style « strict », export « grid ») | Pixel VFX Studio (nerijs) | https://nerijs.itch.io/pvfx-foundry-thirteen | CC0 1.0 pour les `sprite-sheet.png` et `manifest.json` (crédit apprécié : "VFX from PVFX Foundry by Pixel VFX Studio") | 2026-11-12 |
+| `ui/darkages/` | Dark Ages UI v1.0 (planche + découpes de `tools/ui/slice-darkages.mjs`) | Hypnobius | https://hypnobius.itch.io/ | Licence de l'auteur : jeu commercial gratuit ou payant autorisé, modification autorisée, crédit facultatif ; **interdit de redistribuer les fichiers** (ni IA, ni NFT). **Ignoré par git** : copier la planche du pack dans ce dossier puis lancer le script | 2026-11-12 |
+| `ui/kenney/` | Fantasy UI Borders 1.0 (cadres 012 et 026, teints par `tools/ui/tint-kenney.mjs`) | Kenney | https://kenney.nl/assets/fantasy-ui-borders | CC0 1.0 (crédit facultatif) | 2026-11-12 |
+| `fonts/dungeon-mode.ttf` | DUNGEON.mode (police pixel 8 × 8) | datagoblin | https://datagoblin.itch.io/dungeonmode | CC0 1.0 | 2026-11-12 |
+| `ui/raven/` | Raven Fantasy Icons, version gratuite (21 icônes 16 × 16 copiées par `tools/ui/copy-raven.mjs`) | Clockwork Raven Studios | https://clockworkraven.itch.io/raven-fantasy-icons | Version gratuite : usage personnel / jeu gratuit sans pub ni achats intégrés ; **Premium (35 $) obligatoire pour vendre le jeu** ; interdit de redistribuer les fichiers. **Ignoré par git** : relancer le script avec le pack | 2026-11-12 |
 
 Les fichiers de `sprites/` hors des sous-dossiers de packs (`player.png`, `basic.png`, `boss.png`) et le dossier `sprites/fx/` sont générés par `tools/sprites/build.mjs` (création du projet).

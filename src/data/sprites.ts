@@ -31,6 +31,38 @@ export const PLAYER_SPRITE: SpriteDef = {
   frameTime: 0.1,
 };
 
+/**
+ * Apparence de chaque perso (id de data/characters.ts), en jeu et sur sa carte du menu.
+ * `portraitY` : ligne de son animation de repos dans l'atlas (tile_list : x 128, 4 images de
+ * 16 × 28 côte à côte), pour le portrait animé en CSS de l'écran de choix.
+ */
+export const CHARACTER_SPRITES: Readonly<
+  Record<string, SpriteDef & { readonly portraitY: number }>
+> = {
+  arcanist: { ...PLAYER_SPRITE, portraitY: 164 },
+  pyromancer: {
+    idle: 'wizzard_f_idle_anim',
+    run: 'wizzard_f_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 132,
+  },
+  runist: {
+    idle: 'elf_m_idle_anim',
+    run: 'elf_m_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 36,
+  },
+  bladeMage: {
+    idle: 'knight_m_idle_anim',
+    run: 'knight_m_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 100,
+  },
+};
+
 /** Silhouette blanche quand on prend un coup (joueur et ennemis) */
 export const HIT_FLASH_TINT: SpriteTint = { color: '#ffffff', mode: 'silhouette' };
 /** Filtre doré des mini-boss : on garde le dessin du monstre, mais il « brille » */

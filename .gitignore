@@ -2,3 +2,10 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Dark Ages UI (Hypnobius) : licence qui interdit de redistribuer les fichiers. Ils restent en
+# local et ne doivent jamais arriver dans un dépôt public (voir public/assets/LICENSES.md).
+public/assets/ui/darkages/
+# Raven Fantasy Icons (Clockwork Raven) : licence qui interdit de redistribuer les fichiers ; la
+# version gratuite ne vaut que pour un jeu gratuit (voir public/assets/LICENSES.md).
+public/assets/ui/raven/

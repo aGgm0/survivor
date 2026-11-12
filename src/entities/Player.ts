@@ -2,7 +2,7 @@ import { lerp, normalizeInto, type Vec2 } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
 import { computeDamage } from '../systems/damage';
 import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
-import { HIT_FLASH_TINT, PLAYER_SPRITE } from '../data/sprites';
+import { HIT_FLASH_TINT, PLAYER_SPRITE, type SpriteDef } from '../data/sprites';
 
 const PLAYER_COLOR = '#8a6cff';
 /** Couleur et durée (s) du flash quand le joueur prend un coup */
@@ -51,6 +51,8 @@ export class Player {
   hitFlashTimer = 0;
   /** Temps (s) qui fait avancer l'animation du sprite (aucun effet de jeu). */
   animTime = 0;
+  /** Apparence (celle du perso choisi) : purement visuel */
+  sprite: SpriteDef = PLAYER_SPRITE;
 
   /** Direction regardée (vecteur de longueur 1) : vers la droite au départ */
   facingX = 1;
@@ -122,12 +124,13 @@ export class Player {
     const flashing = this.hitFlashTimer > 0;
 
     const moving = this.vx !== 0 || this.vy !== 0;
-    const anim = sprites?.animation(moving ? PLAYER_SPRITE.run : PLAYER_SPRITE.idle);
-    const frame = anim && frameAt(anim, this.animTime, PLAYER_SPRITE.frameTime);
+    const look = this.sprite;
+    const anim = sprites?.animation(moving ? look.run : look.idle);
+    const frame = anim && frameAt(anim, this.animTime, look.frameTime);
     if (sprites && frame) {
       // Pieds posés sur le bas de la hitbox : le sprite dépasse vers le haut, comme un perso debout.
       const tint = flashing ? HIT_FLASH_TINT : undefined;
-      sprites.draw(ctx, frame, x, y + this.radius, PLAYER_SPRITE.scale, this.facingX < 0, tint);
+      sprites.draw(ctx, frame, x, y + this.radius, look.scale, this.facingX < 0, tint);
     } else {
       ctx.fillStyle = flashing ? HIT_FLASH_COLOR : PLAYER_COLOR;
       ctx.beginPath();

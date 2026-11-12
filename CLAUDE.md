@@ -354,7 +354,14 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
-- [ ] Design de l'UI (HUD, menus, écrans de fin)
+- [ ] Design de l'UI (HUD, menus, écrans de fin) : pack **Dark Ages UI** (cadres, barres ; ignoré par git, licence) + **Kenney Fantasy UI Borders** (CC0, à venir pour les cartes et cases)
+  - [x] Étape 1 : palette en variables CSS, cadres en 9 morceaux (`border-image`) sur boutons, lignes des menus et cartes, titres dorés
+  - [x] Étape 2 : HUD (barres de PV / XP encadrées, niveau sur plaque à couronne, timer centré, crâne et pièce de 0x72, cases d'inventaire du pack)
+  - [x] Étape 3 : cartes de level up (cadres Kenney teints par `tools/ui/tint-kenney.mjs` : bleu arme, vert passif, rouge soin, or + lueur mutation ; étiquette « 1 · Passif »)
+  - [x] Étape 4 : menus (grand cadre doré autour du contenu, titre qui luit, portrait animé de chaque perso sur sa carte, silhouette si verrouillé)
+  - [x] Étape 5 : écran de fin (vignette rouge ou dorée, bilan en tuiles, bandeau doré des déblocages, damage meter dans le grand cadre)
+  - [x] Police pixel **DUNGEON.mode** (datagoblin, CC0, accents compris) partout sauf les outils de dev (F2, F3) ; nombres de dégâts aussi ; conteneurs élargis (police large)
+  - [x] Icônes d'armes et de passifs : pack **Raven Fantasy Icons** (version gratuite pour développer ; **Premium 35 $ obligatoire avant de vendre le jeu** ; fichiers ignorés par git) : 21 icônes choisies dans `tools/ui/copy-raven.mjs`, dans les cases du HUD (48 px) et sur les cartes de level up, texte de secours si le pack manque
 - [ ] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
   - [x] Premier essai généré par script : joueur, basique, boss (remplacé par le pack)
   - [x] Pack téléchargé (`public/assets/sprites/0x72/` : atlas + `tile_list_v1.7`), `public/assets/LICENSES.md` ; choix validés : joueur `wizzard_m`, basique `chort`, rapide `imp`, tank `ogre`, boss `big_demon`, élites = basique / rapide teintés, caisse `crate`, pièce `coin_anim`, nourriture `flask_red`, sol `atlas_floor`
@@ -485,6 +492,9 @@ Format : date — décision — raison.
 | 2026-11-12 | Nerf : le Duplicateur ne s'applique plus à l'Épée (plus de combo, ni tour de Tourbillon ni vague en plus) | Demandé (retour de jeu) |
 | 2026-11-12 | Screen shake par « trauma » (0 à 1, décalage = trauma² × 14 px, −1,6/s) appliqué au seul dessin ; chocs : coup reçu +0,15 (plafond 0,4), charge du boss +0,3, élite tué +0,4, boss tué +0,7, explosion +0,04 (plafond 0,2) ; coupé en pause / level up / fin ; option activée par défaut (anciennes sauvegardes comprises) | Plan validé (« ok reco »). Le plafond évite un écran qui tremble en continu au contact de la horde |
 | 2026-11-12 | Particules : carrés de 4 px (6 pour le boss) qui ralentissent et rétrécissent par paliers de 2 px au lieu de s'effacer ; mort = 4 + rayon / 4 éclats à la couleur du type, boss = 60, caisse = 8, level up = anneau de 28 ; aléatoire séparé de celui du jeu ; réserve de 600, le surplus est sauté | Plan validé (« ok reco »). 400 ennemis tués d'un coup : réserve pleine, 180 FPS |
+| 2026-11-12 | UI : packs Dark Ages UI (Hypnobius) + Kenney Fantasy UI Borders (CC0) ; Paper UI (parchemin clair) écarté ; Dark Ages ignoré par git (licence : pas de redistribution), découpé par `tools/ui/slice-darkages.mjs` ; cadres en `border-image` ×2, bordure de couleur en secours si le pack manque | Choix de l'utilisateur parmi 3 packs (« Dark Ages + Kenney »). Dark Ages colle au thème sombre ; Paper UI jurait avec le donjon |
+| 2026-11-12 | Apparence des persos : Arcaniste = mage (wizzard_m), Pyromancien = mage femme (wizzard_f), Runiste = elfe (elf_m), Lame-mage = chevalier (knight_m) ; même sprite en jeu et sur la carte (`CHARACTER_SPRITES`) ; icônes du HUD = Raven Fantasy Icons | Proposé (héros du pack 0x72), à changer en jeu si besoin. Raven demandé par l'utilisateur |
+| 2026-11-12 | Police DUNGEON.mode (CC0) au lieu de m5x7 ; tailles 12 / 16 / 24 px, pas de faux gras (`font-synthesis: none`) | Choisie par l'utilisateur. Glyphes larges (8 × 8) : boutique, profil, options, cartes et damage meter élargis pour éviter les retours à la ligne |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

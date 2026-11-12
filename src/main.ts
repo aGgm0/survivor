@@ -20,7 +20,13 @@ import { ShopOverlay } from './ui/ShopOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
 import { SpriteAtlas } from './core/SpriteAtlas';
-import { ATLAS_URLS, EFFECT_DIRS, FX_ATLAS_URLS, type EffectName } from './data/sprites';
+import {
+  ATLAS_URLS,
+  CHARACTER_SPRITES,
+  EFFECT_DIRS,
+  FX_ATLAS_URLS,
+  type EffectName,
+} from './data/sprites';
 import { EffectSheet } from './core/EffectSheet';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
@@ -169,7 +175,11 @@ function startRun(chosen: CharacterDef = character): void {
       effects,
     },
     seed,
-    { startWeapon: character.weapon, shopRanks: profile.shop },
+    {
+      startWeapon: character.weapon,
+      shopRanks: profile.shop,
+      sprite: CHARACTER_SPRITES[character.id],
+    },
   );
   game.setScene(scene);
 

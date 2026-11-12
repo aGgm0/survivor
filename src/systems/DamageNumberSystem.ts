@@ -11,7 +11,8 @@ const LIFETIME = 0.6;
 const RISE_SPEED = 50;
 /** px : décalage horizontal aléatoire, pour que des nombres simultanés ne se superposent pas */
 const JITTER_X = 10;
-const FONT = 'bold 15px monospace';
+/** Police pixel de l'interface (chargée par style.css) ; monospace tant qu'elle n'est pas prête */
+const FONT = '16px DungeonMode, monospace';
 const COLOR = '#ffffff';
 const OUTLINE = '#000000';
 

@@ -20,6 +20,22 @@ export type UpgradeChoice = {
   | { readonly kind: 'heal' }
 );
 
+/** Icône d'un choix (id de l'arme, de la mutation ou du passif) ; aucune pour le soin. */
+export function choiceIconId(choice: UpgradeChoice): string | undefined {
+  switch (choice.kind) {
+    case 'weaponLevel':
+      return choice.weapon.def.id;
+    case 'newWeapon':
+      return choice.def.id;
+    case 'mutation':
+      return choice.mutation.id;
+    case 'passive':
+      return choice.passive.id;
+    case 'heal':
+      return undefined;
+  }
+}
+
 /** Ce dont le système d'upgrades a besoin (et qu'il modifie). */
 export interface Build {
   readonly player: Player;

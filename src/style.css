@@ -1,7 +1,57 @@
+/*
+ * Palette de l'interface : celle du pack Dark Ages UI (or miel, charbon, bleu nuit), accordée
+ * aux sprites 0x72. Changer une couleur ici la change partout.
+ */
+@font-face {
+  font-family: 'DungeonMode';
+  src: url('/assets/fonts/dungeon-mode.ttf') format('truetype');
+  font-display: block;
+}
+
+:root {
+  /* Police pixel DUNGEON.mode (datagoblin, CC0) : glyphes de 8 × 8, nette en 8 / 16 / 24 / 32 px */
+  --ui-font: 'DungeonMode', monospace;
+  --ui-bg: #14121a; /* fond des menus */
+  --ui-panel: #1f2420; /* intérieur des panneaux sombres */
+  --ui-charcoal: #2e322a;
+  --ui-night: #15202f;
+  --ui-gold: #dcc47c; /* titres, accents */
+  --ui-gold-dark: #c19149;
+  --ui-tan: #9f8873; /* texte secondaire */
+  --ui-text: #ece6d6;
+  --ui-blue: #4f8fd0; /* XP, valeurs */
+  --ui-red: #c8324a; /* PV */
+}
+
 * {
+  font-synthesis: none;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/*
+ * Cadres en pixel art (pack Dark Ages UI, découpés par tools/ui/slice-darkages.mjs) : chaque
+ * image est coupée en 9 morceaux (coins fixes, bords étirés) et agrandie ×2 sans lissage.
+ * Si l'image manque (pack absent du dépôt, voir .gitignore), la bordure de couleur reste.
+ */
+.menu-button {
+  border-style: solid;
+  border-width: 10px 24px;
+  border-color: var(--ui-tan);
+  border-image: url('/assets/ui/darkages/button.png') 5 12 fill / 10px 24px stretch;
+  image-rendering: pixelated;
+}
+
+.option-row,
+.shop-row,
+.profile-weapon,
+.choice {
+  border-style: solid;
+  border-width: 16px;
+  border-color: var(--ui-charcoal);
+  border-image: url('/assets/ui/darkages/panel-dark.png') 8 fill / 16px round;
+  image-rendering: pixelated;
 }
 
 html,
@@ -36,145 +86,202 @@ body {
   display: none !important;
 }
 
+/*
+ * HUD : pièces du pack Dark Ages agrandies ×2 (barres, plaques, cases) et icônes de 0x72.
+ * Les textes et largeurs sont mis à jour par ui/Hud.ts ; ici, uniquement l'apparence.
+ */
+
 /* Barre d'XP sur toute la largeur, en haut de la zone de jeu */
 #hud-xpbar {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background: rgba(0, 0, 0, 0.6);
+  top: 4px;
+  left: 8px;
+  right: 8px;
+  height: 18px;
+  border-style: solid;
+  border-width: 6px 8px;
+  border-color: var(--ui-gold-dark);
+  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px stretch;
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
 #hud-xpfill {
   width: 0;
   height: 100%;
-  background: #4fc3f7;
+  background: var(--ui-blue) url('/assets/ui/darkages/bar-blue.png') 0 0 / 100% 100%;
+  image-rendering: pixelated;
 }
 
+/* Niveau : plaque à couronne dorée, sous la barre d'XP à gauche */
 #hud-level {
   position: absolute;
-  top: 18px;
-  left: 16px;
-  font: bold 20px monospace;
-  color: #4fc3f7;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  top: 28px;
+  left: 12px;
+  width: 80px;
+  height: 58px;
+  padding-top: 24px;
+  text-align: center;
+  font: 12px var(--ui-font);
+  color: var(--ui-gold);
+  text-shadow: 1px 1px 0 #000;
+  background: url('/assets/ui/darkages/plate-crown.png') 0 0 / 100% 100%;
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
+/* PV : cadre de barre doré, remplissage rouge du pack */
 #hud-hp {
   position: absolute;
   top: 48px;
-  left: 16px;
+  left: 100px;
   width: 200px;
-  height: 18px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 2px solid #000;
+  height: 22px;
+  border-style: solid;
+  border-width: 6px 8px;
+  border-color: var(--ui-gold-dark);
+  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px stretch;
+  image-rendering: pixelated;
   pointer-events: none;
 }
 
 #hud-hpfill {
   width: 100%;
   height: 100%;
-  background: #e5484d;
+  background: var(--ui-red) url('/assets/ui/darkages/bar-red.png') 0 0 / 100% 100%;
+  image-rendering: pixelated;
 }
 
 #hud-hptext {
   position: absolute;
-  inset: 0;
-  font: bold 12px/14px monospace;
-  color: #fff;
+  inset: -6px 0;
+  font: 12px/22px var(--ui-font);
+  color: var(--ui-text);
   text-align: center;
-  text-shadow: 0 1px 2px #000;
+  text-shadow: 1px 1px 0 #000;
 }
 
-/* Inventaire : armes et passifs avec leur niveau, sous la barre de PV */
+/* Inventaire : armes et passifs avec leur niveau, sous le niveau et les PV */
 #hud-inventory {
   position: absolute;
-  top: 74px;
-  left: 16px;
+  top: 94px;
+  left: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .slots {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
+/* Case sombre du pack ; la couleur de l'arme est celle de son texte (le cadre reste le même) */
 .slot {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.65);
-  border: 2px solid #555;
-  border-radius: 4px;
-  font: bold 12px monospace;
-  color: #ddd;
-}
-
-.slot-weapon {
-  border-width: 2px;
+  border-style: solid;
+  border-width: 8px;
+  border-color: var(--ui-charcoal);
+  border-image: url('/assets/ui/darkages/slot.png') 4 fill / 8px stretch;
+  image-rendering: pixelated;
+  font: 12px var(--ui-font);
+  color: var(--ui-text);
 }
 
 .slot-mutated {
-  box-shadow: 0 0 6px #ffd54f;
+  filter: drop-shadow(0 0 4px var(--ui-gold));
 }
 
 .slot-level {
   position: absolute;
-  right: 2px;
-  bottom: 0;
+  right: -6px;
+  bottom: -8px;
   font-size: 10px;
-  color: #ffd54f;
-  text-shadow: 0 1px 2px #000;
+  color: var(--ui-gold);
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* Timer : plaque sombre en haut au centre */
+#hud-timer {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 12px;
+  font: 24px var(--ui-font);
+  color: var(--ui-text);
+  text-shadow: 2px 2px 0 #000;
+  border-style: solid;
+  border-width: 6px;
+  border-color: var(--ui-charcoal);
+  border-image: url('/assets/ui/darkages/plate.png') 3 fill / 6px stretch;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* Kills et or, en haut à droite, avec les icônes du pack 0x72 (crâne, pièce) */
+#hud-kills,
+#hud-gold {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 16px var(--ui-font);
+  color: var(--ui-text);
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
 }
 
 #hud-kills {
-  position: absolute;
-  top: 48px;
-  right: 16px;
-  font: bold 16px monospace;
-  color: #ddd;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
+  top: 30px;
 }
 
-/* Or gagné, sous les kills */
 #hud-gold {
-  position: absolute;
-  top: 70px;
-  right: 16px;
-  font: bold 14px monospace;
-  color: #ffd54f;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
+  top: 58px;
+  color: var(--ui-gold);
+}
+
+#hud-kills::before,
+#hud-gold::before {
+  content: '';
+  display: block;
+  background-image: url('/assets/sprites/0x72/0x72_DungeonTilesetII_v1.7.png');
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+/* Crâne 16 × 16 en (288, 432), agrandi ×1,5 : l'atlas de 512 px devient 768 px */
+#hud-kills::before {
+  width: 24px;
+  height: 24px;
+  background-size: 768px 768px;
+  background-position: -432px -648px;
+}
+
+/* Pièce 6 × 7 en (289, 385), agrandie ×2 : l'atlas de 512 px devient 1024 px */
+#hud-gold::before {
+  width: 12px;
+  height: 14px;
+  margin: 0 6px;
+  background-size: 1024px 1024px;
+  background-position: -578px -770px;
 }
 
 /* Mention du mode sans fin, sous l'or */
 #hud-endless {
   position: absolute;
-  top: 92px;
+  top: 84px;
   right: 16px;
-  font: bold 14px monospace;
+  font: 14px var(--ui-font);
   letter-spacing: 2px;
-  color: #ffd54f;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  pointer-events: none;
-}
-
-#hud-timer {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font: bold 24px monospace;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  color: var(--ui-gold);
+  text-shadow: 2px 2px 0 #000;
   pointer-events: none;
 }
 
@@ -187,21 +294,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-family: monospace;
-}
-
-.overlay-death {
-  background: rgba(40, 0, 0, 0.75);
-}
-
-.overlay-victory {
-  background: rgba(40, 32, 0, 0.75);
-}
-
-.overlay-victory .overlay-title {
-  color: #ffd54f;
+  background: rgba(10, 8, 14, 0.7);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
 }
 
 /* Damage meter de l'écran de fin */
@@ -214,10 +309,10 @@ body {
 
 .meter-row {
   display: grid;
-  grid-template-columns: 170px 1fr;
+  grid-template-columns: 260px 1fr;
   grid-template-rows: auto auto;
   column-gap: 12px;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .meter-label {
@@ -243,24 +338,28 @@ body {
 .overlay-title {
   font-size: 48px;
   letter-spacing: 8px;
+  color: var(--ui-gold);
+  /* Ombre dure (pixel art) plutôt qu'un flou */
+  text-shadow:
+    3px 3px 0 #000,
+    0 0 18px rgba(220, 196, 124, 0.25);
 }
 
 /* "Nouveau perso débloqué" sur l'écran de fin */
 .overlay-unlocks {
   font-size: 20px;
   font-weight: bold;
-  color: #ffd54f;
   white-space: pre-line;
   text-align: center;
 }
 
 .overlay-info {
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .overlay-hint {
-  font-size: 14px;
-  color: #aaa;
+  font-size: 12px;
+  color: var(--ui-tan);
 }
 
 /* Pas de boîte à lui : ses enfants restent en absolute par rapport à #stage */
@@ -270,7 +369,7 @@ body {
 
 /* Menu principal : opaque, il n'y a pas de partie derrière */
 .overlay-menu {
-  background: #14141c;
+  background: radial-gradient(ellipse at center, #221d2a 0%, var(--ui-bg) 70%);
   gap: 32px;
 }
 
@@ -283,28 +382,28 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 260px;
+  width: 320px;
 }
 
 .menu-button {
-  padding: 12px;
+  padding: 2px 0;
   font: inherit;
-  font-size: 18px;
-  color: #fff;
-  background: #1d2236;
-  border: 2px solid #3a4470;
-  border-radius: 8px;
+  font-size: 16px;
+  color: var(--ui-text);
+  background: none;
   cursor: pointer;
 }
 
-.menu-button:hover:not(:disabled) {
-  border-color: #4fc3f7;
-  background: #242b45;
+.menu-button:hover:not(:disabled),
+.menu-button:focus-visible {
+  color: var(--ui-gold);
+  border-image-source: url('/assets/ui/darkages/button-hover.png');
+  outline: none;
 }
 
 .menu-button:disabled {
-  color: #666;
-  border-color: #2a2f45;
+  color: #6b6458;
+  opacity: 0.6;
   cursor: default;
 }
 
@@ -312,57 +411,53 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 360px;
+  width: 520px;
 }
 
 .option-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 6px 10px;
   font-size: 16px;
-  background: #1d2236;
-  border: 2px solid #3a4470;
-  border-radius: 8px;
   cursor: pointer;
 }
 
 .option-row:hover {
-  border-color: #4fc3f7;
+  color: var(--ui-gold);
 }
 
 .option-row input {
   width: 18px;
   height: 18px;
+  accent-color: var(--ui-gold-dark);
   cursor: pointer;
 }
 
 /* Boutique */
 .shop-gold {
-  color: #ffd54f;
+  color: var(--ui-gold);
 }
 
 .shop-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 620px;
+  width: 860px;
 }
 
 .shop-row {
   display: grid;
-  grid-template-columns: 230px 1fr 120px;
+  grid-template-columns: 340px 1fr 140px;
+  font-size: 12px;
   align-items: center;
   gap: 12px;
   padding: 6px 10px;
-  background: #1d2236;
-  border: 2px solid #3a4470;
-  border-radius: 8px;
 }
 
 .shop-effect {
-  color: #aaa;
-  font-size: 14px;
+  color: var(--ui-tan);
+  font-size: 12px;
 }
 
 .shop-buy {
@@ -371,7 +466,7 @@ body {
 }
 
 .shop-buy:disabled {
-  color: #666;
+  color: #6b6458;
   cursor: default;
 }
 
@@ -380,8 +475,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  width: 460px;
-  font-size: 15px;
+  width: 640px;
+  font-size: 12px;
 }
 
 .profile-row,
@@ -392,13 +487,11 @@ body {
 }
 
 .profile-weapon {
-  padding: 6px 10px;
-  background: #1d2236;
-  border-left: 4px solid #3a4470;
+  padding: 4px 10px;
 }
 
 .profile-value {
-  color: #4fc3f7;
+  color: var(--ui-gold);
 }
 
 /* Menu de test (F2, dev seulement) : colonne à droite, défilable */
@@ -470,7 +563,7 @@ body {
   position: absolute;
   bottom: 8px;
   right: 16px;
-  font: bold 14px monospace;
+  font: 14px var(--ui-font);
   color: #ff9800;
   pointer-events: none;
 }
@@ -505,54 +598,56 @@ body {
 }
 
 .choice {
-  width: 220px;
+  width: 260px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   text-align: left;
   font: inherit;
-  color: #fff;
-  background: #1d2236;
-  border: 2px solid #3a4470;
-  border-radius: 8px;
+  color: var(--ui-text);
+  background: none;
   cursor: pointer;
+  transition: transform 0.08s;
 }
 
-.choice:hover {
-  border-color: #4fc3f7;
-  background: #242b45;
+.choice:hover,
+.choice:focus-visible {
+  transform: translateY(-4px);
+  filter: brightness(1.25);
+  outline: none;
 }
 
 /* Carte de perso verrouillé : grisée, pas cliquable */
 .character-card:disabled {
   opacity: 0.5;
   cursor: default;
-  border-color: #2a2f45;
 }
 
 .character-card:disabled:hover {
-  background: #1d2236;
+  transform: none;
+  filter: none;
 }
 
 .choice-key {
   font-size: 12px;
-  color: #888;
+  color: var(--ui-tan);
 }
 
 .choice-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
+  color: var(--ui-gold);
 }
 
 .choice-level {
-  font-size: 13px;
-  color: #4fc3f7;
+  font-size: 12px;
+  color: var(--ui-blue);
 }
 
 .choice-desc {
-  font-size: 14px;
-  color: #ccc;
+  font-size: 12px;
+  color: var(--ui-text);
 }
 
 #debug-overlay {
@@ -565,4 +660,246 @@ body {
   background: rgba(0, 0, 0, 0.6);
   white-space: pre;
   pointer-events: none;
+}
+
+/*
+ * Cartes de level up : cadre Kenney (CC0) teint selon la sorte d'upgrade par
+ * tools/ui/tint-kenney.mjs. Bleu = arme, vert = passif, rouge = soin, or = mutation.
+ */
+.choice-weapon,
+.choice-passive,
+.choice-heal,
+.choice-mutation {
+  border-width: 16px;
+  border-image-slice: 16;
+  border-image-width: 16px;
+  border-image-repeat: stretch;
+  background: var(--ui-panel);
+}
+
+.choice-weapon {
+  border-color: var(--ui-blue);
+  border-image-source: url('/assets/ui/kenney/card-weapon.png');
+}
+
+.choice-passive {
+  border-color: #7fae6a;
+  border-image-source: url('/assets/ui/kenney/card-passive.png');
+}
+
+.choice-heal {
+  border-color: var(--ui-red);
+  border-image-source: url('/assets/ui/kenney/card-heal.png');
+}
+
+.choice-mutation {
+  border-color: var(--ui-gold);
+  border-image-source: url('/assets/ui/kenney/card-mutation.png');
+  background: linear-gradient(180deg, #3a3020 0%, var(--ui-panel) 70%);
+  box-shadow: 0 0 18px rgba(220, 196, 124, 0.35);
+}
+
+/* L'étiquette prend la couleur de la carte */
+.choice-weapon .choice-key {
+  color: var(--ui-blue);
+}
+
+.choice-passive .choice-key {
+  color: #7fae6a;
+}
+
+.choice-heal .choice-key {
+  color: var(--ui-red);
+}
+
+.choice-mutation .choice-key {
+  color: var(--ui-gold);
+}
+
+.choice-key {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/*
+ * Menus : le contenu principal de chaque écran dans le grand cadre doré du pack (×1,5 pour que
+ * les coins ornés restent lisibles sans écraser le contenu).
+ */
+#menu-overlay .menu-buttons,
+.options-list,
+.shop-list,
+#profile-summary,
+#profile-weapons {
+  padding: 8px;
+  border-style: solid;
+  border-width: 36px;
+  border-color: var(--ui-gold-dark);
+  border-image: url('/assets/ui/darkages/panel.png') 24 fill / 36px stretch;
+  image-rendering: pixelated;
+}
+
+#menu-overlay .menu-buttons {
+  width: 400px;
+}
+
+/* Titre du menu principal : plus grand, avec une lueur qui respire */
+.menu-title {
+  font-size: 72px;
+  animation: title-glow 3s ease-in-out infinite;
+}
+
+@keyframes title-glow {
+  50% {
+    text-shadow:
+      4px 4px 0 #000,
+      0 0 28px rgba(220, 196, 124, 0.5);
+  }
+}
+
+/*
+ * Portrait animé du perso : son animation de repos prise dans l'atlas 0x72 (agrandi ×3),
+ * 4 images de 16 × 28 côte à côte à partir de x = 128 ; la ligne vient de --portrait-y.
+ */
+.character-portrait {
+  align-self: center;
+  width: 48px;
+  height: 84px;
+  margin: 4px 0 6px;
+  background-image: url('/assets/sprites/0x72/0x72_DungeonTilesetII_v1.7.png');
+  background-size: 1536px 1536px;
+  background-position: -384px calc(var(--portrait-y, 164) * -3px);
+  image-rendering: pixelated;
+  animation: portrait-idle 0.6s steps(4) infinite;
+}
+
+@keyframes portrait-idle {
+  to {
+    background-position-x: -576px;
+  }
+}
+
+/* Perso verrouillé : silhouette sombre et immobile */
+.character-card:disabled .character-portrait {
+  filter: brightness(0) opacity(0.6);
+  animation: none;
+}
+
+/* ------------------------------------------------------------------ écran de fin */
+
+/* Défaite : vignette rouge sombre ; victoire : lueur dorée */
+.overlay-death {
+  background: radial-gradient(ellipse at center, rgba(60, 8, 16, 0.75) 0%, rgba(8, 2, 4, 0.92) 75%);
+}
+
+.overlay-death .overlay-title {
+  color: var(--ui-red);
+  text-shadow:
+    3px 3px 0 #000,
+    0 0 24px rgba(200, 50, 74, 0.45);
+}
+
+.overlay-victory {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(60, 48, 16, 0.7) 0%,
+    rgba(10, 8, 4, 0.92) 75%
+  );
+}
+
+/* Bilan : une rangée de tuiles encadrées */
+#end-info {
+  display: flex;
+  gap: 8px;
+}
+
+.end-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 130px;
+  padding: 2px 6px;
+  border-style: solid;
+  border-width: 8px;
+  border-color: var(--ui-charcoal);
+  border-image: url('/assets/ui/darkages/slot.png') 4 fill / 8px stretch;
+  image-rendering: pixelated;
+}
+
+.end-stat-value {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--ui-gold);
+  text-shadow: 2px 2px 0 #000;
+}
+
+.end-stat-label {
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+/* Perso débloqué : bandeau doré */
+.overlay-unlocks {
+  padding: 6px 18px;
+  color: var(--ui-gold);
+  text-shadow: 2px 2px 0 #000;
+  border-style: solid;
+  border-width: 10px 24px;
+  border-color: var(--ui-gold-dark);
+  border-image: url('/assets/ui/darkages/button-hover.png') 5 12 fill / 10px 24px stretch;
+  image-rendering: pixelated;
+}
+
+/* Damage meter dans le grand cadre doré, barres sur fond sombre bordé */
+#end-meter {
+  width: 780px;
+  padding: 8px;
+  border-style: solid;
+  border-width: 36px;
+  border-color: var(--ui-gold-dark);
+  border-image: url('/assets/ui/darkages/panel.png') 24 fill / 36px stretch;
+  image-rendering: pixelated;
+}
+
+.meter-label {
+  color: var(--ui-text);
+}
+
+.meter-bar {
+  height: 12px;
+  background: #0d0f0c;
+  box-shadow:
+    0 0 0 2px var(--ui-charcoal),
+    0 0 0 3px var(--ui-gold-dark);
+}
+
+.meter-value {
+  color: var(--ui-tan);
+}
+
+/* ------------------------------------------------------------------ icônes (Raven, 16 × 16) */
+
+/* Icône du pack agrandie ×2, pixels nets */
+.icon {
+  display: block;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+/* Texte de secours si l'icône manque (pack absent du dépôt) */
+.icon-fallback {
+  font-size: 12px;
+}
+
+/* Cases d'inventaire plus grandes pour loger l'icône 32 px (cadre de 8 px de chaque côté) */
+.slot {
+  width: 48px;
+  height: 48px;
+}
+
+/* Carte de level up : icône à gauche du nom */
+.choice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
