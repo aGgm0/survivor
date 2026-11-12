@@ -1,6 +1,8 @@
 import { lerp, normalizeInto, type Vec2 } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
 import { computeDamage } from '../systems/damage';
+import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
+import { HIT_FLASH_TINT, PLAYER_SPRITE } from '../data/sprites';
 
 const PLAYER_COLOR = '#8a6cff';
 /** Couleur et durée (s) du flash quand le joueur prend un coup */
@@ -47,6 +49,8 @@ export class Player {
   extraCount = 0;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
+  /** Temps (s) qui fait avancer l'animation du sprite (aucun effet de jeu). */
+  animTime = 0;
 
   /** Direction regardée (vecteur de longueur 1) : vers la droite au départ */
   facingX = 1;
@@ -65,6 +69,7 @@ export class Player {
    */
   update(dt: number, axisX: number, axisY: number): void {
     this.syncPrevious();
+    this.animTime += dt;
     if (this.hitFlashTimer > 0) this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dt);
     // Sans normalisation, la diagonale (1, 1) a une longueur de ~1,41 : on irait 41 % plus vite.
     normalizeInto(axisX, axisY, this.dir);
@@ -110,14 +115,25 @@ export class Player {
     return lerp(this.prevY, this.y, alpha);
   }
 
-  render(ctx: CanvasRenderingContext2D, alpha: number): void {
+  /** `sprites` absent (image pas encore chargée, ou introuvable) : on dessine un cercle. */
+  render(ctx: CanvasRenderingContext2D, alpha: number, sprites?: SpriteAtlas | null): void {
     const x = this.renderX(alpha);
     const y = this.renderY(alpha);
+    const flashing = this.hitFlashTimer > 0;
 
-    ctx.fillStyle = this.hitFlashTimer > 0 ? HIT_FLASH_COLOR : PLAYER_COLOR;
-    ctx.beginPath();
-    ctx.arc(x, y, this.radius, 0, Math.PI * 2);
-    ctx.fill();
+    const moving = this.vx !== 0 || this.vy !== 0;
+    const anim = sprites?.animation(moving ? PLAYER_SPRITE.run : PLAYER_SPRITE.idle);
+    const frame = anim && frameAt(anim, this.animTime, PLAYER_SPRITE.frameTime);
+    if (sprites && frame) {
+      // Pieds posés sur le bas de la hitbox : le sprite dépasse vers le haut, comme un perso debout.
+      const tint = flashing ? HIT_FLASH_TINT : undefined;
+      sprites.draw(ctx, frame, x, y + this.radius, PLAYER_SPRITE.scale, this.facingX < 0, tint);
+    } else {
+      ctx.fillStyle = flashing ? HIT_FLASH_COLOR : PLAYER_COLOR;
+      ctx.beginPath();
+      ctx.arc(x, y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     const barX = x - HP_BAR.width / 2;
     const barY = y + this.radius + HP_BAR.offset;

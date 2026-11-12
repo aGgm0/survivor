@@ -355,7 +355,17 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 
 ### Phase 6 — Visuel & audio
 - [ ] Design de l'UI (HUD, menus, écrans de fin)
-- [ ] Sprites et animations
+- [ ] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
+  - [x] Premier essai généré par script : joueur, basique, boss (remplacé par le pack)
+  - [x] Pack téléchargé (`public/assets/sprites/0x72/` : atlas + `tile_list_v1.7`), `public/assets/LICENSES.md` ; choix validés : joueur `wizzard_m`, basique `chort`, rapide `imp`, tank `ogre`, boss `big_demon`, élites = basique / rapide teintés, caisse `crate`, pièce `coin_anim`, nourriture `flask_red`, sol `atlas_floor`
+  - [x] Branchement dans le rendu (sprites animés, retournés selon la direction, teinte des élites)
+    - [x] Étape 1 : `core/SpriteAtlas` (atlas + liste, copies miroir et teintées préparées une fois), `data/sprites.ts`, le mage
+    - [x] Étape 2 : ennemis (tournés vers le joueur, flash blanc, élites dorées ×3, animations décalées, barre de PV au-dessus de la tête)
+    - [x] Étape 3 : sol (motif de dalles tirées avec la seed, assombri), caisse, pièces animées, potion
+  - [ ] Gemmes d'XP, aura, orbes, projectiles, effets (Foozle / PVFX)
+  - [ ] `[LATER]` Icônes du HUD : pack Raven Fantasy Icons envisagé (version gratuite = jeux gratuits seulement, Premium 35 $ pour un jeu payant ; fichiers à ne pas republier)
+  - [ ] Une apparence par palier de temps pour chaque type d'ennemi <!-- TODO: quels paliers (6:00 / 8:00 ?) -->
+  - [ ] `[LATER]` Autres bestiaires que les démons (morts-vivants...) pour les prochains niveaux
 - [ ] Screen shake, particules (plan déjà proposé : trauma dans la Camera, `ParticleSystem` en pool)
 - [ ] Sons et musique + option volume
 
@@ -464,6 +474,9 @@ Format : date — décision — raison.
 | 2026-11-11 | Mini-boss = types d'ennemis `fastElite` / `basicElite` (flag `elite`) à 3:00 et 7:00 ; capacités de boss dans `BossAbilitySystem` (état et dates sur l'ennemi, mouvement de charge dans MovementSystem) ; direction de la charge fixée au début de l'annonce ; invocation = 5 basiques + 2 basiques élites ; boss de 5:00 sans invocation | Demandé ; « 5 basiques et 2 élites » à la place de 8 basiques. Annonces obligatoires : une capacité qu'on ne peut pas voir venir n'est pas esquivable |
 | 2026-11-12 | Charge : vitesse ×4 → ×5, durée 0,5 → 0,7 s (distance ×1,75) ; invocation : 2 → 1 basique élite | Retour de jeu |
 | 2026-11-12 | Élites : plus immunisés au recul ; recul = 50 % de leur version normale (`knockbackFactor` 0,75 / 0,5, au lieu du calcul par la masse qui les aurait rendus ~3× moins sensibles) | Demandé |
+| 2026-11-12 | Visuels : pixel art de profil 3/4 (sprites tournés vers la droite, à retourner selon la direction ; la vue de face du 1er essai a été rejetée : « trop bizarre », diablotin « mignon »), 1 pixel d'art = 1 px à l'écran pour plus de détail, contour sombre d'1 pixel, ombrage et traits internes calculés par le script (`shape`), corps sombres + couleur du type en accent ; PNG générés par un script sans dépendance (pas de SVG) ; bestiaire de départ = démons ; variantes = une apparence par palier de temps | Réponses aux questions de style (images de référence en 3/4, monde sombre). Le SVG est fait pour du vectoriel lisse, pas pour une grille de pixels |
+| 2026-11-12 | Assets : pack 0x72 DungeonTileset II (CC0, cases de 16 px, profil gauche/droite, démons, sol de donjon sombre) au lieu des sprites générés ; effets Foozle / PVFX Foundry (CC0), police m5x7 (CC0) ; aura et gemmes dessinées par nous. Tiny RPG (Zerie) écarté ; sprites agrandis ×2 (boss et élites ×3 pour remplir leur hitbox), pieds posés sur le bas de la hitbox ; hitboxes inchangées ; atlas chargé en arrière-plan (formes simples tant qu'il n'est pas prêt) | Pas de démons chez Zerie (bestiaire démons gardé), licence qui interdit de republier les fichiers (gênant pour un dépôt public), 2,50 $. 0x72 : CC0, même vue que la décision 3/4, monde sombre |
+| 2026-11-12 | Flash des ennemis touchés : 0,1 → 0,08 s, au moins 0,25 s entre deux flashs, blanc à 65 % par-dessus le sprite | Retour de jeu : sous un gros DPS les ennemis restaient entièrement blancs |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

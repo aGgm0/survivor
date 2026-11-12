@@ -41,5 +41,8 @@ export class Renderer {
     // Cette transformation permet au reste du code de dessiner en coordonnées logiques.
     const ratio = (cssWidth * dpr) / LOGICAL_WIDTH;
     this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    // Pixel art : agrandir sans lisser (sinon les sprites deviennent flous). Redimensionner le
+    // canvas remet ce réglage à vrai, d'où sa place ici.
+    this.ctx.imageSmoothingEnabled = false;
   }
 }

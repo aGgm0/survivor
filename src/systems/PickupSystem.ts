@@ -2,6 +2,8 @@ import type { Camera } from '../core/Camera';
 import { lerp } from '../core/math';
 import { Pool, type Poolable } from '../core/Pool';
 import { PICKUPS } from '../data/furniture';
+import { PICKUP_SPRITES } from '../data/sprites';
+import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
 import { GEM_MAGNET } from '../data/xp';
 import type { Collector } from './GemSystem';
 
@@ -86,8 +88,21 @@ export class PickupSystem {
     return this.pickups.activeCount;
   }
 
-  /** À appeler entre `camera.begin` et `camera.end` (coordonnées monde). */
-  render(ctx: CanvasRenderingContext2D, alpha: number, camera: Camera): void {
+  /**
+   * À appeler entre `camera.begin` et `camera.end` (coordonnées monde). Avec l'atlas : pièce
+   * animée et potion, posées sur leur position ; sans : des ronds de couleur.
+   */
+  render(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    camera: Camera,
+    sprites?: SpriteAtlas | null,
+    time = 0,
+  ): void {
+    if (sprites) {
+      this.renderSprites(ctx, alpha, camera, sprites, time);
+      return;
+    }
     for (const kind of ['gold', 'food'] as const) {
       const radius = kind === 'gold' ? PICKUPS.goldRadius : PICKUPS.foodRadius;
       ctx.beginPath();
@@ -102,6 +117,31 @@ export class PickupSystem {
       }
       ctx.fillStyle = kind === 'gold' ? PICKUPS.goldColor : PICKUPS.foodColor;
       ctx.fill();
+    }
+  }
+
+  private renderSprites(
+    ctx: CanvasRenderingContext2D,
+    alpha: number,
+    camera: Camera,
+    sprites: SpriteAtlas,
+    time: number,
+  ): void {
+    const items = this.pickups.items;
+    for (let i = 0; i < items.length; i++) {
+      const p = items[i];
+      if (!p?.active) continue;
+      const look = PICKUP_SPRITES[p.kind];
+      // Décalage par objet : les pièces ne tournent pas toutes en même temps.
+      const frame = frameAt(sprites.animation(look.anim), time + i * 0.17, look.frameTime);
+      if (!frame) continue;
+      const x = lerp(p.prevX, p.x, alpha);
+      const y = lerp(p.prevY, p.y, alpha);
+      const half = frame.h * look.scale;
+      if (x < camera.left - half || x > camera.right + half) continue;
+      if (y < camera.top - half || y > camera.bottom + half) continue;
+      // Centré sur sa position (le bas du sprite à mi-hauteur sous le centre).
+      sprites.draw(ctx, frame, x, y + half / 2, look.scale, false);
     }
   }
 }

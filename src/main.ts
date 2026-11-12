@@ -19,6 +19,8 @@ import { CharacterOverlay } from './ui/CharacterOverlay';
 import { ShopOverlay } from './ui/ShopOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
 import type { RunReport } from './systems/runReport';
+import { SpriteAtlas } from './core/SpriteAtlas';
+import { ATLAS_URLS } from './data/sprites';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -112,6 +114,17 @@ const devPanel = import.meta.env.DEV
  */
 let character: CharacterDef = DEFAULT_CHARACTER;
 
+// Sprites : chargés en arrière-plan pendant que le menu s'affiche (le jeu n'attend pas).
+// Une partie lancée avant la fin du chargement, ou une image introuvable : formes simples.
+let sprites: SpriteAtlas | null = null;
+SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
+  .then((atlas) => {
+    sprites = atlas;
+  })
+  .catch((error: unknown) => {
+    console.warn('Sprites non chargés, formes simples à la place :', error);
+  });
+
 function startRun(chosen: CharacterDef = character): void {
   character = chosen;
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
@@ -130,6 +143,7 @@ function startRun(chosen: CharacterDef = character): void {
       onRunEnd,
       devPanel,
       unlocksFor: (report) => newUnlocks(profile, report).map((c) => c.name),
+      sprites,
     },
     seed,
     { startWeapon: character.weapon, shopRanks: profile.shop },

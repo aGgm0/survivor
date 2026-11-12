@@ -41,7 +41,7 @@ export class Enemy implements Poolable {
   /** Instant (temps de partie, en s) à partir duquel il peut de nouveau toucher le joueur. */
   nextContactHitAt = 0;
   /** Instant (temps de partie, en s) jusqu'auquel il est affiché en blanc (vient d'être touché). */
-  flashUntil = 0;
+  flashUntil = -Infinity;
   /**
    * Pour chaque orbe (index = n° de l'orbe) : instant à partir duquel il peut de nouveau le
    * toucher. Tableau typé créé une seule fois avec l'ennemi : aucune allocation en jeu.
@@ -87,7 +87,7 @@ export class Enemy implements Poolable {
     // Plus de PV à percer = plus d'XP : sinon monter de niveau ralentit à chaque vague.
     this.xpMult = hpMult;
     this.nextContactHitAt = 0;
-    this.flashUntil = 0;
+    this.flashUntil = -Infinity; // jamais flashé : le 1er coup flashe toujours
     this.orbitHitAt.fill(0);
     this.nextAuraHitAt = 0;
     this.slowAmount = 0;

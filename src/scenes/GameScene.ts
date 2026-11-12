@@ -4,6 +4,14 @@ import type { Input } from '../core/Input';
 import { lerp, Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import type { Scene } from '../core/Scene';
+import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
+import {
+  ENEMY_ANIM_OFFSET,
+  ENEMY_IDLE_SPEED,
+  FLOOR,
+  HIT_FLASH_TINT,
+  enemySprite,
+} from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
@@ -70,10 +78,31 @@ const PROJECTILE_GLOW_ALPHA = 0.3;
 /** Deux passes de dessin (halo puis cœur), définies une fois pour ne rien allouer par frame. */
 const PROJECTILE_PASSES = [PROJECTILE_GLOW_SCALE, 1] as const;
 /** s pendant lesquelles un ennemi touché est affiché en blanc */
-const ENEMY_HIT_FLASH = 0.1;
+const ENEMY_HIT_FLASH = 0.08;
+/** s minimum entre la fin d'un flash et le suivant (un ennemi pris sous un gros DPS clignote) */
+const ENEMY_FLASH_GAP = 0.25;
+/** Opacité du flash sur les sprites */
+const ENEMY_FLASH_ALPHA = 0.65;
 const ENEMY_FLASH_COLOR = '#ffffff';
 /** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
 const VISUAL_SEED_SALT = 0x9e3779b9;
+/** Idem pour le tirage des dalles du sol */
+const FLOOR_SEED_SALT = 0x85ebca6b;
+
+/** Image du sol : FLOOR.size × FLOOR.size dalles tirées selon leur poids. */
+function buildFloor(sprites: SpriteAtlas, rng: Rng): HTMLCanvasElement {
+  const total = FLOOR.tiles.reduce((sum, t) => sum + t.weight, 0);
+  const pick = (): string => {
+    let roll = rng.next() * total;
+    for (const t of FLOOR.tiles) {
+      roll -= t.weight;
+      if (roll < 0) return t.name;
+    }
+    return FLOOR.tiles[0].name;
+  };
+  const grid = Array.from({ length: FLOOR.size }, () => Array.from({ length: FLOOR.size }, pick));
+  return sprites.buildTiles(grid, FLOOR.scale, FLOOR.darken);
+}
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
 const AURA_STROKE_ALPHA = 0.5;
@@ -130,6 +159,8 @@ export interface GameSceneDeps {
   devPanel?: Pick<DevPanel, 'setVisible' | 'takeActions' | 'refresh'>;
   /** Noms des persos que cette partie débloque (annoncés sur l'écran de fin) */
   unlocksFor: (report: RunReport) => readonly string[];
+  /** Atlas des sprites. Absent (pas encore chargé, tests) : on dessine des formes simples. */
+  sprites?: SpriteAtlas | null;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -171,6 +202,10 @@ export class GameScene implements Scene, Build {
   /** Augmente à chaque upgrade choisi : le HUD ne redessine l'inventaire que quand il change. */
   private buildVersion = 0;
   private paused = false;
+  /** Image du sol (dalles tirées au hasard), préparée une fois ; null = pas de sprites, grille */
+  private readonly floorTiles: HTMLCanvasElement | null;
+  /** Motif répété tiré de `floorTiles`, créé au premier rendu (il faut le contexte du canvas) */
+  private floorPattern: CanvasPattern | null = null;
   /** Bilan de la partie une fois terminée (victoire ou défaite) ; null = partie en cours */
   private report: RunReport | null = null;
   /** secondes de survie (n'avance pas pendant la pause) */
@@ -230,6 +265,9 @@ export class GameScene implements Scene, Build {
       hitEvents,
     );
     this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
+    this.floorTiles = deps.sprites
+      ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
+      : null;
     this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, hitEvents);
     this.statusSystem = new StatusSystem(hitEvents);
     this.recomputeWeapons();
@@ -449,7 +487,10 @@ export class GameScene implements Scene, Build {
       }
       return;
     }
-    e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
+    // Pas de nouveau flash juste après le précédent : sous un gros DPS, l'ennemi resterait blanc.
+    if (this.elapsed - e.flashUntil >= ENEMY_FLASH_GAP) {
+      e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
+    }
     if (showNumbers) this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
@@ -604,13 +645,13 @@ export class GameScene implements Scene, Build {
     this.renderGrid(ctx);
     // Les gemmes sont au sol : dessinées sous les ennemis.
     this.gems.render(ctx, alpha, this.camera);
-    this.pickups.render(ctx, alpha, this.camera);
+    this.pickups.render(ctx, alpha, this.camera, this.deps.sprites, this.elapsed);
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
     this.renderEnemies(ctx, alpha);
     this.renderEliteRings(ctx, alpha);
     this.renderBossBars(ctx, alpha);
-    this.player.render(ctx, alpha);
+    this.player.render(ctx, alpha, this.deps.sprites);
     this.renderOrbs(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
     this.effects.render(ctx, this.camera);
@@ -640,10 +681,11 @@ export class GameScene implements Scene, Build {
       if (!e?.active || (e.type !== BOSS_TYPE && !e.type.elite)) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
-      if (!this.isOnScreen(x, y, e.type.radius + BOSS_BAR.offset + BOSS_BAR.height)) continue;
+      // Au-dessus de la tête (le sprite dépasse la hitbox vers le haut).
+      const barY = this.enemyTop(e, y) - BOSS_BAR.offset - BOSS_BAR.height;
+      if (!this.isOnScreen(x, y, y - barY)) continue;
       const width = e.type.elite ? BOSS_BAR.width * ELITE_LOOK.barScale : BOSS_BAR.width;
       const barX = x - width / 2;
-      const barY = y - e.type.radius - BOSS_BAR.offset - BOSS_BAR.height;
       ctx.fillStyle = BOSS_BAR.bg;
       ctx.fillRect(barX, barY, width, BOSS_BAR.height);
       ctx.fillStyle = BOSS_BAR.fill;
@@ -945,6 +987,7 @@ export class GameScene implements Scene, Build {
    * Les ennemis qui viennent d'être touchés sont dessinés à part, en blanc.
    */
   private renderEnemies(ctx: CanvasRenderingContext2D, alpha: number): void {
+    this.renderEnemySprites(ctx, alpha);
     for (const type of ENEMY_TYPE_LIST) {
       ctx.beginPath();
       this.addEnemyCircles(ctx, alpha, type, false);
@@ -971,6 +1014,7 @@ export class GameScene implements Scene, Build {
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
       if (!e?.active || (type && e.type !== type)) continue;
+      if (this.deps.sprites && enemySprite(e.type.id)) continue; // déjà dessiné en sprite
       if (e.flashUntil > this.elapsed !== flashing) continue;
       const r = e.type.radius;
       const x = e.renderX(alpha);
@@ -982,9 +1026,63 @@ export class GameScene implements Scene, Build {
     }
   }
 
+  /**
+   * Ennemis qui ont un sprite (voir data/sprites.ts) : pieds sur le bas de la hitbox, tournés
+   * vers le joueur, silhouette blanche quand ils viennent d'être touchés. Sans atlas : rien ici,
+   * les cercles prennent le relais.
+   */
+  private renderEnemySprites(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const sprites = this.deps.sprites;
+    if (!sprites) return;
+    const px = this.player.renderX(alpha);
+    const items = this.enemies.items;
+    for (let i = 0; i < items.length; i++) {
+      const e = items[i];
+      if (!e?.active) continue;
+      const look = enemySprite(e.type.id);
+      if (!look) continue;
+      const x = e.renderX(alpha);
+      const y = e.renderY(alpha);
+      const r = e.type.radius;
+      const moving = e.vx * e.vx + e.vy * e.vy > ENEMY_IDLE_SPEED * ENEMY_IDLE_SPEED;
+      const anim = sprites.animation(moving ? look.run : look.idle);
+      // Décalage par ennemi : sinon toute la horde pose le pied au même moment.
+      const frame = frameAt(anim, this.elapsed + e.id * ENEMY_ANIM_OFFSET, look.frameTime);
+      if (!frame) continue;
+      // Le sprite dépasse la hitbox vers le haut : marge de sa hauteur pour ne pas le couper au bord.
+      if (!this.isOnScreen(x, y, r + frame.h * look.scale)) continue;
+      // Tournés vers le joueur (et non selon leur vitesse, qui change de signe dans la mêlée).
+      const mirrored = x > px;
+      sprites.draw(ctx, frame, x, y + r, look.scale, mirrored, look.tint);
+      if (e.flashUntil > this.elapsed) {
+        // Flash par-dessus, à demi transparent : on voit encore le monstre sous le blanc.
+        ctx.globalAlpha = ENEMY_FLASH_ALPHA;
+        sprites.draw(ctx, frame, x, y + r, look.scale, mirrored, HIT_FLASH_TINT);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  /** Haut de l'ennemi à l'écran : haut de son sprite s'il en a un, sinon haut de sa hitbox. */
+  private enemyTop(e: Enemy, y: number): number {
+    const look = this.deps.sprites ? enemySprite(e.type.id) : undefined;
+    const frame = look && this.deps.sprites?.animation(look.run)[0];
+    return look && frame ? y + e.type.radius - frame.h * look.scale : y - e.type.radius;
+  }
+
   /** Ne dessine que les lignes visibles : la grille paraît infinie sans rien coûter. */
   private renderGrid(ctx: CanvasRenderingContext2D): void {
     const cam = this.camera;
+    if (this.floorTiles) {
+      // Sol en dalles : un motif répété, un seul fillRect. Le motif suit le repère monde
+      // (translation de la caméra), donc le sol défile avec le joueur.
+      this.floorPattern ??= ctx.createPattern(this.floorTiles, 'repeat');
+      if (this.floorPattern) {
+        ctx.fillStyle = this.floorPattern;
+        ctx.fillRect(cam.left, cam.top, cam.right - cam.left, cam.bottom - cam.top);
+        return;
+      }
+    }
     const startX = Math.floor(cam.left / GRID_SIZE) * GRID_SIZE;
     const startY = Math.floor(cam.top / GRID_SIZE) * GRID_SIZE;
 
