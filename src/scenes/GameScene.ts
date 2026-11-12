@@ -23,6 +23,8 @@ import {
   enemySprite,
 } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
+import { PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
+import { ParticleSystem } from '../systems/ParticleSystem';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
@@ -98,6 +100,8 @@ const ENEMY_FLASH_COLOR = '#ffffff';
 const VISUAL_SEED_SALT = 0x9e3779b9;
 /** Idem pour le tirage des dalles du sol */
 const FLOOR_SEED_SALT = 0x85ebca6b;
+/** Idem pour les particules */
+const PARTICLE_SEED_SALT = 0xc2b2ae35;
 
 /**
  * Teinte « multiply » à la couleur d'une arme. Une seule par couleur, créée la première fois puis
@@ -210,6 +214,8 @@ export class GameScene implements Scene, Build {
   private readonly projectileSystem: ProjectileSystem;
   private readonly statusSystem: StatusSystem;
   readonly damageNumbers: DamageNumberSystem;
+  /** Éclats purement visuels (morts, caisses, level up) */
+  readonly particles: ParticleSystem;
   readonly gems = new GemSystem();
   /** Rangs de boutique de cette partie, et le bonus d'XP qu'ils donnent (Sagesse) */
   private readonly shopRanks: Readonly<Record<string, number>>;
@@ -282,8 +288,10 @@ export class GameScene implements Scene, Build {
     const hitEvents = {
       onHit: (e: Enemy, damage: number, kind: HitKind) => this.onEnemyHit(e, damage, kind),
       onKill: (e: Enemy) => this.killEnemy(e),
-      onExplosion: (x: number, y: number, r: number, color: string) =>
-        this.effects.explosion(x, y, r, color),
+      onExplosion: (x: number, y: number, r: number, color: string) => {
+        this.effects.explosion(x, y, r, color);
+        this.shake('explosion');
+      },
       onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) =>
         this.effects.slash(x, y, angle, arc, r, color),
     };
@@ -294,6 +302,11 @@ export class GameScene implements Scene, Build {
       hitEvents,
     );
     this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
+    this.particles = new ParticleSystem(
+      PARTICLES.poolSize,
+      new Rng(seed ^ PARTICLE_SEED_SALT),
+      PARTICLES.drag,
+    );
     this.floorTiles = deps.sprites
       ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
       : null;
@@ -401,6 +414,9 @@ export class GameScene implements Scene, Build {
     }
 
     this.elapsed += dt;
+    // Tremblement de l'écran (option) : purement visuel, il ne touche qu'au dessin.
+    if (this.deps.settings.screenShake) this.camera.updateShake(dt, this.elapsed, SHAKE);
+    else this.camera.resetShake();
     // Survécu jusqu'au bout ET plus de boss en vie : tout se fige, écran de victoire.
     // Boss encore là à 10:00 → prolongations : la partie continue jusqu'à sa mort (ou la tienne).
     // En sans fin, plus de victoire : seule la mort termine la partie.
@@ -419,13 +435,14 @@ export class GameScene implements Scene, Build {
       this.spawner.spawnBatch(SPAWN.debugBatch, this.elapsed, this.player.x, this.player.y);
     }
     this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
-    this.bossAbilities.update(
+    const charges = this.bossAbilities.update(
       this.enemies,
       this.elapsed,
       this.player.x,
       this.player.y,
       this.spawner,
     );
+    if (charges > 0) this.shake('bossCharge');
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
@@ -444,14 +461,27 @@ export class GameScene implements Scene, Build {
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
     // Sagesse (boutique) : plus d'XP par gemme.
-    this.pendingLevelUps += this.progression.addXp(
+    const levelsGained = this.progression.addXp(
       this.gems.update(dt, this.player) * this.xpGainMult,
     );
+    if (levelsGained > 0) {
+      // Anneau d'étincelles : il part au moment du level up, puis reprend après le choix.
+      this.particles.burst(
+        this.player.x,
+        this.player.y,
+        PARTICLES.levelUp,
+        PARTICLES.levelUpColor,
+        PARTICLES.levelUp.count,
+        true,
+      );
+    }
+    this.pendingLevelUps += levelsGained;
     this.pickups.update(dt, this.player);
     this.gold += this.pickups.gold;
     if (this.pickups.heal > 0) this.player.heal(this.pickups.heal);
     this.damageNumbers.update(dt);
     this.effects.update(dt);
+    this.particles.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
   }
 
@@ -546,10 +576,33 @@ export class GameScene implements Scene, Build {
     return !this.report && !this.endless && this.elapsed >= this.runDuration;
   }
 
+  /** Choc qui fait trembler l'écran (voir SHAKE_EVENTS dans data/feel.ts). */
+  private shake(event: keyof typeof SHAKE_EVENTS): void {
+    const { amount, cap } = SHAKE_EVENTS[event];
+    this.camera.addTrauma(amount, cap);
+  }
+
+  /** Éclats à la couleur du monstre : plus il est gros, plus il y en a ; une gerbe pour le boss. */
+  private deathBurst(e: Enemy): void {
+    if (e.type === BOSS_TYPE) {
+      this.particles.burst(e.x, e.y, PARTICLES.bossDeath, e.type.color);
+      return;
+    }
+    const d = PARTICLES.death;
+    this.particles.burst(
+      e.x,
+      e.y,
+      d,
+      e.type.color,
+      d.count + Math.round(e.type.radius * d.perRadius),
+    );
+  }
+
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
     // Mobilier cassé : de l'or ou de la nourriture, pas d'XP ni de kill.
     if (e.type.prop) {
+      this.particles.burst(e.x, e.y, PARTICLES.crate, PARTICLES.crateColor);
       this.dropLoot(e.x, e.y);
       this.enemies.release(e);
       return;
@@ -557,6 +610,9 @@ export class GameScene implements Scene, Build {
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
+    this.deathBurst(e);
+    if (e.type === BOSS_TYPE) this.shake('bossKill');
+    else if (e.type.elite) this.shake('eliteKill');
     this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
     this.enemies.release(e);
     this.killCount++;
@@ -589,6 +645,7 @@ export class GameScene implements Scene, Build {
       if (this.god) continue; // menu de test : invincible
       if (!e || this.elapsed < e.nextContactHitAt) continue;
       this.player.takeHit(e.type.contactDamage);
+      this.shake('playerHit');
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
@@ -653,6 +710,7 @@ export class GameScene implements Scene, Build {
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */
   private freeze(): void {
+    this.camera.resetShake();
     this.player.syncPrevious();
     for (const e of this.enemies.items) e.syncPrevious();
     for (const p of this.projectiles.items) {
@@ -660,6 +718,7 @@ export class GameScene implements Scene, Build {
       p.prevY = p.y;
     }
     this.damageNumbers.freeze();
+    this.particles.freeze();
     this.gems.freeze();
     this.pickups.freeze();
     for (const w of this.weapons) w.prevAngle = w.angle;
@@ -678,6 +737,7 @@ export class GameScene implements Scene, Build {
     this.renderAuras(ctx, alpha); // au sol, sous les ennemis
     this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
     this.renderEnemies(ctx, alpha);
+    this.particles.render(ctx, alpha, this.camera); // éclats par-dessus les corps, sous le joueur
     this.renderEliteRings(ctx, alpha);
     this.renderBossBars(ctx, alpha);
     this.player.render(ctx, alpha, this.deps.sprites);

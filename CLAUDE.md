@@ -368,7 +368,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [ ] `[LATER]` Icônes du HUD : pack Raven Fantasy Icons envisagé (version gratuite = jeux gratuits seulement, Premium 35 $ pour un jeu payant ; fichiers à ne pas republier)
   - [ ] Une apparence par palier de temps pour chaque type d'ennemi <!-- TODO: quels paliers (6:00 / 8:00 ?) -->
   - [ ] `[LATER]` Autres bestiaires que les démons (morts-vivants...) pour les prochains niveaux
-- [ ] Screen shake, particules (plan déjà proposé : trauma dans la Camera, `ParticleSystem` en pool)
+- [x] Screen shake, particules
+  - [x] Étape 1 : screen shake (trauma dans la Camera, chocs dans `data/feel.ts`, option « Tremblement de l'écran »)
+  - [x] Étape 2 : particules (`ParticleSystem` en pool de 600 : morts d'ennemis, caisses, level up)
 - [ ] Sons et musique + option volume
 
 ### Phase 7 — Déploiement
@@ -481,6 +483,8 @@ Format : date — décision — raison.
 | 2026-11-12 | Flash des ennemis touchés : 0,1 → 0,08 s, au moins 0,25 s entre deux flashs, blanc à 65 % par-dessus le sprite | Retour de jeu : sous un gros DPS les ennemis restaient entièrement blancs |
 | 2026-11-12 | Effets PVFX : lecteur de manifeste (`core/EffectSheet`) ; taille de chaque effet calculée depuis le gameplay (zone visible de l'explosion = son diamètre, arc du slash = portée de l'épée, croissant de la vague = diamètre de sa hitbox, tête du Trait et orbe = leur hitbox) ; animations jouées en accéléré (explosion 0,5 s, slash 0,45 s) ; slash découpé (clip) à la part de disque qui frappe | Demandé : « faire gaffe à leur taille ». Retours de jeu : slash à 0,25 s « à 200 km/h » et plus grand que sa hitbox (le sprite balaie ~200° pour un arc de 120°) ; flammes autour de l'aura retirées (« trop bizarre »). Agrandissement parfois non entier (pixels un peu inégaux) : la taille exacte de la zone de dégâts passe avant |
 | 2026-11-12 | Nerf : le Duplicateur ne s'applique plus à l'Épée (plus de combo, ni tour de Tourbillon ni vague en plus) | Demandé (retour de jeu) |
+| 2026-11-12 | Screen shake par « trauma » (0 à 1, décalage = trauma² × 14 px, −1,6/s) appliqué au seul dessin ; chocs : coup reçu +0,15 (plafond 0,4), charge du boss +0,3, élite tué +0,4, boss tué +0,7, explosion +0,04 (plafond 0,2) ; coupé en pause / level up / fin ; option activée par défaut (anciennes sauvegardes comprises) | Plan validé (« ok reco »). Le plafond évite un écran qui tremble en continu au contact de la horde |
+| 2026-11-12 | Particules : carrés de 4 px (6 pour le boss) qui ralentissent et rétrécissent par paliers de 2 px au lieu de s'effacer ; mort = 4 + rayon / 4 éclats à la couleur du type, boss = 60, caisse = 8, level up = anneau de 28 ; aléatoire séparé de celui du jeu ; réserve de 600, le surplus est sauté | Plan validé (« ok reco »). 400 ennemis tués d'un coup : réserve pleine, 180 FPS |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

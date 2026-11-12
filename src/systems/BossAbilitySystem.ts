@@ -16,20 +16,25 @@ export class BossAbilitySystem {
     playerX: number,
     playerY: number,
     spawner: Pick<SpawnSystem, 'summonAround'>,
-  ): void {
+  ): number {
+    let charges = 0;
     for (const e of enemies.items) {
       if (!e.active || e.type !== BOSS_TYPE) continue;
-      this.updateCharge(e, now, playerX, playerY);
+      if (this.updateCharge(e, now, playerX, playerY)) charges++;
       this.updateSummon(e, now, spawner);
     }
+    return charges;
   }
 
-  /** none → windup (arrêt + ligne rouge) → dash (ligne droite) → none. */
-  private updateCharge(e: Enemy, now: number, playerX: number, playerY: number): void {
+  /**
+   * none → windup (arrêt + ligne rouge) → dash (ligne droite) → none.
+   * Renvoie vrai quand le boss se lance (la scène fait trembler l'écran).
+   */
+  private updateCharge(e: Enemy, now: number, playerX: number, playerY: number): boolean {
     const c = BOSS_ABILITIES.charge;
     switch (e.chargeState) {
       case 'none': {
-        if (now < e.nextChargeAt) return;
+        if (now < e.nextChargeAt) return false;
         // Direction fixée MAINTENANT : la ligne rouge montre exactement où il va foncer.
         const dx = playerX - e.x;
         const dy = playerY - e.y;
@@ -38,18 +43,18 @@ export class BossAbilitySystem {
         e.chargeDirY = dy / dist;
         e.chargeState = 'windup';
         e.chargeUntil = now + c.windup;
-        return;
+        return false;
       }
       case 'windup':
-        if (now < e.chargeUntil) return;
+        if (now < e.chargeUntil) return false;
         e.chargeState = 'dash';
         e.chargeUntil = now + c.duration;
-        return;
+        return true;
       case 'dash':
-        if (now < e.chargeUntil) return;
+        if (now < e.chargeUntil) return false;
         e.chargeState = 'none';
         e.nextChargeAt = now + c.interval * e.abilityRate;
-        return;
+        return false;
     }
   }
 

@@ -16,6 +16,8 @@ export interface Settings {
   fpsCounter: boolean;
   /** Mettre la partie en pause quand l'onglet est caché */
   pauseOnHidden: boolean;
+  /** Tremblement de l'écran sur les gros chocs (certains joueurs le supportent mal) */
+  screenShake: boolean;
 }
 
 export type SettingKey = keyof Settings;
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   damageNumbers: true,
   fpsCounter: false,
   pauseOnHidden: true,
+  screenShake: true,
 };
 
 /** Ordre et libellés de l'écran Options. */
@@ -31,6 +34,7 @@ export const SETTING_LABELS: readonly (readonly [SettingKey, string])[] = [
   ['damageNumbers', 'Nombres de dégâts'],
   ['fpsCounter', 'Compteur FPS'],
   ['pauseOnHidden', "Pause quand l'onglet est caché"],
+  ['screenShake', "Tremblement de l'écran"],
 ];
 
 function isRecord(value: unknown): value is Record<string, unknown> {

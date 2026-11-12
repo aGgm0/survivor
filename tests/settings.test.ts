@@ -34,6 +34,13 @@ describe('parseSettings', () => {
     expect(settings).toEqual({ ...DEFAULT_SETTINGS, damageNumbers: false });
   });
 
+  it('ancienne sauvegarde sans tremblement : activé par défaut, le reste est gardé', () => {
+    const settings = parseSettings({ version: 1, damageNumbers: false });
+    expect(settings.screenShake).toBe(true);
+    expect(settings.damageNumbers).toBe(false);
+    expect(parseSettings({ version: 1, screenShake: false }).screenShake).toBe(false);
+  });
+
   it('ignore les champs inconnus', () => {
     const settings = parseSettings({ version: 1, triche: true });
     expect(settings).toEqual(DEFAULT_SETTINGS);
@@ -47,7 +54,12 @@ describe('parseSettings', () => {
   });
 
   it('aller-retour : ce qui est sauvegardé est relu à l’identique', () => {
-    const settings = { damageNumbers: false, fpsCounter: true, pauseOnHidden: false };
+    const settings = {
+      damageNumbers: false,
+      fpsCounter: true,
+      pauseOnHidden: false,
+      screenShake: false,
+    };
     expect(parseSettings(serializeSettings(settings))).toEqual(settings);
   });
 
