@@ -377,7 +377,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Screen shake, particules
   - [x] Étape 1 : screen shake (trauma dans la Camera, chocs dans `data/feel.ts`, option « Tremblement de l'écran »)
   - [x] Étape 2 : particules (`ParticleSystem` en pool de 600 : morts d'ennemis, caisses, level up)
-- [ ] Retouches (2026-11-18) : 1) écran de fin agrandi et cartes de mutation remises en forme, 2) visuel de l'aura, 3) écran titre et son fond, 4) publication sur GitHub Pages
+- [x] Retouches (2026-11-18) : 1) écran de fin agrandi et cartes de mutation remises en forme, 2) visuel de l'aura, 3) écran titre et son fond, 4) publication (finalement itch.io, voir Phase 7)
   - [x] Étape 1 : écran de fin (titre 64 px, tuiles en 32 px, damage meter sur une ligne par arme sans chevauchement) ; cartes de mutation (320 px, icône 48 px, nom sans ★ + arme d'origine dessous, « ★ Niveau 6 · définitif ») ; dégradé de la carte de mutation étalé sur tout le cadre (il se répétait : bandes noires) ; plus aucune lueur floue sur les textes (titres, MORT, titre du menu) : ombre dure seule
   - [x] Étape 2 : aura = anneau de braises carrées (pixels de 2 px) sur le bord de la zone, qui tourne et scintille, trait sombre dessous, disque très léger, étincelles qui montent (aléatoire séparé) ; une apparence par aura dans `AURA_LOOKS` (`data/feel.ts`) : feu, Brasier plus dense et vif, Aura toxique verte qui tourne à l'envers avec des bulles lentes
   - [x] Étape 3 : écran titre = fond animé dessiné par MenuScene (sol du donjon qui défile, démons qui passent, vignette ; `MENU_BACKDROP` dans `data/sprites.ts`, sol partagé via `scenes/floor.ts`) ; titre en lettres dorées à 3 bandes nettes et contour noir dur (sans halo), volutes du pack dessous ; voile sombre sur les autres écrans du menu ; « Niv N » centré dans le corps de la plaque (sous la couronne) ; écrans de fin sur un voile sombre neutre (plus de lueur rouge ou dorée)
@@ -388,10 +388,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 4 : musique selon l'écran (`core/MusicPlayer` : boucles Web Audio sans blanc, fondus de 0,8 s, chargée au premier besoin) : menu, partie, boss tant qu'un boss est en vie, jingle de victoire / défaite (sans fondu d'entrée, préchargé, volume ×1,8 : avec le fondu de 0,8 s, un jingle de 0,75 s était presque muet) ; plus basse en pause ; son coupé quand l'onglet est caché ; curseurs Volume général / Musique / Effets sonores dans les Options (sauvegardés)
 
 ### Phase 7 — Déploiement
-- [ ] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
+- [x] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
   - [x] Build publiable : base relative (`./`), chemins audio via `BASE_URL`, `npm run release:itch` (build + retrait de la planche Dark Ages + zip `release/survivor-itch.zip`), testé servi depuis un sous-dossier ; README
   - [x] Dépôt GitHub créé et code poussé : https://github.com/aGgm0/survivor (branche `main` seulement ; commits signés avec l'adresse anonyme GitHub)
-  - [ ] Page itch.io (HTML5, 1280 × 720, plein écran) et lien dans le README
+  - [x] Page itch.io (HTML5, 1280 × 720, plein écran) : https://agemo0.itch.io/survivor, lien dans le README. Nouvelle version = `npm run release:itch` puis renvoyer le zip sur la page
 - [ ] `[LATER]` Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
 ---

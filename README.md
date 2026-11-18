@@ -2,7 +2,7 @@
 
 Jeu navigateur de type **Survivor / bullet heaven** : un mage survit 10 minutes à des hordes de démons dans un donjon. Il se déplace, ses armes tirent toutes seules, et il choisit une amélioration à chaque niveau.
 
-**▶ Jouer : _lien itch.io à venir_**
+**▶ [Jouer dans le navigateur (itch.io)](https://agemo0.itch.io/survivor)**
 
 Projet perso pour apprendre l'architecture d'un jeu : boucle de jeu, rendu, collisions, performances. Le moteur est écrit à la main (Canvas 2D + TypeScript), sans moteur de jeu.
 
