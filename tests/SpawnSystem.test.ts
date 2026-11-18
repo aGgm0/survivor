@@ -179,15 +179,44 @@ describe('SpawnSystem — placement', () => {
     expect(pool.activeCount).toBe(10);
   });
 
-  it('replace un ennemi trop lointain de l’autre côté du joueur', () => {
+  it('replace les ennemis trop lointains tout autour du joueur, hors écran', () => {
     const { pool, spawner } = setup();
-    spawner.spawnBatch(1, 0, 0, 0);
-    const e = activeEnemies(pool)[0];
-    if (!e) throw new Error();
-    e.teleport(-5000, 0); // le joueur a fui loin vers la droite
+    spawner.spawnBatch(40, 0, 0, 0);
+    const enemies = activeEnemies(pool);
+    // Toute la horde est restée loin derrière, à gauche (le joueur a fui vers la droite).
+    for (const e of enemies) e.teleport(-5000, 0);
     spawner.update(0, 0, 0, 0);
-    expect(e.x).toBeCloseTo(SPAWN_RADIUS);
-    expect(e.y).toBeCloseTo(0);
+    let ahead = 0;
+    let behind = 0;
+    for (const e of enemies) {
+      expect(Math.hypot(e.x, e.y)).toBeCloseTo(SPAWN_RADIUS); // sur le cercle, hors écran
+      if (e.x > 0) ahead++;
+      else behind++;
+    }
+    // Redistribués de tous les côtés, pas tous en face.
+    expect(ahead).toBeGreaterThan(5);
+    expect(behind).toBeGreaterThan(5);
+  });
+
+  it('un boss ou un élite trop lointain revient pile en face (menace jamais perdue de vue)', () => {
+    const { pool, spawner } = setup();
+    for (const type of [ENEMY_TYPES.boss, ENEMY_TYPES.basicElite]) {
+      const e = pool.acquire();
+      if (!e) throw new Error();
+      e.spawn(type, -5000, 0);
+      spawner.update(0, 0, 0, 0);
+      expect(e.x).toBeCloseTo(SPAWN_RADIUS);
+      expect(e.y).toBeCloseTo(0);
+    }
+  });
+
+  it('ne replace pas un ennemi juste hors écran', () => {
+    const { pool, spawner } = setup();
+    const e = pool.acquire();
+    if (!e) throw new Error();
+    e.spawn(ENEMY_TYPES.basic, -SPAWN_RADIUS * 1.2, 0);
+    spawner.update(0, 0, 0, 0);
+    expect(e.x).toBeCloseTo(-SPAWN_RADIUS * 1.2);
   });
 
   it('la même seed donne les mêmes spawns', () => {

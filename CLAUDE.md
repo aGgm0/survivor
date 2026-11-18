@@ -194,7 +194,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 - **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
 
-Les ennemis spawn **hors écran**, en cercle autour du joueur.
+Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté à plus de 1,35 × ce cercle (≈ 1 080 px) est replacé sur le cercle **à un angle au hasard** (boss et élites : pile en face du joueur).
 
 ### 5.6 XP & level up
 
@@ -328,6 +328,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [x] Buff léger de tout le recul (×1,2 global) : on ne le sentait pas
 - [x] Équilibrage (retours de jeu, version allégée) : gemme verte du basique (50 %, ×2), ouverture calme 0:00-0:30, dégâts arrondis au-dessus, Trait arcanique 14 → 16, passifs 2× moins souvent avant le niveau 10
 - [x] Bug : la horde tassée se figeait en bouchon (file d'attente) et ne suivait plus le joueur
+- [x] Ennemis distancés replacés tout autour du joueur (plus seulement en face), seuil 1,5 → 1,35
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
 ### 0.2 — Une partie juste `[moyenne]`
@@ -628,6 +629,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Recul : multiplicateur global ×1,2 (`KNOCKBACK.forceMult`) plutôt que de toucher chaque arme | Retour de jeu : « on ne le ressent pas » (≈ 5 px pour un basique touché par le Trait, ≈ 10 px maintenant). Un seul bouton pour régler le ressenti ; ×1,3 et ×1,5 proposés, ×1,2 choisi (« léger ») |
 | 2026-11-18 | Équilibrage allégé : gemme verte du basique (50 % de chances, ×2 d'XP) au lieu de +50 % d'XP partout ; 0,8 ennemi/s de 0:00 à 0:30 ; chaque coup arrondi à l'entier supérieur ; Trait arcanique 14 → 16 ; passifs ×0,5 dans le tirage avant le niveau 10. **Reportés** : PV de la vague 6:00 (×2,5 → ×2,3) et buff de l'Épée et des Orbes | Retours de jeu « trop dur ». Tout cumulé (dégâts, arrondi, PV de 6:00, XP) faisait ≈ +25 % de DPS effectif : risque de retomber dans « ez victoire ». Passifs : moins souvent plutôt que plus forts, pour ne pas gonfler la fin de partie. Arrondi : un bonus de +3 % ne changeait rien de visible |
 | 2026-11-18 | File d'attente de la horde : un voisin devant ne bloque que s'il n'avance pas lui-même (blocage × part de vitesse qui lui manque) | Bug « horde lente, même sur les côtés » : chacun attendait celui de devant même quand il repartait, toute la horde avançait par à-coups à ~40 % de sa vitesse (mesuré : tanks 49 % → 71 %). Joueur immobile : rien ne change. Reste : les petits sont coincés derrière les tanks (plus lents) ; contourner a été essayé, sans effet dans un paquet aussi serré |
+| 2026-11-18 | Ennemis distancés : replacés à un angle au hasard sur le cercle de spawn (au lieu de pile en face), seuil 1,5 → 1,35 × le rayon de spawn ; boss et élites toujours replacés en face | Idée de l'utilisateur : on pouvait tourner en rond avec toute la horde en file derrière soi. Redistribuée tout autour, elle remet la pression de tous les côtés. Une menace (boss, élite) ne doit pas disparaître d'un côté pour réapparaître n'importe où |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

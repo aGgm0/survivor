@@ -8,8 +8,11 @@ export const SPAWN = {
   maxEnemies: 900,
   /** px au-delà du coin de l'écran où les ennemis apparaissent */
   offscreenMargin: 64,
-  /** un ennemi plus loin que (rayon de spawn × ce facteur) est replacé devant le joueur */
-  recycleDistanceFactor: 1.5,
+  /**
+   * Un ennemi plus loin que (rayon de spawn × ce facteur) est replacé autour du joueur.
+   * 1,5 → 1,35 (≈ 1 200 → 1 080 px) : la horde qui suit en file est redistribuée plus tôt.
+   */
+  recycleDistanceFactor: 1.35,
   /** ennemis ajoutés par la touche de debug F4 (tirés selon la vague en cours) */
   debugBatch: 100,
 } as const;

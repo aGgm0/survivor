@@ -243,8 +243,10 @@ export class SpawnSystem {
 
   /**
    * Map infinie : si le joueur fuit, des ennemis restent loin derrière. Plutôt que de
-   * les laisser occuper le pool pour rien, on les "retourne" de l'autre côté du joueur,
-   * sur le cercle de spawn : ils réapparaissent hors écran, devant lui.
+   * les laisser occuper le pool pour rien, on les replace sur le cercle de spawn (hors écran) :
+   * - les ennemis normaux à un angle AU HASARD : la file qui suivait le joueur se redistribue
+   *   tout autour de lui (sinon on pouvait tourner en rond avec la horde derrière soi) ;
+   * - les boss et les élites pile EN FACE, devant le joueur : une menace ne se perd pas de vue.
    */
   private recycleFarEnemies(playerX: number, playerY: number): void {
     const items = this.enemies.items;
@@ -260,9 +262,18 @@ export class SpawnSystem {
         this.enemies.release(e);
         continue;
       }
-      // Direction opposée (-dx, -dy), ramenée à la longueur SPAWN_RADIUS.
-      const k = SPAWN_RADIUS / dist;
-      e.teleport(playerX - dx * k, playerY - dy * k);
+      if (e.type === BOSS_TYPE || e.type.elite) {
+        // Direction opposée (-dx, -dy), ramenée à la longueur SPAWN_RADIUS.
+        const k = SPAWN_RADIUS / dist;
+        e.teleport(playerX - dx * k, playerY - dy * k);
+      } else {
+        // Aléatoire de la partie : même seed, mêmes replacements.
+        const angle = this.rng.range(0, Math.PI * 2);
+        e.teleport(
+          playerX + Math.cos(angle) * SPAWN_RADIUS,
+          playerY + Math.sin(angle) * SPAWN_RADIUS,
+        );
+      }
     }
   }
 }
