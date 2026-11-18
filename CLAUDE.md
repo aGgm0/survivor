@@ -384,8 +384,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 3 : écran titre = fond animé dessiné par MenuScene (sol du donjon qui défile, démons qui passent, vignette ; `MENU_BACKDROP` dans `data/sprites.ts`, sol partagé via `scenes/floor.ts`) ; titre en lettres dorées à 3 bandes nettes et contour noir dur (sans halo), volutes du pack dessous ; voile sombre sur les autres écrans du menu ; « Niv N » centré dans le corps de la plaque (sous la couronne) ; écrans de fin sur un voile sombre neutre (plus de lueur rouge ou dorée)
 - [ ] Sons et musique + option volume
   - [x] Étape 1 : 18 bruitages générés par `tools/audio/build-sfx.mjs` (synthé rétro maison, WAV, CC0), page d'écoute `tools/audio/preview.html` (bouton « Rafale » pour juger la fatigue) ; sources de la musique dans `docs/sons.md`
-  - [ ] Étape 2 : choisir les 5 musiques, les mettre au format
-  - [ ] Étape 3 : moteur audio (Web Audio), sons branchés, volumes musique / effets dans les Options
+  - [x] Étape 2 : 5 musiques choisies (Junkala, Kenney), converties en OGG à −16 LUFS dans `public/assets/audio/music/` (originaux dans `assets-src/`, ignoré par git)
+  - [x] Étape 3 : moteur audio (`core/AudioEngine`, Web Audio + compresseur), limiteur par son (`core/SoundLimiter` : délai minimum, copies max, hauteur ±), réglages dans `data/audio.ts` ; sons branchés en jeu et sur les boutons des menus
+  - [ ] Étape 4 : musique selon l'écran (fondus, boucles sans blanc, plus basse en pause), volumes Musique / Effets dans les Options
 
 ### Phase 7 — Déploiement
 - [ ] Déploiement en ligne (itch.io, GitHub Pages...)
@@ -502,6 +503,7 @@ Format : date — décision — raison.
 | 2026-11-12 | UI : packs Dark Ages UI (Hypnobius) + Kenney Fantasy UI Borders (CC0) ; Paper UI (parchemin clair) écarté ; Dark Ages ignoré par git (licence : pas de redistribution), découpé par `tools/ui/slice-darkages.mjs` ; cadres en `border-image` ×2, bordure de couleur en secours si le pack manque | Choix de l'utilisateur parmi 3 packs (« Dark Ages + Kenney »). Dark Ages colle au thème sombre ; Paper UI jurait avec le donjon |
 | 2026-11-12 | Apparence des persos : Arcaniste = mage (wizzard_m), Pyromancien = mage femme (wizzard_f), Runiste = elfe (elf_m), Lame-mage = chevalier (knight_m) ; même sprite en jeu et sur la carte (`CHARACTER_SPRITES`) ; icônes du HUD = Raven Fantasy Icons | Proposé (héros du pack 0x72), à changer en jeu si besoin. Raven demandé par l'utilisateur |
 | 2026-11-12 | Police DUNGEON.mode (CC0) au lieu de m5x7 ; tailles 12 / 16 / 24 px, pas de faux gras (`font-synthesis: none`) | Choisie par l'utilisateur. Glyphes larges (8 × 8) : boutique, profil, options, cartes et damage meter élargis pour éviter les retours à la ligne |
+| 2026-11-18 | Sons : bruitages générés par script (`tools/audio/build-sfx.mjs`) plutôt que faits à la main dans ChipTone ; gardés en WAV (l'OGG peut ajouter du silence au début) ; chaque son a un volume, un délai minimum entre deux lectures, un nombre de copies max et une variation de hauteur (`data/audio.ts`) ; compresseur en sortie | « ChipTone c'est trop galère » ; 500 ennemis = des dizaines d'impacts par seconde : sans limite, les sons s'additionnent et saturent |
 | 2026-11-18 | Plus aucun halo flou (textes, titre) : ombres dures seulement ; fond du menu animé à la place du dégradé radial | Retour : « trop IA slop », « l'aura néon des textes ça fait IA de fou » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |

@@ -28,6 +28,15 @@ import {
   type EffectName,
 } from './data/sprites';
 import { EffectSheet } from './core/EffectSheet';
+import { AudioEngine } from './core/AudioEngine';
+import {
+  SFX,
+  SFX_COMPRESSOR,
+  SFX_DIR,
+  SFX_EXTENSION,
+  SFX_MASTER_VOLUME,
+  type SfxName,
+} from './data/audio';
 
 function getElement<T extends HTMLElement>(id: string, type: new () => T): T {
   const el = document.getElementById(id);
@@ -152,6 +161,29 @@ Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
     console.warn('Effets PVFX non chargés, formes simples à la place :', error);
   });
 
+// Bruitages : chargés en arrière-plan comme les sprites (un son pas encore prêt est muet).
+const sfx = new AudioEngine<SfxName>(SFX_COMPRESSOR, SFX_MASTER_VOLUME);
+void sfx.load(SFX_DIR, SFX_EXTENSION, SFX);
+
+/** Le bouton (actif) sous un élément de la page, ou null. */
+function buttonOf(target: EventTarget | null): HTMLButtonElement | null {
+  const button = target instanceof Element ? target.closest('button') : null;
+  return button && !button.disabled ? button : null;
+}
+
+// Sons de l'interface pour tous les boutons des menus, écoutés une seule fois sur la page
+// (au lieu d'un écouteur par bouton, recréés à chaque affichage des menus).
+document.addEventListener('mouseover', (event) => {
+  const button = buttonOf(event.target);
+  // Passer d'un morceau du bouton à un autre (icône → texte) n'est pas un nouveau survol.
+  if (button && button !== buttonOf(event.relatedTarget)) sfx.play('ui-hover');
+});
+document.addEventListener('click', (event) => {
+  const button = buttonOf(event.target);
+  // Cartes de level up : le son part dans GameScene (pour que les touches 1-2-3 sonnent aussi).
+  if (button && !button.classList.contains('choice')) sfx.play('ui-click');
+});
+
 function startRun(chosen: CharacterDef = character): void {
   character = chosen;
   // `>>> 0` : seed entière positive. Une nouvelle seed à chaque partie.
@@ -173,6 +205,7 @@ function startRun(chosen: CharacterDef = character): void {
       sprites,
       fx,
       effects,
+      sfx,
     },
     seed,
     {

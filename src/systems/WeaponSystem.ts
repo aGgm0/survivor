@@ -116,7 +116,10 @@ export class WeaponSystem {
       weapon.cooldownTimer = 0;
       return;
     }
-    if (this.fire(weapon, def, x, y, target)) weapon.cooldownTimer = weapon.cooldown;
+    if (this.fire(weapon, def, x, y, target)) {
+      weapon.cooldownTimer = weapon.cooldown;
+      this.events.onFire?.(weapon);
+    }
   }
 
   /**

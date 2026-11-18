@@ -10,6 +10,11 @@ import type { SpawnSystem } from './SpawnSystem';
  * MovementSystem, qui lit `chargeState`.
  */
 export class BossAbilitySystem {
+  /** Charges annoncées pendant la dernière update (la scène joue le son d'avertissement). */
+  chargeWarnings = 0;
+  /** Invocations annoncées pendant la dernière update */
+  summonWarnings = 0;
+
   update(
     enemies: Pool<Enemy>,
     now: number,
@@ -18,6 +23,8 @@ export class BossAbilitySystem {
     spawner: Pick<SpawnSystem, 'summonAround'>,
   ): number {
     let charges = 0;
+    this.chargeWarnings = 0;
+    this.summonWarnings = 0;
     for (const e of enemies.items) {
       if (!e.active || e.type !== BOSS_TYPE) continue;
       if (this.updateCharge(e, now, playerX, playerY)) charges++;
@@ -43,6 +50,7 @@ export class BossAbilitySystem {
         e.chargeDirY = dy / dist;
         e.chargeState = 'windup';
         e.chargeUntil = now + c.windup;
+        this.chargeWarnings++;
         return false;
       }
       case 'windup':
@@ -62,7 +70,10 @@ export class BossAbilitySystem {
   private updateSummon(e: Enemy, now: number, spawner: Pick<SpawnSystem, 'summonAround'>): void {
     const s = BOSS_ABILITIES.summon;
     if (e.summonAt === 0) {
-      if (now >= e.nextSummonAt) e.summonAt = now + s.cast;
+      if (now >= e.nextSummonAt) {
+        e.summonAt = now + s.cast;
+        this.summonWarnings++;
+      }
       return;
     }
     if (now < e.summonAt) return;

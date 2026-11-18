@@ -15,14 +15,19 @@ export type HitKind = 'direct' | 'poison';
 
 /** Ce que la scène veut savoir des coups portés aux ennemis (retour visuel, kills, gemmes...). */
 export interface HitEvents {
-  /** Un ennemi vient d'être touché (appelé à chaque coup, y compris le coup fatal). */
-  onHit(enemy: Enemy, damage: number, kind: HitKind): void;
+  /**
+   * Un ennemi vient d'être touché (appelé à chaque coup, y compris le coup fatal).
+   * `source` : l'arme qui frappe (le bruitage dépend de l'arme).
+   */
+  onHit(enemy: Enemy, damage: number, kind: HitKind, source: Weapon): void;
   /** Un ennemi tombe à 0 PV : la scène le retire, compte le kill, etc. */
   onKill(enemy: Enemy): void;
   /** Optionnel : une explosion a eu lieu (pour l'effet visuel). */
   onExplosion?(x: number, y: number, radius: number, color: string): void;
   /** Optionnel : un coup d'épée (pour l'effet visuel). `angle` = direction, `arc` = ouverture (rad). */
   onSlash?(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
+  /** Optionnel : une arme à projectiles vient de tirer (pour le bruitage). */
+  onFire?(weapon: Weapon): void;
 }
 
 /**
@@ -44,7 +49,7 @@ export function damageEnemy(
   const prop = enemy.type.prop === true;
   if (!prop) source.totalDamage += Math.min(amount, enemy.hp);
   enemy.hp -= amount;
-  events.onHit(enemy, amount, kind);
+  events.onHit(enemy, amount, kind, source);
   if (enemy.hp <= 0) {
     if (!prop) source.kills++;
     events.onKill(enemy);

@@ -9,3 +9,6 @@ public/assets/ui/darkages/
 # Raven Fantasy Icons (Clockwork Raven) : licence qui interdit de redistribuer les fichiers ; la
 # version gratuite ne vaut que pour un jeu gratuit (voir public/assets/LICENSES.md).
 public/assets/ui/raven/
+
+# Originaux des musiques (30 Mo) : seules les versions converties de public/assets/audio/music/ sont suivies.
+assets-src/

@@ -81,6 +81,8 @@ import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
 import type { DevAction, DevPanel, DevView } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
+import type { SoundPlayer } from '../core/AudioEngine';
+import { HIT_SOUNDS, type SfxName } from '../data/audio';
 
 /** px entre deux lignes de la grille de fond */
 const GRID_SIZE = 64;
@@ -187,6 +189,8 @@ export interface GameSceneDeps {
   fx?: SpriteAtlas | null;
   /** Effets animés du pack PVFX (explosion, épée, auras, vague). Absents : formes simples. */
   effects?: Readonly<Record<EffectName, EffectSheet>> | null;
+  /** Bruitages. Absent (tests) : partie muette. */
+  sfx?: SoundPlayer<SfxName>;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -287,14 +291,19 @@ export class GameScene implements Scene, Build {
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
     const hitEvents = {
-      onHit: (e: Enemy, damage: number, kind: HitKind) => this.onEnemyHit(e, damage, kind),
+      onHit: (e: Enemy, damage: number, kind: HitKind, source: Weapon) =>
+        this.onEnemyHit(e, damage, kind, source),
       onKill: (e: Enemy) => this.killEnemy(e),
       onExplosion: (x: number, y: number, r: number, color: string) => {
         this.effects.explosion(x, y, r, color);
         this.shake('explosion');
+        this.sound('bolt-burst');
       },
-      onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) =>
-        this.effects.slash(x, y, angle, arc, r, color),
+      onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) => {
+        this.effects.slash(x, y, angle, arc, r, color);
+        this.sound('sword-slash');
+      },
+      onFire: () => this.sound('bolt-shoot'),
     };
     this.weaponSystem = new WeaponSystem(
       ENEMY_POOL_SIZE,
@@ -445,6 +454,8 @@ export class GameScene implements Scene, Build {
       this.spawner,
     );
     if (charges > 0) this.shake('bossCharge');
+    if (this.bossAbilities.chargeWarnings > 0) this.sound('boss-charge');
+    if (this.bossAbilities.summonWarnings > 0) this.sound('boss-summon');
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
@@ -463,10 +474,11 @@ export class GameScene implements Scene, Build {
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
     // Sagesse (boutique) : plus d'XP par gemme.
-    const levelsGained = this.progression.addXp(
-      this.gems.update(dt, this.player) * this.xpGainMult,
-    );
+    const gemXp = this.gems.update(dt, this.player);
+    if (gemXp > 0) this.sound('gem-pickup');
+    const levelsGained = this.progression.addXp(gemXp * this.xpGainMult);
     if (levelsGained > 0) {
+      this.sound('level-up');
       // Anneau d'étincelles : il part au moment du level up, puis reprend après le choix.
       this.particles.burst(
         this.player.x,
@@ -480,7 +492,11 @@ export class GameScene implements Scene, Build {
     this.pendingLevelUps += levelsGained;
     this.pickups.update(dt, this.player);
     this.gold += this.pickups.gold;
-    if (this.pickups.heal > 0) this.player.heal(this.pickups.heal);
+    if (this.pickups.gold > 0) this.sound('coin-pickup');
+    if (this.pickups.heal > 0) {
+      this.player.heal(this.pickups.heal);
+      this.sound('heal');
+    }
     this.damageNumbers.update(dt);
     this.effects.update(dt);
     this.emitAuraSparks(dt);
@@ -525,6 +541,8 @@ export class GameScene implements Scene, Build {
   chooseUpgrade(index: number): void {
     const choice = this.choices?.[index];
     if (!choice) return;
+    // Ici plutôt que sur le clic : le choix au clavier (1-2-3) sonne aussi.
+    this.sound('ui-click');
     applyUpgrade(choice, this);
     this.recomputeWeapons();
     this.buildVersion++;
@@ -548,7 +566,10 @@ export class GameScene implements Scene, Build {
   }
 
   /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
-  private onEnemyHit(e: Enemy, damage: number, kind: HitKind): void {
+  private onEnemyHit(e: Enemy, damage: number, kind: HitKind, source: Weapon): void {
+    // Bruitage selon l'arme (le poison n'en a pas : il tique sans arrêt). Une caisse ne fait
+    // pas de bruit d'impact, seulement celui de sa casse.
+    if (kind === 'direct' && !e.type.prop) this.sound(HIT_SOUNDS[source.def.kind]);
     const showNumbers = this.deps.settings.damageNumbers; // réglage Options
     if (kind === 'poison') {
       // Poison : nombre vert, sans flash (sinon les empoisonnés clignoteraient sans arrêt).
@@ -587,6 +608,11 @@ export class GameScene implements Scene, Build {
     return !this.report && !this.endless && this.elapsed >= this.runDuration;
   }
 
+  /** Bruitage (réglages et limites dans data/audio.ts). Sans moteur audio (tests) : rien. */
+  private sound(name: SfxName): void {
+    this.deps.sfx?.play(name);
+  }
+
   /** Choc qui fait trembler l'écran (voir SHAKE_EVENTS dans data/feel.ts). */
   private shake(event: keyof typeof SHAKE_EVENTS): void {
     const { amount, cap } = SHAKE_EVENTS[event];
@@ -614,6 +640,7 @@ export class GameScene implements Scene, Build {
     // Mobilier cassé : de l'or ou de la nourriture, pas d'XP ni de kill.
     if (e.type.prop) {
       this.particles.burst(e.x, e.y, PARTICLES.crate, PARTICLES.crateColor);
+      this.sound('crate-break');
       this.dropLoot(e.x, e.y);
       this.enemies.release(e);
       return;
@@ -622,6 +649,7 @@ export class GameScene implements Scene, Build {
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
     this.deathBurst(e);
+    this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
     if (e.type === BOSS_TYPE) this.shake('bossKill');
     else if (e.type.elite) this.shake('eliteKill');
     this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
@@ -657,6 +685,7 @@ export class GameScene implements Scene, Build {
       if (!e || this.elapsed < e.nextContactHitAt) continue;
       this.player.takeHit(e.type.contactDamage);
       this.shake('playerHit');
+      this.sound('player-hurt');
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
