@@ -122,8 +122,14 @@ export class MovementSystem {
       // File d'attente : un voisin aussi gros ou plus gros que moi, DEVANT moi (entre moi et
       // le joueur), me bloque. Je cesse de pousser au lieu d'écraser la foule contre lui.
       // (Un gros derrière des petits, lui, continue de pousser : c'est voulu.)
+      // Mais seulement s'il n'avance pas lui-même : un voisin qui avance vers le joueur à ma
+      // vitesse ne me bloque pas. Sans ça, toute la horde se figeait de proche en proche (chacun
+      // attendait celui de devant, même quand il repartait) et avançait à ~40 % de sa vitesse.
       if (otherMass >= myMass && nx * px + ny * py < -CROWD.queueConeCos) {
-        if (overlapRatio > blockAmount) blockAmount = overlapRatio;
+        const otherForward = other.vx * px + other.vy * py;
+        const stalled = speed > 0 ? Math.max(0, 1 - otherForward / speed) : 0;
+        const block = overlapRatio * Math.min(1, stalled);
+        if (block > blockAmount) blockAmount = block;
       }
       if (otherMass > myMass && pushesTowardTarget(nx, ny, px, py)) {
         const otherToTarget = Math.hypot(targetX - other.x, targetY - other.y);

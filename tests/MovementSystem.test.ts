@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Pool } from '../src/core/Pool';
+import { Rng } from '../src/core/math';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
 import { CROWD } from '../src/data/physics';
 import { Enemy } from '../src/entities/Enemy';
@@ -176,5 +177,44 @@ describe('MovementSystem — horde', () => {
     a.run(2);
     b.run(2);
     expect(a.enemies.map((e) => [e.x, e.y])).toEqual(b.enemies.map((e) => [e.x, e.y]));
+  });
+});
+
+describe('MovementSystem — horde tassée qui poursuit (bug du 2026-11-18)', () => {
+  it('un paquet de 250 ennemis suit le joueur sans se figer en bouchon', () => {
+    const N = 300;
+    const pool = new Pool(N, (i) => new Enemy(i));
+    const rng = new Rng(3);
+    // Paquet serré autour du joueur : 40 % de tanks, le reste basiques et rapides.
+    for (let i = 0; i < 250; i++) {
+      const e = pool.acquire();
+      if (!e) throw new Error();
+      const r = rng.next();
+      const type = r < 0.4 ? ENEMY_TYPES.tank : r < 0.7 ? ENEMY_TYPES.basic : ENEMY_TYPES.fast;
+      const angle = rng.next() * Math.PI * 2;
+      const d = 40 + Math.sqrt(rng.next()) * 260;
+      e.spawn(type, Math.cos(angle) * d, Math.sin(angle) * d);
+    }
+    const collisions = new CollisionSystem(N);
+    const movement = new MovementSystem(N, collisions);
+    const touching = new Array<Enemy>(N);
+    const player = { x: 0, y: 0, vx: 0, vy: 0, radius: 16 };
+    const step = (fleeing: boolean) => {
+      player.vx = fleeing ? 200 : 0;
+      player.x += player.vx * DT;
+      collisions.rebuild(pool);
+      movement.update(pool, player.x, player.y, DT);
+      collisions.pushOutOfPlayer(pool, player, touching);
+    };
+    // 3 s au contact pour que la horde se tasse, puis le joueur fuit 4 s vers la droite.
+    for (let t = 0; t < 180; t++) step(false);
+    const tanks = pool.items.filter((e) => e.active && e.type === ENEMY_TYPES.tank);
+    const startX = tanks.map((e) => e.x);
+    for (let t = 0; t < 240; t++) step(true);
+    const ratios = tanks
+      .map((e, i) => (e.x - (startX[i] ?? 0)) / 4 / ENEMY_TYPES.tank.speed)
+      .sort((a, b) => a - b);
+    // Avant la correction : ~49 % de leur vitesse (chacun attendait celui de devant). Après : ~71 %.
+    expect(ratios[Math.floor(ratios.length / 2)]).toBeGreaterThan(0.62);
   });
 });
