@@ -153,6 +153,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 | Déplacement | ZQSD / WASD / flèches (diagonale normalisée) |
 | Pause | Échap / P |
 | Options (depuis la pause) | O |
+| Plein écran | F (ou la case des Options) ; Échap en sort et met la partie en pause |
 | Choisir un upgrade | Clic ou touches 1-2-3 |
 
 ### 5.4 Armes `[MVP : 3 armes, 4 depuis l'Épée]`
@@ -318,7 +319,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 
 ### 0.1.0 — Première version numérotée `[petite]`
 - [ ] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin ; `CHANGELOG.md` ; tag `v0.1.0`
-- [ ] Plein écran : touche + option
+- [x] Plein écran : touche + option
 - [x] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
 - [ ] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
 - [x] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) ; pas de « bannir » pour l’instant
@@ -618,6 +619,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Ordre des refactors : rendu puis menu F2 sortis de `GameScene` (0.2), registre de comportements d'armes et événements de partie avant les nouvelles armes (0.3), `StageDef` avant les 30 min (0.4) ; bot de simulation `npm run sim` pour équilibrer | Bilan : `GameScene` (1 393 lignes) concentre rendu, outils et règles ; ajouter un type d'arme touche 5 fichiers ; vagues et boss sont globaux. Seulement ce qui débloque la suite, pas de refactor « pour faire propre » |
 | 2026-11-18 | Relance des cartes en 0.1, sans « bannir » pour l'instant | Avec 4 armes et 9 passifs, le tirage est trop petit pour que bannir soit un vrai choix ; à revoir quand le contenu aura grossi |
 | 2026-11-18 | Options en partie : bouton et touche O dans le menu pause ; Échap y ramène au menu pause (pas à la partie) ; HUD masqué pendant l'écran Options ; logique partagée avec le menu (`scenes/options.ts`) | Ne pas relancer la partie par erreur en fermant les options ; le titre de l'écran passait sur le timer |
+| 2026-11-18 | Plein écran : touche F + case « Plein écran (F) » des Options, demandé directement dans l'événement (pas dans l'update), jamais sauvegardé ; sortir du plein écran met la partie en pause | Le navigateur n'accepte le plein écran que pendant un clic ou un appui (activation utilisateur) et le refuse au chargement ; en plein écran, Échap est gardé par le navigateur et n'atteint pas le jeu. F plutôt que F11 (plein écran du navigateur, qui n'agrandit pas le cadre itch) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

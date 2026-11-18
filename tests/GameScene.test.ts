@@ -671,6 +671,23 @@ describe('GameScene — menu pause', () => {
   });
 });
 
+describe('GameScene — sortie du plein écran', () => {
+  it('met la partie en pause (Échap ne parvient pas au jeu dans ce cas)', () => {
+    const { scene, ui } = newScene();
+    scene.onFullscreenExit();
+    expect(ui.paused).toBe(true);
+  });
+
+  it('ne réaffiche pas le menu pause par-dessus les options', () => {
+    const { scene, ui, press } = newScene();
+    press('Escape', scene);
+    press('KeyO', scene);
+    scene.onFullscreenExit();
+    expect(ui.optionsShown).toBe(true);
+    expect(ui.paused).toBe(false); // le menu pause ne revient pas par-dessus les options
+  });
+});
+
 describe('GameScene — onglet caché', () => {
   it('met la partie en pause', () => {
     const { scene, ui } = newScene();

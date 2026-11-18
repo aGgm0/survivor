@@ -42,6 +42,11 @@ export class Game {
     });
   }
 
+  /** Le joueur vient de quitter le plein écran : la scène peut se mettre en pause. */
+  notifyFullscreenExit(): void {
+    this.scene?.onFullscreenExit?.();
+  }
+
   setScene(scene: Scene): void {
     this.scene?.exit();
     this.scene = scene;

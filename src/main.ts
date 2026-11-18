@@ -1,4 +1,6 @@
 import { Game } from './core/Game';
+import { Fullscreen } from './core/Fullscreen';
+import { CONTROLS } from './data/controls';
 import { Renderer } from './core/Renderer';
 import { DebugOverlay } from './core/DebugOverlay';
 import { Input } from './core/Input';
@@ -104,10 +106,12 @@ const profileOverlay = new ProfileOverlay(
   getElement('profile-weapons', HTMLDivElement),
   getElement('profile-back', HTMLButtonElement),
 );
+const fullscreen = new Fullscreen(document);
 const optionsOverlay = new OptionsOverlay(
   getElement('options-overlay', HTMLDivElement),
   getElement('options-list', HTMLDivElement),
   getElement('options-back', HTMLButtonElement),
+  fullscreen,
 );
 const hud = new Hud({
   root: getElement('hud', HTMLDivElement),
@@ -124,6 +128,18 @@ const hud = new Hud({
   passives: getElement('hud-passives', HTMLDivElement),
 });
 const game = new Game(renderer, debug, input);
+
+// Plein écran (touche F) : demandé pendant l'appui lui-même, sinon le navigateur refuse
+// (voir core/Fullscreen.ts). Hors de la game loop, mais ça ne touche à aucun état de jeu.
+window.addEventListener('keydown', (e) => {
+  if (!e.repeat && (CONTROLS.fullscreen as readonly string[]).includes(e.code)) fullscreen.toggle();
+});
+document.addEventListener('fullscreenchange', () => {
+  optionsOverlay.setFullscreen(fullscreen.isActive);
+  // Sortir du plein écran (souvent avec Échap, que le jeu ne reçoit alors pas) met la partie
+  // en pause : sinon on reprendrait la main en pleine horde.
+  if (!fullscreen.isActive) game.notifyFullscreenExit();
+});
 
 // Menu de test (F2) : seulement avec `npm run dev`. Dans le build, `import.meta.env.DEV` vaut
 // false et Vite retire ce code : un joueur ne peut pas l'ouvrir.

@@ -19,6 +19,8 @@ export const CONTROLS = {
   menu: ['KeyM', 'Semicolon'],
   /** Options depuis le menu pause (même touche en AZERTY et QWERTY) */
   options: ['KeyO'],
+  /** Plein écran (partout : menu, partie, pause) */
+  fullscreen: ['KeyF'],
   // Choix au level up. Touches physiques : sur AZERTY, ce sont les touches & é " (sans Maj).
   choice1: ['Digit1', 'Numpad1'],
   choice2: ['Digit2', 'Numpad2'],
