@@ -1,5 +1,5 @@
 /** Ce que le joueur peut demander depuis le menu pause. */
-export type PauseAction = 'resume' | 'restart' | 'menu';
+export type PauseAction = 'resume' | 'options' | 'restart' | 'menu';
 
 /**
  * Menu pause en HTML par-dessus le canvas. Comme les autres menus, un clic est seulement
@@ -13,6 +13,7 @@ export class PauseOverlay {
     buttons: Readonly<Record<PauseAction, HTMLButtonElement>>,
   ) {
     buttons.resume.addEventListener('click', () => (this.action = 'resume'));
+    buttons.options.addEventListener('click', () => (this.action = 'options'));
     buttons.restart.addEventListener('click', () => (this.action = 'restart'));
     buttons.menu.addEventListener('click', () => (this.action = 'menu'));
   }

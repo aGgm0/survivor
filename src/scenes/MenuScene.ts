@@ -18,6 +18,7 @@ import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
 import { MENU_BACKDROP } from '../data/sprites';
 import { buildFloor } from './floor';
+import { applyOptionsAction } from './options';
 
 /** Seed fixe du sol du menu : le même décor à chaque retour au menu. */
 const MENU_FLOOR_SEED = 0x6d656e75;
@@ -178,12 +179,7 @@ export class MenuScene implements Scene {
     const action = optionsOverlay.takeAction();
     if (action?.kind === 'back' || input.wasPressed(CONTROLS.back)) {
       this.open('main');
-    } else if (action?.kind === 'toggle') {
-      settings[action.key] = !settings[action.key];
-      optionsOverlay.refresh(settings);
-      this.deps.onSettingsChanged();
-    } else if (action?.kind === 'volume') {
-      settings[action.key] = action.value;
+    } else if (applyOptionsAction(action, settings)) {
       optionsOverlay.refresh(settings);
       this.deps.onSettingsChanged();
     }

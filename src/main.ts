@@ -63,6 +63,7 @@ const debug = new DebugOverlay(
 const input = new Input(window);
 const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement), {
   resume: getElement('pause-resume', HTMLButtonElement),
+  options: getElement('pause-options', HTMLButtonElement),
   restart: getElement('pause-restart', HTMLButtonElement),
   menu: getElement('pause-menu', HTMLButtonElement),
 });
@@ -209,6 +210,8 @@ function startRun(chosen: CharacterDef = character): void {
     {
       input,
       pauseOverlay,
+      optionsOverlay,
+      onSettingsChanged,
       endOverlay,
       levelUpOverlay,
       hud,

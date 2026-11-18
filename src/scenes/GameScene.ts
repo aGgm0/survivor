@@ -26,6 +26,7 @@ import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS, type AuraLook } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { buildFloor } from './floor';
+import { applyOptionsAction } from './options';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
@@ -80,6 +81,7 @@ import { buildDamageReport, type RunReport } from '../systems/runReport';
 import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
+import type { OptionsOverlay } from '../ui/OptionsOverlay';
 import type { DevAction, DevPanel, DevView } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
 import type { SoundPlayer } from '../core/AudioEngine';
@@ -173,8 +175,12 @@ export interface GameSceneDeps {
     | 'setInventory'
   >;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
-  /** Réglages du joueur (écran Options), lus en direct */
-  settings: Readonly<Settings>;
+  /** Réglages du joueur (écran Options), lus en direct ; modifiables depuis la pause */
+  settings: Settings;
+  /** Écran Options, ouvert depuis le menu pause */
+  optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
+  /** Un réglage vient de changer : main.ts l'applique et le sauvegarde. */
+  onSettingsChanged: () => void;
   /** Appelé quand le joueur demande à rejouer : main.ts crée une scène neuve. */
   onRestart: () => void;
   /** Appelé quand le joueur demande le menu principal (écran de fin ou pause). */
@@ -244,6 +250,8 @@ export class GameScene implements Scene, Build {
   /** Augmente à chaque upgrade choisi : le HUD ne redessine l'inventaire que quand il change. */
   private buildVersion = 0;
   private paused = false;
+  /** Écran Options ouvert par-dessus la pause */
+  private optionsOpen = false;
   /** Image du sol (dalles tirées au hasard), préparée une fois ; null = pas de sprites, grille */
   private readonly floorTiles: HTMLCanvasElement | null;
   /** Motif répété tiré de `floorTiles`, créé au premier rendu (il faut le contexte du canvas) */
@@ -365,6 +373,7 @@ export class GameScene implements Scene, Build {
     if (this.endless && !this.report) this.report = this.buildReport(true);
     this.recordRunOnce();
     this.setPaused(false);
+    this.deps.optionsOverlay.hide();
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
   }
@@ -373,6 +382,8 @@ export class GameScene implements Scene, Build {
   onHidden(): void {
     // Partie finie ou en plein choix d'upgrade : le jeu est déjà figé, pas besoin de pause.
     // Réglage désactivé : la partie reprend telle quelle au retour (la boucle s'arrête quand même).
+    // Déjà en pause dans les options : ne pas réafficher le menu pause par-dessus.
+    if (this.optionsOpen) return;
     if (!this.report && !this.choices && this.deps.settings.pauseOnHidden) this.setPaused(true);
   }
 
@@ -1279,14 +1290,49 @@ export class GameScene implements Scene, Build {
     return this.testRun;
   }
 
-  /** Menu pause : clic sur un bouton, ou raccourci clavier (Échap/P, R, M). */
+  /** Menu pause : clic sur un bouton, ou raccourci clavier (Échap/P, O, R, M). */
   private updatePauseMenu(): void {
+    if (this.optionsOpen) {
+      this.updateOptions();
+      return;
+    }
     const { input, pauseOverlay } = this.deps;
     // Le clic d'abord : `takeAction` le consomme même si une touche est aussi pressée.
     const clicked = pauseOverlay.takeAction();
     if (clicked === 'resume' || input.wasPressed(CONTROLS.pause)) this.setPaused(false);
+    else if (clicked === 'options' || input.wasPressed(CONTROLS.options)) this.setOptionsOpen(true);
     else if (clicked === 'restart' || input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
     else if (clicked === 'menu' || input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
+  }
+
+  /**
+   * Écran Options ouvert depuis la pause (le même que celui du menu principal).
+   * Échap ou Retour ramène au menu pause, sans reprendre la partie.
+   */
+  private updateOptions(): void {
+    const { input, optionsOverlay, settings } = this.deps;
+    const action = optionsOverlay.takeAction();
+    if (action?.kind === 'back' || input.wasPressed(CONTROLS.back)) {
+      this.setOptionsOpen(false);
+    } else if (applyOptionsAction(action, settings)) {
+      optionsOverlay.refresh(settings);
+      this.deps.onSettingsChanged();
+    }
+  }
+
+  private setOptionsOpen(open: boolean): void {
+    this.optionsOpen = open;
+    if (open) this.deps.optionsOverlay.show(this.deps.settings);
+    else this.deps.optionsOverlay.hide();
+    // Un seul écran à la fois : le menu pause revient quand on ferme les options.
+    this.deps.pauseOverlay.setVisible(!open);
+    // L'écran Options est haut : son titre passerait sur le timer du HUD.
+    this.deps.hud.setVisible(!open);
+  }
+
+  /** Vrai pendant que l'écran Options est ouvert par-dessus la pause. */
+  get isOptionsOpen(): boolean {
+    return this.optionsOpen;
   }
 
   private setPaused(paused: boolean): void {

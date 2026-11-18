@@ -12,6 +12,7 @@ import { BOSS_TYPE } from '../src/data/waves';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
+import type { OptionsAction } from '../src/ui/OptionsOverlay';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
 
 const DT = 1 / 60;
@@ -41,6 +42,12 @@ function makeDeps() {
     rerolls: null as { left: number; enabled: boolean } | null,
     /** Clic simulé sur le bouton de relance */
     rerollClick: false,
+    /** Écran Options affiché (depuis la pause) */
+    optionsShown: false,
+    /** Action simulée sur l'écran Options */
+    optionsAction: null as OptionsAction | null,
+    /** Réglages changés (= sauvegardes demandées à main.ts) */
+    settingsSaves: 0,
   };
   const deps: GameSceneDeps = {
     input: {
@@ -87,6 +94,17 @@ function makeDeps() {
     },
     debug: { setStat: () => {}, showHitboxes: false },
     settings: { ...DEFAULT_SETTINGS },
+    optionsOverlay: {
+      show: () => (ui.optionsShown = true),
+      hide: () => (ui.optionsShown = false),
+      refresh: () => {},
+      takeAction: () => {
+        const a = ui.optionsAction;
+        ui.optionsAction = null;
+        return a;
+      },
+    },
+    onSettingsChanged: () => ui.settingsSaves++,
     onRestart: () => ui.restarts++,
     onMenu: () => ui.menus++,
     onRunEnd: (report) => {
@@ -597,12 +615,59 @@ describe('GameScene — menu pause', () => {
     expect(ui.restarts).toBe(0);
   });
 
-  it('R et M ne font rien hors pause', () => {
+  it('R, M et O ne font rien hors pause', () => {
     const { scene, ui, press } = newScene();
     press('KeyR', scene);
     press('KeyM', scene);
+    press('KeyO', scene);
     expect(ui.restarts).toBe(0);
     expect(ui.menus).toBe(0);
+    expect(scene.isOptionsOpen).toBe(false);
+    expect(ui.optionsShown).toBe(false);
+  });
+
+  it('Options (bouton ou O) : l’écran Options remplace le menu pause', () => {
+    const { scene, ui, press } = pausedScene();
+    ui.pauseClick = 'options';
+    scene.update(DT);
+    expect(scene.isOptionsOpen).toBe(true);
+    expect(ui.optionsShown).toBe(true);
+    expect(ui.paused).toBe(false); // menu pause caché pendant les options
+    press('Escape', scene);
+    press('KeyO', scene);
+    expect(ui.optionsShown).toBe(true);
+  });
+
+  it('un réglage changé en partie est appliqué et sauvegardé', () => {
+    const { scene, ui, deps, press } = pausedScene();
+    press('KeyO', scene);
+    const before = deps.settings.damageNumbers;
+    ui.optionsAction = { kind: 'toggle', key: 'damageNumbers' };
+    scene.update(DT);
+    expect(deps.settings.damageNumbers).toBe(!before);
+    ui.optionsAction = { kind: 'volume', key: 'volumeMusic', value: 0.3 };
+    scene.update(DT);
+    expect(deps.settings.volumeMusic).toBe(0.3);
+    expect(ui.settingsSaves).toBe(2);
+  });
+
+  it('Échap dans les options ramène à la pause (partie toujours figée), puis reprend', () => {
+    const { scene, ui, press } = pausedScene();
+    press('KeyO', scene);
+    const time = scene.runTime;
+    press('Escape', scene);
+    expect(scene.isOptionsOpen).toBe(false);
+    expect(ui.optionsShown).toBe(false);
+    expect(ui.paused).toBe(true);
+    for (let i = 0; i < 30; i++) scene.update(DT);
+    expect(scene.runTime).toBe(time);
+    // Le bouton Retour fait pareil.
+    press('KeyO', scene);
+    ui.optionsAction = { kind: 'back' };
+    scene.update(DT);
+    expect(ui.paused).toBe(true);
+    press('Escape', scene);
+    expect(ui.paused).toBe(false);
   });
 });
 
