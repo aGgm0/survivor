@@ -1,6 +1,7 @@
 import { Game } from './core/Game';
 import { Fullscreen } from './core/Fullscreen';
 import { CONTROLS } from './data/controls';
+import { GAME_VERSION } from './data/version';
 import { Renderer } from './core/Renderer';
 import { DebugOverlay } from './core/DebugOverlay';
 import { Input } from './core/Input';
@@ -106,6 +107,9 @@ const profileOverlay = new ProfileOverlay(
   getElement('profile-weapons', HTMLDivElement),
   getElement('profile-back', HTMLButtonElement),
 );
+// Version affichée dans le menu et sur l'écran de fin (fixe pour tout le build).
+for (const el of document.querySelectorAll('.game-version')) el.textContent = `v${GAME_VERSION}`;
+
 const fullscreen = new Fullscreen(document);
 const optionsOverlay = new OptionsOverlay(
   getElement('options-overlay', HTMLDivElement),

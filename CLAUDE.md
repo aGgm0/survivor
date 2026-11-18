@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.0 |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.0 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -319,7 +319,8 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 | Méta | 4 persos, boutique, profil | + bestiaire, relances, ~30 déblocages |
 
 ### 0.1.0 — Première version numérotée `[petite]`
-- [ ] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin ; `CHANGELOG.md` ; tag `v0.1.0`
+- [x] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin, `savedWith` dans les sauvegardes ; `CHANGELOG.md` ; zip `survivor-0.1.0-itch.zip`
+- [ ] Tag `v0.1.0` sur `main` et poussé, une fois le zip testé sur itch
 - [x] Plein écran : touche + option
 - [x] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
 - [x] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
@@ -500,7 +501,7 @@ Les tâches ouvertes de cette époque sont reprises dans les versions ci-dessus 
 - [x] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
   - [x] Build publiable : base relative (`./`), chemins audio via `BASE_URL`, `npm run release:itch` (build + retrait de la planche Dark Ages + zip `release/survivor-itch.zip`), testé servi depuis un sous-dossier ; README
   - [x] Dépôt GitHub créé et code poussé : https://github.com/aGgm0/survivor (branche `main` seulement ; commits signés avec l'adresse anonyme GitHub)
-  - [x] Page itch.io (HTML5, 1280 × 720, plein écran) : https://agemo0.itch.io/survivor, lien dans le README. Nouvelle version = `npm run release:itch` puis renvoyer le zip sur la page
+  - [x] Page itch.io (HTML5, 1280 × 720, plein écran) : https://agemo0.itch.io/survivor, lien dans le README. Nouvelle version = `npm run release:itch` (zip `release/survivor-<version>-itch.zip`) puis renvoyer le zip sur la page
 - ↪ après la 1.0 : Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
 ---
@@ -633,6 +634,7 @@ Format : date — décision — raison.
 | 2026-11-18 | File d'attente de la horde : un voisin devant ne bloque que s'il n'avance pas lui-même (blocage × part de vitesse qui lui manque) | Bug « horde lente, même sur les côtés » : chacun attendait celui de devant même quand il repartait, toute la horde avançait par à-coups à ~40 % de sa vitesse (mesuré : tanks 49 % → 71 %). Joueur immobile : rien ne change. Reste : les petits sont coincés derrière les tanks (plus lents) ; contourner a été essayé, sans effet dans un paquet aussi serré |
 | 2026-11-18 | Ennemis distancés : replacés à un angle au hasard sur le cercle de spawn (au lieu de pile en face), seuil 1,5 → 1,35 × le rayon de spawn ; boss et élites toujours replacés en face | Idée de l'utilisateur : on pouvait tourner en rond avec toute la horde en file derrière soi. Redistribuée tout autour, elle remet la pression de tous les côtés. Une menace (boss, élite) ne doit pas disparaître d'un côté pour réapparaître n'importe où |
 | 2026-11-18 | Idées notées : objets rares des caisses (arrêt du temps, 20 or, bombe) en 0.4 ; mutations de l'aura glace / feu en 0.3 | 0.4 : il faut des moments forts sur 30 min. 0.3 : va avec les types de dégâts et les autres mutations de l'arsenal |
+| 2026-11-18 | Version : `define` de Vite (`__APP_VERSION__`, lu dans `package.json` par import JSON), affichée en bas à droite du menu et de l'écran de fin, `savedWith` dans les sauvegardes (écrit, ignoré à la lecture, sans changer leur numéro de format) | Une seule source pour la version. Import JSON plutôt que `node:fs` : pas de types Node dans le projet (pas de dépendance ajoutée) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

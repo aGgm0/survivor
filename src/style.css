@@ -364,6 +364,17 @@ body {
   color: var(--ui-tan);
 }
 
+/* Version du jeu, discrète dans le coin (menu principal, écran de fin) */
+.game-version {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ui-tan);
+  opacity: 0.6;
+}
+
 /* Pas de boîte à lui : ses enfants restent en absolute par rapport à #stage */
 #hud {
   display: contents;

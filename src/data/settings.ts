@@ -1,5 +1,7 @@
 // Réglages du joueur (écran Options), sauvegardés dans localStorage.
 
+import { GAME_VERSION } from './version';
+
 /** Clé de sauvegarde. Le préfixe évite les collisions avec d'autres jeux sur le même domaine. */
 export const SETTINGS_KEY = 'survivor.settings';
 
@@ -90,5 +92,6 @@ export function parseSettings(raw: unknown): Settings {
 
 /** Ce qui est écrit dans localStorage (avec le numéro de version). */
 export function serializeSettings(settings: Readonly<Settings>): Record<string, unknown> {
-  return { version: SETTINGS_VERSION, ...settings };
+  // savedWith : version du jeu qui a écrit la sauvegarde (ignorée à la lecture, utile aux migrations).
+  return { version: SETTINGS_VERSION, savedWith: GAME_VERSION, ...settings };
 }

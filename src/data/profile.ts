@@ -3,6 +3,7 @@
 
 import type { RunReport } from '../systems/runReport';
 import { SHOP_ITEMS } from './shop';
+import { GAME_VERSION } from './version';
 import { WEAPON_LIST } from './weapons';
 
 export const PROFILE_KEY = 'survivor.profile';
@@ -141,5 +142,6 @@ export function parseProfile(raw: unknown): Profile {
 }
 
 export function serializeProfile(profile: Readonly<Profile>): Record<string, unknown> {
-  return { version: PROFILE_VERSION, ...profile };
+  // savedWith : version du jeu qui a écrit la sauvegarde (ignorée à la lecture, utile aux migrations).
+  return { version: PROFILE_VERSION, savedWith: GAME_VERSION, ...profile };
 }
