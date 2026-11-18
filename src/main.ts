@@ -206,6 +206,7 @@ function showMenu(): void {
       onSettingsChanged,
       onProfileChanged: saveProfile,
       onPlay: startRun,
+      sprites: () => sprites,
     }),
   );
 }

@@ -68,6 +68,30 @@ export class ParticleSystem {
     }
   }
 
+  /**
+   * Une seule particule, à vitesse donnée (ex. étincelle qui monte d'une aura). Réserve pleine :
+   * rien n'est créé. `drag` ne s'applique pas moins : elle ralentit comme les autres.
+   */
+  spawn(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    size: number,
+    life: number,
+    color: string,
+  ): void {
+    const p = this.particles.acquire();
+    if (!p) return;
+    p.x = p.prevX = x;
+    p.y = p.prevY = y;
+    p.vx = vx;
+    p.vy = vy;
+    p.maxLife = p.life = life;
+    p.size = size;
+    p.color = color;
+  }
+
   update(dt: number): void {
     // Freinage exponentiel : indépendant du nombre d'updates par seconde.
     const keep = Math.exp(-this.drag * dt);

@@ -18,14 +18,14 @@ import {
   ORB_SPRITE,
   ENEMY_ANIM_OFFSET,
   ENEMY_IDLE_SPEED,
-  FLOOR,
   HIT_FLASH_TINT,
   type SpriteDef,
   enemySprite,
 } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
+import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS, type AuraLook } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
+import { buildFloor } from './floor';
 import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
@@ -104,6 +104,8 @@ const VISUAL_SEED_SALT = 0x9e3779b9;
 const FLOOR_SEED_SALT = 0x85ebca6b;
 /** Idem pour les particules */
 const PARTICLE_SEED_SALT = 0xc2b2ae35;
+/** Idem pour les étincelles d'aura */
+const AURA_SEED_SALT = 0x27d4eb2f;
 
 /**
  * Teinte « multiply » à la couleur d'une arme. Une seule par couleur, créée la première fois puis
@@ -119,23 +121,13 @@ function weaponTint(color: string): SpriteTint {
   return tint;
 }
 
-/** Image du sol : FLOOR.size × FLOOR.size dalles tirées selon leur poids. */
-function buildFloor(sprites: SpriteAtlas, rng: Rng): HTMLCanvasElement {
-  const total = FLOOR.tiles.reduce((sum, t) => sum + t.weight, 0);
-  const pick = (): string => {
-    let roll = rng.next() * total;
-    for (const t of FLOOR.tiles) {
-      roll -= t.weight;
-      if (roll < 0) return t.name;
-    }
-    return FLOOR.tiles[0].name;
-  };
-  const grid = Array.from({ length: FLOOR.size }, () => Array.from({ length: FLOOR.size }, pick));
-  return sprites.buildTiles(grid, FLOOR.scale, FLOOR.darken);
-}
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
 const AURA_STROKE_ALPHA = 0.5;
+/** rad/s du scintillement des braises d'aura */
+const EMBER_FLICKER_SPEED = 6;
+/** Opacité du trait sombre sous les braises */
+const EMBER_RING_ALPHA = 0.6;
 /** Mini-boss : anneau doré pulsant (réglages purement visuels) */
 const ELITE_LOOK = {
   ringColor: '#ffd54f',
@@ -218,6 +210,10 @@ export class GameScene implements Scene, Build {
   readonly damageNumbers: DamageNumberSystem;
   /** Éclats purement visuels (morts, caisses, level up) */
   readonly particles: ParticleSystem;
+  /** Aléatoire visuel des étincelles d'aura (séparé de celui du jeu, comme les particules) */
+  private readonly auraRng: Rng;
+  /** Étincelles d'aura dues mais pas encore émises (fraction qui s'accumule d'une update à l'autre) */
+  private auraSparkDebt = 0;
   readonly gems = new GemSystem();
   /** Rangs de boutique de cette partie, et le bonus d'XP qu'ils donnent (Sagesse) */
   private readonly shopRanks: Readonly<Record<string, number>>;
@@ -312,6 +308,7 @@ export class GameScene implements Scene, Build {
       new Rng(seed ^ PARTICLE_SEED_SALT),
       PARTICLES.drag,
     );
+    this.auraRng = new Rng(seed ^ AURA_SEED_SALT);
     this.floorTiles = deps.sprites
       ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
       : null;
@@ -486,6 +483,7 @@ export class GameScene implements Scene, Build {
     if (this.pickups.heal > 0) this.player.heal(this.pickups.heal);
     this.damageNumbers.update(dt);
     this.effects.update(dt);
+    this.emitAuraSparks(dt);
     this.particles.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
   }
@@ -504,7 +502,11 @@ export class GameScene implements Scene, Build {
     // Créer ces petits objets est sans risque : seulement au level up.
     this.deps.levelUpOverlay.show(
       level,
-      this.choices.map((c) => ({ ...c, iconId: choiceIconId(c) })),
+      this.choices.map((c) => ({
+        ...c,
+        iconId: choiceIconId(c),
+        weaponName: c.kind === 'mutation' ? c.weapon.def.name : undefined,
+      })),
     );
   }
 
@@ -845,23 +847,98 @@ export class GameScene implements Scene, Build {
     ctx.globalAlpha = 1;
   }
 
-  /** Disque translucide autour du joueur pour chaque aura possédée. */
+  /**
+   * Auras : disque très léger (pour voir la zone) et anneau de braises carrées posé sur le bord,
+   * qui tourne et scintille (voir AURA_LOOKS). Rien n'est modifié ici : tout dépend du temps.
+   */
   private renderAuras(ctx: CanvasRenderingContext2D, alpha: number): void {
     const px = this.player.renderX(alpha);
     const py = this.player.renderY(alpha);
     for (const w of this.weapons) {
       if (w.def.kind !== 'aura') continue;
+      const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
       ctx.beginPath();
       ctx.arc(px, py, w.radius, 0, Math.PI * 2);
       ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-      ctx.globalAlpha = AURA_FILL_ALPHA;
+      ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
       ctx.fill();
-      ctx.globalAlpha = AURA_STROKE_ALPHA;
-      ctx.strokeStyle = w.color;
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (look) this.renderEmbers(ctx, px, py, w.radius, look);
+      else {
+        ctx.globalAlpha = AURA_STROKE_ALPHA;
+        ctx.strokeStyle = w.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
     }
+  }
+
+  /**
+   * Braises le long du cercle : leur nombre suit la circonférence (l'anneau garde le même aspect
+   * quand le rayon grandit). Chacune scintille à son rythme et prend la couleur claire, moyenne
+   * ou sombre selon sa luminosité. Un passage par couleur : 3 changements de fillStyle seulement.
+   */
+  private renderEmbers(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    radius: number,
+    look: AuraLook,
+  ): void {
+    const count = Math.max(24, Math.round((Math.PI * 2 * radius) / look.emberSpacing));
+    const t = this.elapsed;
+    const spin = t * look.spin;
+    const size = look.emberSize;
+    // Trait sombre continu sous les braises : l'anneau reste lisible entre deux scintillements.
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius - size / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = look.colors[2];
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = EMBER_RING_ALPHA;
+    ctx.stroke();
     ctx.globalAlpha = 1;
+    for (let shade = 0; shade < 3; shade++) {
+      ctx.fillStyle = look.colors[shade] ?? look.colors[1];
+      for (let k = 0; k < count; k++) {
+        // Scintillement de 0 à 1, décalé d'une braise à l'autre.
+        const flicker = 0.5 + 0.5 * Math.sin(t * EMBER_FLICKER_SPEED + k * 2.3);
+        const kShade = flicker > 0.66 ? 0 : flicker > 0.33 ? 1 : 2;
+        if (kShade !== shade) continue;
+        const a = spin + (k / count) * Math.PI * 2;
+        // Une braise sur deux légèrement à l'intérieur : un anneau épais, pas une ligne.
+        const r = radius - (k % 2) * size;
+        // Positions calées sur une grille de 2 px : des pixels nets, comme les sprites ×2.
+        const x = Math.round((cx + Math.cos(a) * r - size / 2) / 2) * 2;
+        const y = Math.round((cy + Math.sin(a) * r - size / 2) / 2) * 2;
+        ctx.fillRect(x, y, size, size);
+      }
+    }
+  }
+
+  /** Étincelles qui montent de l'intérieur des auras (purement visuel, aléatoire séparé). */
+  private emitAuraSparks(dt: number): void {
+    for (const w of this.weapons) {
+      if (w.def.kind !== 'aura') continue;
+      const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
+      if (!look) continue;
+      this.auraSparkDebt += look.sparksPerSecond * dt;
+      while (this.auraSparkDebt >= 1) {
+        this.auraSparkDebt -= 1;
+        // Point au hasard dans le disque (racine carrée : répartition uniforme, pas tassée au centre).
+        const a = this.auraRng.range(0, Math.PI * 2);
+        const d = Math.sqrt(this.auraRng.next()) * w.radius;
+        this.particles.spawn(
+          this.player.x + Math.cos(a) * d,
+          this.player.y + Math.sin(a) * d,
+          this.auraRng.range(-15, 15),
+          -look.sparkRise * this.auraRng.range(0.7, 1),
+          look.sparkSize,
+          look.sparkLife * this.auraRng.range(0.6, 1),
+          look.sparkColor,
+        );
+      }
+    }
   }
 
   /** Orbes autour du joueur, à leur angle interpolé (rotation fluide à 144/240 Hz). */

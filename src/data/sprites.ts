@@ -170,6 +170,34 @@ export const SLASH_FX = {
 /** Lame d'onde : la hauteur du croissant formé (px d'art, mesurée dans le manifeste) = le diamètre de la hitbox */
 export const WAVE_FX = { artHeight: 33 } as const;
 
+/**
+ * Fond animé du menu : le sol du donjon qui défile lentement, des démons qui le traversent, et
+ * des bords assombris (vignette). Positions en coordonnées logiques (1280 × 720).
+ */
+export const MENU_BACKDROP = {
+  /** px/s de défilement du sol */
+  scrollX: 14,
+  scrollY: 7,
+  /** Assombrissement du sol (moins qu'en jeu : il n'y a pas de horde à faire ressortir) */
+  floorDarken: 0.3,
+  /** Opacité du noir sur les bords (le centre reste clair pour le titre et les boutons) */
+  vignette: 0.6,
+  /**
+   * Démons qui passent : animation, agrandissement, ligne (bas du sprite), vitesse en px/s
+   * (négatif = vers la gauche) et décalage de départ (px) pour qu'ils ne soient pas alignés.
+   */
+  walkers: [
+    { anim: 'chort_run_anim', scale: 2, y: 600, speed: 42, offset: 0 },
+    { anim: 'imp_run_anim', scale: 2, y: 640, speed: 75, offset: 500 },
+    { anim: 'ogre_run_anim', scale: 2, y: 700, speed: 30, offset: 900 },
+    { anim: 'big_demon_run_anim', scale: 3, y: 712, speed: 22, offset: 250 },
+    { anim: 'chort_run_anim', scale: 2, y: 140, speed: -38, offset: 300 },
+    { anim: 'imp_run_anim', scale: 2, y: 96, speed: -64, offset: 1000 },
+  ],
+  /** s par image des démons */
+  frameTime: 0.1,
+} as const;
+
 /** Objets ramassables */
 export const PICKUP_SPRITES = {
   gold: { anim: 'coin_anim', scale: 2, frameTime: 0.12 },

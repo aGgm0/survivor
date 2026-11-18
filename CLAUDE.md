@@ -378,6 +378,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Screen shake, particules
   - [x] Étape 1 : screen shake (trauma dans la Camera, chocs dans `data/feel.ts`, option « Tremblement de l'écran »)
   - [x] Étape 2 : particules (`ParticleSystem` en pool de 600 : morts d'ennemis, caisses, level up)
+- [ ] Retouches (2026-11-18) : 1) écran de fin agrandi et cartes de mutation remises en forme, 2) visuel de l'aura, 3) écran titre et son fond, 4) publication sur GitHub Pages
+  - [x] Étape 1 : écran de fin (titre 64 px, tuiles en 32 px, damage meter sur une ligne par arme sans chevauchement) ; cartes de mutation (320 px, icône 48 px, nom sans ★ + arme d'origine dessous, « ★ Niveau 6 · définitif ») ; dégradé de la carte de mutation étalé sur tout le cadre (il se répétait : bandes noires) ; plus aucune lueur floue sur les textes (titres, MORT, titre du menu) : ombre dure seule
+  - [x] Étape 2 : aura = anneau de braises carrées (pixels de 2 px) sur le bord de la zone, qui tourne et scintille, trait sombre dessous, disque très léger, étincelles qui montent (aléatoire séparé) ; une apparence par aura dans `AURA_LOOKS` (`data/feel.ts`) : feu, Brasier plus dense et vif, Aura toxique verte qui tourne à l'envers avec des bulles lentes
+  - [x] Étape 3 : écran titre = fond animé dessiné par MenuScene (sol du donjon qui défile, démons qui passent, vignette ; `MENU_BACKDROP` dans `data/sprites.ts`, sol partagé via `scenes/floor.ts`) ; titre en lettres dorées à 3 bandes nettes et contour noir dur (sans halo), volutes du pack dessous ; voile sombre sur les autres écrans du menu ; « Niv N » centré dans le corps de la plaque (sous la couronne) ; écrans de fin sur un voile sombre neutre (plus de lueur rouge ou dorée)
 - [ ] Sons et musique + option volume
 
 ### Phase 7 — Déploiement
@@ -495,6 +499,7 @@ Format : date — décision — raison.
 | 2026-11-12 | UI : packs Dark Ages UI (Hypnobius) + Kenney Fantasy UI Borders (CC0) ; Paper UI (parchemin clair) écarté ; Dark Ages ignoré par git (licence : pas de redistribution), découpé par `tools/ui/slice-darkages.mjs` ; cadres en `border-image` ×2, bordure de couleur en secours si le pack manque | Choix de l'utilisateur parmi 3 packs (« Dark Ages + Kenney »). Dark Ages colle au thème sombre ; Paper UI jurait avec le donjon |
 | 2026-11-12 | Apparence des persos : Arcaniste = mage (wizzard_m), Pyromancien = mage femme (wizzard_f), Runiste = elfe (elf_m), Lame-mage = chevalier (knight_m) ; même sprite en jeu et sur la carte (`CHARACTER_SPRITES`) ; icônes du HUD = Raven Fantasy Icons | Proposé (héros du pack 0x72), à changer en jeu si besoin. Raven demandé par l'utilisateur |
 | 2026-11-12 | Police DUNGEON.mode (CC0) au lieu de m5x7 ; tailles 12 / 16 / 24 px, pas de faux gras (`font-synthesis: none`) | Choisie par l'utilisateur. Glyphes larges (8 × 8) : boutique, profil, options, cartes et damage meter élargis pour éviter les retours à la ligne |
+| 2026-11-18 | Plus aucun halo flou (textes, titre) : ombres dures seulement ; fond du menu animé à la place du dégradé radial | Retour : « trop IA slop », « l'aura néon des textes ça fait IA de fou » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

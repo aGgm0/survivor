@@ -120,8 +120,12 @@ body {
   left: 12px;
   width: 80px;
   height: 58px;
-  padding-top: 24px;
-  text-align: center;
+  /* La couronne occupe le haut de la plaque : le texte est centré dans le corps, en dessous. */
+  padding-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   font: 12px var(--ui-font);
   color: var(--ui-gold);
   text-shadow: 1px 1px 0 #000;
@@ -340,9 +344,7 @@ body {
   letter-spacing: 8px;
   color: var(--ui-gold);
   /* Ombre dure (pixel art) plutôt qu'un flou */
-  text-shadow:
-    3px 3px 0 #000,
-    0 0 18px rgba(220, 196, 124, 0.25);
+  text-shadow: 3px 3px 0 #000;
 }
 
 /* "Nouveau perso débloqué" sur l'écran de fin */
@@ -695,7 +697,9 @@ body {
 .choice-mutation {
   border-color: var(--ui-gold);
   border-image-source: url('/assets/ui/kenney/card-mutation.png');
-  background: linear-gradient(180deg, #3a3020 0%, var(--ui-panel) 70%);
+  /* Dégradé calé sur toute la carte, cadre compris : sinon il se répète dans la bande du cadre
+     (bandes sombres en haut et en bas). */
+  background: linear-gradient(180deg, #3a3020 0%, var(--ui-panel) 70%) border-box no-repeat;
   box-shadow: 0 0 18px rgba(220, 196, 124, 0.35);
 }
 
@@ -742,18 +746,9 @@ body {
   width: 400px;
 }
 
-/* Titre du menu principal : plus grand, avec une lueur qui respire */
+/* Titre du menu principal : plus grand */
 .menu-title {
   font-size: 72px;
-  animation: title-glow 3s ease-in-out infinite;
-}
-
-@keyframes title-glow {
-  50% {
-    text-shadow:
-      4px 4px 0 #000,
-      0 0 28px rgba(220, 196, 124, 0.5);
-  }
 }
 
 /*
@@ -786,24 +781,19 @@ body {
 
 /* ------------------------------------------------------------------ écran de fin */
 
-/* Défaite : vignette rouge sombre ; victoire : lueur dorée */
+/* Écrans de fin : même voile sombre neutre ; seul le titre change de couleur (rouge ou or) */
 .overlay-death {
-  background: radial-gradient(ellipse at center, rgba(60, 8, 16, 0.75) 0%, rgba(8, 2, 4, 0.92) 75%);
+  /* Voile neutre : plus de lueur colorée derrière l'écran de fin (retour : « IA slop ») */
+  background: rgba(8, 6, 10, 0.85);
 }
 
 .overlay-death .overlay-title {
   color: var(--ui-red);
-  text-shadow:
-    3px 3px 0 #000,
-    0 0 24px rgba(200, 50, 74, 0.45);
+  text-shadow: 3px 3px 0 #000;
 }
 
 .overlay-victory {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(60, 48, 16, 0.7) 0%,
-    rgba(10, 8, 4, 0.92) 75%
-  );
+  background: rgba(8, 6, 10, 0.85);
 }
 
 /* Bilan : une rangée de tuiles encadrées */
@@ -902,4 +892,151 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/*
+ * Carte de mutation : plus large (son cadre aux grands coins mange de la place), grande icône à
+ * gauche, nom de la mutation et arme d'origine empilés à droite.
+ */
+.choice-mutation {
+  width: 320px;
+  padding: 10px 14px;
+  gap: 10px;
+}
+
+.choice-mutation .choice-head {
+  gap: 12px;
+}
+
+.choice-mutation .icon {
+  width: 48px;
+  height: 48px;
+  flex: none;
+}
+
+.choice-names {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.choice-weapon-name {
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+.choice-mutation .choice-level {
+  color: var(--ui-gold);
+}
+
+.choice-mutation .choice-desc {
+  line-height: 1.5;
+}
+
+/*
+ * Écran de fin plus lisible (retour de jeu : « trop écrasé ») : titre et chiffres plus grands,
+ * damage meter sur une ligne par arme (nom | barre | chiffres), sans chevauchement.
+ */
+#end-title {
+  font-size: 64px;
+}
+
+#end-info {
+  gap: 12px;
+  margin: 4px 0;
+}
+
+.end-stat {
+  min-width: 150px;
+  padding: 6px 10px;
+  gap: 4px;
+}
+
+.end-stat-value {
+  font-size: 32px;
+}
+
+#end-meter {
+  width: 1160px;
+  gap: 12px;
+}
+
+.meter-row {
+  grid-template-columns: 390px 1fr 350px;
+  white-space: nowrap;
+  grid-template-rows: auto;
+  align-items: center;
+  column-gap: 16px;
+  font-size: 16px;
+}
+
+.meter-label {
+  grid-row: auto;
+}
+
+.meter-bar {
+  height: 16px;
+}
+
+.meter-value {
+  font-size: 12px;
+  text-align: right;
+}
+
+#end-hint {
+  font-size: 16px;
+  margin-top: 6px;
+}
+
+/* ------------------------------------------------------------------ écran titre (2026-11-18) */
+
+/*
+ * Les écrans du menu laissent voir le fond animé dessiné par MenuScene : transparent pour
+ * l'accueil, voile sombre pour les autres (lisibilité des listes).
+ */
+.overlay-menu {
+  background: rgba(10, 8, 14, 0.72);
+}
+
+#menu-overlay {
+  background: none;
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/*
+ * Titre : lettres dorées en 3 bandes nettes (pas de dégradé lisse) et contour noir dur fait
+ * d'ombres sans flou dans les 4 directions, plus une ombre portée. Aucun halo.
+ */
+.menu-title {
+  font-size: 96px;
+  letter-spacing: 6px;
+  color: var(--ui-gold);
+  background: linear-gradient(
+    180deg,
+    #fff0b0 0%,
+    #fff0b0 34%,
+    var(--ui-gold) 34%,
+    var(--ui-gold) 68%,
+    var(--ui-gold-dark) 68%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(4px 0 0 #000) drop-shadow(-4px 0 0 #000) drop-shadow(0 4px 0 #000)
+    drop-shadow(0 -4px 0 #000) drop-shadow(6px 8px 0 rgba(0, 0, 0, 0.6));
+}
+
+/* Ornement en volutes du pack Dark Ages, agrandi ×3 */
+.title-flourish {
+  width: 180px;
+  height: 72px;
+  background: url('/assets/ui/darkages/flourish.png') center / contain no-repeat;
+  image-rendering: pixelated;
 }

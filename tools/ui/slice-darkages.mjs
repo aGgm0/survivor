@@ -28,6 +28,7 @@ const PIECES = {
   'bar-body': [197, 141, 86, 9], // corps du cadre de barre, sans l'ornement du dessus
   plate: [288, 106, 32, 15], // petite plaque sombre (timer)
   'plate-crown': [352, 98, 32, 23], // plaque à couronne dorée (niveau)
+  flourish: [322, 190, 60, 24], // ornement en volutes (sous le titre du menu)
 };
 
 // ---------------------------------------------------------------- découpe

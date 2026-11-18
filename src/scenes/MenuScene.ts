@@ -11,6 +11,16 @@ import type { Hud } from '../ui/Hud';
 import type { MenuOverlay } from '../ui/MenuOverlay';
 import type { OptionsOverlay } from '../ui/OptionsOverlay';
 import type { ProfileOverlay } from '../ui/ProfileOverlay';
+import { Rng } from '../core/math';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
+import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
+import { MENU_BACKDROP } from '../data/sprites';
+import { buildFloor } from './floor';
+
+/** Seed fixe du sol du menu : le même décor à chaque retour au menu. */
+const MENU_FLOOR_SEED = 0x6d656e75;
+/** Couleur de fond tant que les sprites ne sont pas chargés */
+const MENU_BG = '#14121a';
 
 /** Comme pour GameScene : seulement les méthodes utilisées, pour tester sans navigateur. */
 export interface MenuSceneDeps {
@@ -31,6 +41,8 @@ export interface MenuSceneDeps {
   onSettingsChanged: () => void;
   /** Lance une partie avec ce perso : main.ts crée une GameScene neuve. */
   onPlay: (character: CharacterDef) => void;
+  /** Atlas des sprites, lu à chaque frame (il peut finir de charger après l'ouverture du menu) */
+  sprites?: () => SpriteAtlas | null;
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
@@ -39,6 +51,12 @@ export type MenuScreen = 'main' | 'characters' | 'options' | 'profile' | 'shop';
 /** Écran d'accueil, choix du perso, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
 export class MenuScene implements Scene {
   private screen: MenuScreen = 'main';
+  /** s depuis l'ouverture du menu (anime le fond) */
+  private elapsed = 0;
+  /** Sol du fond, préparé une fois quand l'atlas est prêt ; motif et vignette créés au 1er dessin */
+  private floor: HTMLCanvasElement | null = null;
+  private floorPattern: CanvasPattern | null = null;
+  private vignette: CanvasGradient | null = null;
 
   constructor(private readonly deps: MenuSceneDeps) {}
 
@@ -61,7 +79,11 @@ export class MenuScene implements Scene {
     this.deps.shopOverlay.hide();
   }
 
-  update(): void {
+  update(dt = 0): void {
+    this.elapsed += dt;
+    const sprites = this.deps.sprites?.();
+    if (!this.floor && sprites)
+      this.floor = buildFloor(sprites, new Rng(MENU_FLOOR_SEED), MENU_BACKDROP.floorDarken);
     switch (this.screen) {
       case 'main':
         return this.updateMain();
@@ -76,8 +98,49 @@ export class MenuScene implements Scene {
     }
   }
 
-  /** Rien à dessiner : le menu HTML couvre le canvas (déjà effacé par la boucle). */
-  render(): void {}
+  /**
+   * Fond animé, sous les écrans HTML du menu : sol qui défile, démons qui passent, bords
+   * assombris. Tout est calculé à partir du temps : rien n'est modifié ici (hors caches de dessin).
+   */
+  render(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = MENU_BG;
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    const sprites = this.deps.sprites?.();
+    if (this.floor) {
+      this.floorPattern ??= ctx.createPattern(this.floor, 'repeat');
+      if (this.floorPattern) {
+        // Le motif suit la translation : on le décale, puis on remplit tout l'écran.
+        const ox = (this.elapsed * MENU_BACKDROP.scrollX) % this.floor.width;
+        const oy = (this.elapsed * MENU_BACKDROP.scrollY) % this.floor.height;
+        ctx.save();
+        ctx.translate(-ox, -oy);
+        ctx.fillStyle = this.floorPattern;
+        ctx.fillRect(ox, oy, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+        ctx.restore();
+      }
+    }
+    if (sprites) this.renderWalkers(ctx, sprites);
+    this.vignette ??= makeVignette(ctx);
+    ctx.fillStyle = this.vignette;
+    ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  }
+
+  /** Démons qui traversent l'écran en boucle, chacun à sa vitesse et sur sa ligne. */
+  private renderWalkers(ctx: CanvasRenderingContext2D, sprites: SpriteAtlas): void {
+    const margin = 120; // ils entrent et sortent hors de l'écran
+    const span = LOGICAL_WIDTH + margin * 2;
+    for (const w of MENU_BACKDROP.walkers) {
+      const frame = frameAt(
+        sprites.animation(w.anim),
+        this.elapsed + w.offset * 0.01,
+        MENU_BACKDROP.frameTime,
+      );
+      if (!frame) continue;
+      const travelled = (this.elapsed * Math.abs(w.speed) + w.offset) % span;
+      const x = w.speed > 0 ? travelled - margin : LOGICAL_WIDTH + margin - travelled;
+      sprites.draw(ctx, frame, x, w.y, w.scale, w.speed < 0);
+    }
+  }
 
   private updateMain(): void {
     const { input, menuOverlay } = this.deps;
@@ -150,4 +213,14 @@ export class MenuScene implements Scene {
     else if (screen === 'options') optionsOverlay.show(this.deps.settings);
     else profileOverlay.show(this.deps.profile);
   }
+}
+
+/** Bords assombris : transparent au centre, noir sur les côtés. */
+function makeVignette(ctx: CanvasRenderingContext2D): CanvasGradient {
+  const cx = LOGICAL_WIDTH / 2;
+  const cy = LOGICAL_HEIGHT / 2;
+  const g = ctx.createRadialGradient(cx, cy, LOGICAL_HEIGHT * 0.25, cx, cy, LOGICAL_WIDTH * 0.62);
+  g.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  g.addColorStop(1, `rgba(0, 0, 0, ${MENU_BACKDROP.vignette})`);
+  return g;
 }

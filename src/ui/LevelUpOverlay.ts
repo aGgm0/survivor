@@ -9,6 +9,8 @@ export interface ChoiceView {
   readonly kind?: string;
   /** Icône (id de l'arme, de la mutation ou du passif) ; absente : pas d'icône */
   readonly iconId?: string;
+  /** Mutation : nom de l'arme qui mute (affiché sous le nom de la mutation) */
+  readonly weaponName?: string;
 }
 
 /** Étiquette et style de carte selon la sorte d'upgrade (voir UpgradeChoice). */
@@ -65,7 +67,21 @@ export class LevelUpOverlay {
         const head = document.createElement('span');
         head.className = 'choice-head';
         if (choice.iconId) head.append(iconElement(choice.iconId, ''));
-        head.append(title);
+        if (choice.kind === 'mutation') {
+          // Mutation : le nom seul (l'étoile passe dans la ligne de niveau), l'arme dessous, et
+          // « niveau 6 » au lieu de « Niv 6 · Mutation » (l'étiquette dit déjà « Mutation »).
+          title.textContent = choice.title.replace(/^★\s*/, '');
+          const names = document.createElement('span');
+          names.className = 'choice-names';
+          const weapon = document.createElement('span');
+          weapon.className = 'choice-weapon-name';
+          weapon.textContent = choice.weaponName ? `de ${choice.weaponName}` : '';
+          names.append(title, weapon);
+          head.append(names);
+          level.textContent = '★ Niveau 6 · définitif';
+        } else {
+          head.append(title);
+        }
         button.append(key, head, level, desc);
         button.addEventListener('click', () => (this.clicked = index));
         return button;
