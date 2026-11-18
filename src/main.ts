@@ -78,6 +78,7 @@ const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-overlay', HTMLDivElement),
   getElement('levelup-title', HTMLParagraphElement),
   getElement('levelup-choices', HTMLDivElement),
+  getElement('levelup-reroll', HTMLButtonElement),
 );
 const menuOverlay = new MenuOverlay(getElement('menu-overlay', HTMLDivElement), {
   play: getElement('menu-play', HTMLButtonElement),

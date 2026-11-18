@@ -36,6 +36,14 @@ export function choiceIconId(choice: UpgradeChoice): string | undefined {
   }
 }
 
+/**
+ * Identifiant stable d'un choix : `availableUpgrades` recrée des objets à chaque appel, on ne
+ * peut donc pas comparer les cartes par référence.
+ */
+export function choiceKey(choice: UpgradeChoice): string {
+  return `${choice.kind}:${choiceIconId(choice) ?? ''}`;
+}
+
 /** Ce dont le système d'upgrades a besoin (et qu'il modifie). */
 export interface Build {
   readonly player: Player;
@@ -102,16 +110,34 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
  * S'il n'y a plus rien à améliorer, propose le soin pour que le level up ne soit jamais vide.
  * `guaranteeNewWeapon` : si aucune nouvelle arme n'est sortie alors qu'il en reste, la dernière
  * carte est remplacée par une nouvelle arme tirée au hasard.
+ * `exclude` (relance) : ces cartes ne reviennent que s'il n'y a pas assez d'autres options,
+ * sinon une relance pourrait reproposer exactement les mêmes cartes.
  */
 export function rollUpgradeChoices(
   options: readonly UpgradeChoice[],
   rng: Rng,
   count: number,
   guaranteeNewWeapon = false,
+  exclude: readonly UpgradeChoice[] = [],
 ): UpgradeChoice[] {
-  const picks = shufflePick(options, rng, count);
+  let picks: UpgradeChoice[];
+  let fresh: readonly UpgradeChoice[] = options;
+  if (exclude.length === 0 || options.length === 0) {
+    picks = shufflePick(options, rng, count);
+  } else {
+    const excludedKeys = new Set(exclude.map(choiceKey));
+    fresh = options.filter((c) => !excludedKeys.has(choiceKey(c)));
+    const stale = options.filter((c) => excludedKeys.has(choiceKey(c)));
+    picks = fresh.length > 0 ? shufflePick(fresh, rng, count) : [];
+    // Pas assez de nouvelles cartes : on complète avec des anciennes.
+    if (picks.length < count && stale.length > 0) {
+      picks.push(...shufflePick(stale, rng, count - picks.length));
+    }
+  }
   if (guaranteeNewWeapon && !picks.some((c) => c.kind === 'newWeapon')) {
-    const newWeapons = options.filter((c) => c.kind === 'newWeapon');
+    const freshWeapons = fresh.filter((c) => c.kind === 'newWeapon');
+    const newWeapons =
+      freshWeapons.length > 0 ? freshWeapons : options.filter((c) => c.kind === 'newWeapon');
     const forced = newWeapons[rng.int(0, newWeapons.length - 1)];
     if (forced) {
       if (picks.length < count) picks.push(forced);

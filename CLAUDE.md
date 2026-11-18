@@ -202,6 +202,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 - Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP).
 - Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
 - Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité, Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur).
+- **Relance** : 2 par partie (`REROLLS_PER_RUN`), touche R ou bouton sous les cartes. Les cartes affichées ne reviennent pas tant qu’il reste assez d’autres options ; la nouvelle arme garantie (< 3 armes) tient toujours. Impossible quand il ne reste que le soin.
 
 ### 5.7 Vagues & difficulté
 
@@ -319,7 +320,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Plein écran : touche + option
 - [ ] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
 - [ ] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
-- [ ] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) <!-- TODO: nombre de relances ; « bannir » une carte pour la partie, oui ou non ? -->
+- [x] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) ; pas de « bannir » pour l’instant
 - [x] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
@@ -614,6 +615,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Ulti par perso (jauge, effets faits de briques existantes, pas d'animation du sprite) ; enchantements revus : l'effet dépend du passif seul, appliqué à une arme au choix, un par arme | Ulti : une vraie décision active dans un genre automatique ; les sprites 0x72 n'ont pas d'animation de sort. Enchantements : 12 effets au lieu de 144 (un par couple passif × arme), intenable seul |
 | 2026-11-18 | Nouvelles idées validées : relance des cartes de level up, régénération de base 0,1 PV/s, annonces de boss et barres de PV dans la DA, options modifiables en partie, bestiaire (ennemis vus, armes jouées) ; relance et régénération avancées en 0.1 | Proposées par l'utilisateur : la relance compense la chance du tirage, la régén aide sur 30 min. 0.1 : demandé (« ASAP ») |
 | 2026-11-18 | Ordre des refactors : rendu puis menu F2 sortis de `GameScene` (0.2), registre de comportements d'armes et événements de partie avant les nouvelles armes (0.3), `StageDef` avant les 30 min (0.4) ; bot de simulation `npm run sim` pour équilibrer | Bilan : `GameScene` (1 393 lignes) concentre rendu, outils et règles ; ajouter un type d'arme touche 5 fichiers ; vagues et boss sont globaux. Seulement ce qui débloque la suite, pas de refactor « pour faire propre » |
+| 2026-11-18 | Relance des cartes en 0.1, sans « bannir » pour l'instant | Avec 4 armes et 9 passifs, le tirage est trop petit pour que bannir soit un vrai choix ; à revoir quand le contenu aura grossi |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

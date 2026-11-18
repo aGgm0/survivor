@@ -29,16 +29,21 @@ const CARD_STYLES: Readonly<Record<string, { readonly tag: string; readonly css:
  */
 export class LevelUpOverlay {
   private clicked: number | null = null;
+  private rerollClicked = false;
 
   constructor(
     private readonly el: HTMLElement,
     private readonly titleEl: HTMLElement,
     private readonly choicesEl: HTMLElement,
-  ) {}
+    private readonly rerollButton: HTMLButtonElement,
+  ) {
+    rerollButton.addEventListener('click', () => (this.rerollClicked = true));
+  }
 
   /** `title` remplace "NIVEAU N" (ex. pour l'écran de mutation). */
   show(level: number, choices: readonly ChoiceView[], title?: string): void {
     this.clicked = null;
+    this.rerollClicked = false;
     this.titleEl.textContent = title ?? `NIVEAU ${level}`;
     this.el.classList.toggle('overlay-mutation', title !== undefined);
     // L'aide liste les touches réellement utilisables (2 choix pour une mutation).
@@ -97,8 +102,23 @@ export class LevelUpOverlay {
     return index;
   }
 
+  /** Bouton de relance : relances restantes, grisé quand on ne peut pas relancer. */
+  setRerolls(left: number, enabled: boolean): void {
+    // Retour à la ligne voulu (white-space: pre-line) : sinon le compteur tombe seul en dessous.
+    this.rerollButton.textContent = `Relancer\n(R) · ${left}`;
+    this.rerollButton.disabled = !enabled;
+  }
+
+  /** Vrai si le bouton de relance a été cliqué depuis la dernière lecture. */
+  takeReroll(): boolean {
+    const clicked = this.rerollClicked;
+    this.rerollClicked = false;
+    return clicked;
+  }
+
   hide(): void {
     this.el.hidden = true;
     this.clicked = null;
+    this.rerollClicked = false;
   }
 }

@@ -5,7 +5,8 @@ import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
 import type { RunReport } from '../src/systems/runReport';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
-import { MAX_PASSIVES, MAXED_XP_MULT } from '../src/data/progression';
+import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
+import { choiceKey } from '../src/systems/upgrades';
 import { PASSIVES } from '../src/data/upgrades';
 import { BOSS_TYPE } from '../src/data/waves';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
@@ -36,6 +37,10 @@ function makeDeps() {
     levelUpShown: null as { level: number; titles: string[] } | null,
     /** Clic simulé sur une carte de level up (lu une fois par la scène) */
     click: null as number | null,
+    /** Bouton de relance : compteur affiché et état (null = jamais affiché) */
+    rerolls: null as { left: number; enabled: boolean } | null,
+    /** Clic simulé sur le bouton de relance */
+    rerollClick: false,
   };
   const deps: GameSceneDeps = {
     input: {
@@ -60,6 +65,12 @@ function makeDeps() {
       takeClick: () => {
         const c = ui.click;
         ui.click = null;
+        return c;
+      },
+      setRerolls: (left, enabled) => (ui.rerolls = { left, enabled }),
+      takeReroll: () => {
+        const c = ui.rerollClick;
+        ui.rerollClick = false;
         return c;
       },
     },
@@ -315,6 +326,38 @@ describe('GameScene — level up', () => {
     ui.click = 2;
     scene.update(DT);
     expect(scene.isChoosingUpgrade).toBe(false);
+  });
+
+  it('R : relance les cartes (d’autres cartes), une relance en moins', () => {
+    const { scene, ui, press } = newScene({ armed: false });
+    giveXp(scene, 15);
+    expect(ui.rerolls).toEqual({ left: REROLLS_PER_RUN, enabled: true });
+    const before = scene.currentChoices.map(choiceKey);
+    press('KeyR', scene);
+    expect(scene.isChoosingUpgrade).toBe(true);
+    expect(scene.rerollsLeft).toBe(REROLLS_PER_RUN - 1);
+    expect(ui.rerolls?.left).toBe(REROLLS_PER_RUN - 1);
+    // Au niveau 2 il reste largement assez d'options : aucune carte ne revient.
+    const after = scene.currentChoices.map(choiceKey);
+    expect(after).toHaveLength(3);
+    for (const key of after) expect(before).not.toContain(key);
+    expect(ui.restarts).toBe(0); // R ne relance pas la partie ici
+  });
+
+  it('le bouton de relance marche aussi ; plus de relance : rien ne change', () => {
+    const { scene, ui } = newScene({ armed: false });
+    giveXp(scene, 15);
+    for (let i = 0; i < REROLLS_PER_RUN; i++) {
+      ui.rerollClick = true;
+      scene.update(DT);
+    }
+    expect(scene.rerollsLeft).toBe(0);
+    expect(ui.rerolls?.enabled).toBe(false);
+    const titles = scene.currentChoices.map((c) => c.title);
+    ui.rerollClick = true;
+    scene.update(DT);
+    expect(scene.currentChoices.map((c) => c.title)).toEqual(titles);
+    expect(scene.rerollsLeft).toBe(0);
   });
 
   it('plusieurs niveaux d’un coup : les écrans s’enchaînent', () => {

@@ -30,6 +30,9 @@ export function xpToNext(level: number): number {
  */
 export const MAXED_XP_MULT = 4;
 
+/** Relances des cartes de level up par partie (la boutique pourra en ajouter) */
+export const REROLLS_PER_RUN = 2;
+
 /** Nombre de choix proposés à chaque level up */
 export const UPGRADE_CHOICE_COUNT = 3;
 

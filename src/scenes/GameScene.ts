@@ -31,6 +31,7 @@ import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
   MAXED_XP_MULT,
   NEW_WEAPON_GUARANTEE_BELOW,
+  REROLLS_PER_RUN,
   RUN_DURATION,
   UPGRADE_CHOICE_COUNT,
 } from '../data/progression';
@@ -158,7 +159,7 @@ export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
   pauseOverlay: Pick<PauseOverlay, 'setVisible' | 'takeAction'>;
   endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
-  levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick'>;
+  levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick' | 'setRerolls' | 'takeReroll'>;
   hud: Pick<
     Hud,
     | 'setVisible'
@@ -238,6 +239,8 @@ export class GameScene implements Scene, Build {
   private pendingLevelUps = 0;
   /** Choix affichés à l'écran ; null = pas de level up en cours */
   private choices: UpgradeChoice[] | null = null;
+  /** Relances de cartes restantes pour cette partie (une scène neuve à chaque partie) */
+  rerollsLeft: number = REROLLS_PER_RUN;
   /** Augmente à chaque upgrade choisi : le HUD ne redessine l'inventaire que quand il change. */
   private buildVersion = 0;
   private paused = false;
@@ -408,6 +411,7 @@ export class GameScene implements Scene, Build {
       this.freeze();
       const index = this.readChoiceInput();
       if (index !== null) this.chooseUpgrade(index);
+      else if (this.readRerollInput()) this.rerollChoices();
       return;
     }
 
@@ -512,7 +516,7 @@ export class GameScene implements Scene, Build {
   }
 
   /** Tire 3 choix (avec l'aléatoire du jeu : même seed → mêmes choix) et les affiche. */
-  private openLevelUp(): void {
+  private openLevelUp(exclude: readonly UpgradeChoice[] = []): void {
     // Niveau atteint par CE level up (s'il en reste plusieurs à choisir, on les montre dans l'ordre).
     const level = this.progression.level - this.pendingLevelUps + 1;
 
@@ -521,6 +525,7 @@ export class GameScene implements Scene, Build {
       this.rng,
       UPGRADE_CHOICE_COUNT,
       this.weapons.length < NEW_WEAPON_GUARANTEE_BELOW,
+      exclude,
     );
     // Créer ces petits objets est sans risque : seulement au level up.
     this.deps.levelUpOverlay.show(
@@ -531,6 +536,25 @@ export class GameScene implements Scene, Build {
         weaponName: c.kind === 'mutation' ? c.weapon.def.name : undefined,
       })),
     );
+    this.deps.levelUpOverlay.setRerolls(this.rerollsLeft, this.canReroll);
+  }
+
+  /** Relance possible : il en reste, et il y a de vraies cartes (pas seulement le soin). */
+  get canReroll(): boolean {
+    return this.rerollsLeft > 0 && availableUpgrades(this).length > 0;
+  }
+
+  private readRerollInput(): boolean {
+    const clicked = this.deps.levelUpOverlay.takeReroll();
+    return this.deps.input.wasPressed(CONTROLS.reroll) || clicked;
+  }
+
+  /** Retire de nouvelles cartes à la place de celles affichées (même niveau, même aléatoire). */
+  rerollChoices(): void {
+    if (!this.choices || !this.canReroll) return;
+    this.rerollsLeft--;
+    this.sound('ui-click');
+    this.openLevelUp(this.choices);
   }
 
   /** Index choisi (0, 1, 2) au clavier ou à la souris, ou null s'il n'y a rien de valide. */

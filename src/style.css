@@ -621,6 +621,13 @@ body {
   gap: 16px;
 }
 
+/* Bouton de relance sous les cartes : même cadre que les boutons des menus. */
+.levelup-reroll {
+  width: 240px;
+  margin-top: 16px;
+  white-space: pre-line;
+}
+
 .choice {
   width: 260px;
   padding: 16px;

@@ -14,6 +14,7 @@ import { CollisionSystem } from '../src/systems/CollisionSystem';
 import {
   applyUpgrade,
   availableUpgrades,
+  choiceKey,
   rollUpgradeChoices,
   type Build,
 } from '../src/systems/upgrades';
@@ -89,6 +90,28 @@ describe('upgrades — options et tirage', () => {
     expect(a).toHaveLength(3);
     expect(new Set(a.map((c) => c.title)).size).toBe(3);
     expect(a.map((c) => c.title)).toEqual(b.map((c) => c.title));
+  });
+
+  it('relance : les cartes écartées ne reviennent pas s’il y a assez d’autres options', () => {
+    const options = availableUpgrades(makeBuild());
+    for (let seed = 0; seed < 100; seed++) {
+      const first = rollUpgradeChoices(options, new Rng(seed), 3, true);
+      const again = rollUpgradeChoices(options, new Rng(seed + 1000), 3, true, first);
+      const firstKeys = first.map(choiceKey);
+      expect(again).toHaveLength(3);
+      for (const c of again) expect(firstKeys).not.toContain(choiceKey(c));
+      // La garantie d'arme tient toujours après une relance.
+      expect(again.some((c) => c.kind === 'newWeapon')).toBe(true);
+    }
+  });
+
+  it('relance : pas assez de nouvelles cartes → on complète avec les anciennes', () => {
+    const options = availableUpgrades(makeBuild()).slice(0, 4);
+    const shown = options.slice(0, 3);
+    const again = rollUpgradeChoices(options, new Rng(3), 3, false, shown);
+    expect(again).toHaveLength(3);
+    expect(again.map(choiceKey)).toContain(choiceKey(options[3]!));
+    expect(new Set(again.map(choiceKey)).size).toBe(3);
   });
 
   it('n’en propose pas plus qu’il n’en existe', () => {
