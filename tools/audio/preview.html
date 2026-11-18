@@ -1,0 +1,122 @@
+<!doctype html>
+<!-- Page d'écoute des bruitages (outil de dev, absente du build) :
+     npm run dev puis http://localhost:5173/tools/audio/preview.html
+     « Rafale » rejoue le son 15 fois par seconde avec une hauteur qui varie un peu, comme en partie :
+     c'est là qu'on entend si un son devient fatigant. -->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Écoute des bruitages</title>
+    <style>
+      body {
+        background: #14121a;
+        color: #e8e0cc;
+        font:
+          15px system-ui,
+          sans-serif;
+        max-width: 640px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #2a2633;
+      }
+      .name {
+        flex: 1;
+        font-family: monospace;
+      }
+      button {
+        background: #2a2633;
+        color: inherit;
+        border: 1px solid #4a4458;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #c9a227;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bruitages</h1>
+    <p>
+      Générés par <code>node tools/audio/build-sfx.mjs</code>. Recharge la page après une
+      régénération.
+    </p>
+    <div id="list"></div>
+    <script>
+      const NAMES = [
+        'bolt-shoot',
+        'bolt-burst',
+        'aura-burn',
+        'orb-hit',
+        'sword-slash',
+        'enemy-hit',
+        'enemy-death',
+        'player-hurt',
+        'gem-pickup',
+        'coin-pickup',
+        'heal',
+        'crate-break',
+        'level-up',
+        'boss-charge',
+        'boss-summon',
+        'boss-death',
+        'ui-hover',
+        'ui-click',
+      ];
+      const ctx = new AudioContext();
+      const buffers = {};
+
+      async function load(name) {
+        // Paramètre anti-cache : sinon le navigateur garde l'ancienne version après une régénération.
+        const res = await fetch(`/assets/audio/sfx/${name}.wav?t=${Date.now()}`);
+        buffers[name] = await ctx.decodeAudioData(await res.arrayBuffer());
+      }
+
+      function play(name, rate = 1, volume = 1) {
+        const source = ctx.createBufferSource();
+        source.buffer = buffers[name];
+        source.playbackRate.value = rate;
+        const gain = ctx.createGain();
+        gain.gain.value = volume;
+        source.connect(gain).connect(ctx.destination);
+        source.start();
+      }
+
+      function burst(name) {
+        let count = 0;
+        const timer = setInterval(() => {
+          play(name, 0.95 + Math.random() * 0.1, 0.5);
+          if (++count >= 30) clearInterval(timer);
+        }, 1000 / 15);
+      }
+
+      const list = document.getElementById('list');
+      for (const name of NAMES) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `<span class="name">${name}</span>`;
+        const once = document.createElement('button');
+        once.textContent = 'Jouer';
+        once.onclick = () => {
+          ctx.resume();
+          play(name);
+        };
+        const many = document.createElement('button');
+        many.textContent = 'Rafale (2 s)';
+        many.onclick = () => {
+          ctx.resume();
+          burst(name);
+        };
+        row.append(once, many);
+        list.append(row);
+        load(name);
+      }
+    </script>
+  </body>
+</html>

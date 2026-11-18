@@ -13,3 +13,5 @@ Avant d'ajouter un pack : vérifier la licence sur sa page (pas de "non commerci
 | `ui/raven/` | Raven Fantasy Icons, version gratuite (21 icônes 16 × 16 copiées par `tools/ui/copy-raven.mjs`) | Clockwork Raven Studios | https://clockworkraven.itch.io/raven-fantasy-icons | Version gratuite : usage personnel / jeu gratuit sans pub ni achats intégrés ; **Premium (35 $) obligatoire pour vendre le jeu** ; interdit de redistribuer les fichiers. **Ignoré par git** : relancer le script avec le pack | 2026-11-12 |
 
 Les fichiers de `sprites/` hors des sous-dossiers de packs (`player.png`, `basic.png`, `boss.png`) et le dossier `sprites/fx/` sont générés par `tools/sprites/build.mjs` (création du projet).
+
+Les bruitages de `audio/sfx/` sont générés par `tools/audio/build-sfx.mjs` (création du projet, CC0). Écoute : `tools/audio/preview.html`.

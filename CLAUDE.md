@@ -383,6 +383,9 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 2 : aura = anneau de braises carrées (pixels de 2 px) sur le bord de la zone, qui tourne et scintille, trait sombre dessous, disque très léger, étincelles qui montent (aléatoire séparé) ; une apparence par aura dans `AURA_LOOKS` (`data/feel.ts`) : feu, Brasier plus dense et vif, Aura toxique verte qui tourne à l'envers avec des bulles lentes
   - [x] Étape 3 : écran titre = fond animé dessiné par MenuScene (sol du donjon qui défile, démons qui passent, vignette ; `MENU_BACKDROP` dans `data/sprites.ts`, sol partagé via `scenes/floor.ts`) ; titre en lettres dorées à 3 bandes nettes et contour noir dur (sans halo), volutes du pack dessous ; voile sombre sur les autres écrans du menu ; « Niv N » centré dans le corps de la plaque (sous la couronne) ; écrans de fin sur un voile sombre neutre (plus de lueur rouge ou dorée)
 - [ ] Sons et musique + option volume
+  - [x] Étape 1 : 18 bruitages générés par `tools/audio/build-sfx.mjs` (synthé rétro maison, WAV, CC0), page d'écoute `tools/audio/preview.html` (bouton « Rafale » pour juger la fatigue) ; sources de la musique dans `docs/sons.md`
+  - [ ] Étape 2 : choisir les 5 musiques, les mettre au format
+  - [ ] Étape 3 : moteur audio (Web Audio), sons branchés, volumes musique / effets dans les Options
 
 ### Phase 7 — Déploiement
 - [ ] Déploiement en ligne (itch.io, GitHub Pages...)

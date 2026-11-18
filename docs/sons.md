@@ -12,37 +12,37 @@ Réponse au prompt de `docs/prompt-sons.md` (recherche du 2026-11-18). Licences 
 
 ## Musique (`music/`)
 
-| Fichier | Source | Licence |
-|---|---|---|
-| `menu.ogg` | [JRPG Pack 4 Calm](https://opengameart.org/content/jrpg-pack-4-calm) ou piste lente de [JRPG Pack 3 Evil](https://opengameart.org/content/jrpg-pack-3-evil) (tagué dark / horror) | CC0 |
-| `run.ogg` | [5 Chiptunes (Action)](https://opengameart.org/content/5-chiptunes-action) : la piste la moins chargée | CC0 |
-| `boss.ogg` | [Boss Battle Music](https://opengameart.org/content/boss-battle-music) (« Epic Boss Battle », orchestral) ou la piste la plus intense de 5 Chiptunes | CC0 |
-| `victory.ogg`, `defeat.ogg` | [Kenney Music Jingles](https://kenney.nl/assets/music-jingles) (85 jingles, dont une série 8-bit) | CC0 |
+| Fichier                     | Source                                                                                                                                                                            | Licence |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `menu.ogg`                  | [JRPG Pack 4 Calm](https://opengameart.org/content/jrpg-pack-4-calm) ou piste lente de [JRPG Pack 3 Evil](https://opengameart.org/content/jrpg-pack-3-evil) (tagué dark / horror) | CC0     |
+| `run.ogg`                   | [5 Chiptunes (Action)](https://opengameart.org/content/5-chiptunes-action) : la piste la moins chargée                                                                            | CC0     |
+| `boss.ogg`                  | [Boss Battle Music](https://opengameart.org/content/boss-battle-music) (« Epic Boss Battle », orchestral) ou la piste la plus intense de 5 Chiptunes                              | CC0     |
+| `victory.ogg`, `defeat.ogg` | [Kenney Music Jingles](https://kenney.nl/assets/music-jingles) (85 jingles, dont une série 8-bit)                                                                                 | CC0     |
 
 ## Bruitages (`sfx/`) : recettes ChipTone
 
 Outil : [ChipTone](https://sfbgames.itch.io/chiptone) (alternative : [jsfxr](https://sfxr.me)). Règle : attaque à 0, court, peu de basses pour les sons fréquents.
 
-| Fichier | Recette |
-|---|---|
-| `bolt-shoot` | Sinus ou triangle, hauteur qui descend vite, 0,1 s |
-| `bolt-burst` | Bruit blanc + carré grave, descente, 0,3 s |
-| `aura-burn` | Bruit filtré très court (0,05-0,08 s), volume bas |
-| `orb-hit` | Triangle aigu, petite descente, 0,08 s (« tink ») |
-| `sword-slash` | Bruit, passe-haut qui balaie vers le bas, 0,2 s |
-| `enemy-hit` | Carré, 0,05 s, très sec |
-| `enemy-death` | Carré qui descend vite (« pop »), 0,12 s |
+| Fichier       | Recette                                                          |
+| ------------- | ---------------------------------------------------------------- |
+| `bolt-shoot`  | Sinus ou triangle, hauteur qui descend vite, 0,1 s               |
+| `bolt-burst`  | Bruit blanc + carré grave, descente, 0,3 s                       |
+| `aura-burn`   | Bruit filtré très court (0,05-0,08 s), volume bas                |
+| `orb-hit`     | Triangle aigu, petite descente, 0,08 s (« tink »)                |
+| `sword-slash` | Bruit, passe-haut qui balaie vers le bas, 0,2 s                  |
+| `enemy-hit`   | Carré, 0,05 s, très sec                                          |
+| `enemy-death` | Carré qui descend vite (« pop »), 0,12 s                         |
 | `player-hurt` | Dent de scie grave + bruit, 0,25 s (doit trancher avec le reste) |
-| `gem-pickup` | Sinus très aigu, 2 notes rapides, 0,06 s |
-| `coin-pickup` | Carré, 2 notes montantes, 0,15 s |
-| `heal` | Arpège montant en triangle, 0,35 s |
-| `crate-break` | Bruit + carré grave, craquement, 0,25 s |
-| `level-up` | Arpège majeur montant en carré, 0,7 s |
-| `boss-charge` | Montée de hauteur menaçante (sirène courte), 0,6 s |
-| `boss-summon` | Vibrato grave + bruit qui monte, 0,8 s |
-| `boss-death` | Longue explosion en bruit + descente grave, 1,5 s |
-| `ui-hover` | Clic carré très aigu, 0,03 s, volume bas |
-| `ui-click` | Même son, plus grave et un peu plus long |
+| `gem-pickup`  | Sinus très aigu, 2 notes rapides, 0,06 s                         |
+| `coin-pickup` | Carré, 2 notes montantes, 0,15 s                                 |
+| `heal`        | Arpège montant en triangle, 0,35 s                               |
+| `crate-break` | Bruit + carré grave, craquement, 0,25 s                          |
+| `level-up`    | Arpège majeur montant en carré, 0,7 s                            |
+| `boss-charge` | Montée de hauteur menaçante (sirène courte), 0,6 s               |
+| `boss-summon` | Vibrato grave + bruit qui monte, 0,8 s                           |
+| `boss-death`  | Longue explosion en bruit + descente grave, 1,5 s                |
+| `ui-hover`    | Clic carré très aigu, 0,03 s, volume bas                         |
+| `ui-click`    | Même son, plus grave et un peu plus long                         |
 
 **Secours (CC0)** : [512 Sound Effects (8-bit style)](https://opengameart.org/content/512-sound-effects-8-bit-style) (Junkala : pièces, gemmes, level up, coups, interface) ; [Kenney Interface Sounds](https://kenney.nl/assets/interface-sounds) (UI) ; [Kenney Impact Sounds](https://kenney.nl/assets/impact-sounds) et [RPG Audio](https://kenney.nl/assets/rpg-audio) (réalistes : seulement `crate-break` à la rigueur).
 
@@ -69,11 +69,11 @@ ffmpeg -i in.wav -af "loudnorm=I=-16:TP=-1.5:LRA=11:linear=true" -ac 2 -ar 44100
 
 ## Récapitulatif
 
-| Fichier | Source | Licence | Crédit à afficher |
-|---|---|---|---|
-| `menu.ogg`, `run.ogg`, `boss.ogg` | Juhani Junkala (OpenGameArt) | CC0 | Facultatif : « Musique : Juhani Junkala » |
-| `victory.ogg`, `defeat.ogg` | Kenney Music Jingles | CC0 | Facultatif : « Kenney (kenney.nl) » |
-| 18 fichiers `sfx/` | Créés avec ChipTone | CC0 (création perso) | Facultatif : « Bruitages faits avec ChipTone (SFB Games) » |
-| (secours) sfx | 512 Sound Effects / Kenney | CC0 | Facultatif, comme ci-dessus |
+| Fichier                           | Source                       | Licence              | Crédit à afficher                                          |
+| --------------------------------- | ---------------------------- | -------------------- | ---------------------------------------------------------- |
+| `menu.ogg`, `run.ogg`, `boss.ogg` | Juhani Junkala (OpenGameArt) | CC0                  | Facultatif : « Musique : Juhani Junkala »                  |
+| `victory.ogg`, `defeat.ogg`       | Kenney Music Jingles         | CC0                  | Facultatif : « Kenney (kenney.nl) »                        |
+| 18 fichiers `sfx/`                | Créés avec ChipTone          | CC0 (création perso) | Facultatif : « Bruitages faits avec ChipTone (SFB Games) » |
+| (secours) sfx                     | 512 Sound Effects / Kenney   | CC0                  | Facultatif, comme ci-dessus                                |
 
 À reporter dans `public/assets/LICENSES.md` (avec la piste exacte choisie) quand les fichiers seront dans le projet.
