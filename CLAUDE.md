@@ -320,7 +320,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 
 ### 0.1.0 — Première version numérotée `[petite]`
 - [x] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin, `savedWith` dans les sauvegardes ; `CHANGELOG.md` ; zip `survivor-0.1.0-itch.zip`
-- [ ] Tag `v0.1.0` sur `main` et poussé, une fois le zip testé sur itch
+- [x] Tag `v0.1.0` sur `main` et poussé, une fois le zip testé sur itch (testé le 2026-11-18)
 - [x] Plein écran : touche + option
 - [x] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
 - [x] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
