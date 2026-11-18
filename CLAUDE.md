@@ -350,12 +350,14 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits
 - [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
 - [ ] 4 nouvelles armes (2 physiques, 2 magiques), avec de nouveaux comportements, 2 mutations chacune
+- [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique <!-- TODO: chiffres à définir le moment venu -->
 - **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine.
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
 - [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi. Les métriques du bot doivent rester identiques avant d'aller plus loin
 - [ ] Vagues jusqu'à 30:00, 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
 - [ ] 3 boss (10:00, 20:00, 30:00) aux sprites différents, nouvelles capacités (projectiles, zones au sol), plus d'élites avec leurs propres capacités
+- [ ] **Objets rares** lâchés par les caisses : arrêt du temps, 20 or, bombe qui tue tout à l'écran sauf les boss <!-- TODO: chance d'apparition, durée de l'arrêt du temps -->
 - [ ] Courbe d'XP refaite (build complet vers 25 min), sans fin après 30:00
 - [ ] Décision avec le bot : niveau max des armes à 12 (nouvelle mutation ?) et/ou plus d'emplacements (5 + 5 ?) <!-- TODO: à trancher selon « build complet à » -->
 - [ ] Refactor : `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
@@ -630,6 +632,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Équilibrage allégé : gemme verte du basique (50 % de chances, ×2 d'XP) au lieu de +50 % d'XP partout ; 0,8 ennemi/s de 0:00 à 0:30 ; chaque coup arrondi à l'entier supérieur ; Trait arcanique 14 → 16 ; passifs ×0,5 dans le tirage avant le niveau 10. **Reportés** : PV de la vague 6:00 (×2,5 → ×2,3) et buff de l'Épée et des Orbes | Retours de jeu « trop dur ». Tout cumulé (dégâts, arrondi, PV de 6:00, XP) faisait ≈ +25 % de DPS effectif : risque de retomber dans « ez victoire ». Passifs : moins souvent plutôt que plus forts, pour ne pas gonfler la fin de partie. Arrondi : un bonus de +3 % ne changeait rien de visible |
 | 2026-11-18 | File d'attente de la horde : un voisin devant ne bloque que s'il n'avance pas lui-même (blocage × part de vitesse qui lui manque) | Bug « horde lente, même sur les côtés » : chacun attendait celui de devant même quand il repartait, toute la horde avançait par à-coups à ~40 % de sa vitesse (mesuré : tanks 49 % → 71 %). Joueur immobile : rien ne change. Reste : les petits sont coincés derrière les tanks (plus lents) ; contourner a été essayé, sans effet dans un paquet aussi serré |
 | 2026-11-18 | Ennemis distancés : replacés à un angle au hasard sur le cercle de spawn (au lieu de pile en face), seuil 1,5 → 1,35 × le rayon de spawn ; boss et élites toujours replacés en face | Idée de l'utilisateur : on pouvait tourner en rond avec toute la horde en file derrière soi. Redistribuée tout autour, elle remet la pression de tous les côtés. Une menace (boss, élite) ne doit pas disparaître d'un côté pour réapparaître n'importe où |
+| 2026-11-18 | Idées notées : objets rares des caisses (arrêt du temps, 20 or, bombe) en 0.4 ; mutations de l'aura glace / feu en 0.3 | 0.4 : il faut des moments forts sur 30 min. 0.3 : va avec les types de dégâts et les autres mutations de l'arsenal |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
