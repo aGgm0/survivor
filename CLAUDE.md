@@ -141,6 +141,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 | Vitesse | 200 px/s | |
 | Rayon de ramassage | 60 px | Augmentable via upgrade |
 | Armure | 0 | Réduction plate des dégâts |
+| Régénération | 0,1 PV/s | `regen` dans `data/player.ts`, pas de régén en pause ni au level up |
 | Délai de coup par ennemi | 0,7 s | Pas d'invincibilité globale : chaque ennemi au contact frappe, puis attend 0,7 s (`data/combat.ts`) |
 
 <!-- TODO: plusieurs personnages jouables ? [LATER] -->
@@ -319,7 +320,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
 - [ ] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
 - [ ] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) <!-- TODO: nombre de relances ; « bannir » une carte pour la partie, oui ou non ? -->
-- [ ] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
+- [x] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
 ### 0.2 — Une partie juste `[moyenne]`

@@ -7,6 +7,8 @@ export const PLAYER_BASE = {
   pickupRadius: 60,
   /** réduction plate des dégâts reçus */
   armor: 0,
+  /** PV rendus par seconde (régénération de base : 0.1 = 6 PV par minute) */
+  regen: 0.1,
   /** px, taille du joueur (affichage et future hitbox) */
   radius: 16,
 } as const;

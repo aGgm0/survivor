@@ -230,6 +230,7 @@ export function rebuildPassiveStats(
   player.maxHp = PLAYER_BASE.maxHp;
   player.speed = PLAYER_BASE.speed;
   player.pickupRadius = PLAYER_BASE.pickupRadius;
+  player.regen = PLAYER_BASE.regen;
   player.damageMult = 1;
   player.cooldownMult = 1;
   player.knockbackMult = 1;

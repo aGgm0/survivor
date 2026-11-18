@@ -35,6 +35,8 @@ export class Player {
   maxHp: number = PLAYER_BASE.maxHp;
   hp: number = PLAYER_BASE.maxHp;
   armor: number = PLAYER_BASE.armor;
+  /** PV rendus par seconde */
+  regen: number = PLAYER_BASE.regen;
   /** px : les gemmes d'XP dans ce rayon sont attirées */
   pickupRadius: number = PLAYER_BASE.pickupRadius;
   /** Multiplicateurs appliqués à toutes les armes (modifiés par les passifs) */
@@ -73,6 +75,9 @@ export class Player {
     this.syncPrevious();
     this.animTime += dt;
     if (this.hitFlashTimer > 0) this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dt);
+    // Régénération multipliée par dt comme tout le reste : même vitesse quel que soit le FPS.
+    // Pas de régén en pause / level up / fin de partie : cette update ne tourne alors pas.
+    this.heal(this.regen * dt);
     // Sans normalisation, la diagonale (1, 1) a une longueur de ~1,41 : on irait 41 % plus vite.
     normalizeInto(axisX, axisY, this.dir);
     // Direction du regard (Épée) : la dernière direction de marche, gardée à l'arrêt.

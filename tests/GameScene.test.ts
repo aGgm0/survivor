@@ -133,6 +133,8 @@ describe('GameScene — dégâts et mort', () => {
 
   it('un même ennemi ne refrappe qu’après CONTACT_HIT_COOLDOWN', () => {
     const { scene } = newScene({ armed: false });
+    // Sans régénération : on compare des PV exacts, seul le délai de coup est testé ici.
+    scene.player.regen = 0;
     enemyOnPlayer(scene);
     scene.update(DT);
     const afterFirstHit = scene.player.hp;
