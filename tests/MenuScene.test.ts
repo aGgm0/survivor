@@ -32,6 +32,10 @@ function newMenu(profile: Profile = emptyProfile()) {
     optionsClick: null as OptionsAction | null,
     /** Dernier état des cases affiché par l'écran Options */
     shown: null as Settings | null,
+    /** État du bouton Jouer (null = jamais signalé) */
+    playReady: null as boolean | null,
+    /** Faux chargement des sprites et effets */
+    assetsReady: true,
   };
   const scene = new MenuScene({
     input: { wasPressed: (codes) => codes.some((c) => pressed.has(c)) },
@@ -43,6 +47,7 @@ function newMenu(profile: Profile = emptyProfile()) {
         ui.menuClick = null;
         return a;
       },
+      setPlayReady: (r) => (ui.playReady = r),
     },
     optionsOverlay: {
       show: (s) => {
@@ -99,6 +104,7 @@ function newMenu(profile: Profile = emptyProfile()) {
       ui.plays++;
       ui.played = c;
     },
+    assetsReady: () => ui.assetsReady,
   });
   const press = (code: string) => {
     pressed.add(code);
@@ -117,6 +123,32 @@ describe('MenuScene', () => {
     expect(ui.hudVisible).toBe(false);
     scene.exit();
     expect(ui.menuVisible).toBe(false);
+  });
+
+  it('sprites pas chargés : Jouer grisé, ni clic ni Entrée ne lancent rien ; le reste marche', () => {
+    const { scene, ui, press } = newMenu();
+    ui.assetsReady = false;
+    scene.update();
+    expect(ui.playReady).toBe(false);
+    ui.menuClick = 'play';
+    scene.update();
+    press('Enter');
+    expect(scene.currentScreen).toBe('main');
+    // Options reste accessible pendant le chargement.
+    ui.menuClick = 'options';
+    scene.update();
+    expect(scene.currentScreen).toBe('options');
+  });
+
+  it('chargement fini pendant que le menu est affiché : Jouer se débloque', () => {
+    const { scene, ui, press } = newMenu();
+    ui.assetsReady = false;
+    scene.update();
+    ui.assetsReady = true;
+    scene.update();
+    expect(ui.playReady).toBe(true);
+    press('Enter');
+    expect(scene.currentScreen).toBe('characters');
   });
 
   it('attend sans rien faire tant que le joueur ne valide pas', () => {

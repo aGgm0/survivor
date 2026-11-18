@@ -157,7 +157,7 @@ let character: CharacterDef = DEFAULT_CHARACTER;
 // Sprites : chargés en arrière-plan pendant que le menu s'affiche (le jeu n'attend pas).
 // Une partie lancée avant la fin du chargement, ou une image introuvable : formes simples.
 let sprites: SpriteAtlas | null = null;
-SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
+const spritesLoading = SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
   .then((atlas) => {
     sprites = atlas;
   })
@@ -165,7 +165,7 @@ SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
     console.warn('Sprites non chargés, formes simples à la place :', error);
   });
 let fx: SpriteAtlas | null = null;
-SpriteAtlas.load(FX_ATLAS_URLS.image, FX_ATLAS_URLS.list)
+const fxLoading = SpriteAtlas.load(FX_ATLAS_URLS.image, FX_ATLAS_URLS.list)
   .then((atlas) => {
     fx = atlas;
   })
@@ -174,7 +174,7 @@ SpriteAtlas.load(FX_ATLAS_URLS.image, FX_ATLAS_URLS.list)
   });
 let effects: Record<EffectName, EffectSheet> | null = null;
 const effectNames = Object.keys(EFFECT_DIRS) as EffectName[];
-Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
+const effectsLoading = Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
   .then((sheets) => {
     effects = Object.fromEntries(effectNames.map((name, i) => [name, sheets[i]])) as Record<
       EffectName,
@@ -184,6 +184,12 @@ Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
   .catch((error: unknown) => {
     console.warn('Effets PVFX non chargés, formes simples à la place :', error);
   });
+// « Jouer » reste grisé jusqu'ici. Chaque chargement attrape déjà son erreur : un fichier manquant
+// débloque quand même le bouton (partie en formes simples) au lieu de le griser pour toujours.
+let assetsReady = false;
+void Promise.allSettled([spritesLoading, fxLoading, effectsLoading]).then(() => {
+  assetsReady = true;
+});
 
 // Son : bruitages chargés en arrière-plan comme les sprites (un son pas encore prêt est muet),
 // musiques chargées au premier besoin. Volumes appliqués par applySettings().
@@ -278,6 +284,7 @@ function showMenu(): void {
       onPlay: startRun,
       sprites: () => sprites,
       music,
+      assetsReady: () => assetsReady,
     }),
   );
 }

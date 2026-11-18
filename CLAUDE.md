@@ -321,7 +321,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin ; `CHANGELOG.md` ; tag `v0.1.0`
 - [x] Plein écran : touche + option
 - [x] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
-- [ ] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
+- [x] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
 - [x] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) ; pas de « bannir » pour l’instant
 - [x] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
@@ -620,6 +620,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Relance des cartes en 0.1, sans « bannir » pour l'instant | Avec 4 armes et 9 passifs, le tirage est trop petit pour que bannir soit un vrai choix ; à revoir quand le contenu aura grossi |
 | 2026-11-18 | Options en partie : bouton et touche O dans le menu pause ; Échap y ramène au menu pause (pas à la partie) ; HUD masqué pendant l'écran Options ; logique partagée avec le menu (`scenes/options.ts`) | Ne pas relancer la partie par erreur en fermant les options ; le titre de l'écran passait sur le timer |
 | 2026-11-18 | Plein écran : touche F + case « Plein écran (F) » des Options, demandé directement dans l'événement (pas dans l'update), jamais sauvegardé ; sortir du plein écran met la partie en pause | Le navigateur n'accepte le plein écran que pendant un clic ou un appui (activation utilisateur) et le refuse au chargement ; en plein écran, Échap est gardé par le navigateur et n'atteint pas le jeu. F plutôt que F11 (plein écran du navigateur, qui n'agrandit pas le cadre itch) |
+| 2026-11-18 | « Jouer » grisé (« Chargement… ») jusqu'à la fin des 3 chargements (sprites, atlas fx, effets PVFX), réussis **ou ratés** ; sons non attendus ; Boutique, Profil et Options utilisables pendant ce temps | Un fichier manquant ne doit pas bloquer le jeu pour toujours (il se lance en formes simples) ; un son pas encore prêt est seulement muet |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

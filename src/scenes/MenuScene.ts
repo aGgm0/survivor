@@ -28,7 +28,7 @@ const MENU_BG = '#14121a';
 /** Comme pour GameScene : seulement les méthodes utilisées, pour tester sans navigateur. */
 export interface MenuSceneDeps {
   input: Pick<Input, 'wasPressed'>;
-  menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction'>;
+  menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction' | 'setPlayReady'>;
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack'>;
   characterOverlay: Pick<CharacterOverlay, 'show' | 'hide' | 'takeChoice' | 'takeBack'>;
@@ -48,6 +48,11 @@ export interface MenuSceneDeps {
   sprites?: () => SpriteAtlas | null;
   /** Musique. Absente (tests) : menu muet. */
   music?: MusicControl<MusicName>;
+  /**
+   * Vrai quand sprites et effets ont fini de charger (ou échoué : formes simples). Tant que c'est
+   * faux, « Jouer » est grisé : sinon toute la partie serait en formes simples. Absent : prêt.
+   */
+  assetsReady?: () => boolean;
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
@@ -150,10 +155,14 @@ export class MenuScene implements Scene {
 
   private updateMain(): void {
     const { input, menuOverlay } = this.deps;
+    const ready = this.deps.assetsReady?.() ?? true;
+    // Le bouton suit l'état du chargement (le DOM n'est touché qu'au changement, voir MenuOverlay).
+    menuOverlay.setPlayReady(ready);
     // `takeAction` d'abord : il vide le clic mémorisé même si on joue au clavier.
     const action = menuOverlay.takeAction();
     if (action === 'options' || action === 'profile' || action === 'shop') this.open(action);
-    else if (action === 'play' || input.wasPressed(CONTROLS.confirm)) this.open('characters');
+    else if (ready && (action === 'play' || input.wasPressed(CONTROLS.confirm)))
+      this.open('characters');
   }
 
   /** Choix du perso : clic ou 1-2-3-4 ; un perso verrouillé ne se lance pas. Échap = retour. */
