@@ -34,7 +34,13 @@ import {
   SFX_COMPRESSOR,
   SFX_DIR,
   SFX_EXTENSION,
-  SFX_MASTER_VOLUME,
+  SFX_BASE_VOLUME,
+  MUSIC,
+  MUSIC_BASE_VOLUME,
+  MUSIC_DIR,
+  MUSIC_EXTENSION,
+  MUSIC_FADE,
+  MUSIC_PAUSE_DUCK,
   type SfxName,
 } from './data/audio';
 
@@ -161,9 +167,19 @@ Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
     console.warn('Effets PVFX non chargés, formes simples à la place :', error);
   });
 
-// Bruitages : chargés en arrière-plan comme les sprites (un son pas encore prêt est muet).
-const sfx = new AudioEngine<SfxName>(SFX_COMPRESSOR, SFX_MASTER_VOLUME);
+// Son : bruitages chargés en arrière-plan comme les sprites (un son pas encore prêt est muet),
+// musiques chargées au premier besoin. Volumes appliqués par applySettings().
+const sfx = new AudioEngine<SfxName>(SFX_COMPRESSOR, {
+  sfx: SFX_BASE_VOLUME,
+  music: MUSIC_BASE_VOLUME,
+});
 void sfx.load(SFX_DIR, SFX_EXTENSION, SFX);
+const music = sfx.createMusicPlayer(MUSIC, (name) => `${MUSIC_DIR}${name}${MUSIC_EXTENSION}`, {
+  fade: MUSIC_FADE,
+  duck: MUSIC_PAUSE_DUCK,
+});
+music.preload('victory');
+music.preload('defeat');
 
 /** Le bouton (actif) sous un élément de la page, ou null. */
 function buttonOf(target: EventTarget | null): HTMLButtonElement | null {
@@ -206,6 +222,7 @@ function startRun(chosen: CharacterDef = character): void {
       fx,
       effects,
       sfx,
+      music,
     },
     seed,
     {
@@ -240,6 +257,7 @@ function showMenu(): void {
       onProfileChanged: saveProfile,
       onPlay: startRun,
       sprites: () => sprites,
+      music,
     }),
   );
 }
@@ -247,6 +265,7 @@ function showMenu(): void {
 /** Les réglages qui ne sont pas lus en direct par la partie s'appliquent ici. */
 function applySettings(): void {
   debug.setFpsCounterVisible(settings.fpsCounter);
+  sfx.setVolumes(settings.volumeMaster, settings.volumeMusic, settings.volumeSfx);
 }
 
 /** Un réglage vient de changer (écran Options) : on l'applique et on le sauvegarde. */

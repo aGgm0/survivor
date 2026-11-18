@@ -354,7 +354,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
 ### Phase 6 — Visuel & audio
-- [ ] Design de l'UI (HUD, menus, écrans de fin) : pack **Dark Ages UI** (cadres, barres ; ignoré par git, licence) + **Kenney Fantasy UI Borders** (CC0, à venir pour les cartes et cases)
+- [x] Design de l'UI (HUD, menus, écrans de fin) : pack **Dark Ages UI** (cadres, barres ; ignoré par git, licence) + **Kenney Fantasy UI Borders** (CC0, à venir pour les cartes et cases)
   - [x] Étape 1 : palette en variables CSS, cadres en 9 morceaux (`border-image`) sur boutons, lignes des menus et cartes, titres dorés
   - [x] Étape 2 : HUD (barres de PV / XP encadrées, niveau sur plaque à couronne, timer centré, crâne et pièce de 0x72, cases d'inventaire du pack)
   - [x] Étape 3 : cartes de level up (cadres Kenney teints par `tools/ui/tint-kenney.mjs` : bleu arme, vert passif, rouge soin, or + lueur mutation ; étiquette « 1 · Passif »)
@@ -362,7 +362,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 5 : écran de fin (vignette rouge ou dorée, bilan en tuiles, bandeau doré des déblocages, damage meter dans le grand cadre)
   - [x] Police pixel **DUNGEON.mode** (datagoblin, CC0, accents compris) partout sauf les outils de dev (F2, F3) ; nombres de dégâts aussi ; conteneurs élargis (police large)
   - [x] Icônes d'armes et de passifs : pack **Raven Fantasy Icons** (version gratuite pour développer ; **Premium 35 $ obligatoire avant de vendre le jeu** ; fichiers ignorés par git) : 21 icônes choisies dans `tools/ui/copy-raven.mjs`, dans les cases du HUD (48 px) et sur les cartes de level up, texte de secours si le pack manque
-- [ ] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
+- [x] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
   - [x] Premier essai généré par script : joueur, basique, boss (remplacé par le pack)
   - [x] Pack téléchargé (`public/assets/sprites/0x72/` : atlas + `tile_list_v1.7`), `public/assets/LICENSES.md` ; choix validés : joueur `wizzard_m`, basique `chort`, rapide `imp`, tank `ogre`, boss `big_demon`, élites = basique / rapide teintés, caisse `crate`, pièce `coin_anim`, nourriture `flask_red`, sol `atlas_floor`
   - [x] Branchement dans le rendu (sprites animés, retournés selon la direction, teinte des élites)
@@ -372,7 +372,6 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Visuels des armes (taille des sprites calculée depuis les hitbox / rayons du gameplay)
     - [x] Étape 1 : atlas `fx` généré par le script (gemmes par palier, Trait arcanique orienté, orbe runique ; gris teints à la couleur de l'arme)
     - [x] Étape 2 : effets PVFX Foundry (CC0, style « strict ») : explosion `arcane-burst`, slash `axe-smear` de l'Épée (découpé à la zone qui frappe), `wind-blade` pour la Lame d'onde. L'aura garde son disque (flammes le long du cercle essayées puis retirées : « trop bizarre »). Foozle écarté (rouge-orange, hors thème)
-  - [ ] `[LATER]` Icônes du HUD : pack Raven Fantasy Icons envisagé (version gratuite = jeux gratuits seulement, Premium 35 $ pour un jeu payant ; fichiers à ne pas republier)
   - [ ] Une apparence par palier de temps pour chaque type d'ennemi <!-- TODO: quels paliers (6:00 / 8:00 ?) -->
   - [ ] `[LATER]` Autres bestiaires que les démons (morts-vivants...) pour les prochains niveaux
 - [x] Screen shake, particules
@@ -382,11 +381,11 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 1 : écran de fin (titre 64 px, tuiles en 32 px, damage meter sur une ligne par arme sans chevauchement) ; cartes de mutation (320 px, icône 48 px, nom sans ★ + arme d'origine dessous, « ★ Niveau 6 · définitif ») ; dégradé de la carte de mutation étalé sur tout le cadre (il se répétait : bandes noires) ; plus aucune lueur floue sur les textes (titres, MORT, titre du menu) : ombre dure seule
   - [x] Étape 2 : aura = anneau de braises carrées (pixels de 2 px) sur le bord de la zone, qui tourne et scintille, trait sombre dessous, disque très léger, étincelles qui montent (aléatoire séparé) ; une apparence par aura dans `AURA_LOOKS` (`data/feel.ts`) : feu, Brasier plus dense et vif, Aura toxique verte qui tourne à l'envers avec des bulles lentes
   - [x] Étape 3 : écran titre = fond animé dessiné par MenuScene (sol du donjon qui défile, démons qui passent, vignette ; `MENU_BACKDROP` dans `data/sprites.ts`, sol partagé via `scenes/floor.ts`) ; titre en lettres dorées à 3 bandes nettes et contour noir dur (sans halo), volutes du pack dessous ; voile sombre sur les autres écrans du menu ; « Niv N » centré dans le corps de la plaque (sous la couronne) ; écrans de fin sur un voile sombre neutre (plus de lueur rouge ou dorée)
-- [ ] Sons et musique + option volume
+- [x] Sons et musique + option volume
   - [x] Étape 1 : 18 bruitages générés par `tools/audio/build-sfx.mjs` (synthé rétro maison, WAV, CC0), page d'écoute `tools/audio/preview.html` (bouton « Rafale » pour juger la fatigue) ; sources de la musique dans `docs/sons.md`
   - [x] Étape 2 : 5 musiques choisies (Junkala, Kenney), converties en OGG à −16 LUFS dans `public/assets/audio/music/` (originaux dans `assets-src/`, ignoré par git)
   - [x] Étape 3 : moteur audio (`core/AudioEngine`, Web Audio + compresseur), limiteur par son (`core/SoundLimiter` : délai minimum, copies max, hauteur ±), réglages dans `data/audio.ts` ; sons branchés en jeu et sur les boutons des menus
-  - [ ] Étape 4 : musique selon l'écran (fondus, boucles sans blanc, plus basse en pause), volumes Musique / Effets dans les Options
+  - [x] Étape 4 : musique selon l'écran (`core/MusicPlayer` : boucles Web Audio sans blanc, fondus de 0,8 s, chargée au premier besoin) : menu, partie, boss tant qu'un boss est en vie, jingle de victoire / défaite (sans fondu d'entrée, préchargé, volume ×1,8 : avec le fondu de 0,8 s, un jingle de 0,75 s était presque muet) ; plus basse en pause ; son coupé quand l'onglet est caché ; curseurs Volume général / Musique / Effets sonores dans les Options (sauvegardés)
 
 ### Phase 7 — Déploiement
 - [ ] Déploiement en ligne (itch.io, GitHub Pages...)
@@ -504,6 +503,7 @@ Format : date — décision — raison.
 | 2026-11-12 | Apparence des persos : Arcaniste = mage (wizzard_m), Pyromancien = mage femme (wizzard_f), Runiste = elfe (elf_m), Lame-mage = chevalier (knight_m) ; même sprite en jeu et sur la carte (`CHARACTER_SPRITES`) ; icônes du HUD = Raven Fantasy Icons | Proposé (héros du pack 0x72), à changer en jeu si besoin. Raven demandé par l'utilisateur |
 | 2026-11-12 | Police DUNGEON.mode (CC0) au lieu de m5x7 ; tailles 12 / 16 / 24 px, pas de faux gras (`font-synthesis: none`) | Choisie par l'utilisateur. Glyphes larges (8 × 8) : boutique, profil, options, cartes et damage meter élargis pour éviter les retours à la ligne |
 | 2026-11-18 | Sons : bruitages générés par script (`tools/audio/build-sfx.mjs`) plutôt que faits à la main dans ChipTone ; gardés en WAV (l'OGG peut ajouter du silence au début) ; chaque son a un volume, un délai minimum entre deux lectures, un nombre de copies max et une variation de hauteur (`data/audio.ts`) ; compresseur en sortie | « ChipTone c'est trop galère » ; 500 ennemis = des dizaines d'impacts par seconde : sans limite, les sons s'additionnent et saturent |
+| 2026-11-18 | Volumes : 3 curseurs (général 80 %, musique 70 %, effets 80 % par défaut) par pas de 10 %, ajoutés aux réglages sans changer de version (ancienne sauvegarde = valeurs par défaut) ; musique au volume de base ×0,55 pour laisser passer les bruitages ; compresseur sur les effets seulement ; musique du boss tant qu'un boss vit (celle de la partie repart du début ensuite) | Demandé (« réglage son, musique, effets sonores ») |
 | 2026-11-18 | Plus aucun halo flou (textes, titre) : ombres dures seulement ; fond du menu animé à la place du dégradé radial | Retour : « trop IA slop », « l'aura néon des textes ça fait IA de fou » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |

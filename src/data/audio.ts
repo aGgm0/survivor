@@ -6,10 +6,10 @@ export const SFX_DIR = '/assets/audio/sfx/';
 export const SFX_EXTENSION = '.wav';
 
 /**
- * Volume général des effets (avant le réglage du joueur, étape B). Tous les fichiers sont à la
+ * Volume de base des effets (multiplié par le réglage du joueur). Tous les fichiers sont à la
  * même crête (−1 dB) : c'est `volume` ci-dessous qui fait l'équilibre entre les sons.
  */
-export const SFX_MASTER_VOLUME = 0.8;
+export const SFX_BASE_VOLUME = 0.8;
 
 /**
  * Réglages de chaque bruitage. Le danger d'un jeu du genre : 30 ennemis touchés dans la même
@@ -54,6 +54,35 @@ export const HIT_SOUNDS = {
   orbit: 'orb-hit',
   aura: 'aura-burn',
 } as const satisfies Record<string, SfxName>;
+
+/** Dossier des musiques (OGG à −16 LUFS, originaux dans assets-src/). */
+export const MUSIC_DIR = '/assets/audio/music/';
+export const MUSIC_EXTENSION = '.ogg';
+
+/**
+ * Les musiques : `loop` = en boucle (sinon jouée une fois, comme les jingles de fin) ;
+ * `volume` = volume propre du morceau. Les jingles sont plus forts : très courts, ils doivent
+ * ressortir par-dessus le bilan (crête des fichiers vers −7 dB, donc ×1,8 ne sature pas).
+ */
+export const MUSIC = {
+  menu: { loop: true, volume: 1 },
+  run: { loop: true, volume: 1 },
+  boss: { loop: true, volume: 1 },
+  victory: { loop: false, volume: 1.8 },
+  defeat: { loop: false, volume: 1.8 },
+} as const satisfies Record<string, { loop: boolean; volume: number }>;
+
+export type MusicName = keyof typeof MUSIC;
+
+/**
+ * Volume de base de la musique (avant le réglage du joueur) : la musique est à −16 LUFS, plus
+ * forte en continu que les bruitages, qui doivent rester lisibles par-dessus.
+ */
+export const MUSIC_BASE_VOLUME = 0.55;
+/** s : fondu quand on change de musique (menu → partie → boss) */
+export const MUSIC_FADE = 0.8;
+/** Volume de la musique pendant la pause (fraction) */
+export const MUSIC_PAUSE_DUCK = 0.35;
 
 /**
  * Compresseur à la sortie (filet de sécurité) : si beaucoup de sons forts tombent ensemble, il

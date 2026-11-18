@@ -82,7 +82,8 @@ import type { PauseOverlay } from '../ui/PauseOverlay';
 import type { DevAction, DevPanel, DevView } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
 import type { SoundPlayer } from '../core/AudioEngine';
-import { HIT_SOUNDS, type SfxName } from '../data/audio';
+import type { MusicControl } from '../core/MusicPlayer';
+import { HIT_SOUNDS, type MusicName, type SfxName } from '../data/audio';
 
 /** px entre deux lignes de la grille de fond */
 const GRID_SIZE = 64;
@@ -191,6 +192,8 @@ export interface GameSceneDeps {
   effects?: Readonly<Record<EffectName, EffectSheet>> | null;
   /** Bruitages. Absent (tests) : partie muette. */
   sfx?: SoundPlayer<SfxName>;
+  /** Musique. Absente (tests) : partie muette. */
+  music?: MusicControl<MusicName>;
 }
 
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
@@ -348,6 +351,7 @@ export class GameScene implements Scene, Build {
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
+    this.deps.music?.play('run');
     // Afficher la seed permet de rejouer exactement la même partie pour reproduire un bug.
     this.deps.debug.setStat('seed', this.rng.seed);
   }
@@ -446,6 +450,9 @@ export class GameScene implements Scene, Build {
       this.spawner.spawnBatch(SPAWN.debugBatch, this.elapsed, this.player.x, this.player.y);
     }
     this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
+    // Musique du boss tant qu'un boss est en vie (le lecteur ne fait rien si elle joue déjà).
+    // Parcourir le pool à chaque update est bon marché : ~900 cases, aucune allocation.
+    this.deps.music?.play(this.isBossAlive() ? 'boss' : 'run');
     const charges = this.bossAbilities.update(
       this.enemies,
       this.elapsed,
@@ -597,7 +604,7 @@ export class GameScene implements Scene, Build {
     }
   }
 
-  /** Vrai si un boss est encore actif. Parcours du pool, seulement après le temps de victoire. */
+  /** Vrai si un boss est encore actif (victoire, musique du boss). Parcours du pool. */
   private isBossAlive(): boolean {
     for (const e of this.enemies.items) if (e.active && e.type === BOSS_TYPE) return true;
     return false;
@@ -695,6 +702,7 @@ export class GameScene implements Scene, Build {
   /** Fin de partie (mort ou victoire) : on fige tout et on affiche le bilan. */
   private endRun(victory: boolean): void {
     this.setPaused(false);
+    this.deps.music?.play(victory ? 'victory' : 'defeat');
     this.report = this.buildReport(victory);
     this.deps.endOverlay.show(
       this.report,
@@ -1259,6 +1267,7 @@ export class GameScene implements Scene, Build {
 
   private setPaused(paused: boolean): void {
     this.paused = paused;
+    this.deps.music?.setDucked(paused);
     this.deps.pauseOverlay.setVisible(paused);
   }
 

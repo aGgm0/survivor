@@ -1,3 +1,4 @@
+import { MusicPlayer } from './MusicPlayer';
 import { SoundLimiter, jitteredRate, type SoundSettings } from './SoundLimiter';
 
 /** Ce que le jeu demande au moteur audio : jouer un son par son nom. */
@@ -22,29 +23,61 @@ interface LoadedSound {
 }
 
 /**
- * Bruitages via la Web Audio API (pas `<audio>` : trop lent à démarrer pour des centaines de
- * sons par minute). Chaque son est décodé une fois en mémoire, puis rejoué à la demande.
- * Chaîne : source → volume du son → volume des effets → compresseur → haut-parleurs.
+ * Son du jeu via la Web Audio API (pas `<audio>` : trop lent à démarrer pour des centaines de
+ * bruitages par minute). Chaque bruitage est décodé une fois en mémoire, puis rejoué à la demande.
+ * Chaînes (chaque « bus » = un volume réglable) :
+ *   bruitage → volume du son → bus effets → compresseur ─┐
+ *   musique (MusicPlayer) ───────────────→ bus musique ──┴→ volume général → haut-parleurs
  * Ne connaît rien du gameplay : les noms et réglages viennent de data/audio.ts via main.ts.
  */
 export class AudioEngine<N extends string> implements SoundPlayer<N> {
   private readonly ctx: AudioContext;
   private readonly master: GainNode;
+  private readonly sfxBus: GainNode;
+  private readonly musicBus: GainNode;
   private readonly sounds = new Map<N, LoadedSound>();
+  /** Vrai une fois le son débloqué par le joueur (premier clic ou première touche) */
+  private unlocked = false;
 
-  constructor(compressor: CompressorSettings, masterVolume: number) {
+  /** @param base volumes de base des effets et de la musique (multipliés par les réglages) */
+  constructor(
+    compressor: CompressorSettings,
+    private readonly base: { sfx: number; music: number },
+  ) {
     this.ctx = new AudioContext();
+    this.master = this.ctx.createGain();
+    this.master.connect(this.ctx.destination);
+    // Le compresseur ne protège que les effets : la musique est déjà mise au bon niveau.
     const comp = this.ctx.createDynamicsCompressor();
     comp.threshold.value = compressor.threshold;
     comp.knee.value = compressor.knee;
     comp.ratio.value = compressor.ratio;
     comp.attack.value = compressor.attack;
     comp.release.value = compressor.release;
-    comp.connect(this.ctx.destination);
-    this.master = this.ctx.createGain();
-    this.master.gain.value = masterVolume;
-    this.master.connect(comp);
+    comp.connect(this.master);
+    this.sfxBus = this.ctx.createGain();
+    this.sfxBus.connect(comp);
+    this.musicBus = this.ctx.createGain();
+    this.musicBus.connect(this.master);
+    this.setVolumes(1, 1, 1);
     this.unlockOnFirstInput();
+    this.silenceWhenHidden();
+  }
+
+  /** Réglages du joueur (0 à 1) : volume général, musique, effets. */
+  setVolumes(master: number, music: number, sfx: number): void {
+    this.master.gain.value = master;
+    this.musicBus.gain.value = music * this.base.music;
+    this.sfxBus.gain.value = sfx * this.base.sfx;
+  }
+
+  /** Lecteur de musique branché sur le bus musique. */
+  createMusicPlayer<M extends string>(
+    tracks: Readonly<Record<M, { loop: boolean; volume: number }>>,
+    url: (name: M) => string,
+    timing: { fade: number; duck: number },
+  ): MusicPlayer<M> {
+    return new MusicPlayer(this.ctx, this.musicBus, tracks, url, timing);
   }
 
   /**
@@ -62,7 +95,7 @@ export class AudioEngine<N extends string> implements SoundPlayer<N> {
           const settings = sounds[name];
           const gain = this.ctx.createGain();
           gain.gain.value = settings.volume;
-          gain.connect(this.master);
+          gain.connect(this.sfxBus);
           this.sounds.set(name, { buffer, gain, limiter: new SoundLimiter(settings), settings });
         } catch (error: unknown) {
           console.warn(`Son « ${name} » non chargé :`, error);
@@ -97,11 +130,20 @@ export class AudioEngine<N extends string> implements SoundPlayer<N> {
   private unlockOnFirstInput(): void {
     const unlock = (): void => {
       void this.ctx.resume().then(() => {
+        this.unlocked = true;
         window.removeEventListener('pointerdown', unlock);
         window.removeEventListener('keydown', unlock);
       });
     };
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
+  }
+
+  /** Onglet caché : tout le son s'arrête (la musique reprend où elle en était au retour). */
+  private silenceWhenHidden(): void {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) void this.ctx.suspend();
+      else if (this.unlocked) void this.ctx.resume();
+    });
   }
 }

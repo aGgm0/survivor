@@ -1,8 +1,17 @@
-import { SETTING_LABELS, type SettingKey, type Settings } from '../data/settings';
+import {
+  SETTING_LABELS,
+  VOLUME_LABELS,
+  VOLUME_STEP,
+  type SettingKey,
+  type Settings,
+  type VolumeKey,
+} from '../data/settings';
 
 /** Ce que le joueur peut demander depuis l'écran Options. */
 export type OptionsAction =
-  { readonly kind: 'toggle'; readonly key: SettingKey } | { readonly kind: 'back' };
+  | { readonly kind: 'toggle'; readonly key: SettingKey }
+  | { readonly kind: 'volume'; readonly key: VolumeKey; readonly value: number }
+  | { readonly kind: 'back' };
 
 /**
  * Écran Options : une case à cocher par réglage + Retour. Comme les autres menus, un clic est
@@ -11,6 +20,7 @@ export type OptionsAction =
 export class OptionsOverlay {
   private action: OptionsAction | null = null;
   private readonly boxes = new Map<SettingKey, HTMLInputElement>();
+  private readonly sliders = new Map<VolumeKey, { input: HTMLInputElement; value: HTMLElement }>();
 
   constructor(
     private readonly el: HTMLElement,
@@ -30,6 +40,27 @@ export class OptionsOverlay {
       listEl.append(row);
       this.boxes.set(key, box);
     }
+    // Curseurs de volume (0 à 100 %, par pas de 10). 'input' : le son change pendant qu'on glisse.
+    const steps = Math.round(1 / VOLUME_STEP);
+    for (const [key, label] of VOLUME_LABELS) {
+      const row = document.createElement('label');
+      row.className = 'option-row option-volume';
+      const text = document.createElement('span');
+      text.textContent = label;
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = '0';
+      input.max = String(steps);
+      input.step = '1';
+      input.addEventListener('input', () => {
+        this.action = { kind: 'volume', key, value: Number(input.value) / steps };
+      });
+      const value = document.createElement('span');
+      value.className = 'option-value';
+      row.append(text, input, value);
+      listEl.append(row);
+      this.sliders.set(key, { input, value });
+    }
     backButton.addEventListener('click', () => (this.action = { kind: 'back' }));
   }
 
@@ -46,6 +77,11 @@ export class OptionsOverlay {
   /** Recoche les cases selon les réglages réels (la source de vérité, c'est la scène). */
   refresh(settings: Readonly<Settings>): void {
     for (const [key, box] of this.boxes) box.checked = settings[key];
+    const steps = Math.round(1 / VOLUME_STEP);
+    for (const [key, slider] of this.sliders) {
+      slider.input.value = String(Math.round(settings[key] * steps));
+      slider.value.textContent = `${Math.round(settings[key] * 100)} %`;
+    }
   }
 
   /** L'action cliquée depuis la dernière lecture, ou null. */

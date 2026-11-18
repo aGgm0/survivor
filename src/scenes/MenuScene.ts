@@ -10,6 +10,8 @@ import type { Settings } from '../data/settings';
 import type { Hud } from '../ui/Hud';
 import type { MenuOverlay } from '../ui/MenuOverlay';
 import type { OptionsOverlay } from '../ui/OptionsOverlay';
+import type { MusicControl } from '../core/MusicPlayer';
+import type { MusicName } from '../data/audio';
 import type { ProfileOverlay } from '../ui/ProfileOverlay';
 import { Rng } from '../core/math';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
@@ -43,6 +45,8 @@ export interface MenuSceneDeps {
   onPlay: (character: CharacterDef) => void;
   /** Atlas des sprites, lu à chaque frame (il peut finir de charger après l'ouverture du menu) */
   sprites?: () => SpriteAtlas | null;
+  /** Musique. Absente (tests) : menu muet. */
+  music?: MusicControl<MusicName>;
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
@@ -68,6 +72,7 @@ export class MenuScene implements Scene {
   enter(): void {
     // Le HUD n'a rien à afficher hors d'une partie.
     this.deps.hud.setVisible(false);
+    this.deps.music?.play('menu');
     this.open('main');
   }
 
@@ -175,6 +180,10 @@ export class MenuScene implements Scene {
       this.open('main');
     } else if (action?.kind === 'toggle') {
       settings[action.key] = !settings[action.key];
+      optionsOverlay.refresh(settings);
+      this.deps.onSettingsChanged();
+    } else if (action?.kind === 'volume') {
+      settings[action.key] = action.value;
       optionsOverlay.refresh(settings);
       this.deps.onSettingsChanged();
     }

@@ -59,8 +59,22 @@ describe('parseSettings', () => {
       fpsCounter: true,
       pauseOnHidden: false,
       screenShake: false,
+      volumeMaster: 0.5,
+      volumeMusic: 0,
+      volumeSfx: 1,
     };
     expect(parseSettings(serializeSettings(settings))).toEqual(settings);
+  });
+
+  it('volumes : ramenés entre 0 et 1, valeur par défaut si ce n’est pas un nombre', () => {
+    const s = parseSettings({ volumeMaster: 7, volumeMusic: -2, volumeSfx: 'fort' });
+    expect(s.volumeMaster).toBe(1);
+    expect(s.volumeMusic).toBe(0);
+    expect(s.volumeSfx).toBe(DEFAULT_SETTINGS.volumeSfx);
+    // Ancienne sauvegarde sans volumes : valeurs par défaut.
+    expect(parseSettings({ version: 1, damageNumbers: false }).volumeMusic).toBe(
+      DEFAULT_SETTINGS.volumeMusic,
+    );
   });
 
   it('ne modifie jamais les valeurs par défaut partagées', () => {
