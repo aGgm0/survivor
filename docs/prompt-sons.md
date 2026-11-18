@@ -36,36 +36,36 @@ m'expliquant comment les créer moi-même (ex. jsfxr / ChipTone pour les bruitag
 
 ## Musiques (dossier `music/`)
 
-| Fichier | Moment | Durée | Notes |
-|---|---|---|---|
-| `menu.ogg` | Écran titre et menus | 1-2 min, en boucle | Calme, mystérieux |
-| `run.ogg` | Pendant la partie | 2-3 min, en boucle | Rythmé, tendu, pas trop chargé (beaucoup de bruitages par-dessus) |
-| `boss.ogg` | Quand un boss apparaît (5:00, 9:00) | 1-2 min, en boucle | Plus intense |
-| `victory.ogg` | Écran de victoire | 3-6 s, sans boucle | Fanfare courte |
-| `defeat.ogg` | Écran de mort | 3-6 s, sans boucle | Sombre, court |
+| Fichier       | Moment                              | Durée              | Notes                                                             |
+| ------------- | ----------------------------------- | ------------------ | ----------------------------------------------------------------- |
+| `menu.ogg`    | Écran titre et menus                | 1-2 min, en boucle | Calme, mystérieux                                                 |
+| `run.ogg`     | Pendant la partie                   | 2-3 min, en boucle | Rythmé, tendu, pas trop chargé (beaucoup de bruitages par-dessus) |
+| `boss.ogg`    | Quand un boss apparaît (5:00, 9:00) | 1-2 min, en boucle | Plus intense                                                      |
+| `victory.ogg` | Écran de victoire                   | 3-6 s, sans boucle | Fanfare courte                                                    |
+| `defeat.ogg`  | Écran de mort                       | 3-6 s, sans boucle | Sombre, court                                                     |
 
 ## Bruitages (dossier `sfx/`)
 
-| Fichier | Quand | Durée max |
-|---|---|---|
-| `bolt-shoot.ogg` | Le Trait arcanique tire (projectile magique bleu) | 0,2 s |
-| `bolt-burst.ogg` | Explosion du Trait éclaté | 0,4 s |
-| `aura-burn.ogg` | L'aura de feu brûle un ennemi (très fréquent, très discret) | 0,15 s |
-| `orb-hit.ogg` | Un orbe runique touche un ennemi | 0,15 s |
-| `sword-slash.ogg` | Coup d'épée en arc | 0,3 s |
-| `enemy-hit.ogg` | Un ennemi prend un coup | 0,1 s |
-| `enemy-death.ogg` | Un ennemi meurt (petit « pop ») | 0,2 s |
-| `player-hurt.ogg` | Le joueur prend un coup | 0,3 s |
-| `gem-pickup.ogg` | Ramasser une gemme d'XP (très fréquent, aigu, léger) | 0,1 s |
-| `coin-pickup.ogg` | Ramasser une pièce d'or | 0,2 s |
-| `heal.ogg` | Ramasser une potion de soin | 0,4 s |
-| `crate-break.ogg` | Casser une caisse en bois | 0,3 s |
-| `level-up.ogg` | Montée de niveau | 0,8 s |
-| `boss-charge.ogg` | Le boss annonce sa charge (avertissement) | 0,6 s |
-| `boss-summon.ogg` | Le boss annonce une invocation (avertissement) | 0,8 s |
-| `boss-death.ogg` | Mort d'un boss | 1,5 s |
-| `ui-hover.ogg` | Survol d'un bouton | 0,05 s |
-| `ui-click.ogg` | Clic sur un bouton, choix d'une carte | 0,1 s |
+| Fichier           | Quand                                                       | Durée max |
+| ----------------- | ----------------------------------------------------------- | --------- |
+| `bolt-shoot.ogg`  | Le Trait arcanique tire (projectile magique bleu)           | 0,2 s     |
+| `bolt-burst.ogg`  | Explosion du Trait éclaté                                   | 0,4 s     |
+| `aura-burn.ogg`   | L'aura de feu brûle un ennemi (très fréquent, très discret) | 0,15 s    |
+| `orb-hit.ogg`     | Un orbe runique touche un ennemi                            | 0,15 s    |
+| `sword-slash.ogg` | Coup d'épée en arc                                          | 0,3 s     |
+| `enemy-hit.ogg`   | Un ennemi prend un coup                                     | 0,1 s     |
+| `enemy-death.ogg` | Un ennemi meurt (petit « pop »)                             | 0,2 s     |
+| `player-hurt.ogg` | Le joueur prend un coup                                     | 0,3 s     |
+| `gem-pickup.ogg`  | Ramasser une gemme d'XP (très fréquent, aigu, léger)        | 0,1 s     |
+| `coin-pickup.ogg` | Ramasser une pièce d'or                                     | 0,2 s     |
+| `heal.ogg`        | Ramasser une potion de soin                                 | 0,4 s     |
+| `crate-break.ogg` | Casser une caisse en bois                                   | 0,3 s     |
+| `level-up.ogg`    | Montée de niveau                                            | 0,8 s     |
+| `boss-charge.ogg` | Le boss annonce sa charge (avertissement)                   | 0,6 s     |
+| `boss-summon.ogg` | Le boss annonce une invocation (avertissement)              | 0,8 s     |
+| `boss-death.ogg`  | Mort d'un boss                                              | 1,5 s     |
+| `ui-hover.ogg`    | Survol d'un bouton                                          | 0,05 s    |
+| `ui-click.ogg`    | Clic sur un bouton, choix d'une carte                       | 0,1 s     |
 
 ## Ce que j'attends en sortie
 
