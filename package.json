@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release:itch": "npm run build && node tools/release/itch.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

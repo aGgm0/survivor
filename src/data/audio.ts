@@ -1,7 +1,7 @@
 import type { SoundSettings } from '../core/SoundLimiter';
 
 /** Dossier des bruitages (générés par tools/audio/build-sfx.mjs). */
-export const SFX_DIR = '/assets/audio/sfx/';
+export const SFX_DIR = `${import.meta.env.BASE_URL}assets/audio/sfx/`;
 /** WAV et pas OGG : l'encodage OGG peut ajouter quelques ms de silence au début d'un son. */
 export const SFX_EXTENSION = '.wav';
 
@@ -56,7 +56,7 @@ export const HIT_SOUNDS = {
 } as const satisfies Record<string, SfxName>;
 
 /** Dossier des musiques (OGG à −16 LUFS, originaux dans assets-src/). */
-export const MUSIC_DIR = '/assets/audio/music/';
+export const MUSIC_DIR = `${import.meta.env.BASE_URL}assets/audio/music/`;
 export const MUSIC_EXTENSION = '.ogg';
 
 /**

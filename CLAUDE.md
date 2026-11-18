@@ -388,7 +388,10 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 4 : musique selon l'écran (`core/MusicPlayer` : boucles Web Audio sans blanc, fondus de 0,8 s, chargée au premier besoin) : menu, partie, boss tant qu'un boss est en vie, jingle de victoire / défaite (sans fondu d'entrée, préchargé, volume ×1,8 : avec le fondu de 0,8 s, un jingle de 0,75 s était presque muet) ; plus basse en pause ; son coupé quand l'onglet est caché ; curseurs Volume général / Musique / Effets sonores dans les Options (sauvegardés)
 
 ### Phase 7 — Déploiement
-- [ ] Déploiement en ligne (itch.io, GitHub Pages...)
+- [ ] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
+  - [x] Build publiable : base relative (`./`), chemins audio via `BASE_URL`, `npm run release:itch` (build + retrait de la planche Dark Ages + zip `release/survivor-itch.zip`), testé servi depuis un sous-dossier ; README
+  - [ ] Dépôt GitHub créé et code poussé
+  - [ ] Page itch.io (HTML5, 1280 × 720, plein écran) et lien dans le README
 - [ ] `[LATER]` Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
 ---
@@ -504,6 +507,7 @@ Format : date — décision — raison.
 | 2026-11-12 | Police DUNGEON.mode (CC0) au lieu de m5x7 ; tailles 12 / 16 / 24 px, pas de faux gras (`font-synthesis: none`) | Choisie par l'utilisateur. Glyphes larges (8 × 8) : boutique, profil, options, cartes et damage meter élargis pour éviter les retours à la ligne |
 | 2026-11-18 | Sons : bruitages générés par script (`tools/audio/build-sfx.mjs`) plutôt que faits à la main dans ChipTone ; gardés en WAV (l'OGG peut ajouter du silence au début) ; chaque son a un volume, un délai minimum entre deux lectures, un nombre de copies max et une variation de hauteur (`data/audio.ts`) ; compresseur en sortie | « ChipTone c'est trop galère » ; 500 ennemis = des dizaines d'impacts par seconde : sans limite, les sons s'additionnent et saturent |
 | 2026-11-18 | Volumes : 3 curseurs (général 80 %, musique 70 %, effets 80 % par défaut) par pas de 10 %, ajoutés aux réglages sans changer de version (ancienne sauvegarde = valeurs par défaut) ; musique au volume de base ×0,55 pour laisser passer les bruitages ; compresseur sur les effets seulement ; musique du boss tant qu'un boss vit (celle de la partie repart du début ensuite) | Demandé (« réglage son, musique, effets sonores ») |
+| 2026-11-18 | Mise en ligne : jeu sur itch.io (zip construit en local), code sur GitHub ; pas GitHub Pages | Dark Ages UI et Raven interdisent de redistribuer leurs fichiers : ignorés par git, un build fait par GitHub ne les aurait pas, et les mettre dans une branche publique reviendrait à les republier. Le zip ne garde que les morceaux utilisés (pas la planche complète) |
 | 2026-11-18 | Plus aucun halo flou (textes, titre) : ombres dures seulement ; fond du menu animé à la place du dégradé radial | Retour : « trop IA slop », « l'aura néon des textes ça fait IA de fou » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
