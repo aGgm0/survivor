@@ -19,4 +19,10 @@ export const KNOCKBACK = {
   referenceRadius: 14,
   /** Plafond du multiplicateur pour les ennemis plus légers que la référence (rapides) */
   maxFactor: 1.5,
+  /**
+   * Multiplicateur global de toutes les forces de recul (armes, mutations, Impact compris).
+   * 1 → 1,2 : le recul ne se sentait pas (≈ 5 px pour un basique touché par le Trait, ≈ 10 px
+   * maintenant : la distance grandit avec le carré de la vitesse qui reste après le coup).
+   */
+  forceMult: 1.2,
 } as const;

@@ -24,10 +24,10 @@ function enemyOf(type: EnemyType): Enemy {
 }
 
 describe('applyKnockback', () => {
-  it('pousse dans la direction donnée, à la force donnée (ennemi de référence)', () => {
+  it('pousse dans la direction donnée, à la force donnée × forceMult (ennemi de référence)', () => {
     const e = enemyOf(ENEMY_TYPES.basic);
     applyKnockback(e, 100, 1, 0);
-    expect(e.vx).toBeCloseTo(100);
+    expect(e.vx).toBeCloseTo(100 * KNOCKBACK.forceMult);
     expect(e.vy).toBeCloseTo(0);
   });
 
@@ -45,7 +45,9 @@ describe('applyKnockback', () => {
       return e.vx;
     };
     expect(recoil(ENEMY_TYPES.fast)).toBeGreaterThan(recoil(ENEMY_TYPES.basic));
-    expect(recoil(ENEMY_TYPES.fast)).toBeLessThanOrEqual(100 * KNOCKBACK.maxFactor); // plafonné
+    expect(recoil(ENEMY_TYPES.fast)).toBeLessThanOrEqual(
+      100 * KNOCKBACK.maxFactor * KNOCKBACK.forceMult + 1e-9,
+    ); // plafonné
     expect(recoil(ENEMY_TYPES.tank)).toBeLessThan(recoil(ENEMY_TYPES.basic) / 2);
   });
 });

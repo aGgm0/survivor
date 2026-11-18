@@ -68,8 +68,10 @@ const REFERENCE_MASS = KNOCKBACK.referenceRadius * KNOCKBACK.referenceRadius;
  */
 export function applyKnockback(enemy: Enemy, force: number, dirX: number, dirY: number): void {
   if (force <= 0 || enemy.type.knockbackImmune) return;
+  // Multiplicateur global (réglage du « ressenti » de toutes les armes à la fois).
   const factor =
-    enemy.type.knockbackFactor ?? Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass);
+    KNOCKBACK.forceMult *
+    (enemy.type.knockbackFactor ?? Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass));
   enemy.vx += dirX * force * factor;
   enemy.vy += dirY * force * factor;
 }

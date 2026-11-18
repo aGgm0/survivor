@@ -167,7 +167,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 | **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 110 px, 120°, chaque ennemi touché une fois par coup | 16 | 1,2 s | Niv 2 +5 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +7 dégâts et portée +25 px (28 au niv 5). Recul 140. Le Duplicateur ne s'applique pas à l'Épée |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
-**Recul** (stat par arme, px/s donnés à l'ennemi touché) : Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
+**Recul** (stat par arme, px/s donnés à l'ennemi touché) : toutes les forces ×1,2 (`KNOCKBACK.forceMult`, data/combat.ts) ; Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
 
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
@@ -324,6 +324,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [x] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
 - [x] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) ; pas de « bannir » pour l’instant
 - [x] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
+- [x] Buff léger de tout le recul (×1,2 global) : on ne le sentait pas
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
 ### 0.2 — Une partie juste `[moyenne]`
@@ -621,6 +622,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Options en partie : bouton et touche O dans le menu pause ; Échap y ramène au menu pause (pas à la partie) ; HUD masqué pendant l'écran Options ; logique partagée avec le menu (`scenes/options.ts`) | Ne pas relancer la partie par erreur en fermant les options ; le titre de l'écran passait sur le timer |
 | 2026-11-18 | Plein écran : touche F + case « Plein écran (F) » des Options, demandé directement dans l'événement (pas dans l'update), jamais sauvegardé ; sortir du plein écran met la partie en pause | Le navigateur n'accepte le plein écran que pendant un clic ou un appui (activation utilisateur) et le refuse au chargement ; en plein écran, Échap est gardé par le navigateur et n'atteint pas le jeu. F plutôt que F11 (plein écran du navigateur, qui n'agrandit pas le cadre itch) |
 | 2026-11-18 | « Jouer » grisé (« Chargement… ») jusqu'à la fin des 3 chargements (sprites, atlas fx, effets PVFX), réussis **ou ratés** ; sons non attendus ; Boutique, Profil et Options utilisables pendant ce temps | Un fichier manquant ne doit pas bloquer le jeu pour toujours (il se lance en formes simples) ; un son pas encore prêt est seulement muet |
+| 2026-11-18 | Recul : multiplicateur global ×1,2 (`KNOCKBACK.forceMult`) plutôt que de toucher chaque arme | Retour de jeu : « on ne le ressent pas » (≈ 5 px pour un basique touché par le Trait, ≈ 10 px maintenant). Un seul bouton pour régler le ressenti ; ×1,3 et ×1,5 proposés, ×1,2 choisi (« léger ») |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
