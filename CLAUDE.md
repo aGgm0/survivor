@@ -362,7 +362,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 5 : écran de fin (vignette rouge ou dorée, bilan en tuiles, bandeau doré des déblocages, damage meter dans le grand cadre)
   - [x] Police pixel **DUNGEON.mode** (datagoblin, CC0, accents compris) partout sauf les outils de dev (F2, F3) ; nombres de dégâts aussi ; conteneurs élargis (police large)
   - [x] Icônes d'armes et de passifs : pack **Raven Fantasy Icons** (version gratuite pour développer ; **Premium 35 $ obligatoire avant de vendre le jeu** ; fichiers ignorés par git) : 21 icônes choisies dans `tools/ui/copy-raven.mjs`, dans les cases du HUD (48 px) et sur les cartes de level up, texte de secours si le pack manque
-- [x] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
+- [ ] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
   - [x] Premier essai généré par script : joueur, basique, boss (remplacé par le pack)
   - [x] Pack téléchargé (`public/assets/sprites/0x72/` : atlas + `tile_list_v1.7`), `public/assets/LICENSES.md` ; choix validés : joueur `wizzard_m`, basique `chort`, rapide `imp`, tank `ogre`, boss `big_demon`, élites = basique / rapide teintés, caisse `crate`, pièce `coin_anim`, nourriture `flask_red`, sol `atlas_floor`
   - [x] Branchement dans le rendu (sprites animés, retournés selon la direction, teinte des élites)
