@@ -390,7 +390,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 ### Phase 7 — Déploiement
 - [ ] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
   - [x] Build publiable : base relative (`./`), chemins audio via `BASE_URL`, `npm run release:itch` (build + retrait de la planche Dark Ages + zip `release/survivor-itch.zip`), testé servi depuis un sous-dossier ; README
-  - [ ] Dépôt GitHub créé et code poussé
+  - [x] Dépôt GitHub créé et code poussé : https://github.com/aGgm0/survivor (branche `main` seulement ; commits signés avec l'adresse anonyme GitHub)
   - [ ] Page itch.io (HTML5, 1280 × 720, plein écran) et lien dans le README
 - [ ] `[LATER]` Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
