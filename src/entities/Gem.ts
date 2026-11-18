@@ -14,13 +14,16 @@ export class Gem implements Poolable {
   attracted = false;
   /** px/s, vitesse actuelle quand elle est attirée */
   speed = 0;
+  /** Gemme verte boostée (dessinée à part, quelle que soit sa valeur) */
+  bonus = false;
 
-  drop(x: number, y: number, value: number): void {
+  drop(x: number, y: number, value: number, bonus = false): void {
     this.x = x;
     this.y = y;
     this.prevX = x;
     this.prevY = y;
     this.value = value;
+    this.bonus = bonus;
     this.attracted = false;
     this.speed = 0;
   }

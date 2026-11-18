@@ -44,6 +44,14 @@ export const UPGRADE_CHOICE_COUNT = 3;
 export const NEW_WEAPON_GUARANTEE_BELOW = 3;
 
 /**
+ * Début de partie : une carte de passif sort `weight` fois moins souvent qu'une carte d'arme,
+ * pour les level up qui mènent à un niveau inférieur à `untilLevel`. Retour de jeu : un passif
+ * niveau 1 (+10 % de dégâts...) pèse très peu face à une nouvelle arme. Ça ne change rien
+ * à la fin de partie, contrairement à un buff des passifs.
+ */
+export const EARLY_PASSIVES = { weight: 0.5, untilLevel: 10 } as const;
+
+/**
  * Emplacements : armes et passifs maximum en même temps. Une fois pleins, seuls ceux déjà
  * possédés peuvent encore monter de niveau : il faut choisir son build.
  */

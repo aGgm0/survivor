@@ -162,14 +162,14 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
-| **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 14 | 1 s | +1 projectile aux niv 3 et 5 |
+| **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 16 | 1 s | +1 projectile aux niv 3 et 5 |
 | **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px |
 | **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 110 px, 120°, chaque ennemi touché une fois par coup | 16 | 1,2 s | Niv 2 +5 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +7 dégâts et portée +25 px (28 au niv 5). Recul 140. Le Duplicateur ne s'applique pas à l'Épée |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
 **Recul** (stat par arme, px/s donnés à l'ennemi touché) : toutes les forces ×1,2 (`KNOCKBACK.forceMult`, data/combat.ts) ; Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
 
-Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure. La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
+Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure, et chaque coup est **arrondi à l'entier supérieur** (un petit bonus en % compte toujours). La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
 `[LATER]` : évolutions d'armes (arme niv max + objet passif = arme évoluée).
 
@@ -177,7 +177,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 
 | Ennemi | PV | Vitesse | Dégâts contact | XP | Comportement |
 |---|---|---|---|---|---|
-| Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique) |
+| Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`) |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile |
 | Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
@@ -201,14 +201,15 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur.
 - Les ennemis lâchent des gemmes d'XP, attirées par le joueur quand il est dans le rayon de ramassage.
 - XP requise : `xpToNext(level) = 5 + level × 7 + 0,75 × max(0, level − 10)²`, arrondi (`XP_CURVE` dans `data/progression.ts`). Les 10 premiers niveaux gardent l'ancienne courbe ; ensuite elle se durcit (niv 20 : 220, niv 30 : 515).
 - L'écran de fin affiche **« build complet à mm:ss »** (moment où plus rien n'est améliorable) pour régler la courbe sur du concret.
-- Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP).
+- Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP). Couleur de la gemme selon sa valeur (bleue < 5, violette < 20, dorée), sauf la gemme verte du basique (×2, couleur à part, redevient normale si elle est fusionnée).
 - Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
-- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité, Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur).
+- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité, Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur). Jusqu'au niveau 10, une carte de passif sort 2 fois moins souvent qu'une carte d'arme (`EARLY_PASSIVES`).
 - **Relance** : 2 par partie (`REROLLS_PER_RUN`), touche R ou bouton sous les cartes. Les cartes affichées ne reviennent pas tant qu’il reste assez d’autres options ; la nouvelle arme garantie (< 3 armes) tient toujours. Impossible quand il ne reste que le soin.
 
 ### 5.7 Vagues & difficulté
 
 - Défini dans `src/data/waves.ts` : par tranche de temps → types d'ennemis, taux de spawn, multiplicateur de PV.
+- Ouverture calme : 0,8 ennemi/s de 0:00 à 0:30, puis 1,5/s.
 - Courbe : nombre d'ennemis à l'écran qui monte progressivement (objectif perf : **500+ ennemis à 60 FPS**).
 - **Rushs** (`BONUS_WAVES`) : en plus de la vague normale, 2:00-2:30 = +5 rapides/s (≈ 150), 6:00-6:30 = +7 basiques/s (≈ 210). PV et vitesse de la vague en cours.
 
@@ -325,6 +326,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [x] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) ; pas de « bannir » pour l’instant
 - [x] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
 - [x] Buff léger de tout le recul (×1,2 global) : on ne le sentait pas
+- [x] Équilibrage (retours de jeu, version allégée) : gemme verte du basique (50 %, ×2), ouverture calme 0:00-0:30, dégâts arrondis au-dessus, Trait arcanique 14 → 16, passifs 2× moins souvent avant le niveau 10
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
 ### 0.2 — Une partie juste `[moyenne]`
@@ -623,6 +625,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Plein écran : touche F + case « Plein écran (F) » des Options, demandé directement dans l'événement (pas dans l'update), jamais sauvegardé ; sortir du plein écran met la partie en pause | Le navigateur n'accepte le plein écran que pendant un clic ou un appui (activation utilisateur) et le refuse au chargement ; en plein écran, Échap est gardé par le navigateur et n'atteint pas le jeu. F plutôt que F11 (plein écran du navigateur, qui n'agrandit pas le cadre itch) |
 | 2026-11-18 | « Jouer » grisé (« Chargement… ») jusqu'à la fin des 3 chargements (sprites, atlas fx, effets PVFX), réussis **ou ratés** ; sons non attendus ; Boutique, Profil et Options utilisables pendant ce temps | Un fichier manquant ne doit pas bloquer le jeu pour toujours (il se lance en formes simples) ; un son pas encore prêt est seulement muet |
 | 2026-11-18 | Recul : multiplicateur global ×1,2 (`KNOCKBACK.forceMult`) plutôt que de toucher chaque arme | Retour de jeu : « on ne le ressent pas » (≈ 5 px pour un basique touché par le Trait, ≈ 10 px maintenant). Un seul bouton pour régler le ressenti ; ×1,3 et ×1,5 proposés, ×1,2 choisi (« léger ») |
+| 2026-11-18 | Équilibrage allégé : gemme verte du basique (50 % de chances, ×2 d'XP) au lieu de +50 % d'XP partout ; 0,8 ennemi/s de 0:00 à 0:30 ; chaque coup arrondi à l'entier supérieur ; Trait arcanique 14 → 16 ; passifs ×0,5 dans le tirage avant le niveau 10. **Reportés** : PV de la vague 6:00 (×2,5 → ×2,3) et buff de l'Épée et des Orbes | Retours de jeu « trop dur ». Tout cumulé (dégâts, arrondi, PV de 6:00, XP) faisait ≈ +25 % de DPS effectif : risque de retomber dans « ez victoire ». Passifs : moins souvent plutôt que plus forts, pour ne pas gonfler la fin de partie. Arrondi : un bonus de +3 % ne changeait rien de visible |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

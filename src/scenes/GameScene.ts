@@ -31,6 +31,7 @@ import { CONTROLS } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
   MAXED_XP_MULT,
+  EARLY_PASSIVES,
   NEW_WEAPON_GUARANTEE_BELOW,
   REROLLS_PER_RUN,
   RUN_DURATION,
@@ -546,6 +547,8 @@ export class GameScene implements Scene, Build {
       UPGRADE_CHOICE_COUNT,
       this.weapons.length < NEW_WEAPON_GUARANTEE_BELOW,
       exclude,
+      // Début de partie : passifs moins souvent (un passif niv 1 pèse peu face à une arme).
+      level < EARLY_PASSIVES.untilLevel ? EARLY_PASSIVES.weight : 1,
     );
     // Créer ces petits objets est sans risque : seulement au level up.
     this.deps.levelUpOverlay.show(
@@ -703,7 +706,11 @@ export class GameScene implements Scene, Build {
     this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
     if (e.type === BOSS_TYPE) this.shake('bossKill');
     else if (e.type.elite) this.shake('eliteKill');
-    this.gems.drop(e.x, e.y, e.type.xp * e.xpMult, this.player.x, this.player.y);
+    // Gemme verte (basique) : tirée avec l'aléatoire de la partie, donc reproductible avec la seed.
+    const bonusGem = 'bonusGem' in e.type ? e.type.bonusGem : undefined;
+    const bonus = bonusGem !== undefined && this.rng.next() < bonusGem.chance;
+    const xp = e.type.xp * e.xpMult * (bonus && bonusGem ? bonusGem.xpMult : 1);
+    this.gems.drop(e.x, e.y, xp, this.player.x, this.player.y, bonus);
     this.enemies.release(e);
     this.killCount++;
   }

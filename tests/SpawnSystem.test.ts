@@ -37,8 +37,10 @@ function runBetween(spawner: SpawnSystem, pool: Pool<Enemy>, from: number, to: n
 describe('waveAt', () => {
   it('renvoie la vague de chaque tranche de temps', () => {
     expect(waveAt(0)).toBe(WAVES[0]);
-    expect(waveAt(119.9)).toBe(WAVES[0]);
-    expect(waveAt(120)).toBe(WAVES[1]);
+    expect(waveAt(29.9)).toBe(WAVES[0]);
+    expect(waveAt(30)).toBe(WAVES[1]);
+    expect(waveAt(119.9)).toBe(WAVES[1]);
+    expect(waveAt(120)).toBe(WAVES[2]);
     expect(waveAt(599)).toBe(WAVES[WAVES.length - 1]);
     expect(waveAt(5000)).toBe(WAVES[WAVES.length - 1]); // après 10 min : la dernière
   });
@@ -51,6 +53,10 @@ describe('SpawnSystem — vagues', () => {
     expect(first.filter((e) => e.type !== ENEMY_TYPES.boss)).toHaveLength(
       Math.round(waveAt(0).perSecond * 10),
     );
+  });
+
+  it('ouverture calme : moins d’ennemis pendant les 30 premières secondes', () => {
+    expect(waveAt(0).perSecond).toBeLessThan(waveAt(30).perSecond);
   });
 
   it('pas de tanks pendant les 2 premières minutes, puis ils arrivent', () => {

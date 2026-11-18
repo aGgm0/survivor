@@ -36,3 +36,9 @@ export const GEM_TIERS: readonly GemTier[] = [
   { minValue: 5, size: 9, color: '#b388ff' }, // violet : tank
   { minValue: 20, size: 12, color: '#ffd54f' }, // or : grosses gemmes fusionnées
 ];
+
+/**
+ * Gemme verte « boostée » (`bonusGem` d'un type d'ennemi) : sa couleur ne dépend pas de sa
+ * valeur. Fusionnée (réserve pleine), elle redevient une gemme normale.
+ */
+export const BONUS_GEM = { size: 8, color: '#5ee07a' } as const;

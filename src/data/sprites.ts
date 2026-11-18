@@ -123,6 +123,8 @@ export const FX_ATLAS_URLS = {
 
 /** Gemme de chaque palier de GEM_TIERS (même ordre), dessinée ×2 */
 export const GEM_SPRITES = ['gem_1', 'gem_2', 'gem_3'] as const;
+/** Gemme verte boostée (voir BONUS_GEM dans data/xp.ts) */
+export const BONUS_GEM_SPRITE = 'gem_bonus';
 export const GEM_SCALE = 2;
 
 /**

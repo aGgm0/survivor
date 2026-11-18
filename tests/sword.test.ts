@@ -156,7 +156,7 @@ describe('Épée — mutations', () => {
     expect(hits).toContain(list[1]);
     const tank = list[0];
     if (!tank) throw new Error();
-    expect(tank.maxHp - tank.hp).toBeCloseTo(w.damage * 0.6);
+    expect(tank.maxHp - tank.hp).toBe(Math.ceil(w.damage * 0.6)); // dégâts arrondis au-dessus
   });
 });
 

@@ -1,7 +1,8 @@
 gem_1 0 0 9 11
 gem_2 10 0 11 14
 gem_3 22 0 14 18
-bolt_anim_f0 37 0 16 8
-bolt_anim_f1 54 0 16 8
-orb_anim_f0 71 0 15 15
-orb_anim_f1 87 0 15 15
+gem_bonus 37 0 10 12
+bolt_anim_f0 48 0 16 8
+bolt_anim_f1 65 0 16 8
+orb_anim_f0 82 0 15 15
+orb_anim_f1 98 0 15 15

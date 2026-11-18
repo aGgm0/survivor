@@ -231,6 +231,41 @@ describe('GameScene — dégâts et mort', () => {
   });
 });
 
+describe('GameScene — gemme verte du basique', () => {
+  it('environ une gemme de basique sur deux est verte et vaut double', () => {
+    const { scene } = newScene();
+    // Aimant coupé : les gemmes restent au sol (sinon un level up figerait le test).
+    scene.player.pickupRadius = 0;
+    scene.player.hp = scene.player.maxHp = 1e9; // ne meurt pas pendant le test
+    for (let n = 0; n < 40; n++) {
+      const e = scene.enemies.acquire();
+      e?.spawn(ENEMY_TYPES.basic, 300, 0);
+      if (e) e.hp = 1;
+      const before = scene.kills;
+      for (let i = 0; i < 300 && scene.kills === before; i++) scene.update(DT);
+    }
+    const gems = scene.gems.gems.items.filter((g) => g.active);
+    const green = gems.filter((g) => g.bonus);
+    const blue = gems.filter((g) => !g.bonus);
+    expect(green.length).toBeGreaterThan(8);
+    expect(blue.length).toBeGreaterThan(8);
+    for (const g of green) expect(g.value).toBe(2);
+    for (const g of blue) expect(g.value).toBe(1);
+  });
+
+  it('les autres ennemis ne lâchent jamais de gemme verte', () => {
+    const { scene } = newScene();
+    scene.player.pickupRadius = 0;
+    scene.player.hp = scene.player.maxHp = 1e9; // ne meurt pas pendant le test
+    for (let n = 0; n < 20; n++) {
+      scene.enemies.acquire()?.spawn(ENEMY_TYPES.fast, 300, 0);
+      const before = scene.kills;
+      for (let i = 0; i < 300 && scene.kills === before; i++) scene.update(DT);
+    }
+    expect(scene.gems.gems.items.some((g) => g.active && g.bonus)).toBe(false);
+  });
+});
+
 describe('GameScene — combat', () => {
   it('l’arme tue un ennemi proche et le kill est compté', () => {
     const { scene } = newScene();

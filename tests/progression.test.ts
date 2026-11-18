@@ -3,7 +3,7 @@ import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
-import { MAX_PASSIVES, MAX_WEAPONS, xpToNext } from '../src/data/progression';
+import { EARLY_PASSIVES, MAX_PASSIVES, MAX_WEAPONS, xpToNext } from '../src/data/progression';
 import { HEAL_UPGRADE, PASSIVES } from '../src/data/upgrades';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
@@ -112,6 +112,28 @@ describe('upgrades — options et tirage', () => {
     expect(again).toHaveLength(3);
     expect(again.map(choiceKey)).toContain(choiceKey(options[3]!));
     expect(new Set(again.map(choiceKey)).size).toBe(3);
+  });
+
+  it('début de partie : les passifs sortent environ 2 fois moins souvent', () => {
+    const options = availableUpgrades(makeBuild());
+    const passiveShare = (weight: number) => {
+      let passives = 0;
+      let total = 0;
+      for (let seed = 0; seed < 2000; seed++) {
+        for (const c of rollUpgradeChoices(options, new Rng(seed), 3, false, [], weight)) {
+          total++;
+          if (c.kind === 'passive') passives++;
+        }
+      }
+      return passives / total;
+    };
+    const normal = passiveShare(1);
+    const early = passiveShare(EARLY_PASSIVES.weight);
+    expect(early).toBeLessThan(normal * 0.9);
+    // Toujours 3 cartes différentes.
+    const picks = rollUpgradeChoices(options, new Rng(5), 3, true, [], EARLY_PASSIVES.weight);
+    expect(new Set(picks.map((c) => c.title)).size).toBe(3);
+    expect(picks.some((c) => c.kind === 'newWeapon')).toBe(true);
   });
 
   it('n’en propose pas plus qu’il n’en existe', () => {

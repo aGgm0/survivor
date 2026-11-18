@@ -153,7 +153,7 @@ describe('mutations du Trait arcanique', () => {
     const tankHp = ENEMY_TYPES.tank.hp;
     // Le voisin a perdu 70 % des dégâts du tir (vérifié via le damage meter de l'arme).
     expect(w.totalDamage).toBeCloseTo(
-      Math.min(w.damage, tankHp) + Math.min(w.damage * 0.7, tankHp),
+      Math.min(Math.ceil(w.damage), tankHp) + Math.min(Math.ceil(w.damage * 0.7), tankHp),
     );
   });
 });

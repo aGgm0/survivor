@@ -27,6 +27,11 @@ export interface EnemyType {
    * plus gros, ils reculeraient beaucoup moins qu'on ne le veut. Absent = calcul par la masse.
    */
   readonly knockbackFactor?: number;
+  /**
+   * Chance (0 à 1) de lâcher une gemme verte « boostée » à la place de la normale, qui vaut
+   * `xpMult` fois plus d'XP. Absent = jamais.
+   */
+  readonly bonusGem?: { readonly chance: number; readonly xpMult: number };
 }
 
 export const ENEMY_TYPES = {
@@ -38,6 +43,9 @@ export const ENEMY_TYPES = {
     xp: 1,
     radius: 14,
     color: '#d9534f',
+    // Retour de jeu (2026-11-18) : XP trop lente. Une gemme sur deux vaut double (≈ +20 % d'XP
+    // au total), plutôt qu'un +50 % général : ça récompense de tuer les basiques.
+    bonusGem: { chance: 0.5, xpMult: 2 },
   },
   fast: {
     id: 'fast',

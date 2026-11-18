@@ -112,6 +112,8 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
  * carte est remplacée par une nouvelle arme tirée au hasard.
  * `exclude` (relance) : ces cartes ne reviennent que s'il n'y a pas assez d'autres options,
  * sinon une relance pourrait reproposer exactement les mêmes cartes.
+ * `passiveWeight` : chances relatives d'une carte de passif (0,5 = deux fois moins souvent
+ * qu'une carte d'arme). 1 = tirage uniforme.
  */
 export function rollUpgradeChoices(
   options: readonly UpgradeChoice[],
@@ -119,19 +121,20 @@ export function rollUpgradeChoices(
   count: number,
   guaranteeNewWeapon = false,
   exclude: readonly UpgradeChoice[] = [],
+  passiveWeight = 1,
 ): UpgradeChoice[] {
   let picks: UpgradeChoice[];
   let fresh: readonly UpgradeChoice[] = options;
   if (exclude.length === 0 || options.length === 0) {
-    picks = shufflePick(options, rng, count);
+    picks = shufflePick(options, rng, count, passiveWeight);
   } else {
     const excludedKeys = new Set(exclude.map(choiceKey));
     fresh = options.filter((c) => !excludedKeys.has(choiceKey(c)));
     const stale = options.filter((c) => excludedKeys.has(choiceKey(c)));
-    picks = fresh.length > 0 ? shufflePick(fresh, rng, count) : [];
+    picks = fresh.length > 0 ? shufflePick(fresh, rng, count, passiveWeight) : [];
     // Pas assez de nouvelles cartes : on complète avec des anciennes.
     if (picks.length < count && stale.length > 0) {
-      picks.push(...shufflePick(stale, rng, count - picks.length));
+      picks.push(...shufflePick(stale, rng, count - picks.length, passiveWeight));
     }
   }
   if (guaranteeNewWeapon && !picks.some((c) => c.kind === 'newWeapon')) {
@@ -147,7 +150,12 @@ export function rollUpgradeChoices(
   return picks;
 }
 
-function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number): UpgradeChoice[] {
+function shufflePick(
+  options: readonly UpgradeChoice[],
+  rng: Rng,
+  count: number,
+  passiveWeight = 1,
+): UpgradeChoice[] {
   if (options.length === 0) {
     return [
       {
@@ -158,6 +166,7 @@ function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number)
       },
     ];
   }
+  if (passiveWeight !== 1) return weightedPick(options, rng, count, passiveWeight);
   const pool = options.slice();
   const n = Math.min(count, pool.length);
   for (let i = 0; i < n; i++) {
@@ -170,6 +179,40 @@ function shufflePick(options: readonly UpgradeChoice[], rng: Rng, count: number)
     pool[j] = tmp;
   }
   return pool.slice(0, n);
+}
+
+/**
+ * Tirage sans doublon où chaque carte de passif pèse `passiveWeight` et les autres 1 :
+ * on tire un nombre dans [0, poids total[, la carte dont la tranche le contient sort, et on
+ * recommence sans elle. Seulement au level up : quelques tableaux créés, sans souci de perf.
+ */
+function weightedPick(
+  options: readonly UpgradeChoice[],
+  rng: Rng,
+  count: number,
+  passiveWeight: number,
+): UpgradeChoice[] {
+  const pool = options.slice();
+  const picks: UpgradeChoice[] = [];
+  const weightOf = (c: UpgradeChoice) => (c.kind === 'passive' ? passiveWeight : 1);
+  while (picks.length < count && pool.length > 0) {
+    let total = 0;
+    for (const c of pool) total += weightOf(c);
+    let roll = rng.next() * total;
+    let index = pool.length - 1;
+    for (let i = 0; i < pool.length; i++) {
+      const c = pool[i];
+      if (!c) continue;
+      roll -= weightOf(c);
+      if (roll < 0) {
+        index = i;
+        break;
+      }
+    }
+    const [picked] = pool.splice(index, 1);
+    if (picked) picks.push(picked);
+  }
+  return picks;
 }
 
 /** Les 2 variantes proposées pour une arme prête à muter. */

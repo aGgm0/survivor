@@ -172,8 +172,8 @@ export const WEAPONS = {
     name: 'Trait arcanique',
     short: 'TA',
     description: "Tire sur l'ennemi le plus proche",
-    // 10 → 11 → 14 : restait dernier du damage meter. Un basique (20 PV) tombe toujours en 2 coups.
-    damage: 14,
+    // 10 → 11 → 14 → 16 : restait dernier du damage meter. Un basique (23 PV) tombe en 2 coups.
+    damage: 16,
     knockback: 185, // moyen, dans la direction du tir (160 → 185 avec le nerf d'Impact)
     cooldown: 1,
     count: 1,

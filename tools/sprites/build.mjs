@@ -534,6 +534,8 @@ writeAtlas(join(OUT_DIR, 'fx'), 'fx', [
   ['gem_1', buildGem(7, ['#1f6f9a', '#4fc3f7', '#c8f0ff'])],
   ['gem_2', buildGem(9, ['#5e3d9e', '#b388ff', '#e6d9ff'])],
   ['gem_3', buildGem(12, ['#9a7414', '#ffd54f', '#fff3c4'])],
+  // Gemme verte boostée (basique) : un peu plus grosse que la bleue, couleur à part.
+  ['gem_bonus', buildGem(8, ['#1f7a3a', '#5ee07a', '#d4ffd9'])],
   ['bolt_anim_f0', buildBolt(0)],
   ['bolt_anim_f1', buildBolt(1)],
   ['orb_anim_f0', buildOrb(0)],

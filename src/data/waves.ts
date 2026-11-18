@@ -18,16 +18,27 @@ export interface WaveDef {
 
 const { basic, fast, tank } = ENEMY_TYPES;
 
+/** Les 2 premières minutes : basiques et rapides, sans tanks */
+const OPENING_WEIGHTS: WaveDef['weights'] = [
+  [basic, 4],
+  [fast, 6],
+];
+
 /** Triées par `start` croissant. La dernière vague dure jusqu'à la fin de la partie. */
 export const WAVES: readonly WaveDef[] = [
-  // 0:00 – 2:00 : pas de tanks, le temps d'obtenir une 2e arme
+  // 0:00 – 0:30 : ouverture calme (retour de jeu 2026-11-18 : trop de monde d'entrée)
   {
     start: 0,
+    perSecond: 0.8,
+    weights: OPENING_WEIGHTS,
+    hpMult: 1,
+    speedMult: 1,
+  },
+  // 0:30 – 2:00 : pas de tanks, le temps d'obtenir une 2e arme
+  {
+    start: 30,
     perSecond: 1.5,
-    weights: [
-      [basic, 4],
-      [fast, 6],
-    ],
+    weights: OPENING_WEIGHTS,
     hpMult: 1,
     speedMult: 1,
   },

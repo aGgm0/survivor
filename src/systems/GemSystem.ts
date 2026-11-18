@@ -1,9 +1,15 @@
 import type { Camera } from '../core/Camera';
 import { Pool } from '../core/Pool';
-import { GEM_MAGNET, GEM_POOL_SIZE, GEM_TIERS, RELOCATED_GEM_XP_FACTOR } from '../data/xp';
+import {
+  BONUS_GEM,
+  GEM_MAGNET,
+  GEM_POOL_SIZE,
+  GEM_TIERS,
+  RELOCATED_GEM_XP_FACTOR,
+} from '../data/xp';
 import { Gem } from '../entities/Gem';
 import type { SpriteAtlas } from '../core/SpriteAtlas';
-import { GEM_SCALE, GEM_SPRITES } from '../data/sprites';
+import { BONUS_GEM_SPRITE, GEM_SCALE, GEM_SPRITES } from '../data/sprites';
 
 /** Ce dont les gemmes ont besoin côté joueur. */
 export interface Collector {
@@ -24,12 +30,13 @@ export class GemSystem {
    * la nouvelle valeur. Sa propre valeur est réduite (RELOCATED_GEM_XP_FACTOR) : l'XP se
    * rapproche du joueur, mais ce raccourci a un prix.
    */
-  drop(x: number, y: number, value: number, playerX: number, playerY: number): void {
+  drop(x: number, y: number, value: number, playerX: number, playerY: number, bonus = false): void {
     const gem = this.gems.acquire();
     if (gem) {
-      gem.drop(x, y, value);
+      gem.drop(x, y, value, bonus);
       return;
     }
+    // Fusion : la gemme obtenue est une gemme normale (couleur selon sa valeur).
     const farthest = this.findFarthest(playerX, playerY);
     if (farthest) farthest.drop(x, y, farthest.value * RELOCATED_GEM_XP_FACTOR + value);
   }
@@ -93,25 +100,43 @@ export class GemSystem {
       const tier = GEM_TIERS[t];
       const next = GEM_TIERS[t + 1];
       if (!tier) continue;
-      const s = tier.size;
       ctx.beginPath();
       for (let i = 0; i < items.length; i++) {
         const g = items[i];
-        if (!g?.active || g.value < tier.minValue) continue;
+        if (!g?.active || g.bonus || g.value < tier.minValue) continue;
         if (next && g.value >= next.minValue) continue; // appartient au palier suivant
-        const x = g.renderX(alpha);
-        const y = g.renderY(alpha);
-        if (x + s < camera.left || x - s > camera.right) continue;
-        if (y + s < camera.top || y - s > camera.bottom) continue;
-        ctx.moveTo(x, y - s);
-        ctx.lineTo(x + s, y);
-        ctx.lineTo(x, y + s);
-        ctx.lineTo(x - s, y);
-        ctx.closePath();
+        this.addDiamond(ctx, g, alpha, camera, tier.size);
       }
       ctx.fillStyle = tier.color;
       ctx.fill();
     }
+    // Gemmes vertes : un passage de plus, leur couleur ne dépend pas de leur valeur.
+    ctx.beginPath();
+    for (let i = 0; i < items.length; i++) {
+      const g = items[i];
+      if (g?.active && g.bonus) this.addDiamond(ctx, g, alpha, camera, BONUS_GEM.size);
+    }
+    ctx.fillStyle = BONUS_GEM.color;
+    ctx.fill();
+  }
+
+  /** Ajoute le losange d'une gemme au chemin en cours (rien si elle est hors écran). */
+  private addDiamond(
+    ctx: CanvasRenderingContext2D,
+    g: Gem,
+    alpha: number,
+    camera: Camera,
+    s: number,
+  ): void {
+    const x = g.renderX(alpha);
+    const y = g.renderY(alpha);
+    if (x + s < camera.left || x - s > camera.right) return;
+    if (y + s < camera.top || y - s > camera.bottom) return;
+    ctx.moveTo(x, y - s);
+    ctx.lineTo(x + s, y);
+    ctx.lineTo(x, y + s);
+    ctx.lineTo(x - s, y);
+    ctx.closePath();
   }
 
   /** Renvoie faux si un sprite de gemme manque (on retombe alors sur les losanges). */
@@ -128,7 +153,8 @@ export class GemSystem {
       // Palier = le plus haut dont la valeur minimale est atteinte.
       let t = 0;
       while (t + 1 < GEM_TIERS.length && g.value >= (GEM_TIERS[t + 1]?.minValue ?? Infinity)) t++;
-      const frame = fx.animation(GEM_SPRITES[t] ?? GEM_SPRITES[0])[0];
+      const name = g.bonus ? BONUS_GEM_SPRITE : (GEM_SPRITES[t] ?? GEM_SPRITES[0]);
+      const frame = fx.animation(name)[0];
       if (!frame) return false;
       const x = g.renderX(alpha);
       const y = g.renderY(alpha);

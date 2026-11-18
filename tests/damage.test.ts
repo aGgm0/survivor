@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { MIN_DAMAGE } from '../src/data/combat';
 import { PLAYER_BASE } from '../src/data/player';
 import { Player } from '../src/entities/Player';
-import { computeDamage } from '../src/systems/damage';
+import { computeDamage, damageEnemy } from '../src/systems/damage';
+import { Enemy } from '../src/entities/Enemy';
+import { Weapon } from '../src/entities/Weapon';
+import { ENEMY_TYPES } from '../src/data/enemies';
+import { WEAPONS } from '../src/data/weapons';
 
 describe('computeDamage', () => {
   it('retire l’armure aux dégâts', () => {
@@ -51,5 +55,32 @@ describe('Player — PV', () => {
     p.takeHit(10);
     expect(p.hp).toBe(0);
     expect(p.isDead).toBe(true);
+  });
+});
+
+describe('arrondi des dégâts', () => {
+  it('arrondit chaque coup à l’entier supérieur (un petit bonus en % compte toujours)', () => {
+    const weapon = new Weapon(WEAPONS.arcaneBolt);
+    const enemy = new Enemy();
+    enemy.spawn(ENEMY_TYPES.tank, 0, 0);
+    const hp = enemy.hp;
+    damageEnemy(weapon, enemy, 14.42, { onHit: () => {}, onKill: () => {} }, 1, 0);
+    expect(hp - enemy.hp).toBe(15);
+  });
+
+  it('ne compte pas un point de trop sur une erreur de virgule', () => {
+    const weapon = new Weapon(WEAPONS.arcaneBolt);
+    const enemy = new Enemy();
+    enemy.spawn(ENEMY_TYPES.tank, 0, 0);
+    const hp = enemy.hp;
+    damageEnemy(
+      weapon,
+      enemy,
+      (0.1 * 3 * 10 * 16) / 3,
+      { onHit: () => {}, onKill: () => {} },
+      1,
+      0,
+    );
+    expect(hp - enemy.hp).toBe(16);
   });
 });
