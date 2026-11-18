@@ -31,12 +31,13 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 |---|---|
 | Genre | Survivor / bullet heaven, roguelite |
 | Plateforme | Navigateur desktop (Chrome, Firefox). Mobile = `[LATER]` |
-| Contrôles | Clavier (ZQSD + flèches). Manette = `[LATER]` |
-| Durée d'une run | 10 min pour le MVP |
+| Contrôles | Clavier (ZQSD + flèches). Manette en 0.7 |
+| Durée d'une run | 10 min aujourd'hui ; **30 min pour la 1.0** (un seul niveau, voir § 9) |
 | Univers / thème | Provisoire : magie / fantasy (un mage qui survit à des hordes). <!-- TODO: à affiner --> |
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.0 |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -290,18 +291,115 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 
 ## 9. Roadmap
 
-### Phase 0 — Setup
+Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même jour). Chaque version est publiable sur itch.io. Les phases 0 à 7 (faites) sont gardées plus bas dans l'**Historique**.
+
+### Numérotation des versions
+
+- `MAJEUR.MINEUR.CORRECTIF`. `0.x` = en développement : contenu, équilibrage et sauvegarde peuvent changer. `0.x.y` = correctifs (bugs, petit équilibrage) sans nouveau contenu. `1.0` = jeu fini, les sauvegardes ne cassent plus.
+- Source unique : `version` de `package.json` (`npm version minor` / `patch` met à jour et crée le tag). Injectée par le `define` de Vite, affichée dans le menu et sur l'écran de fin, écrite dans la sauvegarde (`savedWith`).
+- Tag git annoté `v0.2.0`, `CHANGELOG.md` en français, devlog itch à chaque version mineure, zip nommé `survivor-0.2.0-itch.zip`.
+- Le jeu tel qu'il est au 2026-11-18 = **0.1.0**.
+
+### Objectif 1.0
+
+**Sortie gratuite sur itch.io, pas de vente.** Un seul niveau, **30 min, bien fait**. Le 2e niveau et la version PC viennent en 1.x.
+
+| | Aujourd'hui (0.1) | Cible 1.0 |
+|---|---|---|
+| Niveaux | 1 (10 min) | 1 (30 min) |
+| Armes | 4 | 12 (au moins 8 comportements différents, autant de physiques que de magiques) |
+| Passifs | 9 | ~12 (dont la pénétration) |
+| Persos | 4 | 8, chacun avec ses stats et son ulti |
+| Ennemis | 3 + 2 élites + 1 boss | 8 à 10 types (dont des blindés), plus d'élites, 3 boss (10:00, 20:00, 30:00) |
+| Méta | 4 persos, boutique, profil | + bestiaire, relances, ~30 déblocages |
+
+### 0.1.0 — Première version numérotée `[petite]`
+- [ ] Version dans `package.json` (0.1.0), affichée dans le menu et sur l'écran de fin ; `CHANGELOG.md` ; tag `v0.1.0`
+- [ ] Plein écran : touche + option
+- [ ] Options modifiables en partie (bouton « Options » du menu pause, même écran que celui du menu)
+- [ ] « Jouer » grisé tant que les sprites et effets ne sont pas chargés (sinon toute la partie est en formes simples)
+- [ ] **Relance des cartes** de level up (2 par partie au départ, plus via la boutique ensuite) <!-- TODO: nombre de relances ; « bannir » une carte pour la partie, oui ou non ? -->
+- [ ] **Régénération de base** 0,1 PV/s (stat du joueur dans `data/player.ts`, augmentable ensuite)
+- **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
+
+### 0.2 — Une partie juste `[moyenne]`
+- [ ] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement
+- [ ] Refactor : menu de test sorti de `GameScene` (`applyDevAction`, `devView` → `scenes/game/devActions.ts`)
+- [ ] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` hors de `systems/` (une entité n'importe pas un système)
+- [ ] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
+- [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel <!-- TODO: barres au-dessus du joueur, des élites et des boss seulement (recommandé), ou aussi des ennemis blessés ? -->
+- [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
+- [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
+- **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
+
+### 0.3 — Stats avancées et arsenal `[grosse]`
+- [ ] Registre de comportements d'armes : un module par type (`recompute`, `update`, `render`) au lieu des `switch` sur `def.kind` (`Weapon`, `WeaponSystem`, rendu)
+- [ ] Événements de partie typés (`RunEvents` : kill, coup reçu, level up, ramassage, boss…) + module `Feedback` (son, tremblement, particules) qui les écoute ; `killEnemy` ne garde que les règles
+- [ ] **2 types de dégâts** : physique / magique, sur chaque arme
+- [ ] **Résistances des ennemis** : armure physique et résistance magique, en pourcentage : réduction = A / (A + 100), avec A = résistance − pénétration (jamais d'immunité, 1 dégât minimum)
+- [ ] **Pénétration** (stat du joueur, des passifs, des persos, des enchantements)
+- [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits
+- [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
+- [ ] 4 nouvelles armes (2 physiques, 2 magiques), avec de nouveaux comportements, 2 mutations chacune
+- **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine.
+
+### 0.4 — Le niveau en 30 min `[grosse]`
+- [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi. Les métriques du bot doivent rester identiques avant d'aller plus loin
+- [ ] Vagues jusqu'à 30:00, 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
+- [ ] 3 boss (10:00, 20:00, 30:00) aux sprites différents, nouvelles capacités (projectiles, zones au sol), plus d'élites avec leurs propres capacités
+- [ ] Courbe d'XP refaite (build complet vers 25 min), sans fin après 30:00
+- [ ] Décision avec le bot : niveau max des armes à 12 (nouvelle mutation ?) et/ou plus d'emplacements (5 + 5 ?) <!-- TODO: à trancher selon « build complet à » -->
+- [ ] Refactor : `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
+- **Finie quand :** une partie de 30 min se joue de bout en bout, sans temps mort ni build complet trop tôt.
+
+### 0.5 — Persos, ultis, bestiaire `[grosse]`
+- [ ] 8 persos (un par arme de départ) avec leurs stats : PV, vitesse, dégâts et armures physiques / magiques, pénétration
+- [ ] **Ulti par perso** : jauge, bouton dans le HUD, effets faits de briques existantes (zone, rafale, invincibilité, ralentissement…) + effets PVFX, flash, tremblement ; recharge longue, boss peu touchés <!-- TODO: touche manuelle (Espace, recommandé) ou automatique ; jauge remplie par les kills (recommandé) ? -->
+- [ ] Sauvegarde v2 : migration testée depuis la v1, copie de secours, export / import en texte ; sauvegarde rangée dans `src/save/`
+- [ ] **Bestiaire** : ennemis déjà vus (PV, vitesse, dégâts, résistances) et armes déjà jouées (niveaux, mutations)
+- [ ] ~30 déblocages
+- **Finie quand :** une sauvegarde 0.4 se charge sans perte ; chaque perso a une raison d'être joué.
+
+### 0.6 — Enchantements et fin de l'arsenal `[moyenne]`
+- [ ] **Enchantements** : le niveau 6 d'un passif enchante une arme au choix. L'effet dépend **du passif seul** (12 effets, pas un par couple passif × arme) et passe par des stats communes à toutes les armes (pénétration, type de dégâts, effets d'état, taille…). Un seul enchantement par arme <!-- TODO: les 12 effets (pistes : Puissance = +pénétration, Duplicateur = change le type de dégâts, Vitalité = soin au kill…) -->
+- [ ] Armes 9 à 12, passifs jusqu'à ~12
+- **Finie quand :** tout le contenu de la 1.0 est dans le jeu, même pas encore poli.
+
+### 0.7 — Identité et bêta `[moyenne]`
+- [ ] Nom du jeu et pitch (§ 1), logo, écran titre, écran de crédits
+- [ ] Tutoriel léger au premier lancement
+- [ ] Manette (Gamepad API, sans dépendance), choix des touches
+- [ ] Testeurs extérieurs, corrections, équilibrage final, perf
+- **Finie quand :** quelqu'un qui découvre le jeu le comprend sans explication ; deux semaines sans bug bloquant signalé.
+
+### 1.0 — Sortie gratuite `[petite]`
+- [ ] Licences et crédits vérifiés (Raven gratuit suffit pour un jeu gratuit sans pub ni achats ; **pas de dons** sans revérifier sa licence)
+- [ ] Licence du code décidée <!-- TODO: aucune (tous droits réservés) ou MIT -->
+- [ ] Tag `v1.0.0`, page itch finale (captures, GIF), annonce
+
+### Après la 1.0
+- [ ] 2e niveau (autre bestiaire, morts-vivants envisagés) ; puis d'autres niveaux
+- [ ] Version PC (Electron ou Tauri)
+- [ ] Langue anglaise (i18n) <!-- TODO: à décider ; si oui, la mettre en place avant d'écrire beaucoup de textes -->
+
+---
+
+### Historique — phases 0 à 7 (avant la roadmap versionnée)
+
+Les tâches ouvertes de cette époque sont reprises dans les versions ci-dessus (↪).
+
+#### Phase 0 — Setup
 - [x] Projet Vite + TypeScript strict, ESLint, Prettier, Vitest
 - [x] Canvas plein écran avec mise à l'échelle 1280×720
 - [x] Game loop fixed timestep + overlay FPS
 
-### Phase 1 — Bouger
+#### Phase 1 — Bouger
 - [x] Input clavier
 - [x] Joueur qui se déplace (diagonale normalisée)
 - [x] Caméra qui suit le joueur + sol/grille de fond pour voir le mouvement
 - [x] Interpolation au rendu + pause simple (Échap / P)
 
-### Phase 2 — Ennemis
+#### Phase 2 — Ennemis
 - [x] Spawn hors écran + poursuite du joueur (spawn temporaire, recyclage des ennemis lointains)
 - [x] Object pool (+ debug F4 : +100 ennemis)
 - [x] Timer de survie en haut à droite (avancé depuis le HUD de la Phase 4)
@@ -309,13 +407,13 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 - [x] Collisions joueur/ennemi, PV, délai de coup par ennemi, mort (barre de PV sous le joueur, écran de mort, R = rejouer)
 - [x] Pause automatique quand l'onglet est caché
 
-### Phase 3 — Combat
+#### Phase 3 — Combat
 - [x] Arme 1 (projectile auto vers l'ennemi le plus proche)
 - [x] Dégâts, mort des ennemis, kills (+ stats par arme pour un futur damage meter)
 - [x] Feedback visuel (flash blanc des ennemis touchés, nombres de dégâts)
 - [x] Gemmes d'XP + aimant (compteur "XP" temporaire sous le timer)
 
-### Phase 4 — Progression `[MVP atteint ici]`
+#### Phase 4 — Progression `[MVP atteint ici]`
 - [x] Level up + écran de choix (3 upgrades) + barre d'XP et niveau
 - [x] Upgrades passifs (Vitalité, Célérité, Attraction, Puissance, Hâte) + niveaux du Trait arcanique
 - [x] Armes 2 et 3 (Aura ardente, Orbes runiques) + nouvelle arme garantie au level up tant qu'on a < 3 armes
@@ -325,35 +423,35 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
 
 **✅ MVP atteint (2026-11-10)** : run complète de 10 min, 3 armes auto, XP, level up, mort ou victoire, rejouer.
 
-### Après le MVP — idées validées, à planifier
+#### Après le MVP — idées validées, à planifier
 - [x] **Mutations d'armes** : le niveau 6 de chaque arme ; ses 2 variantes entrent dans le tirage normal du level up une fois l'arme au niveau 5 (choix définitif, ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
   - [x] Aura (les 2 brûlent toutes les 0,6 s) : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
   - [x] Trait arcanique : **Trait perçant** (traverse 5 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 75 px, 70 % des dégâts, anneau visuel)
   - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, rotation ×0,85, recul ×1,6) / **Tempête d'orbes** (9 orbes, rotation ×1,6, recul ×0,3)
 
-### Phase 5 — Contenu & systèmes (pas de visuel)
+#### Phase 5 — Contenu & systèmes (pas de visuel)
 - [x] Menu principal fonctionnel (Jouer, Options grisé en attendant l'étape Options), HTML basique ; M sur l'écran de fin = retour au menu
 - [x] Menu pause complet (Reprendre, Rejouer, Quitter vers le menu) : boutons + Échap/P, R, M
 - [x] Options + sauvegarde des réglages (localStorage) : nombres de dégâts, compteur FPS, pause quand l'onglet est caché (volume et screen shake en Phase 6)
 - [x] Emplacements limités (4 armes, 4 passifs) + XP requise revue à la hausse (le build complet arrivait avant le boss de 9:00) + « build complet à mm:ss » sur l'écran de fin
-  - [ ] À régler en jouant : `steepFactor` (0,75), objectif build complet vers 9:00-9:30
-- [ ] Équilibrage : passe complète armes, mutations, vagues, boss (après parties de test)
+  - ↪ 0.2 / 0.4 : `steepFactor` (0,75), objectif build complet
+- ↪ 0.2 : Équilibrage : passe complète armes, mutations, vagues, boss
 - [x] **Profil / statistiques** : bouton Profil du menu ; parties, victoires, meilleur temps, temps total, kills totaux, meilleur niveau, arme la plus jouée, et par arme parties / dégâts / kills cumulés (`data/profile.ts`, sauvegarde versionnée). Seules les parties terminées (mort ou victoire) comptent
 - [x] **Mode sans fin** après la victoire (C sur l'écran de victoire) : difficulté qui monte chaque minute, boss toutes les 3 min, « SANS FIN » dans le HUD
 - [x] Persos de départ (une arme chacun) + défis de déblocage + sauvegarde localStorage (§ 5.9) : écran de choix après Jouer (clic ou 1-2-3), cartes verrouillées avec défi et progression, « Nouveau perso débloqué » sur l'écran de fin (`data/characters.ts`)
 - [x] Mobilier cassable : or et nourriture (+20 PV) (§ 5.9) — étape 1 : caisses (type d'ennemi « objet »), pièces et nourriture à l'aimant, or dans le HUD, l'écran de fin et le profil, +100 or dans le menu de test
 - [x] Boutique de bonus permanents au menu (§ 5.9) — étape 2 : bouton Boutique, achat rang par rang, bonus appliqués au début de chaque partie (`data/shop.ts`)
-  - [ ] À régler en jouant : les prix, selon l'or gagné par partie
-- [ ] Enchantements (idée) : le **niveau 6 d'un passif** = un enchantement spécialisé sur une arme au choix (variante du bonus propre à cette arme), comme la mutation est le niveau 6 d'une arme <!-- TODO: effets par couple passif × arme, niveau max des passifs (6 ? 12 ?), coût en XP -->
+  - ↪ 0.2 : les prix, selon l'or gagné par partie
+- ↪ 0.6 : Enchantements (design revu : l'effet dépend du passif seul)
 - [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur sans effet sur elle (nerf du 2026-11-12, c'était un combo) ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, ni l'aura ni l'Épée)
 - [x] **Capacités des boss** : charge annoncée (tous), invocation annoncée (9:00 et sans fin) (§ 5.5)
 - [x] **Mini-boss** : rapide élite à 3:00, basique élite à 7:00 (§ 5.5)
-- [ ] `[LATER]` Autres capacités de boss (projectiles, zones au sol...) et capacités propres aux élites
-- [ ] `[LATER]` Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
+- ↪ 0.4 : Autres capacités de boss (projectiles, zones au sol...) et capacités propres aux élites
+- ↪ 0.3 / 0.5 : Stats avancées par perso : armure physique / magique, **pénétration** physique / magique, dégâts physiques / magiques, vitesse... Les ennemis pourront aussi avoir de l'armure (tanks qui encaissent), que la pénétration réduit
 
-### Phase 6 — Visuel & audio
+#### Phase 6 — Visuel & audio
 - [x] Design de l'UI (HUD, menus, écrans de fin) : pack **Dark Ages UI** (cadres, barres ; ignoré par git, licence) + **Kenney Fantasy UI Borders** (CC0, à venir pour les cartes et cases)
   - [x] Étape 1 : palette en variables CSS, cadres en 9 morceaux (`border-image`) sur boutons, lignes des menus et cartes, titres dorés
   - [x] Étape 2 : HUD (barres de PV / XP encadrées, niveau sur plaque à couronne, timer centré, crâne et pièce de 0x72, cases d'inventaire du pack)
@@ -362,7 +460,7 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 5 : écran de fin (vignette rouge ou dorée, bilan en tuiles, bandeau doré des déblocages, damage meter dans le grand cadre)
   - [x] Police pixel **DUNGEON.mode** (datagoblin, CC0, accents compris) partout sauf les outils de dev (F2, F3) ; nombres de dégâts aussi ; conteneurs élargis (police large)
   - [x] Icônes d'armes et de passifs : pack **Raven Fantasy Icons** (version gratuite pour développer ; **Premium 35 $ obligatoire avant de vendre le jeu** ; fichiers ignorés par git) : 21 icônes choisies dans `tools/ui/copy-raven.mjs`, dans les cases du HUD (48 px) et sur les cartes de level up, texte de secours si le pack manque
-- [ ] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
+- [x] Sprites et animations : pack **0x72 DungeonTileset II** (CC0) pour les persos, les ennemis, le sol et les objets ; effets Foozle / PVFX Foundry (CC0) ; police m5x7 (CC0). Le script `tools/sprites/build.mjs` ne sert plus qu'à ce qui manque (gemmes d'XP...)
   - [x] Premier essai généré par script : joueur, basique, boss (remplacé par le pack)
   - [x] Pack téléchargé (`public/assets/sprites/0x72/` : atlas + `tile_list_v1.7`), `public/assets/LICENSES.md` ; choix validés : joueur `wizzard_m`, basique `chort`, rapide `imp`, tank `ogre`, boss `big_demon`, élites = basique / rapide teintés, caisse `crate`, pièce `coin_anim`, nourriture `flask_red`, sol `atlas_floor`
   - [x] Branchement dans le rendu (sprites animés, retournés selon la direction, teinte des élites)
@@ -372,8 +470,8 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Visuels des armes (taille des sprites calculée depuis les hitbox / rayons du gameplay)
     - [x] Étape 1 : atlas `fx` généré par le script (gemmes par palier, Trait arcanique orienté, orbe runique ; gris teints à la couleur de l'arme)
     - [x] Étape 2 : effets PVFX Foundry (CC0, style « strict ») : explosion `arcane-burst`, slash `axe-smear` de l'Épée (découpé à la zone qui frappe), `wind-blade` pour la Lame d'onde. L'aura garde son disque (flammes le long du cercle essayées puis retirées : « trop bizarre »). Foozle écarté (rouge-orange, hors thème)
-  - [ ] Une apparence par palier de temps pour chaque type d'ennemi <!-- TODO: quels paliers (6:00 / 8:00 ?) -->
-  - [ ] `[LATER]` Autres bestiaires que les démons (morts-vivants...) pour les prochains niveaux
+  - ↪ 0.4 : Une apparence par palier de temps pour chaque type d'ennemi
+  - ↪ après la 1.0 : Autres bestiaires que les démons (morts-vivants...) pour les prochains niveaux
 - [x] Screen shake, particules
   - [x] Étape 1 : screen shake (trauma dans la Camera, chocs dans `data/feel.ts`, option « Tremblement de l'écran »)
   - [x] Étape 2 : particules (`ParticleSystem` en pool de 600 : morts d'ennemis, caisses, level up)
@@ -387,12 +485,12 @@ Je suis étudiant en dev web (HTML/CSS/JS/PHP), le jeu vidéo est nouveau pour m
   - [x] Étape 3 : moteur audio (`core/AudioEngine`, Web Audio + compresseur), limiteur par son (`core/SoundLimiter` : délai minimum, copies max, hauteur ±), réglages dans `data/audio.ts` ; sons branchés en jeu et sur les boutons des menus
   - [x] Étape 4 : musique selon l'écran (`core/MusicPlayer` : boucles Web Audio sans blanc, fondus de 0,8 s, chargée au premier besoin) : menu, partie, boss tant qu'un boss est en vie, jingle de victoire / défaite (sans fondu d'entrée, préchargé, volume ×1,8 : avec le fondu de 0,8 s, un jingle de 0,75 s était presque muet) ; plus basse en pause ; son coupé quand l'onglet est caché ; curseurs Volume général / Musique / Effets sonores dans les Options (sauvegardés)
 
-### Phase 7 — Déploiement
+#### Phase 7 — Déploiement
 - [x] Déploiement en ligne : jeu sur **itch.io**, code sur **GitHub** (pas GitHub Pages : voir Journal)
   - [x] Build publiable : base relative (`./`), chemins audio via `BASE_URL`, `npm run release:itch` (build + retrait de la planche Dark Ages + zip `release/survivor-itch.zip`), testé servi depuis un sous-dossier ; README
   - [x] Dépôt GitHub créé et code poussé : https://github.com/aGgm0/survivor (branche `main` seulement ; commits signés avec l'adresse anonyme GitHub)
   - [x] Page itch.io (HTML5, 1280 × 720, plein écran) : https://agemo0.itch.io/survivor, lien dans le README. Nouvelle version = `npm run release:itch` puis renvoyer le zip sur la page
-- [ ] `[LATER]` Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
+- ↪ après la 1.0 : Version PC téléchargeable (Electron ou Tauri autour du jeu web) ; Steam possible ensuite (frais Steam Direct, Steamworks pour les succès)
 
 ---
 
@@ -509,6 +607,12 @@ Format : date — décision — raison.
 | 2026-11-18 | Volumes : 3 curseurs (général 80 %, musique 70 %, effets 80 % par défaut) par pas de 10 %, ajoutés aux réglages sans changer de version (ancienne sauvegarde = valeurs par défaut) ; musique au volume de base ×0,55 pour laisser passer les bruitages ; compresseur sur les effets seulement ; musique du boss tant qu'un boss vit (celle de la partie repart du début ensuite) | Demandé (« réglage son, musique, effets sonores ») |
 | 2026-11-18 | Mise en ligne : jeu sur itch.io (zip construit en local), code sur GitHub ; pas GitHub Pages | Dark Ages UI et Raven interdisent de redistribuer leurs fichiers : ignorés par git, un build fait par GitHub ne les aurait pas, et les mettre dans une branche publique reviendrait à les republier. Le zip ne garde que les morceaux utilisés (pas la planche complète) |
 | 2026-11-18 | Plus aucun halo flou (textes, titre) : ombres dures seulement ; fond du menu animé à la place du dégradé radial | Retour : « trop IA slop », « l'aura néon des textes ça fait IA de fou » |
+| 2026-11-18 | Roadmap versionnée 0.1 → 1.0 à la place des phases ; le jeu actuel = 0.1.0 ; numéro unique dans `package.json`, affiché en jeu, tag git + `CHANGELOG.md` | Bilan d'architecture : chaque version doit être publiable et avoir des critères de sortie. 0.1 plutôt que 0.5 : le numéro compte les versions, pas un pourcentage |
+| 2026-11-18 | 1.0 = sortie **gratuite** (pas de vente), **un seul niveau de 30 min** ; 2e niveau et version PC après la 1.0 | Choix de l'utilisateur. Raven gratuit suffit pour un jeu gratuit (pas de dons sans revérifier sa licence). 30 min multiplie le contenu par 3 : un seul niveau bien fait plutôt que plusieurs à moitié |
+| 2026-11-18 | Stats avancées gardées pour la 1.0 : physique / magique, résistances des ennemis en % (A / (A + 100)), pénétration, jamais d'immunité, carte de l'autre type garantie si le build n'en a qu'un | Argument de l'utilisateur : des ennemis résistants obligent à varier les armes, seul vrai choix du joueur dans un jeu à tir automatique. Le % évite qu'une armure plate rende une arme inutile ou ne serve plus à rien en fin de partie |
+| 2026-11-18 | Ulti par perso (jauge, effets faits de briques existantes, pas d'animation du sprite) ; enchantements revus : l'effet dépend du passif seul, appliqué à une arme au choix, un par arme | Ulti : une vraie décision active dans un genre automatique ; les sprites 0x72 n'ont pas d'animation de sort. Enchantements : 12 effets au lieu de 144 (un par couple passif × arme), intenable seul |
+| 2026-11-18 | Nouvelles idées validées : relance des cartes de level up, régénération de base 0,1 PV/s, annonces de boss et barres de PV dans la DA, options modifiables en partie, bestiaire (ennemis vus, armes jouées) ; relance et régénération avancées en 0.1 | Proposées par l'utilisateur : la relance compense la chance du tirage, la régén aide sur 30 min. 0.1 : demandé (« ASAP ») |
+| 2026-11-18 | Ordre des refactors : rendu puis menu F2 sortis de `GameScene` (0.2), registre de comportements d'armes et événements de partie avant les nouvelles armes (0.3), `StageDef` avant les 30 min (0.4) ; bot de simulation `npm run sim` pour équilibrer | Bilan : `GameScene` (1 393 lignes) concentre rendu, outils et règles ; ajouter un type d'arme touche 5 fichiers ; vagues et boss sont globaux. Seulement ce qui débloque la suite, pas de refactor « pour faire propre » |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
