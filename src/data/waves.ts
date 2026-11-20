@@ -69,7 +69,7 @@ export const WAVES: readonly WaveDef[] = [
   // 6:00 – 8:00 : 1er palier de vitesse, la horde grossit
   {
     start: 360,
-    perSecond: 9,
+    perSecond: 7, // 9 → 7 (0.1.1) : marche moins brutale après 3,5/s (avec le rush : 16 → 11/s)
     weights: [
       [basic, 4],
       [fast, 4],
@@ -112,8 +112,10 @@ export interface BonusWaveDef {
 export const BONUS_WAVES: readonly BonusWaveDef[] = [
   // 2:00 – 2:30 : nuée de rapides (≈ 150), juste quand les tanks arrivent (8/s → 5/s : trop dense)
   { start: 120, end: 150, type: fast, perSecond: 5 },
-  // 6:00 – 6:30 : marée de basiques (≈ 210), avec le 1er palier de vitesse (12/s → 7/s)
-  { start: 360, end: 390, type: basic, perSecond: 7 },
+  // 6:00 – 6:30 : marée de basiques (≈ 120), avec le 1er palier de vitesse (12/s → 7/s → 4/s).
+  // 0.1.1 : avec la vague de 6:00, on passait de 3,5 à 16 ennemis/s d'un coup (retour de testeur :
+  // « violent vers 6:30 »). Pas décalé à 6:30 : il tomberait sur le basique élite de 7:00.
+  { start: 360, end: 390, type: basic, perSecond: 4 },
 ];
 
 /** Mini-boss : un ennemi élite à une heure précise, avec les PV et la vitesse de la vague en cours. */

@@ -2,6 +2,19 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.1.1] — 2026-11-20
+
+Correctifs suite aux retours de deux testeurs sur la 0.1.0. Pas de nouveau contenu.
+
+### Modifié
+
+- Sol plus clair : les ennemis s'en détachent mieux.
+- Cartes de level up plus grandes, texte agrandi, bonus chiffrés (« +10 % », « +20 PV ») en vert vif.
+- Barre d'XP plus haute, cyan vif, avec un flash à chaque gain d'XP.
+- Aura ardente (et ses mutations) : anneau plus fin, intérieur et étincelles plus discrets. La zone de dégâts ne change pas.
+- Cartes de mutation : le nom et le contour de l'icône prennent la couleur de la mutation, pour distinguer les 2 variantes d'une arme.
+- Pic de difficulté à 6:00 adouci : la vague de 6:00 passe de 9 à 7 ennemis/s et le rush de basiques de 7 à 4 par seconde.
+
 ## [0.1.0] — 2026-11-18
 
 Première version numérotée. Le jeu tel qu'il était déjà publié sur itch.io, plus les nouveautés ci-dessous.

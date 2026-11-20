@@ -211,7 +211,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 - Défini dans `src/data/waves.ts` : par tranche de temps → types d'ennemis, taux de spawn, multiplicateur de PV.
 - Ouverture calme : 0,8 ennemi/s de 0:00 à 0:30, puis 1,5/s.
 - Courbe : nombre d'ennemis à l'écran qui monte progressivement (objectif perf : **500+ ennemis à 60 FPS**).
-- **Rushs** (`BONUS_WAVES`) : en plus de la vague normale, 2:00-2:30 = +5 rapides/s (≈ 150), 6:00-6:30 = +7 basiques/s (≈ 210). PV et vitesse de la vague en cours.
+- **Rushs** (`BONUS_WAVES`) : en plus de la vague normale, 2:00-2:30 = +5 rapides/s (≈ 150), 6:00-6:30 = +4 basiques/s (≈ 120). PV et vitesse de la vague en cours.
 
 ### 5.8 Fin de run
 
@@ -334,12 +334,12 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 
 ### 0.1.1 — Retours des testeurs `[petite]`
 Correctifs sans nouveau contenu (retours de 2 testeurs sur la 0.1.0, 2026-11-20).
-- [ ] Sol un peu plus gris (plus de contraste avec les ennemis)
-- [ ] Cartes de level up plus grandes, texte plus gros, bonus en vert vif
-- [ ] Barre d'XP plus voyante
-- [ ] Aura ardente : anneau plus fin, disque plus discret (rayon de dégâts inchangé)
-- [ ] Les 2 mutations d'une arme se distinguent mieux sur leurs cartes
-- [ ] Pic de 6:00 adouci (vague de 6:00 + rush 6:00-6:30 = 3,5 → 16 ennemis/s d'un coup)
+- [x] Sol un peu plus gris (plus de contraste avec les ennemis)
+- [x] Cartes de level up plus grandes, texte plus gros, bonus en vert vif
+- [x] Barre d'XP plus voyante
+- [x] Aura ardente : anneau plus fin, disque plus discret (rayon de dégâts inchangé)
+- [x] Les 2 mutations d'une arme se distinguent mieux sur leurs cartes
+- [x] Pic de 6:00 adouci : vague de 6:00 9 → 7/s, rush 7 → 4/s (on passait de 3,5 à 16 ennemis/s d'un coup ; maintenant 11/s)
 - **Finie quand :** zip sur itch, retours des 2 testeurs sur ces points.
 
 ### 0.2 — Une partie juste `[moyenne]`
@@ -649,6 +649,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Idées notées : objets rares des caisses (arrêt du temps, 20 or, bombe) en 0.4 ; mutations de l'aura glace / feu en 0.3 | 0.4 : il faut des moments forts sur 30 min. 0.3 : va avec les types de dégâts et les autres mutations de l'arsenal |
 | 2026-11-18 | Version : `define` de Vite (`__APP_VERSION__`, lu dans `package.json` par import JSON), affichée en bas à droite du menu et de l'écran de fin, `savedWith` dans les sauvegardes (écrit, ignoré à la lecture, sans changer leur numéro de format) | Une seule source pour la version. Import JSON plutôt que `node:fs` : pas de types Node dans le projet (pas de dépendance ajoutée) |
 | 2026-11-20 | 0.1.1 de correctifs (lisibilité, pic de 6:00) avant la 0.2 ; ajouts à la 0.2 : soins, or des ennemis, mutations de l'aura glace / feu (avancées de la 0.3), Lame d'onde repensée ; « manque de dégâts » laissé au bot | Retours de 2 testeurs sur la 0.1.0. Un seul avis sur les dégâts : à mesurer avant d'y toucher (risque « ez victoire ») |
+| 2026-11-20 | Pic de 6:00 : vague 9 → 7/s et rush 7 → 4/s, rush gardé à 6:00 | Décaler le rush à 6:30-7:00 (prévu) l'aurait collé au basique élite de 7:00. PV et vitesse de la vague inchangés : le reste attend le bot |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
