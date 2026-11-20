@@ -2,6 +2,19 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.1.3] — 2026-11-21
+
+Confort sur petit écran et en plein écran.
+
+### Ajouté
+
+- Écran de fin : l'icône de chaque arme devant son nom dans le damage meter (celle de la mutation si l'arme est mutée).
+
+### Corrigé
+
+- Petits écrans : le HUD, les menus et les écrans de fin rétrécissent maintenant avec le jeu au lieu de déborder.
+- Plein écran : Échap le quitte toujours (le navigateur l'impose), mais la pause qui suit propose « Reprendre en plein écran (P) » ; un clic sur Reprendre ou la touche P le remet.
+
 ## [0.1.2] — 2026-11-20
 
 Soins revus et retours de jeu sur la 0.1.1.
