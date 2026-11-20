@@ -348,7 +348,7 @@ Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite 
 - [x] **Soins revus** : **30 % de nourriture** dans les caisses (`goldChance` 0,85 → 0,7), **nourriture garantie sur chaque élite tué**, **Vitalité = +15 PV max et +0,3 PV/s** par niveau (+1,5 PV/s au niveau 5)
 - [x] **Orbes géants : gros nerf du recul** : multiplicateur ×1,6 → ×1 (le recul de base des orbes reste) ; micro nerf des dégâts ×2 → ×1,8. Retour de jeu : « littéralement personne ne rentre »
 - [x] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Continuer en sans fin (victoire seulement), Rejouer, Menu principal ; touches C / R / M toujours actives ; clics ignorés pendant 0,5 s (`END_SCREEN_CLICK_DELAY`)
-- [ ] Version 0.1.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.2` poussé
+- [x] Version 0.1.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.2` poussé (2026-11-21)
 - **Finie quand :** zip sur itch ; les testeurs se soignent assez, des ennemis atteignent le joueur avec les Orbes géants.
 
 ### 0.2 — Une partie juste `[moyenne]`
