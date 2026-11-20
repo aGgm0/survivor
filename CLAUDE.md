@@ -332,6 +332,16 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [x] Ennemis distancés replacés tout autour du joueur (plus seulement en face), seuil 1,5 → 1,35
 - **Finie quand :** version du jeu = tag git = zip sur itch ; plein écran, options en partie, relance et régénération testés sur itch.
 
+### 0.1.1 — Retours des testeurs `[petite]`
+Correctifs sans nouveau contenu (retours de 2 testeurs sur la 0.1.0, 2026-11-20).
+- [ ] Sol un peu plus gris (plus de contraste avec les ennemis)
+- [ ] Cartes de level up plus grandes, texte plus gros, bonus en vert vif
+- [ ] Barre d'XP plus voyante
+- [ ] Aura ardente : anneau plus fin, disque plus discret (rayon de dégâts inchangé)
+- [ ] Les 2 mutations d'une arme se distinguent mieux sur leurs cartes
+- [ ] Pic de 6:00 adouci (vague de 6:00 + rush 6:00-6:30 = 3,5 → 16 ennemis/s d'un coup)
+- **Finie quand :** zip sur itch, retours des 2 testeurs sur ces points.
+
 ### 0.2 — Une partie juste `[moyenne]`
 - [ ] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement
 - [ ] Refactor : menu de test sorti de `GameScene` (`applyDevAction`, `devView` → `scenes/game/devActions.ts`)
@@ -339,6 +349,10 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
 - [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel <!-- TODO: barres au-dessus du joueur, des élites et des boss seulement (recommandé), ou aussi des ennemis blessés ? -->
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
+- [ ] **Soins revus** : nourriture plus fréquente, Vitalité utile (aujourd'hui ≈ 1 potion / 100 s et +20 PV max qui ne se remplissent pas) <!-- TODO: chiffres (reco : 30 % de nourriture dans les caisses, nourriture garantie sur les élites, Vitalité = PV max + régénération) -->
+- [ ] Or lâché (rarement) par les ennemis, réglé avec les prix de la boutique
+- [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul ») <!-- TODO: chiffres -->
+- [ ] **Lame d'onde repensée** : une vague tirée comme un projectile, « pas fun » (retour de jeu) <!-- TODO: par quoi la remplacer ? -->
 - [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
@@ -351,7 +365,6 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 - [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits
 - [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
 - [ ] 4 nouvelles armes (2 physiques, 2 magiques), avec de nouveaux comportements, 2 mutations chacune
-- [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique <!-- TODO: chiffres à définir le moment venu -->
 - **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine.
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
@@ -635,6 +648,7 @@ Format : date — décision — raison.
 | 2026-11-18 | Ennemis distancés : replacés à un angle au hasard sur le cercle de spawn (au lieu de pile en face), seuil 1,5 → 1,35 × le rayon de spawn ; boss et élites toujours replacés en face | Idée de l'utilisateur : on pouvait tourner en rond avec toute la horde en file derrière soi. Redistribuée tout autour, elle remet la pression de tous les côtés. Une menace (boss, élite) ne doit pas disparaître d'un côté pour réapparaître n'importe où |
 | 2026-11-18 | Idées notées : objets rares des caisses (arrêt du temps, 20 or, bombe) en 0.4 ; mutations de l'aura glace / feu en 0.3 | 0.4 : il faut des moments forts sur 30 min. 0.3 : va avec les types de dégâts et les autres mutations de l'arsenal |
 | 2026-11-18 | Version : `define` de Vite (`__APP_VERSION__`, lu dans `package.json` par import JSON), affichée en bas à droite du menu et de l'écran de fin, `savedWith` dans les sauvegardes (écrit, ignoré à la lecture, sans changer leur numéro de format) | Une seule source pour la version. Import JSON plutôt que `node:fs` : pas de types Node dans le projet (pas de dépendance ajoutée) |
+| 2026-11-20 | 0.1.1 de correctifs (lisibilité, pic de 6:00) avant la 0.2 ; ajouts à la 0.2 : soins, or des ennemis, mutations de l'aura glace / feu (avancées de la 0.3), Lame d'onde repensée ; « manque de dégâts » laissé au bot | Retours de 2 testeurs sur la 0.1.0. Un seul avis sur les dégâts : à mesurer avant d'y toucher (risque « ez victoire ») |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

@@ -111,8 +111,11 @@ export const FLOOR = {
   ],
   size: 16,
   scale: 2,
-  /** Assombrissement (0 à 1) : le sol doit rester en retrait derrière les monstres */
-  darken: 0.55,
+  /**
+   * Assombrissement (0 à 1) : le sol doit rester en retrait derrière les monstres, mais assez
+   * clair pour qu'ils s'en détachent (0,55 → 0,4 : retour de testeur, ennemis peu contrastés).
+   */
+  darken: 0.4,
 } as const;
 
 /** Atlas des effets, généré par `node tools/sprites/build.mjs` (ce que le pack 0x72 n'a pas). */
