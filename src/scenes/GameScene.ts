@@ -557,6 +557,7 @@ export class GameScene implements Scene, Build {
         ...c,
         iconId: choiceIconId(c),
         weaponName: c.kind === 'mutation' ? c.weapon.def.name : undefined,
+        accent: c.kind === 'mutation' ? c.mutation.color : undefined,
       })),
     );
     this.deps.levelUpOverlay.setRerolls(this.rerollsLeft, this.canReroll);

@@ -12,6 +12,11 @@ export interface ChoiceView {
   readonly iconId?: string;
   /** Mutation : nom de l'arme qui mute (affiché sous le nom de la mutation) */
   readonly weaponName?: string;
+  /**
+   * Mutation : sa couleur (nom et contour de l'icône). Les 2 mutations d'une arme ont le même
+   * cadre doré : sans couleur propre, un testeur ne voyait pas la différence entre les deux.
+   */
+  readonly accent?: string;
 }
 
 /** Étiquette et style de carte selon la sorte d'upgrade (voir UpgradeChoice). */
@@ -94,6 +99,7 @@ export class LevelUpOverlay {
           names.append(title, weapon);
           head.append(names);
           level.textContent = '★ Niveau 6 · définitif';
+          if (choice.accent) button.style.setProperty('--accent', choice.accent);
         } else {
           head.append(title);
         }

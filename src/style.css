@@ -982,6 +982,14 @@ body {
   width: 48px;
   height: 48px;
   flex: none;
+  /* Contour net de 2 px à la couleur de la mutation (pas de halo flou) */
+  outline: 2px solid var(--accent, var(--ui-gold));
+  outline-offset: 2px;
+}
+
+/* Nom de la mutation à sa couleur : les 2 cartes d'une même arme se distinguent d'un coup d'œil */
+.choice-mutation .choice-title {
+  color: var(--accent, var(--ui-gold));
 }
 
 .choice-names {
