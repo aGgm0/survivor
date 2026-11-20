@@ -88,6 +88,11 @@ export class PickupSystem {
     return this.pickups.activeCount;
   }
 
+  /** Objets au sol, en lecture (le bot de simulation y cherche la nourriture). */
+  get items(): readonly Readonly<Pickup>[] {
+    return this.pickups.items;
+  }
+
   /**
    * À appeler entre `camera.begin` et `camera.end` (coordonnées monde). Avec l'atlas : pièce
    * animée et potion, posées sur leur position ; sans : des ronds de couleur.

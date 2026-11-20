@@ -1,132 +1,23 @@
 import { describe, expect, it } from 'vitest';
+import { makeHeadlessDeps } from '../sim/headlessDeps';
 import { CONTACT_HIT_COOLDOWN } from '../src/data/combat';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
-import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
-import type { RunReport } from '../src/types/RunReport';
+import { GameScene } from '../src/scenes/GameScene';
+import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
 import { choiceKey } from '../src/systems/upgrades';
 import { PASSIVES } from '../src/data/upgrades';
 import { BOSS_TYPE } from '../src/data/waves';
-import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { Weapon } from '../src/entities/Weapon';
-import type { PauseAction } from '../src/ui/PauseOverlay';
-import type { EndAction } from '../src/ui/EndOverlay';
-import type { OptionsAction } from '../src/ui/OptionsOverlay';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
 
 const DT = 1 / 60;
 
-/** Faux objets à la place du navigateur : on peut "appuyer" sur des touches et lire l'UI. */
+/** Faux objets (sim/headlessDeps.ts) + `press` : appuie sur une touche pendant une update. */
 function makeDeps() {
-  const pressed = new Set<string>();
-  const ui = {
-    paused: false,
-    /** Bilan affiché sur l'écran de fin (null = masqué) */
-    end: null as RunReport | null,
-    /** Bouton « Continuer en sans fin » affiché sur l'écran de fin */
-    endCanContinue: false,
-    /** Clic simulé sur un bouton de l'écran de fin */
-    endClick: null as EndAction | null,
-    restarts: 0,
-    menus: 0,
-    /** Fins de partie signalées (pour le profil) */
-    runEnds: 0,
-    /** Dernier bilan envoyé au profil */
-    recorded: null as RunReport | null,
-    endlessShown: false,
-    testShown: false,
-    /** Clic simulé sur un bouton du menu pause */
-    pauseClick: null as PauseAction | null,
-    hudVisible: false,
-    levelUpShown: null as { level: number; titles: string[] } | null,
-    /** Clic simulé sur une carte de level up (lu une fois par la scène) */
-    click: null as number | null,
-    /** Bouton de relance : compteur affiché et état (null = jamais affiché) */
-    rerolls: null as { left: number; enabled: boolean } | null,
-    /** Clic simulé sur le bouton de relance */
-    rerollClick: false,
-    /** Écran Options affiché (depuis la pause) */
-    optionsShown: false,
-    /** Action simulée sur l'écran Options */
-    optionsAction: null as OptionsAction | null,
-    /** Réglages changés (= sauvegardes demandées à main.ts) */
-    settingsSaves: 0,
-  };
-  const deps: GameSceneDeps = {
-    input: {
-      isDown: () => false,
-      wasPressed: (codes) => codes.some((c) => pressed.has(c)),
-    },
-    pauseOverlay: {
-      setVisible: (v) => (ui.paused = v),
-      takeAction: () => {
-        const a = ui.pauseClick;
-        ui.pauseClick = null;
-        return a;
-      },
-    },
-    endOverlay: {
-      show: (report, canContinue = false) => {
-        ui.end = report;
-        ui.endCanContinue = canContinue;
-      },
-      hide: () => (ui.end = null),
-      takeAction: () => {
-        const a = ui.endClick;
-        ui.endClick = null;
-        return a;
-      },
-    },
-    levelUpOverlay: {
-      show: (level, choices) => (ui.levelUpShown = { level, titles: choices.map((c) => c.title) }),
-      hide: () => (ui.levelUpShown = null),
-      takeClick: () => {
-        const c = ui.click;
-        ui.click = null;
-        return c;
-      },
-      setRerolls: (left, enabled) => (ui.rerolls = { left, enabled }),
-      takeReroll: () => {
-        const c = ui.rerollClick;
-        ui.rerollClick = false;
-        return c;
-      },
-    },
-    hud: {
-      setVisible: (v) => (ui.hudVisible = v),
-      setEndless: (v) => (ui.endlessShown = v),
-      setTest: (v) => (ui.testShown = v),
-      setGold: () => {},
-      setTime: () => {},
-      setProgress: () => {},
-      setHp: () => {},
-      setKills: () => {},
-      setInventory: () => {},
-    },
-    debug: { setStat: () => {}, showHitboxes: false },
-    settings: { ...DEFAULT_SETTINGS },
-    optionsOverlay: {
-      show: () => (ui.optionsShown = true),
-      hide: () => (ui.optionsShown = false),
-      refresh: () => {},
-      takeAction: () => {
-        const a = ui.optionsAction;
-        ui.optionsAction = null;
-        return a;
-      },
-    },
-    onSettingsChanged: () => ui.settingsSaves++,
-    onRestart: () => ui.restarts++,
-    onMenu: () => ui.menus++,
-    onRunEnd: (report) => {
-      ui.runEnds++;
-      ui.recorded = report;
-    },
-    unlocksFor: () => [],
-  };
-  /** Simule un appui unique (vu par une seule update, comme Input.endUpdate). */
+  const { deps, ui, pressed } = makeHeadlessDeps();
   const press = (code: string, scene: GameScene) => {
     pressed.add(code);
     scene.update(DT);
