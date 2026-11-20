@@ -1,3 +1,4 @@
+import { splitStats } from './highlightStats';
 import { iconElement } from './icons';
 
 /** Ce qu'il faut pour afficher un choix (le reste de l'upgrade ne concerne pas l'UI). */
@@ -68,7 +69,16 @@ export class LevelUpOverlay {
         level.textContent = choice.levelText;
         const desc = document.createElement('span');
         desc.className = 'choice-desc';
-        desc.textContent = choice.description;
+        // Bonus chiffrés en vert vif ; textContent par morceau (jamais d'innerHTML).
+        desc.append(
+          ...splitStats(choice.description).map((part) => {
+            if (!part.stat) return part.text;
+            const stat = document.createElement('span');
+            stat.className = 'choice-stat';
+            stat.textContent = part.text;
+            return stat;
+          }),
+        );
         const head = document.createElement('span');
         head.className = 'choice-head';
         if (choice.iconId) head.append(iconElement(choice.iconId, ''));

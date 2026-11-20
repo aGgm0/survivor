@@ -21,6 +21,7 @@
   --ui-text: #ece6d6;
   --ui-blue: #4f8fd0; /* XP, valeurs */
   --ui-red: #c8324a; /* PV */
+  --ui-green: #5dff5d; /* bonus chiffrés des cartes de level up (vert vif : retour de testeur) */
 }
 
 * {
@@ -640,11 +641,12 @@ body {
 }
 
 .choice {
-  width: 260px;
+  /* 260 → 340 px et texte agrandi : retour de testeur, « on ne voit pas assez ce que c'est » */
+  width: 340px;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   text-align: left;
   font: inherit;
   color: var(--ui-text);
@@ -677,19 +679,24 @@ body {
 }
 
 .choice-title {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: bold;
   color: var(--ui-gold);
 }
 
 .choice-level {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--ui-blue);
 }
 
 .choice-desc {
-  font-size: 12px;
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--ui-text);
+}
+
+.choice-stat {
+  color: var(--ui-green);
 }
 
 #debug-overlay {
@@ -939,7 +946,7 @@ body {
  * gauche, nom de la mutation et arme d'origine empilés à droite.
  */
 .choice-mutation {
-  width: 320px;
+  width: 340px;
   padding: 10px 14px;
   gap: 10px;
 }
@@ -961,7 +968,7 @@ body {
 }
 
 .choice-weapon-name {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--ui-tan);
 }
 
