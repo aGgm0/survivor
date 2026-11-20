@@ -11,6 +11,8 @@ export function buildDamageReport(weapons: readonly Weapon[]): WeaponReport[] {
     .map((w) => ({
       id: w.def.id,
       name: w.mutation ? `★ ${w.displayName}` : w.displayName,
+      icon: w.mutation?.id ?? w.def.id,
+      short: w.short,
       color: w.color,
       level: w.level,
       damage: Math.round(w.totalDamage),

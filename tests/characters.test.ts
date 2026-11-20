@@ -34,7 +34,19 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
 /** Une partie où l'Aura ardente a fait `kills` kills. */
 function auraRun(kills: number): RunReport {
   return report({
-    weapons: [{ id: 'burningAura', name: 'Aura', color: '', level: 5, damage: 0, kills, share: 1 }],
+    weapons: [
+      {
+        id: 'burningAura',
+        name: 'Aura',
+        icon: 'burningAura',
+        short: 'Au',
+        color: '',
+        level: 5,
+        damage: 0,
+        kills,
+        share: 1,
+      },
+    ],
   });
 }
 

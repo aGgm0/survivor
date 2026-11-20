@@ -26,6 +26,16 @@ describe('buildDamageReport (damage meter)', () => {
     expect(report[0]?.kills).toBe(50);
   });
 
+  it('icône de l’arme, ou de sa mutation si elle est mutée (comme dans le HUD)', () => {
+    const orbs = weapon(WEAPONS.runicOrbs, 10, 0);
+    orbs.mutation = WEAPONS.runicOrbs.mutations?.[0] ?? null;
+    const [bolt, mutated] = buildDamageReport([weapon(WEAPONS.arcaneBolt, 20, 0), orbs]);
+    expect(bolt?.icon).toBe('arcaneBolt');
+    expect(bolt?.short).toBe(WEAPONS.arcaneBolt.short);
+    expect(mutated?.icon).toBe(orbs.mutation?.id);
+    expect(mutated?.short).toBe(orbs.mutation?.short);
+  });
+
   it('arrondit les dégâts (les passifs créent des décimales)', () => {
     const [row] = buildDamageReport([weapon(WEAPONS.arcaneBolt, 123.6, 1)]);
     expect(row?.damage).toBe(124);

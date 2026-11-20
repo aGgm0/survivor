@@ -1050,6 +1050,10 @@ body {
 
 .meter-label {
   grid-row: auto;
+  /* Icône de l'arme (32 px) à gauche de son nom */
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .meter-bar {

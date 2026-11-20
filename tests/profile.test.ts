@@ -23,6 +23,8 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
       {
         id: 'burningAura',
         name: 'Brasier',
+        icon: 'blaze',
+        short: 'Br',
         color: '',
         level: 5,
         damage: 5000,
@@ -32,6 +34,8 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
       {
         id: 'arcaneBolt',
         name: 'Trait',
+        icon: 'arcaneBolt',
+        short: 'Ta',
         color: '',
         level: 3,
         damage: 2000,

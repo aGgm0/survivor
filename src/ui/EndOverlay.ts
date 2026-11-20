@@ -1,5 +1,6 @@
 import type { RunReport } from '../types/RunReport';
 import { formatTime } from './formatTime';
+import { iconElement } from './icons';
 
 /** Une tuile du bilan : la valeur en gros, son libellé dessous. */
 function stat(value: string, label: string): HTMLElement {
@@ -78,7 +79,9 @@ export class EndOverlay {
 
         const label = document.createElement('span');
         label.className = 'meter-label';
-        label.textContent = `${w.name} (niv ${w.level})`;
+        const name = document.createElement('span');
+        name.textContent = `${w.name} (niv ${w.level})`;
+        label.append(iconElement(w.icon, w.short), name);
 
         const bar = document.createElement('span');
         bar.className = 'meter-bar';

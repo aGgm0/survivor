@@ -6,6 +6,10 @@ export interface WeaponReport {
   /** id de l'arme de base (même mutée) : sert aux statistiques du profil */
   readonly id: string;
   readonly name: string;
+  /** Icône à afficher : celle de la mutation si l'arme est mutée (comme dans le HUD) */
+  readonly icon: string;
+  /** 2 lettres affichées à la place de l'icône si elle manque (pack Raven absent) */
+  readonly short: string;
   readonly color: string;
   readonly level: number;
   /** Dégâts utiles infligés, arrondis */
