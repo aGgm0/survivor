@@ -119,6 +119,13 @@ export class Hud {
     }
     const fill = toTenthsOfPercent(progress);
     if (fill !== this.shownXpFill) {
+      // Gain d'XP (pas le retour à 0 du level up) : flash bref de la barre. Retirer puis remettre
+      // la classe relance l'animation ; la lecture de offsetWidth force le navigateur à voir le retrait.
+      if (this.shownXpFill >= 0 && fill > this.shownXpFill) {
+        this.el.xpFill.classList.remove('xp-gain');
+        void this.el.xpFill.offsetWidth;
+        this.el.xpFill.classList.add('xp-gain');
+      }
       this.shownXpFill = fill;
       this.el.xpFill.style.width = `${fill / 10}%`;
     }

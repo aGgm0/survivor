@@ -21,6 +21,7 @@
   --ui-text: #ece6d6;
   --ui-blue: #4f8fd0; /* XP, valeurs */
   --ui-red: #c8324a; /* PV */
+  --ui-xp: #3ad4ff; /* barre d'XP (cyan vif : retour de testeur) */
   --ui-green: #5dff5d; /* bonus chiffrés des cartes de level up (vert vif : retour de testeur) */
 }
 
@@ -98,7 +99,9 @@ body {
   top: 4px;
   left: 8px;
   right: 8px;
-  height: 18px;
+  /* 18 → 26 px (remplissage visible 6 → 14 px) : retour de testeur, barre trop discrète.
+     Tout le HUD en dessous est descendu de 8 px. */
+  height: 26px;
   border-style: solid;
   border-width: 6px 8px;
   border-color: var(--ui-gold-dark);
@@ -107,17 +110,37 @@ body {
   pointer-events: none;
 }
 
+/*
+ * Remplissage de la barre d'XP : cyan vif avec un reflet clair en haut et une ombre en bas (en
+ * aplats nets, sans flou), au lieu du bleu sombre du pack. Retour de testeur : « plus flashy ».
+ */
 #hud-xpfill {
   width: 0;
   height: 100%;
-  background: var(--ui-blue) url('/assets/ui/darkages/bar-blue.png') 0 0 / 100% 100%;
+  background: linear-gradient(
+    180deg,
+    #c8f6ff 0 3px,
+    var(--ui-xp) 3px calc(100% - 4px),
+    #1f86c2 calc(100% - 4px)
+  );
   image-rendering: pixelated;
+}
+
+/* Flash bref quand on gagne de l'XP (classe relancée par le HUD à chaque gain) */
+#hud-xpfill.xp-gain {
+  animation: xp-gain 0.25s steps(2);
+}
+
+@keyframes xp-gain {
+  from {
+    filter: brightness(1.6);
+  }
 }
 
 /* Niveau : plaque à couronne dorée, sous la barre d'XP à gauche */
 #hud-level {
   position: absolute;
-  top: 28px;
+  top: 36px;
   left: 12px;
   width: 80px;
   height: 58px;
@@ -138,7 +161,7 @@ body {
 /* PV : cadre de barre doré, remplissage rouge du pack */
 #hud-hp {
   position: absolute;
-  top: 48px;
+  top: 56px;
   left: 100px;
   width: 200px;
   height: 22px;
@@ -169,7 +192,7 @@ body {
 /* Inventaire : armes et passifs avec leur niveau, sous le niveau et les PV */
 #hud-inventory {
   position: absolute;
-  top: 94px;
+  top: 102px;
   left: 12px;
   display: flex;
   flex-direction: column;
@@ -214,7 +237,7 @@ body {
 /* Timer : plaque sombre en haut au centre */
 #hud-timer {
   position: absolute;
-  top: 26px;
+  top: 34px;
   left: 50%;
   transform: translateX(-50%);
   padding: 2px 12px;
@@ -244,11 +267,11 @@ body {
 }
 
 #hud-kills {
-  top: 30px;
+  top: 38px;
 }
 
 #hud-gold {
-  top: 58px;
+  top: 66px;
   color: var(--ui-gold);
 }
 
@@ -281,7 +304,7 @@ body {
 /* Mention du mode sans fin, sous l'or */
 #hud-endless {
   position: absolute;
-  top: 84px;
+  top: 92px;
   right: 16px;
   font: 14px var(--ui-font);
   letter-spacing: 2px;
