@@ -1,34 +1,18 @@
 import { Camera } from '../core/Camera';
 import type { DebugOverlay } from '../core/DebugOverlay';
 import type { Input } from '../core/Input';
-import { lerp, Rng } from '../core/math';
+import { Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import type { Scene } from '../core/Scene';
-import {
-  frameAt,
-  type SpriteAnimation,
-  type SpriteAtlas,
-  type SpriteTint,
-} from '../core/SpriteAtlas';
-import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
-import {
-  WAVE_FX,
-  type EffectName,
-  BOLT_SPRITE,
-  ORB_SPRITE,
-  ENEMY_ANIM_OFFSET,
-  ENEMY_IDLE_SPEED,
-  HIT_FLASH_TINT,
-  type SpriteDef,
-  enemySprite,
-} from '../data/sprites';
+import type { SpriteAtlas } from '../core/SpriteAtlas';
+import type { EffectSheet } from '../core/EffectSheet';
+import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS, type AuraLook } from '../data/feel';
+import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
-import { buildFloor } from './floor';
+import { WorldRenderer } from './game/WorldRenderer';
 import { applyOptionsAction } from './options';
 import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
-import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
   MAXED_XP_MULT,
   EARLY_PASSIVES,
@@ -89,70 +73,16 @@ import type { SoundPlayer } from '../core/AudioEngine';
 import type { MusicControl } from '../core/MusicPlayer';
 import { HIT_SOUNDS, type MusicName, type SfxName } from '../data/audio';
 
-/** px entre deux lignes de la grille de fond */
-const GRID_SIZE = 64;
-const GRID_COLOR = '#2c2c3d';
-const HITBOX_COLOR = '#00e5ff';
-/** Halo autour des projectiles : taille (× rayon) et opacité */
-const PROJECTILE_GLOW_SCALE = 2;
-const PROJECTILE_GLOW_ALPHA = 0.3;
-/** Deux passes de dessin (halo puis cœur), définies une fois pour ne rien allouer par frame. */
-const PROJECTILE_PASSES = [PROJECTILE_GLOW_SCALE, 1] as const;
 /** s pendant lesquelles un ennemi touché est affiché en blanc */
 const ENEMY_HIT_FLASH = 0.08;
 /** s minimum entre la fin d'un flash et le suivant (un ennemi pris sous un gros DPS clignote) */
 const ENEMY_FLASH_GAP = 0.25;
-/** Opacité du flash sur les sprites */
-const ENEMY_FLASH_ALPHA = 0.65;
-const ENEMY_FLASH_COLOR = '#ffffff';
 /** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
 const VISUAL_SEED_SALT = 0x9e3779b9;
-/** Idem pour le tirage des dalles du sol */
-const FLOOR_SEED_SALT = 0x85ebca6b;
 /** Idem pour les particules */
 const PARTICLE_SEED_SALT = 0xc2b2ae35;
 /** Idem pour les étincelles d'aura */
 const AURA_SEED_SALT = 0x27d4eb2f;
-
-/**
- * Teinte « multiply » à la couleur d'une arme. Une seule par couleur, créée la première fois puis
- * gardée : c'est l'objet qui sert de clé à la copie teintée de l'atlas.
- */
-const WEAPON_TINTS = new Map<string, SpriteTint>();
-function weaponTint(color: string): SpriteTint {
-  let tint = WEAPON_TINTS.get(color);
-  if (!tint) {
-    tint = { color, mode: 'multiply' };
-    WEAPON_TINTS.set(color, tint);
-  }
-  return tint;
-}
-
-/** Opacité du disque de l'aura (le contour est plus marqué) */
-const AURA_FILL_ALPHA = 0.12;
-const AURA_STROKE_ALPHA = 0.5;
-/** rad/s du scintillement des braises d'aura */
-const EMBER_FLICKER_SPEED = 6;
-/** Opacité du trait sombre sous les braises */
-const EMBER_RING_ALPHA = 0.6;
-/** Mini-boss : anneau doré pulsant (réglages purement visuels) */
-const ELITE_LOOK = {
-  ringColor: '#ffd54f',
-  ringWidth: 3,
-  ringGap: 5,
-  ringPulse: 4,
-  pulseSpeed: 6,
-  barScale: 0.6,
-} as const;
-/** Annonces des capacités de boss (purement visuel) */
-const TELEGRAPH = {
-  chargeColor: '#ff3b3b',
-  summonColor: '#b14cff',
-  summonWidth: 4,
-  alpha: 0.35,
-} as const;
-/** Barre de PV au-dessus du boss */
-const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a1a' } as const;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -207,7 +137,7 @@ export interface GameSceneDeps {
 /** La partie en cours. Map infinie : pas de bords, le joueur va où il veut. */
 export class GameScene implements Scene, Build {
   readonly player = new Player();
-  private readonly camera = new Camera();
+  readonly camera = new Camera();
   readonly enemies = new Pool(ENEMY_POOL_SIZE, (i) => new Enemy(i));
   private readonly rng: Rng;
   private readonly spawner: SpawnSystem;
@@ -253,10 +183,8 @@ export class GameScene implements Scene, Build {
   private paused = false;
   /** Écran Options ouvert par-dessus la pause */
   private optionsOpen = false;
-  /** Image du sol (dalles tirées au hasard), préparée une fois ; null = pas de sprites, grille */
-  private readonly floorTiles: HTMLCanvasElement | null;
-  /** Motif répété tiré de `floorTiles`, créé au premier rendu (il faut le contexte du canvas) */
-  private floorPattern: CanvasPattern | null = null;
+  /** Tout le dessin du monde (la scène ne garde que le HUD) */
+  private readonly renderer: WorldRenderer;
   /** Bilan de la partie une fois terminée (victoire ou défaite) ; null = partie en cours */
   private report: RunReport | null = null;
   /** secondes de survie (n'avance pas pendant la pause) */
@@ -335,9 +263,16 @@ export class GameScene implements Scene, Build {
       PARTICLES.drag,
     );
     this.auraRng = new Rng(seed ^ AURA_SEED_SALT);
-    this.floorTiles = deps.sprites
-      ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
-      : null;
+    this.renderer = new WorldRenderer(
+      this,
+      {
+        sprites: deps.sprites ?? null,
+        fx: deps.fx ?? null,
+        effects: deps.effects ?? null,
+        showHitboxes: () => deps.debug.showHitboxes,
+      },
+      seed,
+    );
     this.projectileSystem = new ProjectileSystem(ENEMY_POOL_SIZE, this.collisions, hitEvents);
     this.statusSystem = new StatusSystem(hitEvents);
     this.recomputeWeapons();
@@ -838,29 +773,7 @@ export class GameScene implements Scene, Build {
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
-    // La caméra est un réglage d'affichage, pas de l'état de jeu : la placer ici
-    // sur la position interpolée évite que le joueur "tremble" par rapport au décor.
-    this.camera.lookAt(this.player.renderX(alpha), this.player.renderY(alpha));
-
-    this.camera.begin(ctx);
-    this.renderGrid(ctx);
-    // Les gemmes sont au sol : dessinées sous les ennemis.
-    this.gems.render(ctx, alpha, this.camera, this.deps.fx);
-    this.pickups.render(ctx, alpha, this.camera, this.deps.sprites, this.elapsed);
-    this.renderAuras(ctx, alpha); // au sol, sous les ennemis
-    this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
-    this.renderEnemies(ctx, alpha);
-    this.particles.render(ctx, alpha, this.camera); // éclats par-dessus les corps, sous le joueur
-    this.renderEliteRings(ctx, alpha);
-    this.renderBossBars(ctx, alpha);
-    this.player.render(ctx, alpha, this.deps.sprites);
-    this.renderOrbs(ctx, alpha);
-    this.renderProjectiles(ctx, alpha);
-    this.effects.render(ctx, this.camera);
-    this.damageNumbers.render(ctx, alpha, this.camera);
-    if (this.deps.debug.showHitboxes) this.renderHitboxes(ctx, alpha);
-    this.camera.end(ctx);
-
+    this.renderer.render(ctx, alpha);
     this.deps.hud.setTime(this.elapsed);
     this.deps.hud.setProgress(this.progression.level, this.progression.progress);
     this.deps.hud.setHp(this.player.hp, this.player.maxHp);
@@ -872,150 +785,6 @@ export class GameScene implements Scene, Build {
     this.deps.debug.setStat('contacts', this.touchingCount);
     this.deps.debug.setStat('projectiles', this.projectiles.activeCount);
     this.deps.debug.setStat('kills', this.killCount);
-  }
-
-  /** Barre de PV au-dessus de chaque boss visible (1000 PV : on veut voir où il en est). */
-  private renderBossBars(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const items = this.enemies.items;
-    for (let i = 0; i < items.length; i++) {
-      const e = items[i];
-      // Barre de PV pour les boss et les mini-boss (plus courte pour ces derniers).
-      if (!e?.active || (e.type !== BOSS_TYPE && !e.type.elite)) continue;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      // Au-dessus de la tête (le sprite dépasse la hitbox vers le haut).
-      const barY = this.enemyTop(e, y) - BOSS_BAR.offset - BOSS_BAR.height;
-      if (!this.isOnScreen(x, y, y - barY)) continue;
-      const width = e.type.elite ? BOSS_BAR.width * ELITE_LOOK.barScale : BOSS_BAR.width;
-      const barX = x - width / 2;
-      ctx.fillStyle = BOSS_BAR.bg;
-      ctx.fillRect(barX, barY, width, BOSS_BAR.height);
-      ctx.fillStyle = BOSS_BAR.fill;
-      ctx.fillRect(barX, barY, width * Math.max(0, e.hp / e.maxHp), BOSS_BAR.height);
-    }
-  }
-
-  /** Anneau doré qui pulse autour des mini-boss : on les repère au milieu de la horde. */
-  private renderEliteRings(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const pulse = 0.5 + 0.5 * Math.sin(this.elapsed * ELITE_LOOK.pulseSpeed);
-    ctx.strokeStyle = ELITE_LOOK.ringColor;
-    ctx.lineWidth = ELITE_LOOK.ringWidth;
-    ctx.globalAlpha = 0.5 + 0.5 * pulse;
-    ctx.beginPath();
-    for (const e of this.enemies.items) {
-      if (!e.active || !e.type.elite) continue;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      const r = e.type.radius + ELITE_LOOK.ringGap + pulse * ELITE_LOOK.ringPulse;
-      if (!this.isOnScreen(x, y, r)) continue;
-      ctx.moveTo(x + r, y);
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
-
-  /**
-   * Annonces des capacités de boss : ligne rouge (trajectoire de la charge) et cercle violet
-   * qui grandit (invocation). Lisibles même en pleine horde : c'est ce qui permet d'esquiver.
-   */
-  private renderBossTelegraphs(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const charge = BOSS_ABILITIES.charge;
-    const summon = BOSS_ABILITIES.summon;
-    for (const e of this.enemies.items) {
-      if (!e.active || e.type !== BOSS_TYPE) continue;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      if (e.chargeState === 'windup') {
-        const length = e.type.speed * e.speedMult * charge.speedMult * charge.duration;
-        ctx.strokeStyle = TELEGRAPH.chargeColor;
-        ctx.lineWidth = e.type.radius * 2;
-        ctx.globalAlpha = TELEGRAPH.alpha;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + e.chargeDirX * length, y + e.chargeDirY * length);
-        ctx.stroke();
-      }
-      if (e.summonAt > 0) {
-        const progress = 1 - Math.max(0, e.summonAt - this.elapsed) / summon.cast;
-        ctx.strokeStyle = TELEGRAPH.summonColor;
-        ctx.lineWidth = TELEGRAPH.summonWidth;
-        ctx.globalAlpha = TELEGRAPH.alpha + (1 - TELEGRAPH.alpha) * progress;
-        ctx.beginPath();
-        ctx.arc(x, y, summon.radius * progress + e.type.radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /**
-   * Auras : disque très léger (pour voir la zone) et anneau de braises carrées posé sur le bord,
-   * qui tourne et scintille (voir AURA_LOOKS). Rien n'est modifié ici : tout dépend du temps.
-   */
-  private renderAuras(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const px = this.player.renderX(alpha);
-    const py = this.player.renderY(alpha);
-    for (const w of this.weapons) {
-      if (w.def.kind !== 'aura') continue;
-      const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
-      ctx.beginPath();
-      ctx.arc(px, py, w.radius, 0, Math.PI * 2);
-      ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-      ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      if (look) this.renderEmbers(ctx, px, py, w.radius, look);
-      else {
-        ctx.globalAlpha = AURA_STROKE_ALPHA;
-        ctx.strokeStyle = w.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-    }
-  }
-
-  /**
-   * Braises le long du cercle : leur nombre suit la circonférence (l'anneau garde le même aspect
-   * quand le rayon grandit). Chacune scintille à son rythme et prend la couleur claire, moyenne
-   * ou sombre selon sa luminosité. Un passage par couleur : 3 changements de fillStyle seulement.
-   */
-  private renderEmbers(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    radius: number,
-    look: AuraLook,
-  ): void {
-    const count = Math.max(24, Math.round((Math.PI * 2 * radius) / look.emberSpacing));
-    const t = this.elapsed;
-    const spin = t * look.spin;
-    const size = look.emberSize;
-    // Trait sombre continu sous les braises : l'anneau reste lisible entre deux scintillements.
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius - size / 2, 0, Math.PI * 2);
-    ctx.strokeStyle = look.colors[2];
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = EMBER_RING_ALPHA;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    for (let shade = 0; shade < 3; shade++) {
-      ctx.fillStyle = look.colors[shade] ?? look.colors[1];
-      for (let k = 0; k < count; k++) {
-        // Scintillement de 0 à 1, décalé d'une braise à l'autre.
-        const flicker = 0.5 + 0.5 * Math.sin(t * EMBER_FLICKER_SPEED + k * 2.3);
-        const kShade = flicker > 0.66 ? 0 : flicker > 0.33 ? 1 : 2;
-        if (kShade !== shade) continue;
-        const a = spin + (k / count) * Math.PI * 2;
-        // Une braise sur deux rentrée de `emberInset` (0 : un seul rang, anneau fin).
-        const r = radius - (k % 2) * look.emberInset;
-        // Positions calées sur une grille de 2 px : des pixels nets, comme les sprites ×2.
-        const x = Math.round((cx + Math.cos(a) * r - size / 2) / 2) * 2;
-        const y = Math.round((cy + Math.sin(a) * r - size / 2) / 2) * 2;
-        ctx.fillRect(x, y, size, size);
-      }
-    }
   }
 
   /** Étincelles qui montent de l'intérieur des auras (purement visuel, aléatoire séparé). */
@@ -1041,156 +810,6 @@ export class GameScene implements Scene, Build {
         );
       }
     }
-  }
-
-  /** Orbes autour du joueur, à leur angle interpolé (rotation fluide à 144/240 Hz). */
-  private renderOrbs(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const px = this.player.renderX(alpha);
-    const py = this.player.renderY(alpha);
-    for (const w of this.weapons) {
-      if (w.def.kind !== 'orbit') continue;
-      const angle = lerp(w.prevAngle, w.angle, alpha);
-      const fx = this.deps.fx;
-      const frame =
-        fx && frameAt(fx.animation(ORB_SPRITE.anim), this.elapsed, ORB_SPRITE.frameTime);
-      if (fx && frame) {
-        // Sprite à la taille exacte de la hitbox (niveaux, mutation, passif Taille compris).
-        const scale = (w.orbRadius * 2) / ORB_SPRITE.diameter;
-        const tint = weaponTint(w.color);
-        for (let o = 0; o < w.count; o++) {
-          const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
-          const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
-          fx.draw(ctx, frame, x, y + (frame.h * scale) / 2, scale, false, tint);
-        }
-        continue;
-      }
-      ctx.beginPath();
-      for (let o = 0; o < w.count; o++) {
-        const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
-        const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
-        ctx.moveTo(x + w.orbRadius, y);
-        ctx.arc(x, y, w.orbRadius, 0, Math.PI * 2);
-      }
-      ctx.fillStyle = w.color;
-      ctx.fill();
-    }
-  }
-
-  /** Projectiles groupés par arme (une couleur = un chemin) : un halo, puis le cœur. */
-  private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const items = this.projectiles.items;
-    for (const weapon of this.weapons) {
-      // Projectiles du Trait, et vagues de la Lame d'onde (l'Épée lance aussi des projectiles).
-      if (weapon.def.kind !== 'projectile' && !weapon.mutation?.wave) continue;
-      // Trait arcanique : halo rond, puis sprite orienté. Vagues de la Lame d'onde : ronds.
-      const wave = weapon.mutation?.wave;
-      const waveSheet = this.deps.effects?.wave;
-      if (wave && waveSheet) {
-        this.renderWaves(ctx, alpha, weapon, waveSheet, wave.lifetime);
-        continue;
-      }
-      const fx = weapon.def.kind === 'projectile' ? this.deps.fx : null;
-      const bolt = fx?.animation(BOLT_SPRITE.anim);
-      for (const pass of PROJECTILE_PASSES) {
-        if (fx && bolt && bolt.length > 0 && pass === 1) {
-          this.renderBolts(ctx, alpha, weapon, fx, bolt);
-          continue;
-        }
-        ctx.beginPath();
-        for (let i = 0; i < items.length; i++) {
-          const p = items[i];
-          if (!p?.active || p.source !== weapon) continue;
-          const x = p.renderX(alpha);
-          const y = p.renderY(alpha);
-          const r = p.radius * pass;
-          if (!this.isOnScreen(x, y, r)) continue;
-          ctx.moveTo(x + r, y);
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-        }
-        ctx.globalAlpha = pass === 1 ? 1 : PROJECTILE_GLOW_ALPHA;
-        ctx.fillStyle = weapon.color;
-        ctx.fill();
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /**
-   * Vagues de la Lame d'onde : lame de vent orientée dans le sens du tir, jouée sur la durée de
-   * vie de la vague, sa hauteur visible = le diamètre de la hitbox.
-   */
-  private renderWaves(
-    ctx: CanvasRenderingContext2D,
-    alpha: number,
-    weapon: Weapon,
-    sheet: EffectSheet,
-    lifetime: number,
-  ): void {
-    const items = this.projectiles.items;
-    for (let i = 0; i < items.length; i++) {
-      const p = items[i];
-      if (!p?.active || p.source !== weapon) continue;
-      const x = p.renderX(alpha);
-      const y = p.renderY(alpha);
-      const scale = (p.radius * 2) / WAVE_FX.artHeight;
-      if (!this.isOnScreen(x, y, sheet.clip.width * scale)) continue;
-      const progress = Math.min(0.999, Math.max(0, 1 - p.life / lifetime));
-      const index = clipFrameIndex(sheet.clip, progress * sheet.clip.totalMs);
-      sheet.draw(ctx, index, x, y, scale, Math.atan2(p.vy, p.vx), 'visibleCenter');
-    }
-  }
-
-  /** Projectiles d'une arme en sprites, tournés dans le sens du tir, tête = taille de la hitbox. */
-  private renderBolts(
-    ctx: CanvasRenderingContext2D,
-    alpha: number,
-    weapon: Weapon,
-    fx: SpriteAtlas,
-    bolt: SpriteAnimation,
-  ): void {
-    ctx.globalAlpha = 1;
-    const tint = weaponTint(weapon.color);
-    const items = this.projectiles.items;
-    for (let i = 0; i < items.length; i++) {
-      const p = items[i];
-      if (!p?.active || p.source !== weapon) continue;
-      const x = p.renderX(alpha);
-      const y = p.renderY(alpha);
-      const scale = (p.radius * 2) / BOLT_SPRITE.headDiameter;
-      if (!this.isOnScreen(x, y, BOLT_SPRITE.headCenterX * scale)) continue;
-      const frame = frameAt(bolt, this.elapsed + i * ENEMY_ANIM_OFFSET, BOLT_SPRITE.frameTime);
-      if (!frame) continue;
-      const angle = Math.atan2(p.vy, p.vx);
-      fx.drawRotated(ctx, frame, x, y, scale, angle, BOLT_SPRITE.headCenterX, tint);
-    }
-  }
-
-  private isOnScreen(x: number, y: number, r: number): boolean {
-    const cam = this.camera;
-    return x + r >= cam.left && x - r <= cam.right && y + r >= cam.top && y - r <= cam.bottom;
-  }
-
-  /** Debug (F3) : contour des hitboxes, pour vérifier visuellement les collisions. */
-  private renderHitboxes(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const items = this.enemies.items;
-    ctx.beginPath();
-    for (let i = 0; i < items.length; i++) {
-      const e = items[i];
-      if (!e?.active) continue;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      const r = e.type.radius;
-      if (!this.isOnScreen(x, y, r)) continue;
-      ctx.moveTo(x + r, y);
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-    }
-    const px = this.player.renderX(alpha);
-    const py = this.player.renderY(alpha);
-    ctx.moveTo(px + this.player.radius, py);
-    ctx.arc(px, py, this.player.radius, 0, Math.PI * 2);
-    ctx.strokeStyle = HITBOX_COLOR;
-    ctx.lineWidth = 1;
-    ctx.stroke();
   }
 
   /** F2 ouvre/ferme ; Échap ferme aussi. Les actions cliquées sont appliquées ici, dans l'update. */
@@ -1369,125 +988,5 @@ export class GameScene implements Scene, Build {
     this.paused = paused;
     this.deps.music?.setDucked(paused);
     this.deps.pauseOverlay.setVisible(paused);
-  }
-
-  /**
-   * Dessin groupé par type : un seul chemin + un seul `fill()` par couleur,
-   * au lieu d'un `fill()` par ennemi. Les ennemis hors écran sont ignorés.
-   * Les ennemis qui viennent d'être touchés sont dessinés à part, en blanc.
-   */
-  private renderEnemies(ctx: CanvasRenderingContext2D, alpha: number): void {
-    this.renderEnemySprites(ctx, alpha);
-    for (const type of ENEMY_TYPE_LIST) {
-      ctx.beginPath();
-      this.addEnemyCircles(ctx, alpha, type, false);
-      ctx.fillStyle = type.color;
-      ctx.fill();
-    }
-    ctx.beginPath();
-    this.addEnemyCircles(ctx, alpha, null, true);
-    ctx.fillStyle = ENEMY_FLASH_COLOR;
-    ctx.fill();
-  }
-
-  /**
-   * Ajoute au chemin en cours les cercles des ennemis visibles qui correspondent au filtre :
-   * `type` (null = tous) et `flashing` (vient d'être touché ou non).
-   */
-  private addEnemyCircles(
-    ctx: CanvasRenderingContext2D,
-    alpha: number,
-    type: Enemy['type'] | null,
-    flashing: boolean,
-  ): void {
-    const items = this.enemies.items;
-    for (let i = 0; i < items.length; i++) {
-      const e = items[i];
-      if (!e?.active || (type && e.type !== type)) continue;
-      if (this.deps.sprites && enemySprite(e.type.id)) continue; // déjà dessiné en sprite
-      if (e.flashUntil > this.elapsed !== flashing) continue;
-      const r = e.type.radius;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      if (!this.isOnScreen(x, y, r)) continue;
-      // moveTo évite qu'un trait relie chaque cercle au précédent.
-      ctx.moveTo(x + r, y);
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-    }
-  }
-
-  /**
-   * Ennemis qui ont un sprite (voir data/sprites.ts) : pieds sur le bas de la hitbox, tournés
-   * vers le joueur, silhouette blanche quand ils viennent d'être touchés. Sans atlas : rien ici,
-   * les cercles prennent le relais.
-   */
-  private renderEnemySprites(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const sprites = this.deps.sprites;
-    if (!sprites) return;
-    const px = this.player.renderX(alpha);
-    const items = this.enemies.items;
-    for (let i = 0; i < items.length; i++) {
-      const e = items[i];
-      if (!e?.active) continue;
-      const look = enemySprite(e.type.id);
-      if (!look) continue;
-      const x = e.renderX(alpha);
-      const y = e.renderY(alpha);
-      const r = e.type.radius;
-      const moving = e.vx * e.vx + e.vy * e.vy > ENEMY_IDLE_SPEED * ENEMY_IDLE_SPEED;
-      const anim = sprites.animation(moving ? look.run : look.idle);
-      // Décalage par ennemi : sinon toute la horde pose le pied au même moment.
-      const frame = frameAt(anim, this.elapsed + e.id * ENEMY_ANIM_OFFSET, look.frameTime);
-      if (!frame) continue;
-      // Le sprite dépasse la hitbox vers le haut : marge de sa hauteur pour ne pas le couper au bord.
-      if (!this.isOnScreen(x, y, r + frame.h * look.scale)) continue;
-      // Tournés vers le joueur (et non selon leur vitesse, qui change de signe dans la mêlée).
-      const mirrored = x > px;
-      sprites.draw(ctx, frame, x, y + r, look.scale, mirrored, look.tint);
-      if (e.flashUntil > this.elapsed) {
-        // Flash par-dessus, à demi transparent : on voit encore le monstre sous le blanc.
-        ctx.globalAlpha = ENEMY_FLASH_ALPHA;
-        sprites.draw(ctx, frame, x, y + r, look.scale, mirrored, HIT_FLASH_TINT);
-        ctx.globalAlpha = 1;
-      }
-    }
-  }
-
-  /** Haut de l'ennemi à l'écran : haut de son sprite s'il en a un, sinon haut de sa hitbox. */
-  private enemyTop(e: Enemy, y: number): number {
-    const look = this.deps.sprites ? enemySprite(e.type.id) : undefined;
-    const frame = look && this.deps.sprites?.animation(look.run)[0];
-    return look && frame ? y + e.type.radius - frame.h * look.scale : y - e.type.radius;
-  }
-
-  /** Ne dessine que les lignes visibles : la grille paraît infinie sans rien coûter. */
-  private renderGrid(ctx: CanvasRenderingContext2D): void {
-    const cam = this.camera;
-    if (this.floorTiles) {
-      // Sol en dalles : un motif répété, un seul fillRect. Le motif suit le repère monde
-      // (translation de la caméra), donc le sol défile avec le joueur.
-      this.floorPattern ??= ctx.createPattern(this.floorTiles, 'repeat');
-      if (this.floorPattern) {
-        ctx.fillStyle = this.floorPattern;
-        ctx.fillRect(cam.left, cam.top, cam.right - cam.left, cam.bottom - cam.top);
-        return;
-      }
-    }
-    const startX = Math.floor(cam.left / GRID_SIZE) * GRID_SIZE;
-    const startY = Math.floor(cam.top / GRID_SIZE) * GRID_SIZE;
-
-    // Un seul chemin pour toutes les lignes = un seul appel de dessin (stroke).
-    ctx.beginPath();
-    for (let x = startX; x <= cam.right; x += GRID_SIZE) {
-      ctx.moveTo(x, cam.top);
-      ctx.lineTo(x, cam.bottom);
-    }
-    for (let y = startY; y <= cam.bottom; y += GRID_SIZE) {
-      ctx.moveTo(cam.left, y);
-      ctx.lineTo(cam.right, y);
-    }
-    ctx.strokeStyle = GRID_COLOR;
-    ctx.lineWidth = 1;
-    ctx.stroke();
   }
 }
