@@ -412,6 +412,12 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [ ] Nom du jeu et pitch (§ 1), logo, écran titre, écran de crédits
 - [ ] Tutoriel léger au premier lancement
 - [ ] Manette (Gamepad API, sans dépendance), choix des touches
+- [ ] **Passe UX complète**, guidée par des testeurs qui découvrent le jeu :
+  - infos en partie : armes et passifs avec leurs vraies stats dans le menu pause
+  - lisibilité dans la mêlée : nombres de dégâts, effets avec 500 ennemis à l'écran, d'où viennent les coups reçus
+  - accessibilité : taille du texte, mode daltonien (cartes et gemmes reposent sur la couleur), réduction des effets
+  - souris partout (chaque écran utilisable sans clavier)
+  - cohérence : mêmes boutons et raccourcis affichés partout, retour sonore et visuel sur chaque action
 - [ ] Testeurs extérieurs, corrections, équilibrage final, perf
 - **Finie quand :** quelqu'un qui découvre le jeu le comprend sans explication ; deux semaines sans bug bloquant signalé.
 
@@ -675,6 +681,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Menu F2 : seules les modifications pures (armes, passifs, vue du panneau) sortent de `GameScene` ; temps, niveaux, sans fin, or, boss et élites restent dans son `applyDevAction` | Les sortir aurait obligé à rendre publics une dizaine de champs et de méthodes privés (`elapsed`, `killEnemy`, `startEndless`...) : n'importe quel fichier aurait pu modifier la partie |
 | 2026-11-21 | Interface HTML en 1280×720 logiques, mise à l'échelle du canvas (`transform: scale`) plutôt que refaite en tailles relatives | Sur un petit écran, le monde rétrécissait mais pas les menus (pixels fixes) : ils débordaient. Une seule échelle garde l'interface alignée avec le monde ; sur l'embed itch (1280×720) rien ne change. En plein écran sur un grand écran, l'interface grossit avec le jeu |
 | 2026-11-21 | Échap quitte toujours le plein écran : le plein écran est remis à la reprise (clic sur « Reprendre » ou P), pas avec Échap | Échap est la touche de sécurité du navigateur, impossible à capturer dans le cadre itch (Keyboard Lock : Chrome seul, page principale seule). Le navigateur ne compte pas Échap comme une activation utilisateur, donc il ne peut pas remettre le plein écran |
+| 2026-11-21 | Passe UX complète en 0.7, pas de refonte de l'UI avant | De la 0.3 à la 0.6 le contenu change beaucoup (armes, types de dégâts, ultis, 30 min) : une UI polie maintenant serait à refaire. D'ici là, petits correctifs au fil des retours, comme la 0.1.1 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
