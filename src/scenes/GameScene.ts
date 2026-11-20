@@ -982,7 +982,7 @@ export class GameScene implements Scene, Build {
     ctx.beginPath();
     ctx.arc(cx, cy, radius - size / 2, 0, Math.PI * 2);
     ctx.strokeStyle = look.colors[2];
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.globalAlpha = EMBER_RING_ALPHA;
     ctx.stroke();
     ctx.globalAlpha = 1;
@@ -994,8 +994,8 @@ export class GameScene implements Scene, Build {
         const kShade = flicker > 0.66 ? 0 : flicker > 0.33 ? 1 : 2;
         if (kShade !== shade) continue;
         const a = spin + (k / count) * Math.PI * 2;
-        // Une braise sur deux légèrement à l'intérieur : un anneau épais, pas une ligne.
-        const r = radius - (k % 2) * size;
+        // Une braise sur deux rentrée de `emberInset` (0 : un seul rang, anneau fin).
+        const r = radius - (k % 2) * look.emberInset;
         // Positions calées sur une grille de 2 px : des pixels nets, comme les sprites ×2.
         const x = Math.round((cx + Math.cos(a) * r - size / 2) / 2) * 2;
         const y = Math.round((cy + Math.sin(a) * r - size / 2) / 2) * 2;

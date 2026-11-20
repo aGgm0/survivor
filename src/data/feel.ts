@@ -49,6 +49,11 @@ export interface AuraLook {
   readonly emberSpacing: number;
   /** px, côté d'une braise */
   readonly emberSize: number;
+  /**
+   * px : une braise sur deux est rentrée d'autant vers l'intérieur (anneau sur 2 rangs).
+   * 0 = un seul rang, anneau fin.
+   */
+  readonly emberInset: number;
   /** rad/s, rotation de l'anneau (négatif = sens inverse) */
   readonly spin: number;
   /**
@@ -62,15 +67,20 @@ export interface AuraLook {
   readonly sparkSize: number;
 }
 
-/** Par id d'arme ou de mutation (la mutation remplace l'apparence de l'arme). */
+/**
+ * Par id d'arme ou de mutation (la mutation remplace l'apparence de l'arme).
+ * 0.1.1 : anneau fin (braises 6 → 4 px sur un seul rang), disque et étincelles divisés par 2.
+ * Retour de testeur : l'aura cachait les petits monstres. Le rayon des dégâts ne change pas.
+ */
 export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
   burningAura: {
     colors: ['#ffd27a', '#ff7a3d', '#b8402a'],
-    fillAlpha: 0.07,
+    fillAlpha: 0.03,
     emberSpacing: 8,
-    emberSize: 6,
+    emberSize: 4,
+    emberInset: 0,
     spin: 0.5,
-    sparksPerSecond: 12,
+    sparksPerSecond: 6,
     sparkColor: '#ffb347',
     sparkRise: 170,
     sparkLife: 0.7,
@@ -79,11 +89,12 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
   // Brasier : plus grand, plus dense, plus vif
   blaze: {
     colors: ['#fff0a8', '#ffb347', '#e0582a'],
-    fillAlpha: 0.08,
+    fillAlpha: 0.035,
     emberSpacing: 7,
-    emberSize: 6,
+    emberSize: 4,
+    emberInset: 0,
     spin: 0.35,
-    sparksPerSecond: 24,
+    sparksPerSecond: 12,
     sparkColor: '#ffd27a',
     sparkRise: 200,
     sparkLife: 0.8,
@@ -92,11 +103,12 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
   // Aura toxique : verte, tourne dans l'autre sens, bulles lentes au lieu d'étincelles
   toxicAura: {
     colors: ['#c8ff8a', '#7cd94a', '#2f7a2a'],
-    fillAlpha: 0.08,
+    fillAlpha: 0.035,
     emberSpacing: 9,
-    emberSize: 6,
+    emberSize: 4,
+    emberInset: 0,
     spin: -0.3,
-    sparksPerSecond: 10,
+    sparksPerSecond: 5,
     sparkColor: '#9dff6a',
     sparkRise: 110,
     sparkLife: 1.1,

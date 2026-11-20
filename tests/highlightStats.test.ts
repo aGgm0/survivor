@@ -25,6 +25,10 @@ describe('splitStats', () => {
 
   it('ne perd aucun caractère', () => {
     const desc = '+1 orbe, +3 dégâts, recul ×0,3';
-    expect(splitStats(desc).map((p) => p.text).join('')).toBe(desc);
+    expect(
+      splitStats(desc)
+        .map((p) => p.text)
+        .join(''),
+    ).toBe(desc);
   });
 });
