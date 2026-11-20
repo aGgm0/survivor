@@ -11,6 +11,13 @@ import { CONTACT_HIT_COOLDOWN } from '../data/combat';
 import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { WorldRenderer } from './game/WorldRenderer';
+import {
+  buildDevView,
+  devSetMutation,
+  devSetPassive,
+  devSetWeaponLevel,
+  devToggleWeapon,
+} from './game/devActions';
 import { applyOptionsAction } from './options';
 import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
 import {
@@ -23,14 +30,7 @@ import {
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
-import {
-  PROJECTILE_POOL_SIZE,
-  WEAPON_LIST,
-  WEAPONS,
-  weaponMaxLevel,
-  type WeaponDef,
-} from '../data/weapons';
-import { PASSIVES } from '../data/upgrades';
+import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
 import { BOSS_CHALLENGES } from '../data/characters';
 import { FURNITURE } from '../data/furniture';
 import { applyShopBonuses } from '../data/shop';
@@ -56,7 +56,6 @@ import {
   applyUpgrade,
   availableUpgrades,
   choiceIconId,
-  rebuildPassiveStats,
   rollUpgradeChoices,
   type Build,
   type UpgradeChoice,
@@ -67,7 +66,7 @@ import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
 import type { OptionsOverlay } from '../ui/OptionsOverlay';
-import type { DevAction, DevPanel, DevView } from '../ui/DevPanel';
+import type { DevAction, DevPanel } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
 import type { SoundPlayer } from '../core/AudioEngine';
 import type { MusicControl } from '../core/MusicPlayer';
@@ -818,7 +817,7 @@ export class GameScene implements Scene, Build {
     if (!this.devOpen) {
       this.devOpen = true;
       panel.setVisible(true);
-      panel.refresh(this.devView());
+      panel.refresh(buildDevView(this.weapons, this.passiveLevels, this.god));
       return;
     }
     let close = input.wasPressed(CONTROLS.devPanel) || input.wasPressed(CONTROLS.back);
@@ -826,7 +825,7 @@ export class GameScene implements Scene, Build {
       if (action.kind === 'close') close = true;
       else this.applyDevAction(action);
     }
-    panel.refresh(this.devView());
+    panel.refresh(buildDevView(this.weapons, this.passiveLevels, this.god));
     // +N niveaux : on ferme pour laisser place à l'écran de level up.
     if (close || this.choices) {
       this.devOpen = false;
@@ -851,42 +850,19 @@ export class GameScene implements Scene, Build {
         this.pendingLevelUps += action.count;
         if (!this.choices) this.openLevelUp();
         return;
-      case 'weaponToggle': {
-        const index = this.weapons.findIndex((w) => w.def.id === action.id);
-        const def = WEAPON_LIST.find((d) => d.id === action.id);
-        if (index >= 0) this.weapons.splice(index, 1);
-        else if (def) this.weapons.push(new Weapon(def));
+      case 'weaponToggle':
+        if (!devToggleWeapon(this.weapons, action.id)) return;
         break;
-      }
-      case 'weaponLevel': {
-        const w = this.weapons.find((x) => x.def.id === action.id);
-        if (!w) return;
-        // Les niveaux normaux seulement (1 à 5) ; la mutation (niveau 6) a ses propres boutons.
-        w.mutation = null;
-        w.level = Math.max(1, Math.min(weaponMaxLevel(w.def), w.level + action.delta));
+      case 'weaponLevel':
+        if (!devSetWeaponLevel(this.weapons, action.id, action.delta)) return;
         break;
-      }
-      case 'mutation': {
-        const w = this.weapons.find((x) => x.def.id === action.id);
-        if (!w) return;
-        w.mutation = w.def.mutations?.[action.index] ?? null;
-        w.level = weaponMaxLevel(w.def) + (w.mutation ? 1 : 0);
+      case 'mutation':
+        if (!devSetMutation(this.weapons, action.id, action.index)) return;
         break;
-      }
-      case 'passive': {
-        const passive = PASSIVES.find((p) => p.id === action.id);
-        if (!passive) return;
-        const level = Math.max(
-          0,
-          Math.min(passive.maxLevel, (this.passiveLevels.get(passive.id) ?? 0) + action.delta),
-        );
-        if (level > 0) this.passiveLevels.set(passive.id, level);
-        else this.passiveLevels.delete(passive.id);
-        rebuildPassiveStats(player, this.passiveLevels);
-        // Le recalcul repart des stats de base : on remet les bonus de boutique par-dessus.
-        applyShopBonuses(player, this.shopRanks);
+      case 'passive':
+        if (!devSetPassive(player, this.passiveLevels, this.shopRanks, action.id, action.delta))
+          return;
         break;
-      }
       case 'time':
         this.elapsed = action.seconds;
         this.spawner.jumpTo(action.seconds);
@@ -919,19 +895,6 @@ export class GameScene implements Scene, Build {
     // Armes ou passifs changés : stats recalculées, inventaire du HUD redessiné.
     this.recomputeWeapons();
     this.buildVersion++;
-  }
-
-  /** Ce que le menu de test affiche. Créé seulement quand il est ouvert (pas en jeu). */
-  private devView(): DevView {
-    return {
-      god: this.god,
-      weapons: WEAPON_LIST.map((def) => {
-        const w = this.weapons.find((x) => x.def.id === def.id);
-        const mutation = w?.mutation ? (def.mutations?.indexOf(w.mutation) ?? -1) : -1;
-        return { id: def.id, owned: !!w, level: w?.level ?? 0, mutation };
-      }),
-      passives: PASSIVES.map((p) => ({ id: p.id, level: this.passiveLevels.get(p.id) ?? 0 })),
-    };
   }
 
   /** Vrai si le menu de test a servi pendant cette partie. */

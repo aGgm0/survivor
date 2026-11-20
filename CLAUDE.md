@@ -98,7 +98,7 @@ Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && np
 │   │   ├── SpatialGrid.ts # partition spatiale pour les collisions
 │   │   └── math.ts        # Vec2, clamp, lerp, random seedé
 │   ├── scenes/            # MenuScene, GameScene (règles de la partie)
-│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin du monde)
+│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin), devActions (menu F2)
 │   ├── entities/          # Player, Enemy, Projectile, XpGem, Pickup
 │   ├── systems/           # logique qui agit sur des groupes d'entités
 │   │   ├── MovementSystem.ts
@@ -354,7 +354,7 @@ Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite 
 
 ### 0.2 — Une partie juste `[moyenne]`
 - [x] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement ; test de rendu d'une partie chargée avec un faux contexte canvas
-- [ ] Refactor : menu de test sorti de `GameScene` (`applyDevAction`, `devView` → `scenes/game/devActions.ts`)
+- [x] Refactor : menu de test sorti de `GameScene` : armes, passifs et vue du panneau en fonctions pures (`scenes/game/devActions.ts`, testées) ; les actions sur le déroulement (temps, niveaux, sans fin, or, boss) restent dans `applyDevAction`
 - [ ] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` hors de `systems/` (une entité n'importe pas un système)
 - [ ] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
 - [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
@@ -663,6 +663,7 @@ Format : date — décision — raison.
 | 2026-11-20 | Plan de la 0.2 validé : correctifs (soins, Orbes géants, boutons de fin) d'abord, puis refactors, bot, contenu qui touche l'équilibrage, passe d'équilibrage avec le bot, forme. Vitalité +15 PV max et +0,3 PV/s par niveau ; recul des Orbes géants ×1,6 → ×1 ; barres de PV en DA pour le joueur, les élites et les boss seulement ; Lame d'onde → Estoc | « ok reco », sauf le recul (×1 au lieu de ×0,8 recommandé). Barres sur 500 ennemis : illisible et coûteux à dessiner. Équilibrer après tous les changements de contenu, et mesurer avec le bot plutôt qu'au ressenti d'une partie |
 | 2026-11-20 | Écran de fin : 3 boutons en ligne (Continuer en sans fin d'abord, seulement après une victoire), clics ignorés pendant 0,5 s, touches C / R / M sans délai | Le choix le plus intéressant en premier ; un clic en rafale au moment de mourir ne doit pas relancer la partie avant qu'on ait vu le bilan. En ligne : en colonne, ça ne tenait pas sous un damage meter de 4 armes |
 | 2026-11-21 | Rendu du monde dans `scenes/game/WorldRenderer.ts` ; il ne lit la partie qu'à travers l'interface `WorldView` (joueur, ennemis, armes, systèmes, caméra, `runTime`) ; HUD et overlay F3 restent dans `GameScene.render()` ; les étincelles d'aura restent dans l'update | Le bot de simulation doit faire tourner une partie sans canvas. L'interface limite ce que le dessin peut toucher. Les étincelles créent des particules : c'est de la logique, même si elle est visuelle |
+| 2026-11-21 | Menu F2 : seules les modifications pures (armes, passifs, vue du panneau) sortent de `GameScene` ; temps, niveaux, sans fin, or, boss et élites restent dans son `applyDevAction` | Les sortir aurait obligé à rendre publics une dizaine de champs et de méthodes privés (`elapsed`, `killEnemy`, `startEndless`...) : n'importe quel fichier aurait pu modifier la partie |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
