@@ -217,7 +217,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 
 - **Défaite** : PV à 0 → écran Game Over (temps survécu, kills, niveau atteint, damage meter).
 - **Victoire** : survivre jusqu'au timer (10 min pour le MVP) **et** que le boss de 9:00 soit mort → tout se fige, écran de victoire avec le même bilan. Boss encore en vie à 10:00 → **prolongations** : le timer continue (vagues de fin toujours actives) jusqu'à la mort du boss (victoire) ou du joueur (défaite).
-- **Mode sans fin** : sur l'écran de victoire, **C** = continuer. Le timer continue, et chaque minute (depuis le début du sans fin) la dernière vague se durcit : PV ×1,25 cumulés, +2 ennemis/s, vitesse +3 % (plafond ×1,8). Un boss toutes les 3 min, 50 % plus résistant à chaque fois (`ENDLESS` dans waves.ts). Seule la mort termine la partie, qui compte comme **victoire + sans fin** (le meilleur temps du profil compte le sans fin).
+- **Mode sans fin** : sur l'écran de victoire, bouton **Continuer en sans fin** (ou **C**). Le timer continue, et chaque minute (depuis le début du sans fin) la dernière vague se durcit : PV ×1,25 cumulés, +2 ennemis/s, vitesse +3 % (plafond ×1,8). Un boss toutes les 3 min, 50 % plus résistant à chaque fois (`ENDLESS` dans waves.ts). Seule la mort termine la partie, qui compte comme **victoire + sans fin** (le meilleur temps du profil compte le sans fin).
 - Bouton "Rejouer" qui relance une run propre (aucun état qui fuit d'une run à l'autre).
 
 ### 5.9 Méta-progression
@@ -346,8 +346,8 @@ Correctifs sans nouveau contenu (retours de 2 testeurs sur la 0.1.0, 2026-11-20)
 ### 0.1.2 — Soins et retours de jeu `[petite]`
 Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite l'avis des testeurs.
 - [x] **Soins revus** : **30 % de nourriture** dans les caisses (`goldChance` 0,85 → 0,7), **nourriture garantie sur chaque élite tué**, **Vitalité = +15 PV max et +0,3 PV/s** par niveau (+1,5 PV/s au niveau 5)
-- [x] **Orbes géants : gros nerf du recul** : multiplicateur ×1,6 → ×1 (le recul de base des orbes reste). Retour de jeu : « littéralement personne ne rentre »
-- [ ] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Rejouer, Mode sans fin (victoire), Menu, au lieu des seules touches R / C / M indiquées en texte
+- [x] **Orbes géants : gros nerf du recul** : multiplicateur ×1,6 → ×1 (le recul de base des orbes reste) ; micro nerf des dégâts ×2 → ×1,8. Retour de jeu : « littéralement personne ne rentre »
+- [x] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Continuer en sans fin (victoire seulement), Rejouer, Menu principal ; touches C / R / M toujours actives ; clics ignorés pendant 0,5 s (`END_SCREEN_CLICK_DELAY`)
 - [ ] Version 0.1.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.2` poussé
 - **Finie quand :** zip sur itch ; les testeurs se soignent assez, des ennemis atteignent le joueur avec les Orbes géants.
 
@@ -660,6 +660,7 @@ Format : date — décision — raison.
 | 2026-11-20 | Pic de 6:00 : vague 9 → 7/s et rush 7 → 4/s, rush gardé à 6:00 | Décaler le rush à 6:30-7:00 (prévu) l'aurait collé au basique élite de 7:00. PV et vitesse de la vague inchangés : le reste attend le bot |
 | 2026-11-20 | Ajouts à la 0.2 : soins validés (30 % de nourriture, nourriture sur les élites, Vitalité = PV max + régén), gros nerf du recul des Orbes géants, vrais boutons sur l'écran de fin | Retours de jeu après la 0.1.1 : les soins sont la plainte commune aux 2 testeurs ; avec les Orbes géants plus aucun ennemi n'arrive au contact ; l'écran de fin ne donne que des touches |
 | 2026-11-20 | Plan de la 0.2 validé : correctifs (soins, Orbes géants, boutons de fin) d'abord, puis refactors, bot, contenu qui touche l'équilibrage, passe d'équilibrage avec le bot, forme. Vitalité +15 PV max et +0,3 PV/s par niveau ; recul des Orbes géants ×1,6 → ×1 ; barres de PV en DA pour le joueur, les élites et les boss seulement ; Lame d'onde → Estoc | « ok reco », sauf le recul (×1 au lieu de ×0,8 recommandé). Barres sur 500 ennemis : illisible et coûteux à dessiner. Équilibrer après tous les changements de contenu, et mesurer avec le bot plutôt qu'au ressenti d'une partie |
+| 2026-11-20 | Écran de fin : 3 boutons en ligne (Continuer en sans fin d'abord, seulement après une victoire), clics ignorés pendant 0,5 s, touches C / R / M sans délai | Le choix le plus intéressant en premier ; un clic en rafale au moment de mourir ne doit pas relancer la partie avant qu'on ait vu le bilan. En ligne : en colonne, ça ne tenait pas sous un damage meter de 4 armes |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

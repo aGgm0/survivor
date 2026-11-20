@@ -1,5 +1,12 @@
 // Touches par action, en `event.code` (position physique) :
 // KeyW/KeyA/KeyS/KeyD = ZQSD sur AZERTY, WASD sur QWERTY.
+/**
+ * s pendant lesquelles les boutons de l'écran de fin ignorent les clics : on cliquait
+ * peut-être en rafale au moment de mourir, sans avoir vu le bilan. Les touches C / R / M
+ * ne sont pas concernées (on ne les tape pas par hasard en jouant).
+ */
+export const END_SCREEN_CLICK_DELAY = 0.5;
+
 export const CONTROLS = {
   up: ['KeyW', 'ArrowUp'],
   down: ['KeyS', 'ArrowDown'],

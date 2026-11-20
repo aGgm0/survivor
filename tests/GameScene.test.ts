@@ -12,6 +12,7 @@ import { BOSS_TYPE } from '../src/data/waves';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { Weapon } from '../src/entities/Weapon';
 import type { PauseAction } from '../src/ui/PauseOverlay';
+import type { EndAction } from '../src/ui/EndOverlay';
 import type { OptionsAction } from '../src/ui/OptionsOverlay';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
 
@@ -24,6 +25,10 @@ function makeDeps() {
     paused: false,
     /** Bilan affiché sur l'écran de fin (null = masqué) */
     end: null as RunReport | null,
+    /** Bouton « Continuer en sans fin » affiché sur l'écran de fin */
+    endCanContinue: false,
+    /** Clic simulé sur un bouton de l'écran de fin */
+    endClick: null as EndAction | null,
     restarts: 0,
     menus: 0,
     /** Fins de partie signalées (pour le profil) */
@@ -63,8 +68,16 @@ function makeDeps() {
       },
     },
     endOverlay: {
-      show: (report) => (ui.end = report),
+      show: (report, canContinue = false) => {
+        ui.end = report;
+        ui.endCanContinue = canContinue;
+      },
       hide: () => (ui.end = null),
+      takeAction: () => {
+        const a = ui.endClick;
+        ui.endClick = null;
+        return a;
+      },
     },
     levelUpOverlay: {
       show: (level, choices) => (ui.levelUpShown = { level, titles: choices.map((c) => c.title) }),
@@ -551,6 +564,44 @@ describe('GameScene — victoire et bilan', () => {
     for (let i = 0; i < 65; i++) scene.update(DT);
     press('KeyR', scene);
     expect(ui.restarts).toBe(1);
+  });
+
+  it('boutons de l’écran de fin : ignorés pendant 0,5 s, puis Rejouer et Menu', () => {
+    const { scene, ui } = newScene({ runDuration: 1 });
+    for (let i = 0; i < 65; i++) scene.update(DT);
+    expect(scene.isOver).toBe(true);
+    // Clic dans la foulée de la fin : jeté, pas gardé pour plus tard
+    ui.endClick = 'restart';
+    scene.update(DT);
+    for (let i = 0; i < 60; i++) scene.update(DT);
+    expect(ui.restarts).toBe(0);
+    ui.endClick = 'restart';
+    scene.update(DT);
+    expect(ui.restarts).toBe(1);
+    ui.endClick = 'menu';
+    scene.update(DT);
+    expect(ui.menus).toBe(1);
+  });
+
+  it('bouton « Continuer en sans fin » : seulement après une victoire', () => {
+    const won = newScene({ runDuration: 1 });
+    for (let i = 0; i < 65 + 60; i++) won.scene.update(DT);
+    expect(won.ui.endCanContinue).toBe(true);
+    won.ui.endClick = 'continue';
+    won.scene.update(DT);
+    expect(won.scene.isEndless).toBe(true);
+    expect(won.scene.isOver).toBe(false);
+
+    const lost = newScene();
+    lost.scene.player.hp = 1;
+    enemyOnPlayer(lost.scene);
+    for (let i = 0; i < 60 + 60; i++) lost.scene.update(DT);
+    expect(lost.scene.isOver).toBe(true);
+    expect(lost.ui.endCanContinue).toBe(false);
+    lost.ui.endClick = 'continue';
+    lost.scene.update(DT);
+    expect(lost.scene.isEndless).toBe(false);
+    expect(lost.scene.isOver).toBe(true);
   });
 
   it('le bilan contient le damage meter, trié par dégâts', () => {

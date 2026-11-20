@@ -282,7 +282,7 @@ export const WEAPONS = {
         name: 'Orbes géants',
         short: 'Og',
         description:
-          '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×2, rotation ×0,85',
+          '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×1,8, rotation ×0,85',
         color: '#e040fb',
         count: 3,
         orbRadiusMult: 2.2,
@@ -290,7 +290,7 @@ export const WEAPONS = {
         orbitDistanceMult: 1.25,
         // Retour de jeu : un peu trop forts. Rotation ralentie
         angularSpeedMult: 0.85,
-        damageMult: 2,
+        damageMult: 1.8, // 2 → 1,8 : micro nerf (retour de jeu)
         // 1,6 → 1 : « littéralement personne ne rentre ». Le recul de base des orbes reste
         knockbackMult: 1,
       },

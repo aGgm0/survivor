@@ -27,7 +27,7 @@ import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS, type AuraLook } from '../da
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { buildFloor } from './floor';
 import { applyOptionsAction } from './options';
-import { CONTROLS } from '../data/controls';
+import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
 import { ENEMY_TYPE_LIST } from '../data/enemies';
 import {
   MAXED_XP_MULT,
@@ -161,7 +161,7 @@ const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a
 export interface GameSceneDeps {
   input: Pick<Input, 'isDown' | 'wasPressed'>;
   pauseOverlay: Pick<PauseOverlay, 'setVisible' | 'takeAction'>;
-  endOverlay: Pick<EndOverlay, 'show' | 'hide'>;
+  endOverlay: Pick<EndOverlay, 'show' | 'hide' | 'takeAction'>;
   levelUpOverlay: Pick<LevelUpOverlay, 'show' | 'hide' | 'takeClick' | 'setRerolls' | 'takeReroll'>;
   hud: Pick<
     Hud,
@@ -262,6 +262,8 @@ export class GameScene implements Scene, Build {
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
   private killCount = 0;
+  /** s passées sur l'écran de fin (temps réel : `elapsed` y est figé) */
+  private endScreenTime = 0;
   /** s : moment où plus rien n'était améliorable ; null = build pas encore complet */
   private maxedAt: number | null = null;
   /** Mode sans fin lancé depuis l'écran de victoire */
@@ -421,9 +423,17 @@ export class GameScene implements Scene, Build {
 
     if (this.report) {
       this.freeze();
-      if (this.canContinueEndless && input.wasPressed(CONTROLS.continue)) this.startEndless();
-      else if (input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
-      else if (input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
+      this.endScreenTime += dt;
+      // Lu à chaque update même pendant le délai : un clic trop tôt est jeté, pas gardé pour plus tard.
+      const action = this.deps.endOverlay.takeAction();
+      const clicked = this.endScreenTime >= END_SCREEN_CLICK_DELAY ? action : null;
+      if (
+        this.canContinueEndless &&
+        (clicked === 'continue' || input.wasPressed(CONTROLS.continue))
+      )
+        this.startEndless();
+      else if (clicked === 'restart' || input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
+      else if (clicked === 'menu' || input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
       return;
     }
 
@@ -703,7 +713,8 @@ export class GameScene implements Scene, Build {
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
-    if (e.type.elite && FURNITURE.eliteFood) this.pickups.drop('food', FURNITURE.foodHeal, e.x, e.y);
+    if (e.type.elite && FURNITURE.eliteFood)
+      this.pickups.drop('food', FURNITURE.foodHeal, e.x, e.y);
     this.deathBurst(e);
     this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
     if (e.type === BOSS_TYPE) this.shake('bossKill');
@@ -757,6 +768,7 @@ export class GameScene implements Scene, Build {
     this.setPaused(false);
     this.deps.music?.play(victory ? 'victory' : 'defeat');
     this.report = this.buildReport(victory);
+    this.endScreenTime = 0;
     this.deps.endOverlay.show(
       this.report,
       this.canContinueEndless,

@@ -75,8 +75,12 @@ const endOverlay = new EndOverlay(
   getElement('end-title', HTMLParagraphElement),
   getElement('end-info', HTMLParagraphElement),
   getElement('end-meter', HTMLDivElement),
-  getElement('end-hint', HTMLParagraphElement),
   getElement('end-unlocks', HTMLParagraphElement),
+  {
+    continue: getElement('end-continue', HTMLButtonElement),
+    restart: getElement('end-restart', HTMLButtonElement),
+    menu: getElement('end-menu', HTMLButtonElement),
+  },
 );
 const levelUpOverlay = new LevelUpOverlay(
   getElement('levelup-overlay', HTMLDivElement),

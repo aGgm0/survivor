@@ -15,19 +15,41 @@ function stat(value: string, label: string): HTMLElement {
   return box;
 }
 
-/** Écran de fin de partie : victoire ou défaite, bilan et damage meter. */
+/** Ce que le joueur peut demander depuis l'écran de fin. */
+export type EndAction = 'continue' | 'restart' | 'menu';
+
+/**
+ * Écran de fin de partie : victoire ou défaite, bilan et damage meter. Comme le menu pause,
+ * un clic est seulement mémorisé : la scène le lit pendant son update (`takeAction`).
+ */
 export class EndOverlay {
+  private action: EndAction | null = null;
+
   constructor(
     private readonly el: HTMLElement,
     private readonly titleEl: HTMLElement,
     private readonly infoEl: HTMLElement,
     private readonly meterEl: HTMLElement,
-    private readonly hintEl: HTMLElement,
     private readonly unlocksEl: HTMLElement,
-  ) {}
+    private readonly buttons: Readonly<Record<EndAction, HTMLButtonElement>>,
+  ) {
+    buttons.continue.addEventListener('click', () => (this.action = 'continue'));
+    buttons.restart.addEventListener('click', () => (this.action = 'restart'));
+    buttons.menu.addEventListener('click', () => (this.action = 'menu'));
+  }
+
+  /** L'action cliquée depuis la dernière lecture, ou null. */
+  takeAction(): EndAction | null {
+    const action = this.action;
+    this.action = null;
+    return action;
+  }
 
   /** `canContinue` : écran de victoire d'où l'on peut lancer le mode sans fin (touche C). */
   show(report: RunReport, canContinue = false, unlocks: readonly string[] = []): void {
+    // Un clic d'un écran de fin précédent ne doit pas resservir.
+    this.action = null;
+    this.buttons.continue.hidden = !canContinue;
     this.unlocksEl.hidden = unlocks.length === 0;
     // Annonce des persos débloqués par cette partie (une ligne par perso).
     this.unlocksEl.textContent = unlocks
@@ -47,9 +69,6 @@ export class EndOverlay {
         report.maxedAt === null ? 'build incomplet' : 'build complet',
       ),
     );
-    this.hintEl.textContent = canContinue
-      ? 'C pour continuer en sans fin · R pour rejouer · M pour le menu'
-      : 'R pour rejouer · M pour le menu';
 
     // Créer des éléments est sans risque ici : une seule fois, en fin de partie.
     this.meterEl.replaceChildren(

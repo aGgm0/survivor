@@ -1061,9 +1061,16 @@ body {
   text-align: right;
 }
 
-#end-hint {
-  font-size: 16px;
+/* Boutons en ligne : en colonne, ils ne tiendraient pas sous un damage meter de 4 armes. */
+.end-buttons {
+  flex-direction: row;
+  justify-content: center;
+  width: auto;
   margin-top: 6px;
+}
+
+.end-buttons .menu-button {
+  padding: 2px 16px;
 }
 
 /* ------------------------------------------------------------------ écran titre (2026-11-18) */
