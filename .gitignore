@@ -14,4 +14,4 @@ public/assets/ui/raven/
 assets-src/
 
 # Zip prêt pour itch.io (npm run release:itch)
-release/
+/release/
