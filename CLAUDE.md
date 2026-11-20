@@ -154,7 +154,7 @@ Se déplacer → les armes tirent seules → tuer des ennemis → ramasser l'XP
 | Déplacement | ZQSD / WASD / flèches (diagonale normalisée) |
 | Pause | Échap / P |
 | Options (depuis la pause) | O |
-| Plein écran | F (ou la case des Options) ; Échap en sort et met la partie en pause |
+| Plein écran | F (ou la case des Options) ; Échap en sort et met la partie en pause ; « Reprendre » (clic) ou P le remet |
 | Choisir un upgrade | Clic ou touches 1-2-3 |
 
 ### 5.4 Armes `[MVP : 3 armes, 4 depuis l'Épée]`
@@ -351,6 +351,13 @@ Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite 
 - [x] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Continuer en sans fin (victoire seulement), Rejouer, Menu principal ; touches C / R / M toujours actives ; clics ignorés pendant 0,5 s (`END_SCREEN_CLICK_DELAY`)
 - [x] Version 0.1.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.2` poussé (2026-11-21)
 - **Finie quand :** zip sur itch ; les testeurs se soignent assez, des ennemis atteignent le joueur avec les Orbes géants.
+
+### 0.1.3 — Petits écrans et plein écran `[petite]`
+Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contient aussi les refactors du bloc B (sans effet visible) et les icônes du damage meter, déjà sur `main`.
+- [x] Interface à l'échelle du canvas : HUD, menus et écrans construits en 1280×720 dans `#ui`, mis à la même échelle que le monde (`transform: scale` par `core/Renderer`) ; plus rien ne déborde sur un petit écran. Outils F2 / F3 hors de cette échelle
+- [x] Échap quitte le plein écran (le navigateur l'impose) : la pause qui suit propose « Reprendre en plein écran (P) », et un clic sur « Reprendre » ou P le remet. P met en pause et reprend, partout
+- [ ] Version 0.1.3 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.3` poussé
+- **Finie quand :** zip sur itch ; menus lisibles et entiers dans une petite fenêtre ; plein écran remis après Échap.
 
 ### 0.2 — Une partie juste `[moyenne]`
 - [x] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement ; test de rendu d'une partie chargée avec un faux contexte canvas
@@ -665,6 +672,8 @@ Format : date — décision — raison.
 | 2026-11-20 | Écran de fin : 3 boutons en ligne (Continuer en sans fin d'abord, seulement après une victoire), clics ignorés pendant 0,5 s, touches C / R / M sans délai | Le choix le plus intéressant en premier ; un clic en rafale au moment de mourir ne doit pas relancer la partie avant qu'on ait vu le bilan. En ligne : en colonne, ça ne tenait pas sous un damage meter de 4 armes |
 | 2026-11-21 | Rendu du monde dans `scenes/game/WorldRenderer.ts` ; il ne lit la partie qu'à travers l'interface `WorldView` (joueur, ennemis, armes, systèmes, caméra, `runTime`) ; HUD et overlay F3 restent dans `GameScene.render()` ; les étincelles d'aura restent dans l'update | Le bot de simulation doit faire tourner une partie sans canvas. L'interface limite ce que le dessin peut toucher. Les étincelles créent des particules : c'est de la logique, même si elle est visuelle |
 | 2026-11-21 | Menu F2 : seules les modifications pures (armes, passifs, vue du panneau) sortent de `GameScene` ; temps, niveaux, sans fin, or, boss et élites restent dans son `applyDevAction` | Les sortir aurait obligé à rendre publics une dizaine de champs et de méthodes privés (`elapsed`, `killEnemy`, `startEndless`...) : n'importe quel fichier aurait pu modifier la partie |
+| 2026-11-21 | Interface HTML en 1280×720 logiques, mise à l'échelle du canvas (`transform: scale`) plutôt que refaite en tailles relatives | Sur un petit écran, le monde rétrécissait mais pas les menus (pixels fixes) : ils débordaient. Une seule échelle garde l'interface alignée avec le monde ; sur l'embed itch (1280×720) rien ne change. En plein écran sur un grand écran, l'interface grossit avec le jeu |
+| 2026-11-21 | Échap quitte toujours le plein écran : le plein écran est remis à la reprise (clic sur « Reprendre » ou P), pas avec Échap | Échap est la touche de sécurité du navigateur, impossible à capturer dans le cadre itch (Keyboard Lock : Chrome seul, page principale seule). Le navigateur ne compte pas Échap comme une activation utilisateur, donc il ne peut pas remettre le plein écran |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

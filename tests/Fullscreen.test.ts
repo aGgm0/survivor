@@ -37,6 +37,29 @@ describe('Fullscreen', () => {
     expect(calls.exit).toBe(1);
   });
 
+  it('plein écran perdu sur Échap : remis une seule fois à la reprise', () => {
+    const { doc, calls } = fakeDoc();
+    const fs = new Fullscreen(doc);
+    fs.restoreIfLost(); // rien de perdu : rien à remettre
+    expect(calls.request).toBe(0);
+    fs.rememberToRestore();
+    expect(fs.wantsRestore).toBe(true);
+    fs.restoreIfLost();
+    expect(fs.isActive).toBe(true);
+    expect(calls.request).toBe(1);
+    fs.restoreIfLost(); // déjà remis
+    expect(calls.request).toBe(1);
+  });
+
+  it('oublie le plein écran à remettre (reprise avec Échap, retour au menu…)', () => {
+    const { doc, calls } = fakeDoc();
+    const fs = new Fullscreen(doc);
+    fs.rememberToRestore();
+    fs.forgetRestore();
+    fs.restoreIfLost();
+    expect(calls.request).toBe(0);
+  });
+
   it('ne demande rien si le navigateur l’interdit', () => {
     const { doc, calls } = fakeDoc(false);
     const fs = new Fullscreen(doc);

@@ -760,8 +760,9 @@ describe('GameScene — menu pause', () => {
 describe('GameScene — sortie du plein écran', () => {
   it('met la partie en pause (Échap ne parvient pas au jeu dans ce cas)', () => {
     const { scene, ui } = newScene();
-    scene.onFullscreenExit();
+    expect(scene.onFullscreenExit()).toBe(true); // main.ts remettra le plein écran à la reprise
     expect(ui.paused).toBe(true);
+    expect(scene.onFullscreenExit()).toBe(false); // déjà en pause
   });
 
   it('ne réaffiche pas le menu pause par-dessus les options', () => {

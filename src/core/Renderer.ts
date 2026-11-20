@@ -10,7 +10,14 @@ export class Renderer {
   readonly ctx: CanvasRenderingContext2D;
   private readonly canvas: HTMLCanvasElement;
 
-  constructor(canvas: HTMLCanvasElement) {
+  /**
+   * `uiLayer` : l'interface HTML, construite en 1280×720 ; elle reçoit la même échelle que le
+   * canvas pour garder ses proportions quelle que soit la taille de la fenêtre.
+   */
+  constructor(
+    canvas: HTMLCanvasElement,
+    private readonly uiLayer: HTMLElement | null = null,
+  ) {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D non supporté');
     this.canvas = canvas;
@@ -35,6 +42,7 @@ export class Renderer {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.style.width = `${cssWidth}px`;
     this.canvas.style.height = `${cssHeight}px`;
+    if (this.uiLayer) this.uiLayer.style.transform = `scale(${cssWidth / LOGICAL_WIDTH})`;
     this.canvas.width = Math.floor(cssWidth * dpr);
     this.canvas.height = Math.floor(cssHeight * dpr);
 

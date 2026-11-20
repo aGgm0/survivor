@@ -12,6 +12,6 @@ export interface Scene {
   render(ctx: CanvasRenderingContext2D, alpha: number): void;
   /** Optionnel : l'onglet vient d'être caché (la boucle s'arrête juste après). */
   onHidden?(): void;
-  /** Optionnel : le joueur vient de quitter le plein écran. */
-  onFullscreenExit?(): void;
+  /** Optionnel : le joueur vient de quitter le plein écran. Vrai si la scène s'est mise en pause. */
+  onFullscreenExit?(): boolean;
 }

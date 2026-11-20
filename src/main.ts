@@ -1,6 +1,6 @@
 import { Game } from './core/Game';
 import { Fullscreen } from './core/Fullscreen';
-import { CONTROLS } from './data/controls';
+import { CONTROLS, RESUME_FULLSCREEN_KEY } from './data/controls';
 import { GAME_VERSION } from './data/version';
 import { Renderer } from './core/Renderer';
 import { DebugOverlay } from './core/DebugOverlay';
@@ -58,18 +58,26 @@ const store = SaveStore.fromBrowser();
 const settings = parseSettings(store.load(SETTINGS_KEY));
 const profile = parseProfile(store.load(PROFILE_KEY));
 
-const renderer = new Renderer(getElement('game', HTMLCanvasElement));
+const renderer = new Renderer(
+  getElement('game', HTMLCanvasElement),
+  getElement('ui', HTMLDivElement),
+);
 const debug = new DebugOverlay(
   getElement('debug-overlay', HTMLDivElement),
   getElement('fps-counter', HTMLDivElement),
 );
 const input = new Input(window);
-const pauseOverlay = new PauseOverlay(getElement('pause-overlay', HTMLDivElement), {
-  resume: getElement('pause-resume', HTMLButtonElement),
-  options: getElement('pause-options', HTMLButtonElement),
-  restart: getElement('pause-restart', HTMLButtonElement),
-  menu: getElement('pause-menu', HTMLButtonElement),
-});
+const fullscreen = new Fullscreen(document);
+const pauseOverlay = new PauseOverlay(
+  getElement('pause-overlay', HTMLDivElement),
+  {
+    resume: getElement('pause-resume', HTMLButtonElement),
+    options: getElement('pause-options', HTMLButtonElement),
+    restart: getElement('pause-restart', HTMLButtonElement),
+    menu: getElement('pause-menu', HTMLButtonElement),
+  },
+  () => fullscreen.forgetRestore(),
+);
 const endOverlay = new EndOverlay(
   getElement('end-overlay', HTMLDivElement),
   getElement('end-title', HTMLParagraphElement),
@@ -114,7 +122,6 @@ const profileOverlay = new ProfileOverlay(
 // Version affichée dans le menu et sur l'écran de fin (fixe pour tout le build).
 for (const el of document.querySelectorAll('.game-version')) el.textContent = `v${GAME_VERSION}`;
 
-const fullscreen = new Fullscreen(document);
 const optionsOverlay = new OptionsOverlay(
   getElement('options-overlay', HTMLDivElement),
   getElement('options-list', HTMLDivElement),
@@ -140,13 +147,24 @@ const game = new Game(renderer, debug, input);
 // Plein écran (touche F) : demandé pendant l'appui lui-même, sinon le navigateur refuse
 // (voir core/Fullscreen.ts). Hors de la game loop, mais ça ne touche à aucun état de jeu.
 window.addEventListener('keydown', (e) => {
-  if (!e.repeat && (CONTROLS.fullscreen as readonly string[]).includes(e.code)) fullscreen.toggle();
+  if (e.repeat) return;
+  if ((CONTROLS.fullscreen as readonly string[]).includes(e.code)) fullscreen.toggle();
+  // Reprendre avec P après une sortie du plein écran : on le remet pendant l'appui (Échap ne
+  // le peut pas, le navigateur ne le compte pas comme une activation utilisateur).
+  else if (e.code === RESUME_FULLSCREEN_KEY) fullscreen.restoreIfLost();
 });
+getElement('pause-resume', HTMLButtonElement).addEventListener('click', () =>
+  fullscreen.restoreIfLost(),
+);
 document.addEventListener('fullscreenchange', () => {
   optionsOverlay.setFullscreen(fullscreen.isActive);
   // Sortir du plein écran (souvent avec Échap, que le jeu ne reçoit alors pas) met la partie
-  // en pause : sinon on reprendrait la main en pleine horde.
-  if (!fullscreen.isActive) game.notifyFullscreenExit();
+  // en pause : sinon on reprendrait la main en pleine horde. Le plein écran sera remis à la
+  // reprise (clic sur « Reprendre » ou P).
+  if (!fullscreen.isActive && game.notifyFullscreenExit()) {
+    fullscreen.rememberToRestore();
+    pauseOverlay.setResumeFullscreen(true);
+  }
 });
 
 // Menu de test (F2) : seulement avec `npm run dev`. Dans le build, `import.meta.env.DEV` vaut

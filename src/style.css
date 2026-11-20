@@ -78,6 +78,20 @@ body {
   position: relative;
 }
 
+/*
+ * Toute l'interface est dessinée en 1280×720 (la résolution logique du jeu), puis mise à
+ * l'échelle du canvas par core/Renderer.ts (transform: scale). Sans ça, sur un petit écran le
+ * monde rétrécissait mais pas les menus, qui débordaient.
+ */
+#ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 720px;
+  transform-origin: 0 0;
+}
+
 #game {
   display: block;
   background: #14141c;
@@ -399,7 +413,7 @@ body {
   opacity: 0.6;
 }
 
-/* Pas de boîte à lui : ses enfants restent en absolute par rapport à #stage */
+/* Pas de boîte à lui : ses enfants restent en absolute par rapport à #ui */
 #hud {
   display: contents;
 }
@@ -1128,4 +1142,9 @@ body {
   height: 72px;
   background: url('/assets/ui/darkages/flourish.png') center / contain no-repeat;
   image-rendering: pixelated;
+}
+
+/* Menu pause : boutons plus larges pour « Reprendre en plein écran (P) » sur une seule ligne */
+#pause-overlay .menu-buttons {
+  width: 460px;
 }

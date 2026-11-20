@@ -329,9 +329,10 @@ export class GameScene implements Scene, Build {
    * Sortie du plein écran : souvent avec Échap, que le navigateur garde pour lui (le jeu ne le
    * reçoit pas). On met en pause pour ne pas reprendre la main en pleine horde.
    */
-  onFullscreenExit(): void {
-    if (this.report || this.choices || this.paused || this.devOpen) return;
+  onFullscreenExit(): boolean {
+    if (this.report || this.choices || this.paused || this.devOpen) return false;
     this.setPaused(true);
+    return true;
   }
 
   /** Vrai quand la partie est terminée (mort ou victoire). */

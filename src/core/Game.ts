@@ -43,8 +43,9 @@ export class Game {
   }
 
   /** Le joueur vient de quitter le plein écran : la scène peut se mettre en pause. */
-  notifyFullscreenExit(): void {
-    this.scene?.onFullscreenExit?.();
+  /** Vrai si la scène s'est mise en pause (le plein écran pourra être remis à la reprise). */
+  notifyFullscreenExit(): boolean {
+    return this.scene?.onFullscreenExit?.() ?? false;
   }
 
   setScene(scene: Scene): void {

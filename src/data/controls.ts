@@ -7,6 +7,9 @@
  */
 export const END_SCREEN_CLICK_DELAY = 0.5;
 
+/** Reprendre la partie ET remettre le plein écran (une des touches de `pause`, mais pas Échap) */
+export const RESUME_FULLSCREEN_KEY = 'KeyP';
+
 export const CONTROLS = {
   up: ['KeyW', 'ArrowUp'],
   down: ['KeyS', 'ArrowDown'],

@@ -11,101 +11,113 @@
       <!-- La "scène" a exactement la taille du canvas : les overlays s'y accrochent, pas à la fenêtre -->
       <div id="stage">
         <canvas id="game"></canvas>
-        <!-- Conteneur sans boîte (display: contents) : les éléments restent positionnés sur #stage -->
-        <div id="hud" hidden>
-          <div id="hud-xpbar"><div id="hud-xpfill"></div></div>
-          <div id="hud-level">Niv 1</div>
-          <div id="hud-hp">
-            <div id="hud-hpfill"></div>
-            <span id="hud-hptext">100 / 100</span>
+        <!--
+          Interface en 1280×720 logiques, agrandie ou réduite avec le canvas (même échelle, voir
+          core/Renderer.ts) : elle garde ses proportions sur un petit comme sur un grand écran.
+        -->
+        <div id="ui">
+          <!-- Conteneur sans boîte (display: contents) : les éléments restent positionnés sur #ui -->
+          <div id="hud" hidden>
+            <div id="hud-xpbar"><div id="hud-xpfill"></div></div>
+            <div id="hud-level">Niv 1</div>
+            <div id="hud-hp">
+              <div id="hud-hpfill"></div>
+              <span id="hud-hptext">100 / 100</span>
+            </div>
+            <div id="hud-inventory">
+              <div id="hud-weapons" class="slots"></div>
+              <div id="hud-passives" class="slots"></div>
+            </div>
+            <div id="hud-timer">00:00</div>
+            <div id="hud-kills">0 kills</div>
+            <div id="hud-gold">0 or</div>
+            <div id="hud-endless" hidden>SANS FIN</div>
+            <div id="hud-test" hidden>TEST — partie non enregistrée</div>
           </div>
-          <div id="hud-inventory">
-            <div id="hud-weapons" class="slots"></div>
-            <div id="hud-passives" class="slots"></div>
+          <div id="menu-overlay" class="overlay overlay-menu" hidden>
+            <!-- TODO: vrai nom du jeu (thème fantasy, pas encore décidé) -->
+            <div class="title-block">
+              <p class="overlay-title menu-title">SURVIVOR</p>
+              <div class="title-flourish"></div>
+            </div>
+            <div class="menu-buttons">
+              <button id="menu-play" type="button" class="menu-button">Jouer</button>
+              <button id="menu-shop" type="button" class="menu-button">Boutique</button>
+              <button id="menu-profile" type="button" class="menu-button">Profil</button>
+              <button id="menu-options" type="button" class="menu-button">Options</button>
+            </div>
+            <p class="overlay-hint">Clic ou Entrée pour jouer</p>
+            <p class="game-version"></p>
           </div>
-          <div id="hud-timer">00:00</div>
-          <div id="hud-kills">0 kills</div>
-          <div id="hud-gold">0 or</div>
-          <div id="hud-endless" hidden>SANS FIN</div>
-          <div id="hud-test" hidden>TEST — partie non enregistrée</div>
+          <div id="character-overlay" class="overlay overlay-menu" hidden>
+            <p class="overlay-title">CHOISIS TON PERSO</p>
+            <div id="character-cards" class="choices"></div>
+            <div class="menu-buttons">
+              <button id="character-back" type="button" class="menu-button">Retour (Échap)</button>
+            </div>
+            <p class="overlay-hint">Clic ou touches 1 · 2 · 3 · 4</p>
+          </div>
+          <div id="shop-overlay" class="overlay overlay-menu" hidden>
+            <p class="overlay-title">BOUTIQUE</p>
+            <p id="shop-gold" class="overlay-info shop-gold">0 or</p>
+            <div id="shop-list" class="shop-list"></div>
+            <div class="menu-buttons">
+              <button id="shop-back" type="button" class="menu-button">Retour (Échap)</button>
+            </div>
+            <p class="overlay-hint">Bonus permanents, appliqués au début de chaque partie</p>
+          </div>
+          <div id="profile-overlay" class="overlay overlay-menu" hidden>
+            <p class="overlay-title">PROFIL</p>
+            <div id="profile-summary" class="profile-list"></div>
+            <div id="profile-weapons" class="profile-list"></div>
+            <div class="menu-buttons">
+              <button id="profile-back" type="button" class="menu-button">Retour (Échap)</button>
+            </div>
+          </div>
+          <div id="options-overlay" class="overlay overlay-menu" hidden>
+            <p class="overlay-title">OPTIONS</p>
+            <div id="options-list" class="options-list"></div>
+            <div class="menu-buttons">
+              <button id="options-back" type="button" class="menu-button">Retour (Échap)</button>
+            </div>
+            <p class="overlay-hint">Les réglages sont enregistrés automatiquement</p>
+          </div>
+          <div id="levelup-overlay" class="overlay overlay-levelup" hidden>
+            <p id="levelup-title" class="overlay-title">NIVEAU 2</p>
+            <div id="levelup-choices" class="choices"></div>
+            <button id="levelup-reroll" type="button" class="menu-button levelup-reroll">
+              Relancer (R)
+            </button>
+            <p class="overlay-hint">Clic ou touches 1 · 2 · 3</p>
+          </div>
+          <div id="pause-overlay" class="overlay" hidden>
+            <p class="overlay-title">PAUSE</p>
+            <div class="menu-buttons">
+              <button id="pause-resume" type="button" class="menu-button">
+                Reprendre (Échap ou P)
+              </button>
+              <button id="pause-options" type="button" class="menu-button">Options (O)</button>
+              <button id="pause-restart" type="button" class="menu-button">Rejouer (R)</button>
+              <button id="pause-menu" type="button" class="menu-button">Menu principal (M)</button>
+            </div>
+            <p class="overlay-hint">La partie en cours sera perdue si tu rejoues ou quittes</p>
+          </div>
+          <div id="end-overlay" class="overlay" hidden>
+            <p id="end-title" class="overlay-title">MORT</p>
+            <p id="end-info" class="overlay-info"></p>
+            <p id="end-unlocks" class="overlay-unlocks" hidden></p>
+            <div id="end-meter" class="meter"></div>
+            <div class="menu-buttons end-buttons">
+              <button id="end-continue" type="button" class="menu-button">
+                Continuer en sans fin (C)
+              </button>
+              <button id="end-restart" type="button" class="menu-button">Rejouer (R)</button>
+              <button id="end-menu" type="button" class="menu-button">Menu principal (M)</button>
+            </div>
+            <p class="game-version"></p>
+          </div>
         </div>
-        <div id="menu-overlay" class="overlay overlay-menu" hidden>
-          <!-- TODO: vrai nom du jeu (thème fantasy, pas encore décidé) -->
-          <div class="title-block">
-            <p class="overlay-title menu-title">SURVIVOR</p>
-            <div class="title-flourish"></div>
-          </div>
-          <div class="menu-buttons">
-            <button id="menu-play" type="button" class="menu-button">Jouer</button>
-            <button id="menu-shop" type="button" class="menu-button">Boutique</button>
-            <button id="menu-profile" type="button" class="menu-button">Profil</button>
-            <button id="menu-options" type="button" class="menu-button">Options</button>
-          </div>
-          <p class="overlay-hint">Clic ou Entrée pour jouer</p>
-          <p class="game-version"></p>
-        </div>
-        <div id="character-overlay" class="overlay overlay-menu" hidden>
-          <p class="overlay-title">CHOISIS TON PERSO</p>
-          <div id="character-cards" class="choices"></div>
-          <div class="menu-buttons">
-            <button id="character-back" type="button" class="menu-button">Retour (Échap)</button>
-          </div>
-          <p class="overlay-hint">Clic ou touches 1 · 2 · 3 · 4</p>
-        </div>
-        <div id="shop-overlay" class="overlay overlay-menu" hidden>
-          <p class="overlay-title">BOUTIQUE</p>
-          <p id="shop-gold" class="overlay-info shop-gold">0 or</p>
-          <div id="shop-list" class="shop-list"></div>
-          <div class="menu-buttons">
-            <button id="shop-back" type="button" class="menu-button">Retour (Échap)</button>
-          </div>
-          <p class="overlay-hint">Bonus permanents, appliqués au début de chaque partie</p>
-        </div>
-        <div id="profile-overlay" class="overlay overlay-menu" hidden>
-          <p class="overlay-title">PROFIL</p>
-          <div id="profile-summary" class="profile-list"></div>
-          <div id="profile-weapons" class="profile-list"></div>
-          <div class="menu-buttons">
-            <button id="profile-back" type="button" class="menu-button">Retour (Échap)</button>
-          </div>
-        </div>
-        <div id="options-overlay" class="overlay overlay-menu" hidden>
-          <p class="overlay-title">OPTIONS</p>
-          <div id="options-list" class="options-list"></div>
-          <div class="menu-buttons">
-            <button id="options-back" type="button" class="menu-button">Retour (Échap)</button>
-          </div>
-          <p class="overlay-hint">Les réglages sont enregistrés automatiquement</p>
-        </div>
-        <div id="levelup-overlay" class="overlay overlay-levelup" hidden>
-          <p id="levelup-title" class="overlay-title">NIVEAU 2</p>
-          <div id="levelup-choices" class="choices"></div>
-          <button id="levelup-reroll" type="button" class="menu-button levelup-reroll">Relancer
-(R)</button>
-          <p class="overlay-hint">Clic ou touches 1 · 2 · 3</p>
-        </div>
-        <div id="pause-overlay" class="overlay" hidden>
-          <p class="overlay-title">PAUSE</p>
-          <div class="menu-buttons">
-            <button id="pause-resume" type="button" class="menu-button">Reprendre (Échap)</button>
-            <button id="pause-options" type="button" class="menu-button">Options (O)</button>
-            <button id="pause-restart" type="button" class="menu-button">Rejouer (R)</button>
-            <button id="pause-menu" type="button" class="menu-button">Menu principal (M)</button>
-          </div>
-          <p class="overlay-hint">La partie en cours sera perdue si tu rejoues ou quittes</p>
-        </div>
-        <div id="end-overlay" class="overlay" hidden>
-          <p id="end-title" class="overlay-title">MORT</p>
-          <p id="end-info" class="overlay-info"></p>
-          <p id="end-unlocks" class="overlay-unlocks" hidden></p>
-          <div id="end-meter" class="meter"></div>
-          <div class="menu-buttons end-buttons">
-            <button id="end-continue" type="button" class="menu-button">Continuer en sans fin (C)</button>
-            <button id="end-restart" type="button" class="menu-button">Rejouer (R)</button>
-            <button id="end-menu" type="button" class="menu-button">Menu principal (M)</button>
-          </div>
-          <p class="game-version"></p>
-        </div>
+        <!-- Outils (F3, compteur FPS, F2) : hors de #ui, à taille fixe pour rester lisibles -->
         <div id="debug-overlay" hidden></div>
         <div id="fps-counter" hidden></div>
         <!-- Menu de test (F2) : rempli seulement en dev, voir main.ts -->

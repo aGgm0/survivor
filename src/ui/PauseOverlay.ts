@@ -1,3 +1,7 @@
+const RESUME_LABEL = 'Reprendre (Échap ou P)';
+// Pas d'Échap ici : le navigateur ne laisse pas Échap remettre le plein écran.
+const RESUME_FULLSCREEN_LABEL = 'Reprendre en plein écran (P)';
+
 /** Ce que le joueur peut demander depuis le menu pause. */
 export type PauseAction = 'resume' | 'options' | 'restart' | 'menu';
 
@@ -8,9 +12,14 @@ export type PauseAction = 'resume' | 'options' | 'restart' | 'menu';
 export class PauseOverlay {
   private action: PauseAction | null = null;
 
+  /**
+   * `onHide` : appelé quand le menu pause se ferme (reprise, rejouer, options...) : main.ts y
+   * oublie le plein écran à remettre.
+   */
   constructor(
     private readonly el: HTMLElement,
-    buttons: Readonly<Record<PauseAction, HTMLButtonElement>>,
+    private readonly buttons: Readonly<Record<PauseAction, HTMLButtonElement>>,
+    private readonly onHide: () => void = () => {},
   ) {
     buttons.resume.addEventListener('click', () => (this.action = 'resume'));
     buttons.options.addEventListener('click', () => (this.action = 'options'));
@@ -22,6 +31,15 @@ export class PauseOverlay {
     // Un clic d'une pause précédente ne doit pas resservir à la suivante.
     this.action = null;
     this.el.hidden = !visible;
+    if (!visible) {
+      this.setResumeFullscreen(false);
+      this.onHide();
+    }
+  }
+
+  /** Pause venue d'une sortie du plein écran : « Reprendre » le remettra (clic ou P). */
+  setResumeFullscreen(on: boolean): void {
+    this.buttons.resume.textContent = on ? RESUME_FULLSCREEN_LABEL : RESUME_LABEL;
   }
 
   /** L'action cliquée depuis la dernière lecture, ou null. */
