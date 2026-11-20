@@ -13,6 +13,7 @@ Confort sur petit écran et en plein écran.
 ### Corrigé
 
 - Petits écrans : le HUD, les menus et les écrans de fin rétrécissent maintenant avec le jeu au lieu de déborder.
+- Écrans qui dépassaient même en 1280 × 720 : choix du perso (les 4 cartes sortaient sur les côtés), Options, Boutique et Profil (trop hauts). Lignes des Options et du Profil allégées, liseré à la couleur de l'arme dans le Profil.
 - Plein écran : Échap le quitte toujours (le navigateur l'impose), mais la pause qui suit propose « Reprendre en plein écran (P) » ; un clic sur Reprendre ou la touche P le remet.
 
 ## [0.1.2] — 2026-11-20

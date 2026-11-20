@@ -356,6 +356,7 @@ Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite 
 Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contient aussi les refactors du bloc B (sans effet visible) et les icônes du damage meter, déjà sur `main`.
 - [x] Interface à l'échelle du canvas : HUD, menus et écrans construits en 1280×720 dans `#ui`, mis à la même échelle que le monde (`transform: scale` par `core/Renderer`) ; plus rien ne déborde sur un petit écran. Outils F2 / F3 hors de cette échelle
 - [x] Échap quitte le plein écran (le navigateur l'impose) : la pause qui suit propose « Reprendre en plein écran (P) », et un clic sur « Reprendre » ou P le remet. P met en pause et reprend, partout
+- [x] Écrans qui dépassaient même en 1280×720 : cartes de perso 340 → 290 px (4 côte à côte), Options et Profil sans cadre par ligne, Boutique resserrée, Profil 640 → 760 px
 - [ ] Version 0.1.3 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.3` poussé
 - **Finie quand :** zip sur itch ; menus lisibles et entiers dans une petite fenêtre ; plein écran remis après Échap.
 
