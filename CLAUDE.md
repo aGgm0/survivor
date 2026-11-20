@@ -371,6 +371,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` dans `data/combat.ts`, à côté de `MIN_DAMAGE` (une entité n'importe pas un système)
 - [x] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
 - [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
+- [ ] **Cartes de level up et survol des boutons refaits dans la DA** : retour de jeu (2026-11-21) « trop simple, ça ne fait pas trop dans la DA ». Aujourd'hui une carte survolée monte de 4 px et s'éclaircit, un bouton change juste de couleur de texte : effets génériques de site web. À la place, des effets pixel du pack (cadre qui s'allume, sélection marquée, apparition des cartes). Pistes visuelles à proposer avant de coder <!-- TODO: choisir parmi les pistes proposées -->
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
 - [x] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
 - [ ] Or lâché (rarement) par les ennemis, réglé avec les prix de la boutique
