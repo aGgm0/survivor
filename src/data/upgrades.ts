@@ -26,6 +26,8 @@ export interface PassiveDef {
    * (0.08 = +8 % de la vitesse de départ à chaque niveau).
    */
   readonly amount: number;
+  /** PV/s de régénération en plus à chaque niveau (Vitalité : les PV max seuls ne soignaient pas) */
+  readonly regenPerLevel?: number;
 }
 
 export const PASSIVES: readonly PassiveDef[] = [
@@ -33,10 +35,11 @@ export const PASSIVES: readonly PassiveDef[] = [
     id: 'vitality',
     name: 'Vitalité',
     short: 'Vi',
-    description: '+20 PV max (et soigne 20)',
+    description: '+15 PV max (et soigne 15), +0,3 PV/s',
     maxLevel: 5,
     stat: 'maxHp',
-    amount: 20,
+    amount: 15,
+    regenPerLevel: 0.3,
   },
   {
     id: 'swiftness',

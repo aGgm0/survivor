@@ -912,7 +912,8 @@ describe('GameScene — menu de test (F2)', () => {
       { kind: 'passive', id: 'vitality', delta: 1 },
       { kind: 'passive', id: 'vitality', delta: 1 },
     );
-    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 40);
+    expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp + 30);
+    expect(scene.player.regen).toBeCloseTo(PLAYER_BASE.regen + 0.6);
     click({ kind: 'passive', id: 'vitality', delta: -2 });
     expect(scene.player.maxHp).toBe(PLAYER_BASE.maxHp);
     expect(scene.passiveLevels.has('vitality')).toBe(false);
@@ -1034,5 +1035,7 @@ describe('GameScene — mini-boss', () => {
     expect(elite.active).toBe(false);
     expect(scene.gold).toBe(10);
     expect(scene.kills).toBe(1);
+    // Nourriture garantie sur chaque élite tué
+    expect(scene.pickups.activeCount).toBe(1);
   });
 });

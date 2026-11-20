@@ -5,8 +5,8 @@ export const FURNITURE = {
   spawnInterval: 15,
   /** Mobilier présent en même temps, au maximum */
   maxActive: 8,
-  /** Chances qu'un meuble cassé lâche de l'or (sinon de la nourriture) */
-  goldChance: 0.85,
+  /** Chances qu'un meuble cassé lâche de l'or (sinon de la nourriture). 0,85 → 0,7 : on manquait de soins */
+  goldChance: 0.7,
   /** Pièces lâchées : entre min et max... */
   goldMin: 1,
   goldMax: 3,
@@ -16,6 +16,8 @@ export const FURNITURE = {
   foodHeal: 20,
   /** Or donné directement à la mort d'un boss */
   bossGold: 25,
+  /** Un élite tué lâche toujours de la nourriture (récompense après un combat dur) */
+  eliteFood: true,
 } as const;
 
 /** Objets au sol (pièces, nourriture) : apparence et aimant. */

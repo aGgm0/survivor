@@ -703,6 +703,7 @@ export class GameScene implements Scene, Build {
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
+    if (e.type.elite && FURNITURE.eliteFood) this.pickups.drop('food', FURNITURE.foodHeal, e.x, e.y);
     this.deathBurst(e);
     this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
     if (e.type === BOSS_TYPE) this.shake('bossKill');

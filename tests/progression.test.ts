@@ -219,12 +219,13 @@ describe('upgrades — effets', () => {
     applyUpgrade(choice, build);
   };
 
-  it('Vitalité : +20 PV max et soigne 20', () => {
+  it('Vitalité : +15 PV max, soigne 15 et +0,3 PV/s de régénération', () => {
     const build = makeBuild();
     build.player.hp = 50;
     pick(build, 'vitality');
-    expect(build.player.maxHp).toBe(PLAYER_BASE.maxHp + 20);
-    expect(build.player.hp).toBe(70);
+    expect(build.player.maxHp).toBe(PLAYER_BASE.maxHp + 15);
+    expect(build.player.hp).toBe(65);
+    expect(build.player.regen).toBeCloseTo(PLAYER_BASE.regen + 0.3);
     expect(build.passiveLevels.get('vitality')).toBe(1);
   });
 

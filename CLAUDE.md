@@ -203,7 +203,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 - L'écran de fin affiche **« build complet à mm:ss »** (moment où plus rien n'est améliorable) pour régler la courbe sur du concret.
 - Un ennemi rapporte `XP de base × multiplicateur de PV de sa vague` (plus dur à tuer = plus d'XP). Couleur de la gemme selon sa valeur (bleue < 5, violette < 20, dorée), sauf la gemme verte du basique (×2, couleur à part, redevient normale si elle est fusionnée).
 - Quand tout est au maximum (armes, mutations, passifs), l'XP requise est **×4** (les level up ne donnent plus qu'un soin).
-- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité, Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur). Jusqu'au niveau 10, une carte de passif sort 2 fois moins souvent qu'une carte d'arme (`EARLY_PASSIVES`).
+- Au level up : **pause du jeu**, 3 choix aléatoires parmi : nouvelle arme, niveau d'arme (ou sa mutation au niveau 6), passif (9 passifs pour 4 emplacements : Vitalité (+15 PV max et +0,3 PV/s par niveau), Célérité, Attraction, Puissance, Hâte, Impact, Taille, Vélocité, Duplicateur). Jusqu'au niveau 10, une carte de passif sort 2 fois moins souvent qu'une carte d'arme (`EARLY_PASSIVES`).
 - **Relance** : 2 par partie (`REROLLS_PER_RUN`), touche R ou bouton sous les cartes. Les cartes affichées ne reviennent pas tant qu’il reste assez d’autres options ; la nouvelle arme garantie (< 3 armes) tient toujours. Impossible quand il ne reste que le soin.
 
 ### 5.7 Vagues & difficulté
@@ -234,7 +234,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
 
 **Or et mobilier** (validé le 2026-11-11) :
-- **Mobilier** : tonneaux / caisses immobiles, cassés par n'importe quelle arme (10 PV) **ou en marchant dessus** (la visée automatique du Trait les ignore). Un nouveau toutes les 15 s hors écran, 8 au maximum. Lâche **85 % or** (1 à 3 pièces, un peu plus en fin de partie) ou **15 % nourriture** (+20 PV), ramassés à l'aimant. **Boss tué = +25 or.** Ne compte ni comme kill, ni dans le damage meter.
+- **Mobilier** : tonneaux / caisses immobiles, cassés par n'importe quelle arme (10 PV) **ou en marchant dessus** (la visée automatique du Trait les ignore). Un nouveau toutes les 15 s hors écran, 8 au maximum. Lâche **70 % or** (1 à 3 pièces, un peu plus en fin de partie) ou **30 % nourriture** (+20 PV), ramassés à l'aimant. **Boss tué = +25 or. Élite tué = nourriture garantie.** Ne compte ni comme kill, ni dans le damage meter.
 - L'or de la partie s'ajoute au total **seulement si elle est terminée** (et jamais en partie de test).
 - **Boutique** au menu (bonus permanents, appliqués au début de chaque partie, sans prendre d'emplacement de passif) :
 
@@ -343,19 +343,24 @@ Correctifs sans nouveau contenu (retours de 2 testeurs sur la 0.1.0, 2026-11-20)
 - [x] Testée et taguée `v0.1.1` (2026-11-20)
 - **Finie quand :** zip sur itch, retours des 2 testeurs sur ces points.
 
+### 0.1.2 — Soins et retours de jeu `[petite]`
+Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite l'avis des testeurs.
+- [x] **Soins revus** : **30 % de nourriture** dans les caisses (`goldChance` 0,85 → 0,7), **nourriture garantie sur chaque élite tué**, **Vitalité = +15 PV max et +0,3 PV/s** par niveau (+1,5 PV/s au niveau 5)
+- [x] **Orbes géants : gros nerf du recul** : multiplicateur ×1,6 → ×1 (le recul de base des orbes reste). Retour de jeu : « littéralement personne ne rentre »
+- [ ] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Rejouer, Mode sans fin (victoire), Menu, au lieu des seules touches R / C / M indiquées en texte
+- [ ] Version 0.1.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.2` poussé
+- **Finie quand :** zip sur itch ; les testeurs se soignent assez, des ennemis atteignent le joueur avec les Orbes géants.
+
 ### 0.2 — Une partie juste `[moyenne]`
 - [ ] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement
 - [ ] Refactor : menu de test sorti de `GameScene` (`applyDevAction`, `devView` → `scenes/game/devActions.ts`)
 - [ ] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` hors de `systems/` (une entité n'importe pas un système)
 - [ ] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
-- [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel <!-- TODO: barres au-dessus du joueur, des élites et des boss seulement (recommandé), ou aussi des ennemis blessés ? -->
+- [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
-- [ ] **Soins revus** (à faire en premier, possible en 0.1.2) : aujourd'hui ≈ 1 potion / 100 s et Vitalité = +20 PV max qui ne se remplissent pas. Validé : **30 % de nourriture** dans les caisses (`goldChance` 0,85 → 0,7), **nourriture garantie sur chaque élite tué**, **Vitalité = PV max + régénération** par niveau <!-- TODO: chiffres de la Vitalité (reco : +15 PV max et +0,3 PV/s par niveau, soit +1,5 PV/s au niveau 5) -->
-- [ ] **Orbes géants : gros nerf du recul** (multiplicateur ×1,6 aujourd'hui), mais il doit rester présent. Retour de jeu : « littéralement personne ne rentre » <!-- TODO: valeur (reco : ×1,6 → ×0,8, à vérifier en jeu) -->
-- [ ] **Vrais boutons sur l'écran de fin** (victoire et défaite) : Rejouer, Mode sans fin (victoire), Menu, au lieu des seules touches R / C / M indiquées en texte
 - [ ] Or lâché (rarement) par les ennemis, réglé avec les prix de la boutique
 - [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul ») <!-- TODO: chiffres -->
-- [ ] **Lame d'onde repensée** : une vague tirée comme un projectile, « pas fun » (retour de jeu) <!-- TODO: par quoi la remplacer ? -->
+- [ ] **Lame d'onde remplacée par l'Estoc** : coup long et étroit (~220 px, 30°), gros dégâts, perce. L'Épée choisit entre « large » (Tourbillon) et « loin » (Estoc). La Lame d'onde était « pas fun » (retour de jeu) <!-- TODO: chiffres exacts à proposer au moment de la faire -->
 - [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
@@ -654,6 +659,7 @@ Format : date — décision — raison.
 | 2026-11-20 | 0.1.1 de correctifs (lisibilité, pic de 6:00) avant la 0.2 ; ajouts à la 0.2 : soins, or des ennemis, mutations de l'aura glace / feu (avancées de la 0.3), Lame d'onde repensée ; « manque de dégâts » laissé au bot | Retours de 2 testeurs sur la 0.1.0. Un seul avis sur les dégâts : à mesurer avant d'y toucher (risque « ez victoire ») |
 | 2026-11-20 | Pic de 6:00 : vague 9 → 7/s et rush 7 → 4/s, rush gardé à 6:00 | Décaler le rush à 6:30-7:00 (prévu) l'aurait collé au basique élite de 7:00. PV et vitesse de la vague inchangés : le reste attend le bot |
 | 2026-11-20 | Ajouts à la 0.2 : soins validés (30 % de nourriture, nourriture sur les élites, Vitalité = PV max + régén), gros nerf du recul des Orbes géants, vrais boutons sur l'écran de fin | Retours de jeu après la 0.1.1 : les soins sont la plainte commune aux 2 testeurs ; avec les Orbes géants plus aucun ennemi n'arrive au contact ; l'écran de fin ne donne que des touches |
+| 2026-11-20 | Plan de la 0.2 validé : correctifs (soins, Orbes géants, boutons de fin) d'abord, puis refactors, bot, contenu qui touche l'équilibrage, passe d'équilibrage avec le bot, forme. Vitalité +15 PV max et +0,3 PV/s par niveau ; recul des Orbes géants ×1,6 → ×1 ; barres de PV en DA pour le joueur, les élites et les boss seulement ; Lame d'onde → Estoc | « ok reco », sauf le recul (×1 au lieu de ×0,8 recommandé). Barres sur 500 ennemis : illisible et coûteux à dessiner. Équilibrer après tous les changements de contenu, et mesurer avec le bot plutôt qu'au ressenti d'une partie |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

@@ -254,6 +254,7 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
 
 /** Un niveau de passif. Les pourcentages portent sur la valeur de base (bonus additifs). */
 function applyPassive(player: Player, passive: PassiveDef): void {
+  player.regen += passive.regenPerLevel ?? 0;
   switch (passive.stat) {
     case 'maxHp':
       player.maxHp += passive.amount;
