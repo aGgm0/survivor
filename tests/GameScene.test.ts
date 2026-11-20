@@ -1090,3 +1090,59 @@ describe('GameScene — mini-boss', () => {
     expect(scene.pickups.activeCount).toBe(1);
   });
 });
+
+/**
+ * Faux contexte canvas : accepte n'importe quel appel ou réglage sans rien dessiner. Vitest
+ * tourne sans navigateur ; ce test n'attrape pas un dessin faux, mais une erreur pendant le
+ * rendu (champ undefined, méthode absente) : le vrai risque quand on déplace du code de rendu.
+ */
+function fakeCanvasContext(): CanvasRenderingContext2D {
+  const anything: object = new Proxy(function () {}, {
+    get: (_t, prop) => (prop === Symbol.toPrimitive ? () => 0 : prop === 'width' ? 0 : anything),
+    apply: () => anything,
+    set: () => true,
+  });
+  const values = new Map<PropertyKey, unknown>();
+  return new Proxy({} as CanvasRenderingContext2D, {
+    get: (_t, prop) => (values.has(prop) ? values.get(prop) : anything),
+    set: (_t, prop, value) => {
+      values.set(prop, value);
+      return true;
+    },
+  });
+}
+
+describe('GameScene — rendu', () => {
+  /** Une partie chargée : toutes les armes, mutations, boss, élite, horde ; rendu à chaque frame. */
+  function renderBusyRun(mutationIndex: number, hitboxes: boolean) {
+    const { scene, deps } = newScene();
+    (deps.debug as { showHitboxes: boolean }).showHitboxes = hitboxes;
+    const ctx = fakeCanvasContext();
+    scene.applyDevAction({ kind: 'god' });
+    for (const id of ['arcaneBolt', 'burningAura', 'runicOrbs', 'sword']) {
+      if (!scene.weapons.some((w) => w.def.id === id))
+        scene.applyDevAction({ kind: 'weaponToggle', id });
+      scene.applyDevAction({ kind: 'weaponLevel', id, delta: 10 });
+      scene.applyDevAction({ kind: 'mutation', id, index: mutationIndex });
+    }
+    scene.applyDevAction({ kind: 'boss' });
+    scene.applyDevAction({ kind: 'elite', index: 0 });
+    scene.applyDevAction({ kind: 'spawn', count: 200 });
+    scene.applyDevAction({ kind: 'close' });
+    for (let i = 0; i < 8 * 60; i++) {
+      scene.update(DT);
+      scene.render(ctx, 0.5);
+    }
+    return scene;
+  }
+
+  it('dessine une partie chargée sans erreur (mutations n° 1, hitboxes)', () => {
+    const scene = renderBusyRun(0, true);
+    expect(scene.weapons.every((w) => w.mutation)).toBe(true);
+  });
+
+  it('dessine une partie chargée sans erreur (mutations n° 2)', () => {
+    const scene = renderBusyRun(1, false);
+    expect(scene.weapons.every((w) => w.mutation)).toBe(true);
+  });
+});
