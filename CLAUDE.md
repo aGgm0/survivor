@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.0 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.1 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -340,6 +340,7 @@ Correctifs sans nouveau contenu (retours de 2 testeurs sur la 0.1.0, 2026-11-20)
 - [x] Aura ardente : anneau plus fin, disque plus discret (rayon de dégâts inchangé)
 - [x] Les 2 mutations d'une arme se distinguent mieux sur leurs cartes
 - [x] Pic de 6:00 adouci : vague de 6:00 9 → 7/s, rush 7 → 4/s (on passait de 3,5 à 16 ennemis/s d'un coup ; maintenant 11/s)
+- [x] Testée et taguée `v0.1.1` (2026-11-20)
 - **Finie quand :** zip sur itch, retours des 2 testeurs sur ces points.
 
 ### 0.2 — Une partie juste `[moyenne]`
