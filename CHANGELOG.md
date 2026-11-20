@@ -2,6 +2,21 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.1.2] — 2026-11-20
+
+Soins revus et retours de jeu sur la 0.1.1.
+
+### Ajouté
+
+- Écran de fin : vrais boutons « Continuer en sans fin » (après une victoire), « Rejouer » et « Menu principal ». Les touches C, R et M marchent toujours.
+- Chaque mini-boss tué lâche de la nourriture (+20 PV).
+
+### Modifié
+
+- Caisses : 30 % de nourriture au lieu de 15 %.
+- Vitalité : +15 PV max et +0,3 PV/s de régénération par niveau (au lieu de +20 PV max).
+- Orbes géants : recul nettement réduit (×1,6 → ×1), les ennemis arrivent de nouveau au contact ; dégâts ×2 → ×1,8.
+
 ## [0.1.1] — 2026-11-20
 
 Correctifs suite aux retours de deux testeurs sur la 0.1.0. Pas de nouveau contenu.

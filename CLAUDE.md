@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.1 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.2 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
