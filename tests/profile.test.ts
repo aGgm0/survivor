@@ -7,7 +7,7 @@ import {
   recordRun,
   serializeProfile,
 } from '../src/data/profile';
-import type { RunReport } from '../src/systems/runReport';
+import type { RunReport } from '../src/types/RunReport';
 
 function report(overrides: Partial<RunReport> = {}): RunReport {
   return {

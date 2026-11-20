@@ -1,14 +1,6 @@
-import { KNOCKBACK, MIN_DAMAGE } from '../data/combat';
+import { KNOCKBACK } from '../data/combat';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
-
-/**
- * Dégâts réellement subis : l'armure retire un montant fixe, mais un coup fait toujours
- * au moins MIN_DAMAGE (sinon 3 points d'armure rendraient immunisé aux ennemis rapides).
- */
-export function computeDamage(raw: number, armor: number): number {
-  return Math.max(MIN_DAMAGE, raw - armor);
-}
 
 /** `direct` : coup d'arme ; `poison` : dégâts d'un effet d'état (affichés en vert, sans recul). */
 export type HitKind = 'direct' | 'poison';

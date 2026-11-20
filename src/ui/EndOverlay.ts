@@ -1,4 +1,4 @@
-import type { RunReport } from '../systems/runReport';
+import type { RunReport } from '../types/RunReport';
 import { formatTime } from './formatTime';
 
 /** Une tuile du bilan : la valeur en gros, son libellé dessous. */

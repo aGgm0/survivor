@@ -1,7 +1,7 @@
 // Persos de départ (voir CLAUDE.md § 5.9). Pour l'instant, un perso = son arme de départ.
 // Les persos verrouillés se débloquent par un défi fait avec leur arme, ramassée en partie.
 
-import type { RunReport } from '../systems/runReport';
+import type { RunReport } from '../types/RunReport';
 import { parseProfile, recordRun, serializeProfile, type Profile } from './profile';
 import { WEAPONS, type WeaponDef } from './weapons';
 

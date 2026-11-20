@@ -1,6 +1,6 @@
 import { lerp, normalizeInto, type Vec2 } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
-import { computeDamage } from '../systems/damage';
+import { computeDamage } from '../data/combat';
 import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
 import { HIT_FLASH_TINT, PLAYER_SPRITE, type SpriteDef } from '../data/sprites';
 

@@ -112,7 +112,7 @@ Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && np
 │   │   ├── upgrades.ts
 │   │   └── waves.ts
 │   ├── ui/                # HUD et menus en HTML/CSS
-│   └── types/             # types partagés
+│   └── types/             # types partagés (RunReport : bilan de partie)
 └── tests/                 # tests Vitest (logique pure)
 ```
 
@@ -355,10 +355,11 @@ Bloc A du plan de la 0.2 (validé le 2026-11-20), sorti à part pour avoir vite 
 ### 0.2 — Une partie juste `[moyenne]`
 - [x] Refactor : rendu sorti de `GameScene` (`scenes/game/WorldRenderer.ts`), sans changer le comportement ; test de rendu d'une partie chargée avec un faux contexte canvas
 - [x] Refactor : menu de test sorti de `GameScene` : armes, passifs et vue du panneau en fonctions pures (`scenes/game/devActions.ts`, testées) ; les actions sur le déroulement (temps, niveaux, sans fin, or, boss) restent dans `applyDevAction`
-- [ ] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` hors de `systems/` (une entité n'importe pas un système)
+- [x] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` dans `data/combat.ts`, à côté de `MIN_DAMAGE` (une entité n'importe pas un système)
 - [ ] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
 - [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
+- [ ] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
 - [ ] Or lâché (rarement) par les ennemis, réglé avec les prix de la boutique
 - [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul ») <!-- TODO: chiffres -->
 - [ ] **Lame d'onde remplacée par l'Estoc** : coup long et étroit (~220 px, 30°), gros dégâts, perce. L'Épée choisit entre « large » (Tourbillon) et « loin » (Estoc). La Lame d'onde était « pas fun » (retour de jeu) <!-- TODO: chiffres exacts à proposer au moment de la faire -->

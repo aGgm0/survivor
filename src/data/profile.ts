@@ -1,7 +1,7 @@
 // Profil du joueur : statistiques cumulées sur toutes les parties, sauvegardées dans localStorage.
 // Même principe que les réglages (data/settings.ts) : format versionné, relu sans confiance.
 
-import type { RunReport } from '../systems/runReport';
+import type { RunReport } from '../types/RunReport';
 import { SHOP_ITEMS } from './shop';
 import { GAME_VERSION } from './version';
 import { WEAPON_LIST } from './weapons';

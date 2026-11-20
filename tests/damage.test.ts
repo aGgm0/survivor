@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_DAMAGE } from '../src/data/combat';
+import { computeDamage, MIN_DAMAGE } from '../src/data/combat';
 import { PLAYER_BASE } from '../src/data/player';
 import { Player } from '../src/entities/Player';
-import { computeDamage, damageEnemy } from '../src/systems/damage';
+import { damageEnemy } from '../src/systems/damage';
 import { Enemy } from '../src/entities/Enemy';
 import { Weapon } from '../src/entities/Weapon';
 import { ENEMY_TYPES } from '../src/data/enemies';

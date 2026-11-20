@@ -21,7 +21,7 @@ import { DevPanel } from './ui/DevPanel';
 import { CharacterOverlay } from './ui/CharacterOverlay';
 import { ShopOverlay } from './ui/ShopOverlay';
 import { DEFAULT_CHARACTER, newUnlocks, type CharacterDef } from './data/characters';
-import type { RunReport } from './systems/runReport';
+import type { RunReport } from './types/RunReport';
 import { SpriteAtlas } from './core/SpriteAtlas';
 import {
   ATLAS_URLS,

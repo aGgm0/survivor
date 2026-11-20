@@ -3,7 +3,7 @@ import { CONTACT_HIT_COOLDOWN } from '../src/data/combat';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
 import { GameScene, type GameSceneDeps } from '../src/scenes/GameScene';
-import type { RunReport } from '../src/systems/runReport';
+import type { RunReport } from '../src/types/RunReport';
 import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
 import { choiceKey } from '../src/systems/upgrades';

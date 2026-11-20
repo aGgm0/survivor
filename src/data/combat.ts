@@ -4,6 +4,14 @@
 export const MIN_DAMAGE = 1;
 
 /**
+ * Dégâts réellement subis : l'armure retire un montant fixe, mais un coup fait toujours
+ * au moins MIN_DAMAGE (sinon 3 points d'armure rendraient immunisé aux ennemis rapides).
+ */
+export function computeDamage(raw: number, armor: number): number {
+  return Math.max(MIN_DAMAGE, raw - armor);
+}
+
+/**
  * s : un même ennemi ne peut toucher le joueur qu'une fois par cette durée. Chaque ennemi a son
  * propre délai (pas d'invincibilité globale) : plus il y a d'ennemis au contact, plus ça fait mal.
  */

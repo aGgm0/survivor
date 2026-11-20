@@ -8,7 +8,7 @@ import {
   newUnlocks,
 } from '../src/data/characters';
 import { emptyProfile, recordRun } from '../src/data/profile';
-import type { RunReport } from '../src/systems/runReport';
+import type { RunReport } from '../src/types/RunReport';
 
 const [ARCANIST, PYRO, RUNIST] = CHARACTERS as [
   (typeof CHARACTERS)[0],

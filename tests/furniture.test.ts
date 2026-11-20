@@ -11,7 +11,7 @@ import { CollisionSystem } from '../src/systems/CollisionSystem';
 import { damageEnemy } from '../src/systems/damage';
 import { PickupSystem } from '../src/systems/PickupSystem';
 import { SpawnSystem } from '../src/systems/SpawnSystem';
-import type { RunReport } from '../src/systems/runReport';
+import type { RunReport } from '../src/types/RunReport';
 import { WeaponSystem } from '../src/systems/WeaponSystem';
 import { MovementSystem } from '../src/systems/MovementSystem';
 import { Projectile } from '../src/entities/Projectile';

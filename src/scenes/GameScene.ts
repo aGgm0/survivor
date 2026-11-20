@@ -61,7 +61,8 @@ import {
   type UpgradeChoice,
 } from '../systems/upgrades';
 import type { EndOverlay } from '../ui/EndOverlay';
-import { buildDamageReport, type RunReport } from '../systems/runReport';
+import { buildDamageReport } from '../systems/runReport';
+import type { RunReport } from '../types/RunReport';
 import type { Hud } from '../ui/Hud';
 import type { LevelUpOverlay } from '../ui/LevelUpOverlay';
 import type { PauseOverlay } from '../ui/PauseOverlay';
