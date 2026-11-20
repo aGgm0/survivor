@@ -18,6 +18,9 @@ export interface SimResult {
   readonly seed: number;
   /** null si la partie a été arrêtée par MAX_RUN_TIME (prolongations sans fin) */
   readonly report: RunReport | null;
+  /** Vrai si le joueur est encore en vie à l'arrêt (limite atteinte, ou victoire) */
+  readonly alive: boolean;
+  readonly level: number;
   /** s de jeu au moment de l'arrêt */
   readonly time: number;
   /** PV les plus bas de la partie, en part des PV max (0 à 1) */
@@ -26,7 +29,12 @@ export interface SimResult {
   readonly wallSeconds: number;
 }
 
-export function runSim(seed: number, character?: CharacterDef): SimResult {
+/** `limit` : s de jeu après lesquelles on arrête (test rapide) ; par défaut toute la partie. */
+export function runSim(
+  seed: number,
+  character?: CharacterDef,
+  limit: number = MAX_RUN_TIME,
+): SimResult {
   const input = new BotInput();
   const { deps, ui } = makeHeadlessDeps(input.isDown);
   const scene = new GameScene(deps, seed, character ? { startWeapon: character.weapon } : {});
@@ -36,7 +44,7 @@ export function runSim(seed: number, character?: CharacterDef): SimResult {
   let minHpShare = 1;
   const t0 = performance.now();
 
-  for (let step = 0; !scene.isOver && scene.runTime < MAX_RUN_TIME; step++) {
+  for (let step = 0; !scene.isOver && scene.runTime < limit; step++) {
     if (scene.isChoosingUpgrade) scene.chooseUpgrade(pickUpgrade(scene, rng));
     if (step % thinkSteps === 0) {
       const dir = decideMove(scene);
@@ -48,6 +56,8 @@ export function runSim(seed: number, character?: CharacterDef): SimResult {
 
   return {
     seed,
+    alive: !scene.isOver || (scene.result?.victory ?? false),
+    level: scene.progression.level,
     report: ui.end ?? scene.result,
     time: scene.runTime,
     minHpShare,
