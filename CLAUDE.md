@@ -390,8 +390,8 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
   - [x] Armes : Épée (arc 200°, portée 125, recul 170), Fournaise (onde anti-gros), Tourbillon (dégâts ×0,85, recul ×1,3) ; Trait, Givre et Tempête inchangés
   - [x] Boss de 9:00 : vitesse ×2, annonce de charge 0,5 s
   - [x] Sans fin hardcore, XP ×10 au build complet, carte +15 PV / +10 or, soins de fin de partie réduits, or −50 %
-  - ↪ À confirmer avec les testeurs de la 0.2 : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
-  - ↪ Prix de la Boutique : à revoir une fois tout acheté (choix de l'utilisateur)
+  - ↪ 0.3 bloc D : confirmation avec les testeurs (~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00)
+  - ↪ 0.3 bloc D : prix de la Boutique, à revoir une fois tout acheté (choix de l'utilisateur)
 - [x] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
 - [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
 - [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icônes : flocon de glace (Raven n° 787) pour le givre, explosion de feu (n° 767, ex-Brasier) pour la Fournaise. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
@@ -400,15 +400,38 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
 ### 0.3 — Stats avancées et arsenal `[grosse]`
-- [ ] Registre de comportements d'armes : un module par type (`recompute`, `update`, `render`) au lieu des `switch` sur `def.kind` (`Weapon`, `WeaponSystem`, rendu)
+But : des ennemis qui résistent obligent à varier son build (seul vrai choix du joueur dans un jeu à tir automatique), et une nouvelle arme ne demande plus de toucher au moteur. Ordre : refactors → types de dégâts → armes → correctifs de la 0.2. Un plan court à valider avant chaque bloc.
+
+**Bloc A — Refactors (rien de visible en jeu)** : `npm run sim` donne les mêmes chiffres avant et après, sur les mêmes seeds
+- [ ] Registre de comportements d'armes : un module par type (`recompute`, `update`, `render`, détails de carte) au lieu des `switch` sur `def.kind` (`entities/Weapon.ts`, `WeaponSystem`, `WorldRenderer`, `choiceDetails`)
 - [ ] Événements de partie typés (`RunEvents` : kill, coup reçu, level up, ramassage, boss…) + module `Feedback` (son, tremblement, particules) qui les écoute ; `killEnemy` ne garde que les règles
-- [ ] **2 types de dégâts** : physique / magique, sur chaque arme
-- [ ] **Résistances des ennemis** : armure physique et résistance magique, en pourcentage : réduction = A / (A + 100), avec A = résistance − pénétration (jamais d'immunité, 1 dégât minimum)
-- [ ] **Pénétration** (stat du joueur, des passifs, des persos, des enchantements)
-- [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits
+- [ ] Test : une fausse arme d'un type existant s'ajoute en ne touchant que `data/`
+
+**Bloc B — Types de dégâts et résistances**
+- [ ] **2 types de dégâts** : `damageType` physique / magique sur chaque arme, affiché sur sa carte et dans le HUD <!-- TODO: type des 4 armes actuelles (proposition : Épée physique, les 3 autres magiques) -->
+- [ ] **Résistances des ennemis** : armure physique et résistance magique sur les types d'ennemis, en pourcentage : réduction = A / (A + 100), avec A = résistance − pénétration (jamais d'immunité, 1 dégât minimum) ; calcul dans `computeDamage` (`data/combat.ts`), testé
+- [ ] Résistances des ennemis actuels <!-- TODO: lesquels en ont en 0.3 (tank, élites, boss ?) et combien ; les vrais ennemis blindés arrivent en 0.4 -->
+- [ ] **Pénétration** : stat du joueur (`data/player.ts`), et un passif <!-- TODO: nom et valeur par niveau --> ; plus tard persos (0.5) et enchantements (0.6)
+- [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits ; damage meter en dégâts après réduction
 - [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
-- [ ] 4 nouvelles armes (2 physiques, 2 magiques), avec de nouveaux comportements, 2 mutations chacune
-- **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine.
+- [ ] Bot : part des dégâts physiques / magiques dans le bilan
+
+**Bloc C — 4 nouvelles armes** (2 physiques, 2 magiques, 2 mutations chacune, au moins 2 nouveaux comportements)
+- [ ] Design des 4 armes : noms, comportements, niveaux, mutations, icônes Raven <!-- TODO: à proposer et valider (pistes de comportements : éclair en chaîne, zone au sol, boomerang, tir en ligne) -->
+- [ ] Une arme à la fois : données, module de comportement si nouveau type, visuel, tests ; essai en jeu (F2) avant la suivante
+- [ ] Bot (`SIM_FORCE`) sur chaque mutation, puis petite passe d'équilibrage : aucune arme sous ~10 % du damage meter
+
+**Bloc D — Correctifs de la 0.2** (retours des testeurs sur la 0.2 ; peut sortir à part en 0.2.2 si c'est urgent)
+- [ ] Équilibrage confirmé avec les testeurs : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
+- [ ] Prix de la Boutique revus une fois tout acheté
+- [ ] Bugs et retours signalés sur la 0.2 <!-- TODO: liste à remplir avec les retours des testeurs -->
+- [ ] Limite connue : petits ennemis coincés entre deux tanks, à reprendre seulement si les testeurs le remarquent
+
+**Sortie**
+- [ ] Version 0.3.0 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.3.0` poussé
+
+**Ce qu'apporte la 0.3 (côté joueur) :** 8 armes au lieu de 4, chaque arme physique ou magique, des ennemis qui résistent à l'un des deux types, la pénétration pour percer leurs défenses, et les correctifs de la 0.2.
+- **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine ; les testeurs de la 0.2 confirment l'équilibrage.
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
 - [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi. Les métriques du bot doivent rester identiques avant d'aller plus loin
