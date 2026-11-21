@@ -6,7 +6,7 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 
 ### Modifié
 
-- Nouvelle police pour le texte courant (descriptions des cartes, défis des persos, Boutique, Profil, Options, aides en bas des écrans) : **monogram**, plus fine et plus lisible. Les titres, noms, boutons et chiffres gardent la police pixel du jeu.
+- Nouvelle police pour le texte courant (descriptions des cartes, défis des persos, noms et effets de la Boutique, Profil, Options, aides en bas des écrans) : **monogram**, plus fine et plus lisible. Les titres, noms, boutons et chiffres gardent la police pixel du jeu.
 
 ## [0.2.0] — 2026-11-21
 
