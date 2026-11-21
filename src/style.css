@@ -1232,3 +1232,67 @@ body {
 .profile-list {
   width: 760px;
 }
+
+/* ------------------------------------------------------------ survol « RPG » (piste A, 2026-11-21) */
+
+/*
+ * Retour de jeu : le survol faisait « site web » (texte qui change de couleur, carte qui glisse).
+ * À la place, le code des menus de RPG en pixel art : un curseur ▶ doré à gauche de ce qui est
+ * survolé ou sélectionné au clavier, qui avance de 2 px par à-coups. Le curseur est un seul
+ * carré de 2 px recopié en escalier par des ombres : des pixels nets, sans bord adouci.
+ */
+.menu-button {
+  position: relative;
+}
+
+/* Dans le bouton, à gauche : dehors, il n'y a pas de place (les boutons remplissent leur panneau). */
+.menu-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 2px;
+  height: 2px;
+  margin-top: -7px;
+  background: var(--ui-gold);
+  /* ▶ de 4 colonnes × 7 lignes (en pixels de 2 px) */
+  box-shadow:
+    0 2px var(--ui-gold),
+    0 4px var(--ui-gold),
+    0 6px var(--ui-gold),
+    0 8px var(--ui-gold),
+    0 10px var(--ui-gold),
+    0 12px var(--ui-gold),
+    2px 2px var(--ui-gold),
+    2px 4px var(--ui-gold),
+    2px 6px var(--ui-gold),
+    2px 8px var(--ui-gold),
+    2px 10px var(--ui-gold),
+    4px 4px var(--ui-gold),
+    4px 6px var(--ui-gold),
+    4px 8px var(--ui-gold),
+    6px 6px var(--ui-gold);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.menu-button:hover:not(:disabled)::before,
+.menu-button:focus-visible::before {
+  opacity: 1;
+  animation: rpg-cursor 0.5s steps(1, end) infinite;
+}
+
+@keyframes rpg-cursor {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-button::before {
+    animation: none !important;
+  }
+}
