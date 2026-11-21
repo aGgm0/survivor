@@ -121,7 +121,14 @@ export class LevelUpOverlay {
           line.append(`${c.label} : ${c.before} → `, el('span', 'choice-stat', c.after));
           button.append(line);
         }
-        if (choice.scope) button.append(el('span', 'choice-scope', choice.scope));
+        if (choice.scope) {
+          // Une ligne par morceau (« Orbite · tourne autour de toi · emplacement 3 / 4 »)
+          const scope = el('span', 'choice-scope');
+          for (const part of choice.scope.split(' · ')) {
+            scope.append(el('span', 'choice-scope-part', part));
+          }
+          button.append(scope);
+        }
         button.addEventListener('click', () => (this.clicked = index));
         return button;
       }),
