@@ -74,11 +74,11 @@ npm run preview    # tester le build
 npm run test       # tests Vitest
 npm run lint       # ESLint
 npm run typecheck  # tsc --noEmit
-npm run sim        # bot : 20 parties sans navigateur, bilan (SIM_SEEDS=50, SIM_PERSO=pyromancer)
+npm run sim        # bot : 20 parties sans navigateur, bilan (SIM_SEEDS=50, SIM_PERSO=pyromancer, SIM_FORCE=sword:1)
 npm run bench      # ms par update avec 600 ennemis
 ```
 
-`npm run sim` sert à **comparer** deux versions sur les mêmes seeds (le bot n'est pas un humain) : lancer avant et après une modification d'équilibrage.
+`npm run sim` sert à **comparer** deux versions sur les mêmes seeds (le bot n'est pas un humain) : lancer avant et après une modification d'équilibrage. Le bot plafonne vers le niveau 13 et n'atteint presque jamais une mutation : `SIM_FORCE=<arme>:<mutation>` lui donne l'arme au niveau max dès le début (mutation 0 ou 1, -1 : sans) pour comparer des mutations. Il ne casse pas les caisses : l'or qu'il mesure vient surtout des ennemis.
 
 Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && npm run test` doivent passer.
 
@@ -169,8 +169,8 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 16 | 1 s | +1 projectile aux niv 3 et 5 |
-| **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px |
-| **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 110 px, 120°, chaque ennemi touché une fois par coup | 16 | 1,2 s | Niv 2 +5 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +7 dégâts et portée +25 px (28 au niv 5). Recul 140. Le Duplicateur ne s'applique pas à l'Épée |
+| **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px. Mutations : **Aura de givre** (rayon ×1,4, dégâts ×0,6 toutes les 0,6 s, ralentit 45 %) / **Fournaise** (un souffle commun toutes les 1,5 s : dégâts ×4, recul ×3) |
+| **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 110 px, 120°, chaque ennemi touché une fois par coup | 16 | 1,2 s | Niv 2 +5 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +7 dégâts et portée +25 px (28 au niv 5). Recul 140. Le Duplicateur ne s'applique pas à l'Épée. Mutations : **Tourbillon** (360°, dégâts ×0,75) / **Estoc** (portée ×2, 30°, dégâts ×2, recul ×1,5 ; touche tout ennemi qui chevauche le cône) |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
 **Recul** (stat par arme, px/s donnés à l'ennemi touché) : toutes les forces ×1,2 (`KNOCKBACK.forceMult`, data/combat.ts) ; Trait arcanique 185 (sens du tir), Aura ardente 60 (depuis le joueur), Orbes runiques 200 (depuis le joueur : jamais renvoyé vers lui). Plus l'ennemi est lourd, moins il recule (tank ~3× moins) ; **le boss ne recule jamais** (`knockbackImmune`). Passif **Impact** : +8 % de recul par niveau.
@@ -183,9 +183,9 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. Règle de dégâts :
 
 | Ennemi | PV | Vitesse | Dégâts contact | XP | Comportement |
 |---|---|---|---|---|---|
-| Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`) |
-| Rapide | 5 | 135 | 3 | 1 | Fonce, fragile |
-| Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique |
+| Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`). 4 % de lâcher 1 pièce d'or |
+| Rapide | 5 | 135 | 3 | 1 | Fonce, fragile. 4 % de lâcher 1 pièce d'or |
+| Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique. 15 % de lâcher 1 pièce d'or |
 | Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
 
 **Mini-boss (élites)** : anneau doré pulsant, barre de PV, recul 50 % plus faible que leur version normale (`knockbackFactor`), +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
@@ -240,7 +240,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
 
 **Or et mobilier** (validé le 2026-11-11) :
-- **Mobilier** : tonneaux / caisses immobiles, cassés par n'importe quelle arme (10 PV) **ou en marchant dessus** (la visée automatique du Trait les ignore). Un nouveau toutes les 15 s hors écran, 8 au maximum. Lâche **70 % or** (1 à 3 pièces, un peu plus en fin de partie) ou **30 % nourriture** (+20 PV), ramassés à l'aimant. **Boss tué = +25 or. Élite tué = nourriture garantie.** Ne compte ni comme kill, ni dans le damage meter.
+- **Mobilier** : tonneaux / caisses immobiles, cassés par n'importe quelle arme (10 PV) **ou en marchant dessus** (la visée automatique du Trait les ignore). Un nouveau toutes les 15 s hors écran, 8 au maximum. Lâche **70 % or** (1 à 3 pièces, un peu plus en fin de partie) ou **30 % nourriture** (+20 PV), ramassés à l'aimant. **Boss tué = +25 or. Élite tué = +10 or et nourriture garantie. Basiques et rapides : 4 % de chances d'une pièce, tanks : 15 %** (`goldChance`, tirage séparé du reste de la partie). Ne compte ni comme kill, ni dans le damage meter.
 - L'or de la partie s'ajoute au total **seulement si elle est terminée** (et jamais en partie de test).
 - **Boutique** au menu (bonus permanents, appliqués au début de chaque partie, sans prendre d'emplacement de passif) :
 
@@ -374,9 +374,9 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [ ] **Cartes de level up et survol de TOUS les boutons refaits dans la DA** : retour de jeu (2026-11-21) « trop simple, ça ne fait pas trop dans la DA ». Aujourd'hui une carte survolée monte de 4 px et s'éclaircit, un bouton change juste de couleur de texte : effets génériques de site web. À la place, des effets pixel du pack (cadre qui s'allume, sélection marquée, apparition des cartes). Le même survol partout : menu principal, pause, Options, Boutique (boutons d'achat), Profil, choix du perso, écran de fin, relance, cartes de level up et de mutation Pistes visuelles à proposer avant de coder <!-- TODO: choisir parmi les pistes proposées -->
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
 - [x] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
-- [ ] Or lâché (rarement) par les ennemis, réglé avec les prix de la boutique
-- [ ] Mutations de l'Aura ardente repensées : **glace** (ralentit) et **feu** (dégâts en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul ») <!-- TODO: chiffres -->
-- [ ] **Lame d'onde remplacée par l'Estoc** : coup long et étroit (~220 px, 30°), gros dégâts, perce. L'Épée choisit entre « large » (Tourbillon) et « loin » (Estoc). La Lame d'onde était « pas fun » (retour de jeu) <!-- TODO: chiffres exacts à proposer au moment de la faire -->
+- [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
+- [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icône du givre à choisir dans le pack Raven <!-- TODO: Fournaise sous l'aura de base au bot (7:27 contre 8:04) : à renforcer -->
+- [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône à choisir dans le pack Raven <!-- TODO: frappe vers la direction de marche, donc souvent dans le vide (bot : 23 % du damage meter) ; viser l'ennemi le plus proche ? -->
 - [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
@@ -481,7 +481,7 @@ Les tâches ouvertes de cette époque sont reprises dans les versions ci-dessus 
 #### Après le MVP — idées validées, à planifier
 - [x] **Mutations d'armes** : le niveau 6 de chaque arme ; ses 2 variantes entrent dans le tirage normal du level up une fois l'arme au niveau 5 (choix définitif, ★ dans le HUD et le damage meter). Données : `mutations` dans `data/weapons.ts`
   - [x] Effets d'état : ralentissement, poison (`systems/status.ts`)
-  - [x] Aura (les 2 brûlent toutes les 0,6 s) : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
+  - [x] Aura (les 2 brûlent toutes les 0,6 s), remplacées le 2026-11-21 par Aura de givre / Fournaise : **Brasier** (rayon ×1,6, dégâts ×0,6, ralentit 30 %) / **Aura toxique** (poison pendant 3 s = 60 % des dégâts de l'aura par seconde, soit 6/s au niveau 5 sans bonus)
   - [x] Trait arcanique : **Trait perçant** (traverse 5 ennemis, dégâts ×0,9) / **Trait éclaté** (explosion 75 px, 70 % des dégâts, anneau visuel)
   - [x] Orbes runiques : **Orbes géants** (3 orbes ×2,2, dégâts ×2, rotation ×0,85, recul ×1,6) / **Tempête d'orbes** (9 orbes, rotation ×1,6, recul ×0,3)
 
@@ -499,7 +499,7 @@ Les tâches ouvertes de cette époque sont reprises dans les versions ci-dessus 
 - [x] Boutique de bonus permanents au menu (§ 5.9) — étape 2 : bouton Boutique, achat rang par rang, bonus appliqués au début de chaque partie (`data/shop.ts`)
   - ↪ 0.2 : les prix, selon l'or gagné par partie
 - ↪ 0.6 : Enchantements (design revu : l'effet dépend du passif seul)
-- [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts) ; Duplicateur sans effet sur elle (nerf du 2026-11-12, c'était un combo) ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
+- [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts, remplacée par l'Estoc le 2026-11-21) ; Duplicateur sans effet sur elle (nerf du 2026-11-12, c'était un combo) ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, ni l'aura ni l'Épée)
 - [x] **Capacités des boss** : charge annoncée (tous), invocation annoncée (9:00 et sans fin) (§ 5.5)
 - [x] **Mini-boss** : rapide élite à 3:00, basique élite à 7:00 (§ 5.5)
@@ -691,6 +691,9 @@ Format : date — décision — raison.
 | 2026-11-21 | Bot de simulation : lancé par Vitest (config `sim/vitest.config.ts`) plutôt que par Node ; réglages par variables d'environnement (`SIM_SEEDS`, `SIM_PERSO`) ; `process` déclaré à la main dans `sim/` | Le code du jeu dépend de Vite (`import.meta.env`, `__APP_VERSION__`, imports sans extension) : Vitest le lance sans nouvelle dépendance. Pas de `@types/node` (décision du 2026-11-18) |
 | 2026-11-21 | Le bot teste 16 directions et prend la moins dangereuse 0,4 s plus loin, avec un bonus vers les gemmes et pour tourner autour de la horde ; cartes au hasard (seedé) | Fuir la horde en ligne droite laissait toutes les gemmes derrière (niveau 3 à 3:00) ; additionner les répulsions le bloquait une fois encerclé (4 morts sur 10 avant 2:00). But : un joueur moyen et régulier, pour comparer deux versions, pas un bon joueur |
 | 2026-11-21 | Mesure de référence (0.1.3, Arcaniste, seeds 1 à 20) : 0 victoire, mort entre 4:46 et 6:39 (médiane 6:06), niveau médian 13, jamais de build complet ; damage meter : Trait 62 %, Orbes 27 %, Aura 19 %, Épée 6 %. Bench : 0,57 ms / update à 600 ennemis | Point de départ de la passe d'équilibrage. Le bot meurt surtout entre 6:00 et 6:40 (vague de 6:00 et rush) ; l'Épée est sous les ~10 % visés |
+| 2026-11-21 | Mutations de l'Aura : **Aura de givre** (rayon ×1,4, dégâts ×0,6, toutes les 0,6 s, ralentit 45 %) et **Fournaise** (souffle commun toutes les 1,5 s, dégâts ×4, recul ×3, disque qui s'allume + explosion + son). Le poison n'a plus d'arme : code gardé pour les enchantements | Plan validé (« ok reco »). Le souffle demande une horloge commune : avec l'horloge par ennemi, il n'y aurait pas de vraie rafale. Bot (Aura imposée niv 5) : givre 8:58, base 8:04, Fournaise 7:27 |
+| 2026-11-21 | **Estoc** à la place de la Lame d'onde : portée ×2, 30°, dégâts ×2 (×1,4 proposé, ×2 demandé), recul ×1,5 ; touche un ennemi qui chevauche le cône ; traînée de pixels en damier dessinée par le code. Code de la vague et effet `wind-blade` retirés | Test d'angle seul : un ennemi proche et un peu décalé était raté alors qu'il touche la lame. Pas d'effet d'estoc dans le pack PVFX. Bot (Épée imposée niv 5) : Tourbillon 7:34, Estoc 6:33, sans mutation 6:23 ; Estoc 23 % du damage meter (frappe dans la direction de marche, souvent opposée à la horde) |
+| 2026-11-21 | Or des ennemis : basique / rapide 4 %, tank 15 %, une pièce ; tirage séparé (`goldRng`) | Objectif : Boutique (4 050 or) complète en ~25 parties complètes. Tirage séparé : le bot meurt aux mêmes moments qu'avant sur les mêmes seeds. Bot : ~20 or par partie (mort vers 6:00) au lieu de ~4, mais il ne casse pas les caisses |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
