@@ -411,7 +411,7 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [ ] **2 types de dégâts** : `damageType` physique / magique sur chaque arme, affiché sur sa carte et dans le HUD <!-- TODO: type des 4 armes actuelles (proposition : Épée physique, les 3 autres magiques) -->
 - [ ] **Résistances des ennemis** : armure physique et résistance magique sur les types d'ennemis, en pourcentage : réduction = A / (A + 100), avec A = résistance − pénétration (jamais d'immunité, 1 dégât minimum) ; calcul dans `computeDamage` (`data/combat.ts`), testé
 - [ ] Résistances des ennemis actuels <!-- TODO: lesquels en ont en 0.3 (tank, élites, boss ?) et combien ; les vrais ennemis blindés arrivent en 0.4 -->
-- [ ] **Pénétration** : stat du joueur (`data/player.ts`), et un passif <!-- TODO: nom et valeur par niveau --> ; plus tard persos (0.5) et enchantements (0.6)
+- [ ] **Pénétration** : stat du joueur (`data/player.ts`), et un passif <!-- TODO: nom et valeur par niveau --> ; plus tard enchantements (0.4) et persos (0.5)
 - [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits ; damage meter en dégâts après réduction
 - [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
 - [ ] Bot : part des dégâts physiques / magiques dans le bilan
@@ -434,14 +434,31 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine ; les testeurs de la 0.2 confirment l'équilibrage.
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
-- [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi. Les métriques du bot doivent rester identiques avant d'aller plus loin
-- [ ] Vagues jusqu'à 30:00, 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
-- [ ] **Tank redessiné en démon rouge** (pixel art fait à la main) : aujourd'hui c'est l'orc `ogre` du pack 0x72, qui détonne dans un bestiaire de démons
-- [ ] 3 boss (10:00, 20:00, 30:00) aux sprites différents, nouvelles capacités (projectiles, zones au sol), plus d'élites avec leurs propres capacités
-- [ ] **Objets rares** lâchés par les caisses : arrêt du temps, 20 or, bombe qui tue tout à l'écran sauf les boss <!-- TODO: chance d'apparition, durée de l'arrêt du temps -->
-- [ ] Courbe d'XP refaite (build complet vers 25 min), sans fin après 30:00
-- [ ] Décision avec le bot : niveau max des armes à 12 (nouvelle mutation ?) et/ou plus d'emplacements (5 + 5 ?) <!-- TODO: à trancher selon « build complet à » -->
-- [ ] Refactor : `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
+But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début de la version (comme pour la 0.3).
+
+**Bloc A — Refactors** (le bot donne les mêmes chiffres avant et après)
+- [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi
+- [ ] `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
+
+**Bloc B — Bestiaire**
+- [ ] 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
+- [ ] **Tank redessiné en démon rouge** (pixel art fait à la main) : l'orc `ogre` du pack 0x72 détonne parmi les démons
+- [ ] Plus d'élites, avec leurs propres capacités
+
+**Bloc C — Boss**
+- [ ] 3 boss (10:00, 20:00, 30:00) aux sprites différents, nouvelles capacités (projectiles, zones au sol)
+
+**Bloc D — Rythme des 30 min**
+- [ ] Vagues jusqu'à 30:00, sans fin après
+- [ ] **Objets rares** des caisses : arrêt du temps, 20 or, bombe (tout sauf les boss) <!-- TODO: chance d'apparition, durée de l'arrêt du temps -->
+- [ ] Courbe d'XP refaite (build complet vers 25 min)
+
+**Bloc E — Progression longue** (remplace « armes au niveau 12 / emplacements 5 + 5 » : des choix plutôt que des chiffres en plus ; peut sortir à part en 0.4.x)
+- [ ] **Enchantements** (avancés de la 0.6) : le niveau 6 d'un passif enchante une arme au choix. L'effet dépend **du passif seul** et passe par des stats communes à toutes les armes (pénétration, type de dégâts, effets d'état, taille…). Un seul enchantement par arme. Effets des passifs existants en 0.4, ceux des nouveaux passifs en 0.6 <!-- TODO: les effets (pistes : Puissance = +pénétration, Duplicateur = change le type de dégâts, Vitalité = soin au kill…) -->
+- [ ] **Piste : mutation personnalisée** (idée de l'utilisateur, à concevoir) : après la mutation (niv 6), les niveaux 7 à 11 sont des choix, et le niveau 12 donne une **mutation améliorée** qui dépend de ces choix <!-- TODO: forme des choix, nombre de versions finales, et si on garde les deux (enchantements + niv 12) ou un seul -->
+- [ ] Courbe d'XP et « build complet à » revus avec le bot une fois ce bloc fait
+
+**Ce qu'apporte la 0.4 (côté joueur) :** une partie de 30 min, 3 boss, un bestiaire 3 fois plus grand, des objets rares dans les caisses, les enchantements (et peut-être les mutations personnalisées).
 - **Finie quand :** une partie de 30 min se joue de bout en bout, sans temps mort ni build complet trop tôt.
 
 ### 0.5 — Persos, ultis, bestiaire `[grosse]`
@@ -452,9 +469,8 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [ ] ~30 déblocages
 - **Finie quand :** une sauvegarde 0.4 se charge sans perte ; chaque perso a une raison d'être joué.
 
-### 0.6 — Enchantements et fin de l'arsenal `[moyenne]`
-- [ ] **Enchantements** : le niveau 6 d'un passif enchante une arme au choix. L'effet dépend **du passif seul** (12 effets, pas un par couple passif × arme) et passe par des stats communes à toutes les armes (pénétration, type de dégâts, effets d'état, taille…). Un seul enchantement par arme <!-- TODO: les 12 effets (pistes : Puissance = +pénétration, Duplicateur = change le type de dégâts, Vitalité = soin au kill…) -->
-- [ ] Armes 9 à 12, passifs jusqu'à ~12
+### 0.6 — Fin de l'arsenal `[moyenne]`
+- [ ] Armes 9 à 12, passifs jusqu'à ~12, avec leurs enchantements (le système arrive en 0.4)
 - [ ] **Revue de toutes les icônes** une fois l'arsenal complet (12 armes, leurs mutations, ~12 passifs) : vérifier qu'elles se distinguent toutes d'un coup d'œil (couleurs, formes), en changer si besoin. Choix actuels dans `tools/ui/copy-raven.mjs` ; planche numérotée du pack à refaire pour comparer
 - **Finie quand :** tout le contenu de la 1.0 est dans le jeu, même pas encore poli.
 
@@ -543,7 +559,7 @@ Les tâches ouvertes de cette époque sont reprises dans les versions ci-dessus 
 - [x] Mobilier cassable : or et nourriture (+20 PV) (§ 5.9) — étape 1 : caisses (type d'ennemi « objet »), pièces et nourriture à l'aimant, or dans le HUD, l'écran de fin et le profil, +100 or dans le menu de test
 - [x] Boutique de bonus permanents au menu (§ 5.9) — étape 2 : bouton Boutique, achat rang par rang, bonus appliqués au début de chaque partie (`data/shop.ts`)
   - ↪ 0.2 : les prix, selon l'or gagné par partie
-- ↪ 0.6 : Enchantements (design revu : l'effet dépend du passif seul)
+- ↪ 0.4 : Enchantements (design revu : l'effet dépend du passif seul ; avancés de la 0.6 le 2026-11-21)
 - [x] **4e arme : l'Épée** : coup en arc dans la direction de marche ; mutations **Tourbillon** (360°, dégâts ×0,75) / **Lame d'onde** (vague perçante ~300 px, 60 % des dégâts, remplacée par l'Estoc le 2026-11-21) ; Duplicateur sans effet sur elle (nerf du 2026-11-12, c'était un combo) ; perso **Lame-mage** (3 000 kills cumulés avec l'Épée)
 - [x] Nouveaux passifs : **Taille** (+4 %/niv, 5 niv : projectiles, orbes, aura, explosions ; l'orbite seulement à 30 % du bonus, soit +6 % au max), **Vélocité** (+5 %/niv, 5 niv : vitesse et portée des projectiles, rotation des orbes), **Duplicateur** (+1 projectile et +1 orbe par niveau, 3 niv max, mutations comprises, ni l'aura ni l'Épée)
 - [x] **Capacités des boss** : charge annoncée (tous), invocation annoncée (9:00 et sans fin) (§ 5.5)
@@ -753,6 +769,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Police du texte courant : monogram (32 px, 24 px pour le secondaire) ; DUNGEON.mode reste pour titres, noms, boutons et chiffres | Choisie sur la page de comparaison. 32 px = pixels ×2 exacts (16 px : 1 pour 1, trop petite). 24 px (×1,5) pour le texte à côté d'un nom en DUNGEON.mode 12 px : en 32 px il passait devant le nom (Boutique) |
 | 2026-11-21 | Annonces et barres de PV : chevrons pixel pour la charge, anneau pixel pour l'invocation, barres du pack + traînée des dégâts, barre sous le joueur (seulement blessé), grande barre du boss dans le HUD, contour rouge sous 20 % des PV (plus rapide sous 10 %) | « ok reco » ; seuil en % plutôt qu'en PV fixes : les PV max vont de 100 à ~200, et 15 PV = déjà un coup de boss |
 | 2026-11-21 | Survol « RPG » (piste A) : curseur ▶ doré en pixels dans le bouton, carte qui monte de 4 px d'un coup avec un contour doré ; cartes refaites d'après une proposition de Claude Design (badge, touche, crans, avant → après, portée en bas, 300 px de haut au moins) ; animations coupées avec `prefers-reduced-motion` | Retour de jeu : « trop simple, ça ne fait pas trop dans la DA ». `button-hover.png` du pack ne diffère du bouton que d'un pixel. Le curseur est dans le bouton : les boutons remplissent leur panneau, il n'y a pas de place dehors |
+| 2026-11-21 | Enchantements avancés de la 0.6 à la 0.4, à la place de « armes au niveau 12 / emplacements 5 + 5 » ; idée notée : niveaux 7 à 11 en choix après la mutation, niveau 12 = mutation améliorée selon ces choix (à concevoir) | Argument de l'utilisateur : c'est en 30 min qu'on en a besoin, pour que le build ne soit pas complet trop tôt. Des choix valent mieux que des chiffres en plus. Les stats communes dont ils dépendent (pénétration, types de dégâts) arrivent en 0.3 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
