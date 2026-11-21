@@ -108,7 +108,7 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
     emberSize: 4,
     emberInset: 0,
     spin: 0.8,
-    sparksPerSecond: 10,
+    sparksPerSecond: 0, // rien de permanent : seulement l'onde et ses flammes
     sparkColor: '#ff8a3d',
     sparkRise: 220,
     sparkLife: 0.6,
@@ -118,12 +118,10 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
 
 /**
  * Onde de la Fournaise (retour de jeu : l'explosion violette « bizarre », on ne voyait pas le
- * feu). Le disque s'allume puis s'éteint en `duration` s ; l'anneau de braises suit le front de
- * l'onde (voir `pulse` dans weapons.ts) ; des flammes jaillissent de toute sa portée.
+ * feu). Rien de permanent autour du joueur : l'anneau de braises suit le front de l'onde (voir
+ * `pulse` dans weapons.ts), puis s'éteint en `fade` s ; des flammes jaillissent de sa portée.
  */
 export const AURA_PULSE = {
-  duration: 0.3,
-  alpha: 0.18,
   /** s : l'anneau de l'onde s'éteint en ce temps une fois sa portée atteinte */
   fade: 0.15,
   flames: 46,

@@ -318,17 +318,17 @@ describe('Fournaise : onde de feu', () => {
     expect(hits.has(list[2]!)).toBe(false);
   });
 
-  it('une seule brûlure par onde ; dégâts ×2 sur les gros, ×0,6 sur les autres', () => {
+  it('une seule brûlure par onde ; dégâts ×1,4 sur les gros, ×0,2 sur les autres', () => {
     const { w, list, hits, run, pulses } = setup([
       ['tank', 60],
       ['basic', -60],
     ]);
     run(10, 1); // une onde, puis rien jusqu'à la suivante (1,5 s)
     expect(pulses()).toBe(1);
-    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 2));
-    expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.6));
+    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4));
+    expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.2));
     run(11.5, 0.5); // onde suivante
     expect(pulses()).toBe(2);
-    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 2) * 2);
+    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4) * 2);
   });
 });

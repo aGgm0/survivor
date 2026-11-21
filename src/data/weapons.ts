@@ -260,7 +260,7 @@ export const WEAPONS = {
         name: 'Fournaise',
         short: 'Fo',
         description:
-          'Toutes les 1,5 s, une onde de feu part de toi (×1,9 rayon) : dégâts ×8 sur les gros, ×2,4 sur les autres',
+          'Toutes les 1,5 s, une onde de feu part de toi (×1,9 rayon) : dégâts ×5,6 sur les gros, ×0,8 sur les autres',
         color: '#ff5a1f',
         radiusMult: 1.2, // +20 % (retour de jeu)
         damageMult: 4,
@@ -268,7 +268,8 @@ export const WEAPONS = {
         // 3 → 1,5 : le recul sortait les ennemis de la zone avant le souffle suivant (bot : la
         // Fournaise faisait moins bien que l'aura de base)
         knockbackMult: 1.5,
-        pulse: { reachMult: 1.6, travel: 0.4, bigMult: 2, smallMult: 0.6 },
+        // Gros ×2 → ×1,4 et petits ×0,6 → ×0,2 (retour de jeu, 2026-11-21)
+        pulse: { reachMult: 1.6, travel: 0.4, bigMult: 1.4, smallMult: 0.2 },
       },
     ],
   },

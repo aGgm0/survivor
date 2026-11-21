@@ -253,26 +253,25 @@ export class WorldRenderer {
     for (const w of this.world.weapons) {
       if (w.def.kind !== 'aura') continue;
       const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
-      ctx.beginPath();
-      ctx.arc(px, py, w.radius, 0, Math.PI * 2);
-      ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-      // Onde de feu (Fournaise) : lecture seule de l'état de l'arme.
+      // Onde de feu (Fournaise) : rien de permanent autour du joueur, seulement l'onde
+      // (retour de jeu : l'anneau constant ne servait à rien, c'est l'onde qui touche).
       const pulse = w.mutation?.pulse;
       const sincePulse = this.world.runTime - w.lastPulseAt;
-      const flash =
-        pulse && sincePulse >= 0 && sincePulse < AURA_PULSE.duration
-          ? AURA_PULSE.alpha * (1 - sincePulse / AURA_PULSE.duration)
-          : 0;
-      ctx.globalAlpha = (look ? look.fillAlpha : AURA_FILL_ALPHA) + flash;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      if (look) this.renderEmbers(ctx, px, py, w.radius, look);
-      else {
-        ctx.globalAlpha = AURA_STROKE_ALPHA;
-        ctx.strokeStyle = w.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
+      if (!pulse) {
+        ctx.beginPath();
+        ctx.arc(px, py, w.radius, 0, Math.PI * 2);
+        ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
+        ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
+        ctx.fill();
         ctx.globalAlpha = 1;
+        if (look) this.renderEmbers(ctx, px, py, w.radius, look);
+        else {
+          ctx.globalAlpha = AURA_STROKE_ALPHA;
+          ctx.strokeStyle = w.color;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
       }
       // Le front de l'onde : un anneau de braises vives qui part du joueur jusqu'à la portée
       // de l'onde (là où elle touche vraiment), puis s'éteint.
