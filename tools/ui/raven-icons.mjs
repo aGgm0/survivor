@@ -30,6 +30,11 @@ export const ICON_GROUPS = {
     velocity: 1018, // trait rapide
     duplicator: 969, // éclats en double
   },
+  // Cartes de fin de build (tout est au maximum)
+  'Fin de build': {
+    heal: 281, // potion rouge (comme la nourriture au sol)
+    gold: 158, // bourse
+  },
 };
 
 /** Toutes les icônes : id dans le jeu → numéro dans le pack. */

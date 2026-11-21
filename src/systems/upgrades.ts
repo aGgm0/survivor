@@ -21,7 +21,7 @@ export type UpgradeChoice = {
   | { readonly kind: 'gold' }
 );
 
-/** Icône d'un choix (id de l'arme, de la mutation ou du passif) ; aucune pour le soin. */
+/** Icône d'un choix : id de l'arme, de la mutation ou du passif, ou `heal` / `gold` (fin de build). */
 export function choiceIconId(choice: UpgradeChoice): string | undefined {
   switch (choice.kind) {
     case 'weaponLevel':
@@ -34,7 +34,7 @@ export function choiceIconId(choice: UpgradeChoice): string | undefined {
       return choice.passive.id;
     case 'heal':
     case 'gold':
-      return undefined;
+      return choice.kind;
   }
 }
 

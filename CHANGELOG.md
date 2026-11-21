@@ -11,6 +11,7 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 ### Corrigé
 
 - Barres de PV (joueur et boss) et barre d'XP : il restait un petit trou sombre à chaque bout et une ligne sombre en bas quand elles étaient pleines.
+- Les cartes **Soin** et **Bourse** (quand tout est au maximum) n'avaient pas d'icône : potion rouge et bourse.
 
 ## [0.2.1] — 2026-11-21
 
