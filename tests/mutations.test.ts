@@ -64,16 +64,16 @@ describe('mutation — effets sur les stats', () => {
     expect(w.color).toBe(FROST.color);
   });
 
-  it('Fournaise : rayon ×1,2, dégâts ×4, un souffle toutes les 1,5 s (la Hâte compte)', () => {
+  it('Fournaise : rayon ×1,2, dégâts ×4, une onde toutes les 1,8 s (la Hâte compte)', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     w.mutation = FURNACE;
     w.recompute(NO_MODS);
     expect(w.radius).toBeCloseTo(radius * 1.2);
     expect(w.damage).toBeCloseTo(damage * 4);
-    expect(w.cooldown).toBeCloseTo(1.5);
+    expect(w.cooldown).toBeCloseTo(1.8);
     w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
-    expect(w.cooldown).toBeCloseTo(0.75);
+    expect(w.cooldown).toBeCloseTo(0.9);
   });
 
   it('le damage meter affiche le nom de la mutation avec une étoile', () => {
@@ -303,8 +303,8 @@ describe('Fournaise : onde de feu', () => {
     return { w, list, hits, run, pulses: () => pulses };
   }
 
-  it('l’onde s’étend jusqu’à ×1,6 le rayon : proche d’abord, loin ensuite, pas au-delà', () => {
-    const reach = (maxedAura().radius * 1.2 * 1.6) | 0; // rayon de l'aura × Fournaise × onde
+  it('l’onde s’étend jusqu’à ×1,1 le rayon : proche d’abord, loin ensuite, pas au-delà', () => {
+    const reach = (maxedAura().radius * 1.2 * 1.1) | 0; // rayon de l'aura × Fournaise × onde
     const { list, hits, run } = setup([
       ['basic', 40],
       ['basic', reach - 30],
@@ -323,11 +323,11 @@ describe('Fournaise : onde de feu', () => {
       ['tank', 60],
       ['basic', -60],
     ]);
-    run(10, 1); // une onde, puis rien jusqu'à la suivante (1,5 s)
+    run(10, 1); // une onde, puis rien jusqu'à la suivante (1,8 s)
     expect(pulses()).toBe(1);
     expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4));
     expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.2));
-    run(11.5, 0.5); // onde suivante
+    run(11.8, 0.5); // onde suivante
     expect(pulses()).toBe(2);
     expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4) * 2);
   });
