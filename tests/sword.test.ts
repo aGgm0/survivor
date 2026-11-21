@@ -81,14 +81,14 @@ describe('Épée — le coup', () => {
 });
 
 describe('Épée — niveaux et passifs', () => {
-  it('niveau 5 : 28 dégâts, arc 160°, délai −20 %, portée 135 px', () => {
+  it('niveau 5 : 28 dégâts, arc 240°, délai −20 %, portée 150 px', () => {
     const w = new Weapon(SWORD);
     w.level = weaponMaxLevel(SWORD);
     w.recompute(NEUTRAL);
     expect(w.damage).toBeCloseTo((SWORD.damage + 5 + 7) * WEAPON_DAMAGE_MULT); // 28 avant le buff global
-    expect(w.arc).toBeCloseTo((160 * Math.PI) / 180);
+    expect(w.arc).toBeCloseTo((240 * Math.PI) / 180);
     expect(w.cooldown).toBeCloseTo(0.96);
-    expect(w.range).toBe(135);
+    expect(w.range).toBe(150);
   });
 
   it('Duplicateur : aucun effet sur l’Épée (nerf)', () => {
@@ -103,8 +103,8 @@ describe('Épée — niveaux et passifs', () => {
   it('Taille : portée plus longue, même ouverture', () => {
     const w = new Weapon(SWORD);
     w.recompute({ ...NEUTRAL, sizeMult: 1.2 });
-    expect(w.range).toBeCloseTo(110 * 1.2);
-    expect(w.arc).toBeCloseTo((120 * Math.PI) / 180);
+    expect(w.range).toBeCloseTo(125 * 1.2);
+    expect(w.arc).toBeCloseTo((200 * Math.PI) / 180);
   });
 });
 

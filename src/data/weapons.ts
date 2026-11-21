@@ -335,12 +335,14 @@ export const WEAPONS = {
     description: 'Frappe en arc devant toi, dans la direction où tu marches',
     // 22 → 16 et recul 260 → 140 : gros nerf (retour de jeu, l'Épée dominait).
     damage: 16,
-    knockback: 140,
+    // 2026-11-21 : on garde la direction de marche, mais en reculant le coup partait souvent
+    // dans le vide (6 à 10 % du damage meter) : arc 120 → 200°, portée 110 → 125, recul 140 → 170.
+    knockback: 170,
     cooldown: 1.2,
     count: 1,
     comboDelay: 0.12,
-    range: 110,
-    arcDeg: 120,
+    range: 125,
+    arcDeg: 200,
     color: '#e8e8f0',
     levels: [
       { description: '+5 dégâts', damage: 5 },
