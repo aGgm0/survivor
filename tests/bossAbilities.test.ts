@@ -4,7 +4,7 @@ import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
 import { BOSS_ABILITIES, BOSS_SPAWNS, BOSS_TYPE, ELITE_SPAWNS, waveAt } from '../src/data/waves';
 import { Enemy } from '../src/entities/Enemy';
-import { BossAbilitySystem } from '../src/systems/BossAbilitySystem';
+import { BossAbilitySystem, chargeDistance } from '../src/systems/BossAbilitySystem';
 import { CollisionSystem } from '../src/systems/CollisionSystem';
 import { MovementSystem } from '../src/systems/MovementSystem';
 import { SpawnSystem, armBoss } from '../src/systems/SpawnSystem';
@@ -111,6 +111,8 @@ describe('capacité : charge', () => {
     collisions.rebuild(pool);
     movement.update(pool, 0, 0, 1 / 60);
     expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * 1.2 * CHARGE.speedMult);
+    // L'annonce montre la vraie trajectoire (bug : elle prenait la marche ×2, ~490 px au lieu de ~295).
+    expect(chargeDistance(boss)).toBeCloseTo(BOSS_TYPE.speed * 1.2 * CHARGE.speedMult * CHARGE.duration);
   });
 });
 

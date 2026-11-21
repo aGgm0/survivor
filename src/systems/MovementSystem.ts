@@ -1,8 +1,8 @@
 import type { Pool } from '../core/Pool';
-import { BOSS_ABILITIES } from '../data/waves';
 import { CROWD } from '../data/physics';
 import type { Enemy } from '../entities/Enemy';
 import { MAX_ENEMY_RADIUS, type CollisionSystem } from './CollisionSystem';
+import { chargeSpeed } from './BossAbilitySystem';
 import { slowFactor } from './status';
 
 /**
@@ -72,8 +72,7 @@ export class MovementSystem {
     // Boss en charge : arrêt pendant l'annonce, puis ligne droite à grande vitesse (pas de foule).
     if (e.chargeState !== 'none') {
       const dash = e.chargeState === 'dash';
-      const dashMult = e.dashSpeedMult || e.speedMult;
-      const speed = dash ? e.type.speed * dashMult * BOSS_ABILITIES.charge.speedMult : 0;
+      const speed = dash ? chargeSpeed(e) : 0;
       this.nextVx[index] = e.chargeDirX * speed;
       this.nextVy[index] = e.chargeDirY * speed;
       return;

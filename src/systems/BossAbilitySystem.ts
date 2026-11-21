@@ -4,6 +4,19 @@ import type { Enemy } from '../entities/Enemy';
 import type { SpawnSystem } from './SpawnSystem';
 
 /**
+ * Vitesse de la charge (px/s). Le boss de 9:00 marche ×2 mais charge sur ×1,2 (`dashSpeedMult`) :
+ * le mouvement ET l'annonce passent par ici, pour que la ligne annoncée soit la vraie trajectoire.
+ */
+export function chargeSpeed(e: Enemy): number {
+  return e.type.speed * (e.dashSpeedMult || e.speedMult) * BOSS_ABILITIES.charge.speedMult;
+}
+
+/** Distance parcourue pendant la charge (px) : longueur de l'annonce. */
+export function chargeDistance(e: Enemy): number {
+  return chargeSpeed(e) * BOSS_ABILITIES.charge.duration;
+}
+
+/**
  * Capacités des boss : charge et invocation (réglages dans BOSS_ABILITIES).
  * Chaque capacité passe par une étape d'ANNONCE (dessinée par la scène) avant d'agir :
  * c'est ce qui permet au joueur de l'esquiver. Le mouvement pendant la charge est géré par

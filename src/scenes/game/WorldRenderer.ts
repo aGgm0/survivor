@@ -27,6 +27,7 @@ import type { Enemy } from '../../entities/Enemy';
 import type { Player } from '../../entities/Player';
 import type { Projectile } from '../../entities/Projectile';
 import type { Weapon } from '../../entities/Weapon';
+import { chargeDistance } from '../../systems/BossAbilitySystem';
 import type { DamageNumberSystem } from '../../systems/DamageNumberSystem';
 import type { EffectsSystem } from '../../systems/EffectsSystem';
 import type { GemSystem } from '../../systems/GemSystem';
@@ -214,14 +215,13 @@ export class WorldRenderer {
    * qui grandit (invocation). Lisibles même en pleine horde : c'est ce qui permet d'esquiver.
    */
   private renderBossTelegraphs(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const charge = BOSS_ABILITIES.charge;
     const summon = BOSS_ABILITIES.summon;
     for (const e of this.world.enemies.items) {
       if (!e.active || e.type !== BOSS_TYPE) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       if (e.chargeState === 'windup') {
-        const length = e.type.speed * e.speedMult * charge.speedMult * charge.duration;
+        const length = chargeDistance(e);
         ctx.strokeStyle = TELEGRAPH.chargeColor;
         ctx.lineWidth = e.type.radius * 2;
         ctx.globalAlpha = TELEGRAPH.alpha;
