@@ -95,6 +95,8 @@ interface WeaponDefBase {
   readonly short: string;
   /** Description courte (écran de level up quand on obtient l'arme) */
   readonly description: string;
+  /** Bas de la carte de level up : comment l'arme vise ou touche (ex. « Projectile · vise le plus proche ») */
+  readonly scope: string;
   /** Dégâts par coup au niveau 1 */
   readonly damage: number;
   /**
@@ -194,6 +196,7 @@ export const WEAPONS = {
     projectileLifetime: 1.4,
     projectileRadius: 6,
     color: '#5ab0ff',
+    scope: 'Projectile · vise le plus proche',
     levels: [
       { description: '+5 dégâts', damage: 5 },
       { description: '+1 projectile', count: 1 },
@@ -226,6 +229,7 @@ export const WEAPONS = {
     name: 'Aura ardente',
     short: 'AA',
     description: 'Brûle les ennemis autour de toi',
+    scope: 'Aura · autour de toi',
     damage: 5,
     knockback: 60, // faible : une brûlure pousse peu (50 → 60)
     cooldown: 0.5,
@@ -279,6 +283,7 @@ export const WEAPONS = {
     name: 'Orbes runiques',
     short: 'OR',
     description: 'Des orbes tournent autour de toi',
+    scope: 'Orbite · tourne autour de toi',
     damage: 10, // 8 → 10 : compense le gros nerf du recul
     // 320 → 370 → 350 → 200 : chaque orbe frappe (délai par orbe), le recul s'additionnait trop
     knockback: 200,
@@ -333,6 +338,7 @@ export const WEAPONS = {
     name: 'Épée',
     short: 'ÉP',
     description: 'Frappe en arc devant toi, dans la direction où tu marches',
+    scope: 'Mêlée · direction de marche',
     // 22 → 16 et recul 260 → 140 : gros nerf (retour de jeu, l'Épée dominait).
     damage: 16,
     // 2026-11-21 : on garde la direction de marche, mais en reculant le coup partait souvent

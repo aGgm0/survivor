@@ -60,6 +60,7 @@ import {
   type Build,
   type UpgradeChoice,
 } from '../systems/upgrades';
+import { describeChoice } from '../systems/choiceDetails';
 import type { EndOverlay } from '../ui/EndOverlay';
 import { buildDamageReport } from '../systems/runReport';
 import type { RunReport } from '../types/RunReport';
@@ -515,6 +516,7 @@ export class GameScene implements Scene, Build {
       level,
       this.choices.map((c) => ({
         ...c,
+        ...describeChoice(c, this),
         iconId: choiceIconId(c),
         weaponName: c.kind === 'mutation' ? c.weapon.def.name : undefined,
         accent: c.kind === 'mutation' ? c.mutation.color : undefined,

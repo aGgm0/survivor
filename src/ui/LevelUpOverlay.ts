@@ -1,3 +1,4 @@
+import type { StatChange } from '../systems/choiceDetails';
 import { splitStats } from './highlightStats';
 import { iconElement } from './icons';
 
@@ -17,11 +18,20 @@ export interface ChoiceView {
    * cadre doré : sans couleur propre, un testeur ne voyait pas la différence entre les deux.
    */
   readonly accent?: string;
+  /** Niveau actuel (0 : pas encore possédé) et max : les crans sous le nom */
+  readonly level?: number;
+  readonly maxLevel?: number;
+  /** Ce qui change, avant → après */
+  readonly changes?: readonly StatChange[];
+  /** Bas de la carte : ce que l'upgrade touche, ou l'emplacement qu'il prend */
+  readonly scope?: string;
+  /** Pourquoi la carte apparaît (soin, or : tout est au maximum) */
+  readonly reason?: string;
 }
 
 /** Étiquette et style de carte selon la sorte d'upgrade (voir UpgradeChoice). */
 const CARD_STYLES: Readonly<Record<string, { readonly tag: string; readonly css: string }>> = {
-  newWeapon: { tag: 'Arme', css: 'choice-weapon' }, // « Nouvelle arme » est déjà le texte de niveau
+  newWeapon: { tag: 'Nouvelle arme', css: 'choice-weapon' },
   weaponLevel: { tag: 'Arme', css: 'choice-weapon' },
   passive: { tag: 'Passif', css: 'choice-passive' },
   mutation: { tag: 'Mutation', css: 'choice-mutation' },
@@ -63,48 +73,55 @@ export class LevelUpOverlay {
         button.type = 'button';
         const style = choice.kind ? CARD_STYLES[choice.kind] : undefined;
         button.className = style ? `choice ${style.css}` : 'choice';
-        const key = document.createElement('span');
-        key.className = 'choice-key';
-        // Touche à presser, puis la sorte d'upgrade (« 1 · Passif »).
-        key.textContent = style ? `${index + 1} · ${style.tag}` : String(index + 1);
-        const title = document.createElement('span');
-        title.className = 'choice-title';
-        title.textContent = choice.title;
-        const level = document.createElement('span');
-        level.className = 'choice-level';
-        level.textContent = choice.levelText;
-        const desc = document.createElement('span');
-        desc.className = 'choice-desc';
-        // Bonus chiffrés en vert vif ; textContent par morceau (jamais d'innerHTML).
-        desc.append(
-          ...splitStats(choice.description).map((part) => {
-            if (!part.stat) return part.text;
-            const stat = document.createElement('span');
-            stat.className = 'choice-stat';
-            stat.textContent = part.text;
-            return stat;
-          }),
+        // Les cartes arrivent une par une (décalage lu par le CSS).
+        button.style.setProperty('--card-index', String(index));
+        if (choice.accent) button.style.setProperty('--accent', choice.accent);
+
+        // Haut : badge de la sorte, et la touche à presser dans une touche de clavier.
+        const top = el('span', 'choice-top');
+        if (style) top.append(el('span', 'choice-badge', style.tag));
+        top.append(el('span', 'choice-keycap', String(index + 1)));
+
+        // Icône dans sa case, nom, puis crans de niveau ou tampon de mutation.
+        const head = el('span', 'choice-head');
+        const iconBox = el('span', 'choice-icon');
+        if (choice.iconId) iconBox.append(iconElement(choice.iconId, ''));
+        const names = el('span', 'choice-names');
+        const isMutation = choice.kind === 'mutation';
+        names.append(
+          el('span', 'choice-title', isMutation ? choice.title.replace(/^★\s*/, '') : choice.title),
         );
-        const head = document.createElement('span');
-        head.className = 'choice-head';
-        if (choice.iconId) head.append(iconElement(choice.iconId, ''));
-        if (choice.kind === 'mutation') {
-          // Mutation : le nom seul (l'étoile passe dans la ligne de niveau), l'arme dessous, et
-          // « niveau 6 » au lieu de « Niv 6 · Mutation » (l'étiquette dit déjà « Mutation »).
-          title.textContent = choice.title.replace(/^★\s*/, '');
-          const names = document.createElement('span');
-          names.className = 'choice-names';
-          const weapon = document.createElement('span');
-          weapon.className = 'choice-weapon-name';
-          weapon.textContent = choice.weaponName ? `de ${choice.weaponName}` : '';
-          names.append(title, weapon);
-          head.append(names);
-          level.textContent = '★ Niveau 6 · définitif';
-          if (choice.accent) button.style.setProperty('--accent', choice.accent);
-        } else {
-          head.append(title);
+        if (isMutation && choice.weaponName) {
+          names.append(el('span', 'choice-weapon-name', `de ${choice.weaponName}`));
         }
-        button.append(key, head, level, desc);
+        if (choice.level !== undefined && choice.maxLevel !== undefined) {
+          names.append(
+            pips(choice.level, choice.maxLevel),
+            el('span', 'choice-level', levelText(choice)),
+          );
+        } else if (!isMutation && choice.levelText) {
+          names.append(el('span', 'choice-level', choice.levelText));
+        }
+        head.append(iconBox, names);
+        button.append(top, head);
+        if (isMutation) button.append(el('span', 'choice-stamp', '★ Niv 6 · définitif'));
+        if (choice.reason) button.append(el('span', 'choice-reason', choice.reason));
+
+        button.append(el('span', 'choice-sep'));
+        // Effet : chiffres mis en avant (textContent par morceau, jamais d'innerHTML).
+        const desc = el('span', 'choice-desc');
+        desc.append(
+          ...splitStats(choice.description).map((part) =>
+            part.stat ? el('span', 'choice-stat', part.text) : part.text,
+          ),
+        );
+        button.append(desc);
+        for (const c of choice.changes ?? []) {
+          const line = el('span', 'choice-change');
+          line.append(`${c.label} : ${c.before} → `, el('span', 'choice-stat', c.after));
+          button.append(line);
+        }
+        if (choice.scope) button.append(el('span', 'choice-scope', choice.scope));
         button.addEventListener('click', () => (this.clicked = index));
         return button;
       }),
@@ -138,4 +155,27 @@ export class LevelUpOverlay {
     this.clicked = null;
     this.rerollClicked = false;
   }
+}
+
+/** Petit élément avec sa classe et son texte (seulement au level up : pas dans la boucle). */
+function el(tag: string, className: string, text?: string): HTMLElement {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+/** Crans de niveau : remplis jusqu'au niveau actuel, le suivant (celui qu'on prend) clignote. */
+function pips(level: number, maxLevel: number): HTMLElement {
+  const row = el('span', 'choice-pips');
+  for (let i = 0; i < maxLevel; i++) {
+    row.append(el('span', i < level ? 'pip pip-on' : i === level ? 'pip pip-next' : 'pip'));
+  }
+  return row;
+}
+
+/** « Nouveau » pour une arme ou un passif pas encore possédé, sinon « Niv 2 → 3 ». */
+function levelText(choice: ChoiceView): string {
+  const level = choice.level ?? 0;
+  return level === 0 ? 'Nouveau' : `Niv ${level} → ${level + 1}`;
 }

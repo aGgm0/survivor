@@ -21,6 +21,7 @@
   --ui-text: #ece6d6;
   --ui-blue: #4f8fd0; /* XP, valeurs */
   --ui-red: #c8324a; /* PV */
+  --ui-red-light: #f07384; /* texte rouge lisible sur fond sombre (cartes de soin) */
   --ui-xp: #3ad4ff; /* barre d'XP (cyan vif : retour de testeur) */
   --ui-green: #5dff5d; /* bonus chiffrés des cartes de level up (vert vif : retour de testeur) */
 }
@@ -689,14 +690,29 @@ body {
   color: var(--ui-text);
   background: none;
   cursor: pointer;
-  transition: transform 0.08s;
 }
 
+/*
+ * Survol « RPG » (piste A) : la carte monte de 4 px d'un coup (pas de glissement) et un contour
+ * doré de 2 px apparaît, décalé de 4 px. Plus d'éclaircissement flou (« effet site web »).
+ */
 .choice:hover,
 .choice:focus-visible {
   transform: translateY(-4px);
-  filter: brightness(1.25);
-  outline: none;
+  outline: 2px solid var(--ui-gold);
+  outline-offset: 4px;
+}
+
+/* L'icône fait un petit saut quand on arrive sur la carte */
+.choice:hover .icon,
+.choice:focus-visible .icon {
+  animation: icon-bump 0.24s steps(2, end);
+}
+
+@keyframes icon-bump {
+  50% {
+    transform: translateY(-2px);
+  }
 }
 
 /*
@@ -721,7 +737,7 @@ body {
 
 .character-card:disabled:hover {
   transform: none;
-  filter: none;
+  outline: none;
 }
 
 .choice-key {
@@ -1294,5 +1310,174 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .menu-button::before {
     animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------- cartes de level up (2026-11-21) */
+
+/*
+ * Proposition Claude Design + piste A : badge de la sorte, touche de clavier, icône dans sa
+ * case, crans de niveau, effet avant → après, ligne de portée collée en bas. Rectangulaires
+ * (300 px de haut au moins) : toutes de la même hauteur. Couleur de la sorte (`--kind`)
+ * seulement sur le badge, les chiffres et les crans, jamais sur de longs textes.
+ */
+#levelup-choices .choice {
+  min-height: 300px;
+  gap: 8px;
+  animation: card-in 0.16s steps(2, end) both;
+  animation-delay: calc(var(--card-index, 0) * 0.08s);
+}
+
+.choice-weapon {
+  --kind: var(--ui-blue);
+}
+
+.choice-passive {
+  --kind: var(--ui-green);
+}
+
+.choice-heal {
+  --kind: var(--ui-red-light);
+}
+
+.choice-gold,
+.choice-mutation {
+  --kind: var(--ui-gold);
+}
+
+/* Les cartes arrivent une par une, par à-coups (comme un sprite, pas un fondu de site web) */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.choice-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.choice-badge {
+  padding: 2px 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ui-bg);
+  background: var(--kind, var(--ui-tan));
+}
+
+.choice-keycap {
+  min-width: 20px;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--ui-text);
+  border: 2px solid var(--ui-tan);
+  border-bottom-width: 4px;
+}
+
+.choice-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border: 2px solid var(--accent, var(--kind, var(--ui-tan)));
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.choice-icon .icon {
+  width: 48px;
+  height: 48px;
+}
+
+#levelup-choices .choice-title {
+  font-size: 20px;
+}
+
+.choice-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.pip {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--kind, var(--ui-tan));
+}
+
+.pip-on {
+  background: var(--kind, var(--ui-tan));
+}
+
+/* Le cran qu'on va gagner clignote (par à-coups) */
+.pip-next {
+  animation: pip-blink 0.6s steps(1, end) infinite;
+}
+
+@keyframes pip-blink {
+  50% {
+    background: var(--kind, var(--ui-tan));
+  }
+}
+
+#levelup-choices .choice-level {
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+.choice-stamp {
+  align-self: flex-start;
+  padding: 2px 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ui-gold);
+  border: 2px solid var(--ui-gold);
+}
+
+.choice-reason {
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+.choice-sep {
+  height: 0;
+  border-top: 2px dashed rgba(159, 136, 115, 0.45);
+}
+
+#levelup-choices .choice-desc {
+  font-size: 14px;
+}
+
+.choice-change {
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+#levelup-choices .choice-stat {
+  color: var(--kind, var(--ui-green));
+}
+
+.choice-heal .choice-desc {
+  color: var(--ui-red-light);
+}
+
+/* Ligne de portée collée en bas : toutes les cartes alignées */
+.choice-scope {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--ui-tan);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #levelup-choices .choice,
+  .pip-next,
+  .choice:hover .icon,
+  .choice:focus-visible .icon {
+    animation: none;
   }
 }

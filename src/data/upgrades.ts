@@ -28,6 +28,8 @@ export interface PassiveDef {
   readonly amount: number;
   /** PV/s de régénération en plus à chaque niveau (Vitalité : les PV max seuls ne soignaient pas) */
   readonly regenPerLevel?: number;
+  /** Bas de la carte de level up : ce que le passif touche (ex. « Toutes armes ») */
+  readonly scope: string;
 }
 
 export const PASSIVES: readonly PassiveDef[] = [
@@ -37,6 +39,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Vi',
     description: '+15 PV max (et soigne 15), +0,3 PV/s',
     maxLevel: 5,
+    scope: 'Toi',
     stat: 'maxHp',
     amount: 15,
     regenPerLevel: 0.3,
@@ -47,6 +50,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Cé',
     description: '+8 % vitesse',
     maxLevel: 5,
+    scope: 'Toi',
     stat: 'speedPct',
     amount: 0.08,
   },
@@ -56,6 +60,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'At',
     description: "+30 % rayon d'aimant",
     maxLevel: 5,
+    scope: 'Ramassage (gemmes, or, nourriture)',
     stat: 'pickupPct',
     amount: 0.3,
   },
@@ -65,6 +70,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Pu',
     description: '+10 % dégâts (toutes armes)',
     maxLevel: 5,
+    scope: 'Toutes armes',
     stat: 'damagePct',
     amount: 0.1,
   },
@@ -74,6 +80,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Hâ',
     description: '-8 % cooldown (toutes armes)',
     maxLevel: 5,
+    scope: 'Toutes armes sauf les orbes',
     stat: 'cooldownPct',
     amount: 0.08,
   },
@@ -83,6 +90,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Im',
     description: '+8 % recul (toutes armes)',
     maxLevel: 5,
+    scope: 'Recul de toutes les armes',
     stat: 'knockbackPct',
     // 25 % → 8 % : +125 % au niveau 5 repoussait la horde hors de portée. Recul de base +15 %.
     amount: 0.08,
@@ -93,6 +101,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Ta',
     description: '+4 % taille des projectiles, orbes, aura et explosions',
     maxLevel: 5,
+    scope: 'Projectiles, orbes, aura, explosions, Épée',
     stat: 'sizePct',
     // 7 % → 4 % : gros nerf (retour de jeu). Sur l'aura, ça se cumule avec l'Aura de givre (×1,4).
     amount: 0.04,
@@ -103,6 +112,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     short: 'Vé',
     description: '+5 % vitesse des projectiles (et portée) et rotation des orbes',
     maxLevel: 5,
+    scope: 'Projectiles et orbes',
     stat: 'velocityPct',
     amount: 0.05, // 10 % → 5 % : gros nerf (retour de jeu)
   },
@@ -113,6 +123,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     description: "+1 projectile et +1 orbe (pas l'Épée)",
     // Le plus fort des passifs : seulement 3 niveaux (Tempête : 9 + 3 = 12 orbes, le maximum).
     maxLevel: 3,
+    scope: 'Projectiles et orbes',
     stat: 'extraCount',
     amount: 1,
   },
