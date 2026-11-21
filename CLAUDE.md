@@ -368,7 +368,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 ### 0.2.1 — Police du texte courant `[petite]`
 - [x] Comparaison de 3 polices pixel (`tools/ui/fonts-preview.html`) : monogram (CC0), Pixel Operator (CC0), Silver (CC BY 4.0, 3,5 Mo)
 - [x] **monogram** (datagoblin, CC0, même auteur que DUNGEON.mode) pour le texte courant (`--ui-font-text`) : 32 px pour le texte principal (descriptions des cartes, noms des bonus de la Boutique, Options, damage meter), 24 px pour le texte secondaire (portée des cartes, Boutique, Profil, aides). DUNGEON.mode garde titres, noms, boutons, chiffres du HUD et nombres de dégâts
-- [ ] Version 0.2.1 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.1` poussé
+- [x] Version 0.2.1 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.1` poussé (2026-11-21)
 - **Finie quand :** zip sur itch ; textes lisibles sur tous les écrans, rien ne déborde en 1280×720.
 
 ### 0.2 — Une partie juste `[moyenne]`
