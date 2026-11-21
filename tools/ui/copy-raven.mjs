@@ -21,8 +21,8 @@ const ICONS = {
   // Mutations
   piercingBolt: 1010, // lance de glace
   burstBolt: 774, // éclat violet
-  blaze: 767, // explosion de feu
-  toxicAura: 780, // spirale verte
+  furnace: 767, // explosion de feu (ex-Brasier)
+  // frostAura : icône de glace à choisir dans le pack (en attendant, le jeu affiche « Gv »)
   giantOrbs: 773, // anneau violet
   orbStorm: 786, // tourbillon bleu
   whirlwind: 725, // coup en tourbillon

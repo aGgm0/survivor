@@ -86,35 +86,41 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
     sparkLife: 0.7,
     sparkSize: 4,
   },
-  // Brasier : plus grand, plus dense, plus vif
-  blaze: {
-    colors: ['#fff0a8', '#ffb347', '#e0582a'],
-    fillAlpha: 0.035,
+  // Aura de givre : bleu glacé, tourne lentement, flocons qui montent à peine et durent
+  frostAura: {
+    colors: ['#e8f8ff', '#8fd8ff', '#3a78b8'],
+    fillAlpha: 0.05,
+    emberSpacing: 8,
+    emberSize: 4,
+    emberInset: 0,
+    spin: -0.2,
+    sparksPerSecond: 8,
+    sparkColor: '#d8f4ff',
+    sparkRise: 60,
+    sparkLife: 1.3,
+    sparkSize: 4,
+  },
+  // Fournaise : rouge profond, braises vives ; le souffle lui-même est dessiné à part (AURA_PULSE)
+  furnace: {
+    colors: ['#ffe08a', '#ff5a1f', '#9a2414'],
+    fillAlpha: 0.03,
     emberSpacing: 7,
     emberSize: 4,
     emberInset: 0,
-    spin: 0.35,
-    sparksPerSecond: 12,
-    sparkColor: '#ffd27a',
-    sparkRise: 200,
-    sparkLife: 0.8,
-    sparkSize: 4,
-  },
-  // Aura toxique : verte, tourne dans l'autre sens, bulles lentes au lieu d'étincelles
-  toxicAura: {
-    colors: ['#c8ff8a', '#7cd94a', '#2f7a2a'],
-    fillAlpha: 0.035,
-    emberSpacing: 9,
-    emberSize: 4,
-    emberInset: 0,
-    spin: -0.3,
-    sparksPerSecond: 5,
-    sparkColor: '#9dff6a',
-    sparkRise: 110,
-    sparkLife: 1.1,
+    spin: 0.8,
+    sparksPerSecond: 10,
+    sparkColor: '#ff8a3d',
+    sparkRise: 220,
+    sparkLife: 0.6,
     sparkSize: 4,
   },
 };
+
+/**
+ * Souffle de la Fournaise : le disque s'allume d'un coup puis s'éteint en `duration` s
+ * (opacité de départ `alpha`), pour qu'on voie le rythme des rafales.
+ */
+export const AURA_PULSE = { duration: 0.3, alpha: 0.35 } as const;
 
 /** Trauma ajouté par événement ; `cap` : ce choc seul ne monte pas au-dessus. */
 export const SHAKE_EVENTS = {
@@ -123,6 +129,8 @@ export const SHAKE_EVENTS = {
   bossCharge: { amount: 0.3, cap: 1 },
   eliteKill: { amount: 0.4, cap: 1 },
   bossKill: { amount: 0.7, cap: 1 },
+  /** Souffle de la Fournaise : toutes les 1,5 s, donc léger */
+  auraPulse: { amount: 0.08, cap: 0.25 },
   /** À peine : il y en a beaucoup avec le Trait éclaté */
   explosion: { amount: 0.04, cap: 0.2 },
 } as const;

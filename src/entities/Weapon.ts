@@ -28,6 +28,9 @@ export class Weapon {
   /** s avant de pouvoir tirer / frapper ; ≤ 0 = prête (projectile) */
   cooldownTimer = 0;
   /** Angle actuel des orbes (orbite), et celui de l'update précédente pour l'interpolation */
+  /** Aura à souffle (Fournaise) : temps de partie du prochain souffle, et du dernier (visuel) */
+  nextPulseAt = 0;
+  lastPulseAt = -Infinity;
   angle = 0;
   prevAngle = 0;
   /** Dégâts réellement infligés (sans l'excédent sur un ennemi déjà presque mort) */

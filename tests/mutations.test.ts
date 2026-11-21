@@ -14,7 +14,16 @@ import { WeaponSystem } from '../src/systems/WeaponSystem';
 
 const NO_MODS = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
 const AURA = WEAPONS.burningAura;
-const [BLAZE, TOXIC] = AURA.mutations;
+const [FROST, FURNACE] = AURA.mutations;
+/** Mutation fabriquée pour tester le poison (plus aucune arme ne l'a depuis le 2026-11-21). */
+const POISON_TEST: MutationDef = {
+  id: 'poisonTest',
+  name: 'Poison (test)',
+  short: 'Pt',
+  description: '',
+  color: '#7cfc00',
+  poison: { dpsRatio: 0.6, duration: 3 },
+};
 
 function maxedAura(): Weapon {
   const w = new Weapon(AURA);
@@ -29,53 +38,47 @@ describe('mutation — quand', () => {
     expect(w.canMutate).toBe(false); // niveau 1
     w.level = weaponMaxLevel(AURA);
     expect(w.canMutate).toBe(true);
-    w.mutation = BLAZE;
+    w.mutation = FROST;
     expect(w.canMutate).toBe(false); // déjà mutée
   });
 
   it('propose exactement les 2 variantes de l’arme', () => {
     const choices = mutationChoices(maxedAura());
     expect(choices.map((c) => c.kind)).toEqual(['mutation', 'mutation']);
-    expect(choices.map((c) => c.title)).toEqual([`★ ${BLAZE.name}`, `★ ${TOXIC.name}`]);
+    expect(choices.map((c) => c.title)).toEqual([`★ ${FROST.name}`, `★ ${FURNACE.name}`]);
   });
 });
 
 describe('mutation — effets sur les stats', () => {
-  it('Brasier : rayon ×1,6, dégâts ×0,6 ; nouveau nom et nouvelle couleur', () => {
+  it('Aura de givre : rayon ×1,4, dégâts ×0,6, toutes les 0,6 s ; nouveau nom et couleur', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     const build = { player: undefined as never, weapons: [w], passiveLevels: new Map() };
     applyUpgrade(mutationChoices(w)[0] as Parameters<typeof applyUpgrade>[0], build);
     w.recompute(NO_MODS);
-    expect(w.radius).toBeCloseTo(radius * 1.6);
+    expect(w.radius).toBeCloseTo(radius * 1.4);
     expect(w.damage).toBeCloseTo(damage * 0.6);
-    expect(w.displayName).toBe('Brasier');
-    expect(w.color).toBe(BLAZE.color);
+    expect(w.cooldown).toBeCloseTo(0.6);
+    expect(w.displayName).toBe('Aura de givre');
+    expect(w.color).toBe(FROST.color);
   });
 
-  it('les 2 mutations de l’aura brûlent toutes les 0,6 s au lieu de 0,5 s (la Hâte compte encore)', () => {
-    for (const m of [BLAZE, TOXIC]) {
-      const w = maxedAura();
-      w.mutation = m;
-      w.recompute(NO_MODS);
-      expect(w.cooldown).toBeCloseTo(0.6);
-      w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
-      expect(w.cooldown).toBeCloseTo(0.3);
-    }
-  });
-
-  it('Aura toxique : mêmes rayon et dégâts', () => {
+  it('Fournaise : même rayon, dégâts ×4, un souffle toutes les 1,5 s (la Hâte compte)', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
-    w.mutation = TOXIC;
+    w.mutation = FURNACE;
     w.recompute(NO_MODS);
-    expect([w.radius, w.damage]).toEqual([radius, damage]);
+    expect(w.radius).toBeCloseTo(radius);
+    expect(w.damage).toBeCloseTo(damage * 4);
+    expect(w.cooldown).toBeCloseTo(1.5);
+    w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
+    expect(w.cooldown).toBeCloseTo(0.75);
   });
 
   it('le damage meter affiche le nom de la mutation avec une étoile', () => {
     const w = maxedAura();
-    w.mutation = TOXIC;
-    expect(buildDamageReport([w])[0]?.name).toBe('★ Aura toxique');
+    w.mutation = FURNACE;
+    expect(buildDamageReport([w])[0]?.name).toBe('★ Fournaise');
   });
 });
 
@@ -235,13 +238,13 @@ describe('mutation — effets en jeu', () => {
     return { e, w };
   }
 
-  it('Brasier ralentit de 30 % les ennemis brûlés', () => {
-    const { e } = hitOnce(BLAZE);
-    expect(slowFactor(e, 10)).toBeCloseTo(0.7);
+  it('Aura de givre ralentit de 45 % les ennemis gelés', () => {
+    const { e } = hitOnce(FROST);
+    expect(slowFactor(e, 10)).toBeCloseTo(0.55);
   });
 
-  it('Aura toxique empoisonne, et le poison compte pour l’aura', () => {
-    const { e, w } = hitOnce(TOXIC);
+  it('une aura à poison empoisonne, et le poison compte pour l’aura', () => {
+    const { e, w } = hitOnce(POISON_TEST);
     expect(e.poisonSource).toBe(w);
     // Aura niv 5 sans bonus : 10 dégâts × 0,6 = 6/s (la valeur du plan validé)
     expect(e.poisonDps).toBeCloseTo(6);
@@ -259,7 +262,7 @@ describe('mutation — effets en jeu', () => {
       onKill: () => {},
     });
     const w = maxedAura();
-    w.mutation = TOXIC;
+    w.mutation = POISON_TEST;
     w.recompute({ ...NO_MODS, damageMult: 1.5 });
     system.update(1 / 60, [w], 0, 0, 10);
     expect(e?.poisonDps).toBeCloseTo(6 * 1.5);
@@ -267,9 +270,43 @@ describe('mutation — effets en jeu', () => {
 
   it('le poison suit les dégâts de l’aura (un tick de 0,5 s passe de 3 à 4,5 avec +50 %)', () => {
     const w = maxedAura();
-    w.mutation = TOXIC;
+    w.mutation = POISON_TEST;
     w.recompute({ ...NO_MODS, damageMult: 1.5 });
-    const perTick = w.damage * (TOXIC.poison?.dpsRatio ?? 0) * 0.5;
+    const perTick = w.damage * (POISON_TEST.poison?.dpsRatio ?? 0) * 0.5;
     expect(perTick).toBeCloseTo(4.5);
+  });
+});
+
+describe('Fournaise : souffle commun', () => {
+  function setup() {
+    const enemies = new Pool(10, (i) => new Enemy(i));
+    const a = enemies.acquire();
+    const b = enemies.acquire();
+    a?.spawn(ENEMY_TYPES.tank, 50, 0);
+    b?.spawn(ENEMY_TYPES.tank, -50, 0);
+    const collisions = new CollisionSystem(10);
+    collisions.rebuild(enemies);
+    let hits = 0;
+    let pulses = 0;
+    const system = new WeaponSystem(10, collisions, new Pool(1, () => new Projectile()), {
+      onHit: () => hits++,
+      onKill: () => {},
+      onAuraPulse: () => pulses++,
+    });
+    const w = maxedAura();
+    w.mutation = FURNACE;
+    w.recompute(NO_MODS);
+    return { system, w, count: () => ({ hits, pulses }) };
+  }
+
+  it('brûle tous les ennemis de la zone en même temps, puis rien jusqu’au souffle suivant', () => {
+    const { system, w, count } = setup();
+    system.update(1 / 60, [w], 0, 0, 10);
+    expect(count()).toEqual({ hits: 2, pulses: 1 });
+    system.update(1 / 60, [w], 0, 0, 11); // 1 s plus tard : pas encore
+    expect(count()).toEqual({ hits: 2, pulses: 1 });
+    system.update(1 / 60, [w], 0, 0, 11.6); // 1,6 s après : souffle suivant
+    expect(count()).toEqual({ hits: 4, pulses: 2 });
+    expect(w.lastPulseAt).toBe(11.6);
   });
 });

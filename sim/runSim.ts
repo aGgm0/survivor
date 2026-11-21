@@ -14,6 +14,16 @@ const MAX_RUN_TIME = 15 * 60;
 /** Pour dériver la seed du bot (ses choix de cartes) de celle de la partie */
 const BOT_SEED_SALT = 0x5bd1e995;
 
+/**
+ * Arme imposée dès le début : au niveau max, avec la mutation n° `mutation` (-1 : sans). Le bot
+ * plafonne vers le niveau 13 et n'atteint presque jamais une mutation : c'est le moyen de
+ * comparer des mutations entre elles, à armes égales.
+ */
+export interface ForcedWeapon {
+  readonly weaponId: string;
+  readonly mutation: number;
+}
+
 export interface SimResult {
   readonly seed: number;
   /** null si la partie a été arrêtée par MAX_RUN_TIME (prolongations sans fin) */
@@ -34,11 +44,20 @@ export function runSim(
   seed: number,
   character?: CharacterDef,
   limit: number = MAX_RUN_TIME,
+  forced?: ForcedWeapon,
 ): SimResult {
   const input = new BotInput();
   const { deps, ui } = makeHeadlessDeps(input.isDown);
   const scene = new GameScene(deps, seed, character ? { startWeapon: character.weapon } : {});
   scene.enter();
+  if (forced) {
+    // Mêmes outils que le menu de test (F2) ; une partie simulée n'est jamais enregistrée.
+    const { weaponId: id, mutation } = forced;
+    if (!scene.weapons.some((w) => w.def.id === id))
+      scene.applyDevAction({ kind: 'weaponToggle', id });
+    scene.applyDevAction({ kind: 'weaponLevel', id, delta: 10 });
+    if (mutation >= 0) scene.applyDevAction({ kind: 'mutation', id, index: mutation });
+  }
   const rng = new Rng(seed ^ BOT_SEED_SALT);
   const thinkSteps = Math.round(BOT.thinkEvery / DT);
   let minHpShare = 1;

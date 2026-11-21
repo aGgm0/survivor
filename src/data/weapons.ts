@@ -44,7 +44,13 @@ export interface MutationDef {
   /** Aura : chaque ennemi brûlé est ralenti de `amount` (0,3 = 30 %) pendant `duration` s */
   readonly slow?: { readonly amount: number; readonly duration: number };
   /**
-   * Aura : chaque ennemi brûlé est empoisonné pendant `duration` s (renouvelé).
+   * Aura : un souffle commun toutes les `cooldown` s brûle en même temps tous les ennemis de la
+   * zone (au lieu d'une horloge par ennemi). Le souffle se voit et s'entend.
+   */
+  readonly pulse?: boolean;
+  /**
+   * Aura : chaque ennemi brûlé est empoisonné pendant `duration` s (renouvelé). Plus utilisé par
+   * une arme depuis le 2026-11-21 (Aura toxique remplacée), gardé pour les enchantements.
    * Dégâts par seconde = `dpsRatio` × dégâts actuels de l'arme : niveaux et passifs comptent.
    */
   readonly poison?: { readonly dpsRatio: number; readonly duration: number };
@@ -228,29 +234,31 @@ export const WEAPONS = {
     ],
     mutations: [
       {
-        id: 'blaze',
-        name: 'Brasier',
-        short: 'Br',
+        // Contrôle : grande zone qui ralentit fort, la horde arrive au ralenti (2026-11-21).
+        id: 'frostAura',
+        name: 'Aura de givre',
+        short: 'Gv',
         description:
-          'Rayon ×1,6, dégâts ×0,6, brûle toutes les 0,6 s, ralentit de 30 % les ennemis dedans',
-        color: '#ffb347',
-        radiusMult: 1.6,
+          'Rayon ×1,4, dégâts ×0,6, gèle toutes les 0,6 s : ralentit de 45 % les ennemis dedans',
+        color: '#8fd8ff',
+        radiusMult: 1.4,
         damageMult: 0.6,
-        // Retour de jeu : les 2 mutations de l'aura brûlaient trop souvent. 0,5 → 0,6 s.
-        cooldownMult: 1.2,
-        // 0,7 s > 0,6 s entre deux brûlures : l'ennemi reste ralenti tant qu'il est dedans.
-        slow: { amount: 0.3, duration: 0.7 },
+        cooldownMult: 1.2, // 0,5 → 0,6 s : 10 dégâts / s au niveau 5 (20 pour l'aura de base)
+        // 0,7 s > 0,6 s entre deux gels : l'ennemi reste ralenti tant qu'il est dedans.
+        // Les boss n'en subissent que 15 % (slowResist).
+        slow: { amount: 0.45, duration: 0.7 },
       },
       {
-        id: 'toxicAura',
-        name: 'Aura toxique',
-        short: 'At',
-        description:
-          'Même taille, brûle toutes les 0,6 s, empoisonne pendant 3 s : 60 % des dégâts de l’aura par seconde',
-        color: '#7cfc00',
-        // Au niveau 5 sans bonus : 10 dégâts × 0,6 = 6/s. Grandit avec Puissance.
-        poison: { dpsRatio: 0.6, duration: 3 },
-        cooldownMult: 1.2, // 0,5 → 0,6 s entre deux brûlures (voir Brasier)
+        // Rafale : rien entre deux souffles, puis une grosse brûlure qui repousse (2026-11-21).
+        id: 'furnace',
+        name: 'Fournaise',
+        short: 'Fo',
+        description: 'Toutes les 1,5 s, un souffle brûle toute la zone : dégâts ×4, gros recul',
+        color: '#ff5a1f',
+        damageMult: 4,
+        cooldownMult: 3, // 0,5 → 1,5 s : 40 par souffle au niveau 5, ~27 dégâts / s (20 de base)
+        knockbackMult: 3,
+        pulse: true,
       },
     ],
   },

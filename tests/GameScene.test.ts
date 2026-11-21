@@ -345,12 +345,12 @@ describe('GameScene — level up', () => {
     for (const p of PASSIVES.slice(0, MAX_PASSIVES)) scene.passiveLevels.set(p.id, p.maxLevel);
     giveXp(scene, scene.progression.xpForNext);
     const titles = scene.currentChoices.map((c) => c.title);
-    const toxic = titles.indexOf('★ Aura toxique');
+    const toxic = titles.indexOf('★ Fournaise');
     expect(toxic).toBeGreaterThanOrEqual(0);
     expect(scene.currentChoices[toxic]?.levelText).toBe('Niv 6 · Mutation');
 
     press(`Digit${toxic + 1}`, scene);
-    expect(aura.mutation?.name).toBe('Aura toxique');
+    expect(aura.mutation?.name).toBe('Fournaise');
     expect(aura.level).toBe(6);
     expect(scene.isChoosingUpgrade).toBe(false);
 

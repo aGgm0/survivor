@@ -94,7 +94,7 @@ export const PASSIVES: readonly PassiveDef[] = [
     description: '+4 % taille des projectiles, orbes, aura et explosions',
     maxLevel: 5,
     stat: 'sizePct',
-    // 7 % → 4 % : gros nerf (retour de jeu). Sur l'aura, ça se cumule avec le Brasier (×1,6).
+    // 7 % → 4 % : gros nerf (retour de jeu). Sur l'aura, ça se cumule avec l'Aura de givre (×1,4).
     amount: 0.04,
   },
   {

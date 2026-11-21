@@ -12,7 +12,7 @@ import {
   type SpriteTint,
 } from '../../core/SpriteAtlas';
 import { ENEMY_TYPE_LIST } from '../../data/enemies';
-import { AURA_LOOKS, type AuraLook } from '../../data/feel';
+import { AURA_LOOKS, AURA_PULSE, type AuraLook } from '../../data/feel';
 import {
   BOLT_SPRITE,
   ENEMY_ANIM_OFFSET,
@@ -257,7 +257,13 @@ export class WorldRenderer {
       ctx.beginPath();
       ctx.arc(px, py, w.radius, 0, Math.PI * 2);
       ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-      ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
+      // Souffle (Fournaise) : le disque s'allume puis s'éteint. Lecture seule de l'état de l'arme.
+      const sincePulse = this.world.runTime - w.lastPulseAt;
+      const flash =
+        sincePulse >= 0 && sincePulse < AURA_PULSE.duration
+          ? AURA_PULSE.alpha * (1 - sincePulse / AURA_PULSE.duration)
+          : 0;
+      ctx.globalAlpha = (look ? look.fillAlpha : AURA_FILL_ALPHA) + flash;
       ctx.fill();
       ctx.globalAlpha = 1;
       if (look) this.renderEmbers(ctx, px, py, w.radius, look);

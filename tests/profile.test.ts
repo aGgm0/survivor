@@ -22,9 +22,9 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
     weapons: [
       {
         id: 'burningAura',
-        name: 'Brasier',
-        icon: 'blaze',
-        short: 'Br',
+        name: 'Aura de givre',
+        icon: 'frostAura',
+        short: 'Gv',
         color: '',
         level: 5,
         damage: 5000,

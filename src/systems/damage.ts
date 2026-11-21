@@ -16,6 +16,8 @@ export interface HitEvents {
   onKill(enemy: Enemy): void;
   /** Optionnel : une explosion a eu lieu (pour l'effet visuel). */
   onExplosion?(x: number, y: number, radius: number, color: string): void;
+  /** Optionnel : souffle d'une aura (Fournaise), pour l'effet visuel, le son et le tremblement. */
+  onAuraPulse?(x: number, y: number, radius: number, color: string): void;
   /** Optionnel : un coup d'épée (pour l'effet visuel). `angle` = direction, `arc` = ouverture (rad). */
   onSlash?(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
   /** Optionnel : une arme à projectiles vient de tirer (pour le bruitage). */

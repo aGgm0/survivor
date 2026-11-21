@@ -154,17 +154,25 @@ export class WeaponSystem {
    * après un tick traverser presque 0,5 s sans rien prendre.)
    */
   private updateAura(weapon: Weapon, x: number, y: number, now: number): void {
+    const pulse = weapon.mutation?.pulse ?? false;
+    // Souffle (Fournaise) : une horloge commune ; entre deux souffles, l'aura ne fait rien.
+    if (pulse) {
+      if (now < weapon.nextPulseAt) return;
+      weapon.nextPulseAt = now + weapon.cooldown;
+      weapon.lastPulseAt = now;
+      this.events.onAuraPulse?.(x, y, weapon.radius, weapon.color);
+    }
     const radius = weapon.radius;
     const reach = radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     const count = this.collisions.queryNeighbors(x, y, reach, this.candidates);
     for (let i = 0; i < count; i++) {
       const e = this.candidates[i];
-      if (!e?.active || now < e.nextAuraHitAt) continue;
+      if (!e?.active || (!pulse && now < e.nextAuraHitAt)) continue;
       const touch = radius + e.type.radius; // le cercle de l'aura touche le bord de l'ennemi
       const dx = e.x - x;
       const dy = e.y - y;
       if (dx * dx + dy * dy > touch * touch) continue;
-      e.nextAuraHitAt = now + weapon.cooldown;
+      if (!pulse) e.nextAuraHitAt = now + weapon.cooldown;
       // Recul vers l'extérieur, depuis le joueur.
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       damageEnemy(weapon, e, weapon.damage, this.events, dx / dist, dy / dist);
@@ -172,7 +180,7 @@ export class WeaponSystem {
     }
   }
 
-  /** Effets d'état des auras mutées (Brasier : ralentit ; Aura toxique : empoisonne). */
+  /** Effets d'état des auras mutées (Aura de givre : ralentit ; poison : pour plus tard). */
   private applyAuraMutation(weapon: Weapon, e: Enemy, now: number): void {
     const m = weapon.mutation;
     if (!m) return;

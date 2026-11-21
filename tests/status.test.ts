@@ -51,7 +51,7 @@ describe('ralentissement', () => {
     expect(slowFactor(e, 6)).toBe(1);
   });
 
-  it('le boss ne subit que 15 % du ralentissement (Brasier −30 % → −4,5 %)', () => {
+  it('le boss ne subit que 15 % du ralentissement (−30 % → −4,5 %)', () => {
     const boss = new Enemy(0);
     boss.spawn(ENEMY_TYPES.boss, 0, 0);
     applySlow(boss, 0.3, 2, 0);

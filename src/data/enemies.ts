@@ -75,7 +75,7 @@ export const ENEMY_TYPES = {
     radius: 48,
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
-    slowResist: 0.85, // retour de jeu : le Brasier (−30 %) le ralentissait beaucoup trop
+    slowResist: 0.85, // retour de jeu : le Brasier (−30 %, remplacé par l'Aura de givre) le ralentissait beaucoup trop
   },
   /** Mini-boss de 3:00 : un rapide très boosté (PV ×60, dégâts ×4, taille ×1,8). */
   fastElite: {
