@@ -2,6 +2,16 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.2.2] — 2026-11-21
+
+### Modifié
+
+- Le tank n'est plus un orc vert : c'est maintenant un **démon rouge** à cornes, comme le reste du bestiaire (mêmes animations).
+
+### Corrigé
+
+- Barres de PV (joueur et boss) et barre d'XP : il restait un petit trou sombre à chaque bout quand elles étaient pleines.
+
 ## [0.2.1] — 2026-11-21
 
 ### Modifié

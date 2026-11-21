@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.1.3 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.2.2 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -365,6 +365,13 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Version 0.1.3 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.1.3` poussé (2026-11-21)
 - **Finie quand :** zip sur itch ; menus lisibles et entiers dans une petite fenêtre ; plein écran remis après Échap.
 
+### 0.2.2 — Tank démon et barre de PV `[petite]`
+- [x] **Tank en démon** (avancé de la 0.4) : l'orc `ogre` du pack repeint aux couleurs des démons, cornes en croissant, yeux blancs (`tools/sprites/tank-demon.mjs`, atlas `sprites/monsters/`)
+- [x] Barres du HUD (PV, XP, boss) : trou sombre à chaque bout une fois pleines. Le cadre faisait 8 px de côté mais son creux commence à 4 px : le cadre est maintenant dessiné 4 px au-delà de la barre (`border-image-outset`)
+- [x] Outils : planche des icônes Raven (`tools/ui/icons-preview.html`), page des variantes de sprites (`tools/sprites/variants-preview.html`)
+- [ ] Version 0.2.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.2` poussé
+- **Finie quand :** zip sur itch ; tank démon en jeu, barres pleines sans trou.
+
 ### 0.2.1 — Police du texte courant `[petite]`
 - [x] Comparaison de 3 polices pixel (`tools/ui/fonts-preview.html`) : monogram (CC0), Pixel Operator (CC0), Silver (CC BY 4.0, 3,5 Mo)
 - [x] **monogram** (datagoblin, CC0, même auteur que DUNGEON.mode) pour le texte courant (`--ui-font-text`) : 32 px pour le texte principal (descriptions des cartes, noms des bonus de la Boutique, Options, damage meter), 24 px pour le texte secondaire (portée des cartes, Boutique, Profil, aides). DUNGEON.mode garde titres, noms, boutons, chiffres du HUD et nombres de dégâts
@@ -442,7 +449,7 @@ But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début
 
 **Bloc B — Bestiaire**
 - [ ] 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
-- [ ] **Tank redessiné en démon rouge** (pixel art fait à la main) : l'orc `ogre` du pack 0x72 détonne parmi les démons
+- [x] **Tank redessiné en démon rouge** (avancé en 0.2.2) : l'orc `ogre` du pack repeint aux couleurs des démons, cornes en croissant, yeux blancs (`tools/sprites/tank-demon.mjs`, atlas `sprites/monsters/` collé sous celui du pack, l'ogre en secours). Comparaison : `tools/sprites/variants-preview.html`
 - [ ] Plus d'élites, avec leurs propres capacités
 
 **Bloc C — Boss**
@@ -770,6 +777,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Annonces et barres de PV : chevrons pixel pour la charge, anneau pixel pour l'invocation, barres du pack + traînée des dégâts, barre sous le joueur (seulement blessé), grande barre du boss dans le HUD, contour rouge sous 20 % des PV (plus rapide sous 10 %) | « ok reco » ; seuil en % plutôt qu'en PV fixes : les PV max vont de 100 à ~200, et 15 PV = déjà un coup de boss |
 | 2026-11-21 | Survol « RPG » (piste A) : curseur ▶ doré en pixels dans le bouton, carte qui monte de 4 px d'un coup avec un contour doré ; cartes refaites d'après une proposition de Claude Design (badge, touche, crans, avant → après, portée en bas, 300 px de haut au moins) ; animations coupées avec `prefers-reduced-motion` | Retour de jeu : « trop simple, ça ne fait pas trop dans la DA ». `button-hover.png` du pack ne diffère du bouton que d'un pixel. Le curseur est dans le bouton : les boutons remplissent leur panneau, il n'y a pas de place dehors |
 | 2026-11-21 | Enchantements avancés de la 0.6 à la 0.4, à la place de « armes au niveau 12 / emplacements 5 + 5 » ; idée notée : niveaux 7 à 11 en choix après la mutation, niveau 12 = mutation améliorée selon ces choix (à concevoir) | Argument de l'utilisateur : c'est en 30 min qu'on en a besoin, pour que le build ne soit pas complet trop tôt. Des choix valent mieux que des chiffres en plus. Les stats communes dont ils dépendent (pénétration, types de dégâts) arrivent en 0.3 |
+| 2026-11-21 | Tank : l'ogre du pack transformé en démon par un script (couleurs des démons du pack, cornes en croissant choisies parmi 3 essais, yeux blancs) plutôt que dessiné de zéro ; atlas `monsters` collé sous celui du pack au chargement (`SpriteAtlas.stack`), `fallback` vers l'ogre s'il manque | Un premier essai de sprites dessinés de zéro avait été rejeté (« trop bizarre ») ; partir d'un dessin du pack garde le style et les animations. Une seule image au rendu : rien ne change pour les 500 ennemis. Méthode à reprendre pour les élites et les boss (0.4) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
