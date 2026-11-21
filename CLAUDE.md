@@ -377,7 +377,6 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
 - [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icônes : flocon de glace (Raven n° 787) pour le givre, explosion de feu (n° 767, ex-Brasier) pour la Fournaise. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
 - [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône : épée pointée qui scintille (Raven n° 728). Vise l'ennemi le plus proche (dans la direction de marche, il frappait dans le vide) ; visuel : l'épée du pack se fend + trait d'énergie
-- [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
 ### 0.3 — Stats avancées et arsenal `[grosse]`
@@ -426,6 +425,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
   - accessibilité : taille du texte, mode daltonien (cartes et gemmes reposent sur la couleur), réduction des effets
   - souris partout (chaque écran utilisable sans clavier)
   - cohérence : mêmes boutons et raccourcis affichés partout, retour sonore et visuel sur chaque action
+- [ ] Son (déplacé de la 0.2 le 2026-11-21 : pas bloquant pour « une partie juste ») : musique de partie plus longue (44 s aujourd'hui) et musiques du niveau de 30 min, reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - [ ] Testeurs extérieurs, corrections, équilibrage final, perf
 - **Finie quand :** quelqu'un qui découvre le jeu le comprend sans explication ; deux semaines sans bug bloquant signalé.
 
@@ -704,6 +704,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Fournaise : gros ×2 → ×1,4, petits ×0,6 → ×0,2 ; plus d'anneau ni de disque permanents, seulement l'onde | Retour de jeu après essai (capture) : l'anneau constant n'apportait rien, c'est l'onde qui touche |
 | 2026-11-21 | Fournaise : portée de l'onde ×1,6 → ×1,1 (×1,32 le rayon de l'Aura de base), une onde toutes les 1,5 s → 1,8 s | Retour de jeu : « trop fort » |
 | 2026-11-21 | Épée : on garde la direction de marche (option D) ; arc 120° → 200° (240° au niv 3+), portée 110 → 125 px (150 au niv 5), recul 140 → 170. L'Estoc suit (portée ×2 : 300 px au niv 5) | En reculant, le coup partait souvent dans le vide (6 à 10 % du damage meter, bot bloqué au niveau 1 avec le Lame-mage). Viser l'ennemi le plus proche a été proposé et écarté : le choix de la direction en marchant fait l'identité de l'Épée |
+| 2026-11-21 | Son déplacé de la 0.2 à la 0.7 ; Tempête d'orbes laissée telle quelle | Son : la 0.2 vise « une partie juste », le son actuel marche, et le niveau de 30 min (0.4) demandera d'autres musiques. Tempête : un peu moins forte que les Orbes géants, mais elle les rattrape avec les bons passifs (Duplicateur, Vélocité, Taille) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
