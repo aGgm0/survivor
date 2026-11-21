@@ -370,7 +370,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Barres du HUD (PV, XP, boss) : trou sombre à chaque bout une fois pleines. Le cadre faisait 8 px de côté mais son creux commence à 4 px : le cadre est maintenant dessiné 4 px au-delà de la barre (`border-image-outset`) ; même chose pour le pixel sombre du bas (bordure du bas 6 → 4 px sous une image de 6 px)
 - [x] Icônes des cartes de fin de build : potion rouge (Soin, Raven n° 281) et bourse (Bourse, n° 158) ; elles étaient vides
 - [x] Outils : planche des icônes Raven (`tools/ui/icons-preview.html`), page des variantes de sprites (`tools/sprites/variants-preview.html`)
-- [ ] Version 0.2.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.2` poussé
+- [x] Version 0.2.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.2` poussé (2026-11-21)
 - **Finie quand :** zip sur itch ; tank démon en jeu, barres pleines sans trou.
 
 ### 0.2.1 — Police du texte courant `[petite]`
@@ -492,6 +492,7 @@ But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début
   - accessibilité : taille du texte, mode daltonien (cartes et gemmes reposent sur la couleur), réduction des effets
   - souris partout (chaque écran utilisable sans clavier)
   - cohérence : mêmes boutons et raccourcis affichés partout, retour sonore et visuel sur chaque action
+  - **refonte UX et UI de l'écran Profil** (demandée le 2026-11-21) : organisation des stats, lisibilité, place du bestiaire et des stats par perso (0.5) <!-- TODO: ce qui ne va pas aujourd'hui, ce qu'on veut y voir -->
 - [ ] Son (déplacé de la 0.2 le 2026-11-21 : pas bloquant pour « une partie juste ») : musique de partie plus longue (44 s aujourd'hui) et musiques du niveau de 30 min, reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - [ ] Testeurs extérieurs, corrections, équilibrage final, perf
 - **Finie quand :** quelqu'un qui découvre le jeu le comprend sans explication ; deux semaines sans bug bloquant signalé.
