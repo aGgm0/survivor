@@ -49,7 +49,7 @@ export class BossAbilitySystem {
         e.chargeDirX = dx / dist;
         e.chargeDirY = dy / dist;
         e.chargeState = 'windup';
-        e.chargeUntil = now + c.windup;
+        e.chargeUntil = now + (e.chargeWindup || c.windup);
         this.chargeWarnings++;
         return false;
       }

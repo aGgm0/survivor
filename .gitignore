@@ -1,4 +1,5 @@
-node_modules/
+# Sans slash : ignore aussi un lien symbolique node_modules (un lien n'est pas un dossier)
+node_modules
 dist/
 *.log
 .DS_Store

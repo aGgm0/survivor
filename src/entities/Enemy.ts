@@ -25,6 +25,10 @@ export class Enemy implements Poolable {
   damageMult = 1;
   /** Sans fin : part du recul ignorée, de 0 à 1 (0 sinon) */
   knockbackResist = 0;
+  /** Boss : s d'annonce de sa charge (0 : valeur par défaut de BOSS_ABILITIES) */
+  chargeWindup = 0;
+  /** Boss : multiplicateur de vitesse de sa charge (0 : celui de sa marche, `speedMult`) */
+  dashSpeedMult = 0;
   /** Invoqué par un boss (ses élites ne lâchent pas de nourriture) */
   summoned = false;
   /** N° de la dernière onde de Fournaise qui l'a touché : une seule brûlure par onde */
@@ -93,6 +97,8 @@ export class Enemy implements Poolable {
     this.damageMult = damageMult;
     this.knockbackResist = knockbackResist;
     this.summoned = false;
+    this.chargeWindup = 0;
+    this.dashSpeedMult = 0;
     this.waveHit = -1;
     this.type = type;
     this.bossIndex = -1;

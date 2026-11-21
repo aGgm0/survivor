@@ -15,6 +15,7 @@ import {
   endlessBossHpMult,
   endlessWave,
   waveAt,
+  type BossSpawn,
   type MutableWave,
   type WaveDef,
 } from '../data/waves';
@@ -97,6 +98,7 @@ export class SpawnSystem {
       const spawned = this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
       if (spawned) {
         spawned.bossIndex = this.nextBoss - 1;
+        applyBossSpawn(spawned, boss);
         armBoss(spawned, now, spawned.bossIndex >= BOSS_ABILITIES.summonFromBossIndex, 1);
       }
     }
@@ -126,6 +128,7 @@ export class SpawnSystem {
       playerX,
       playerY,
     );
+    if (boss && lastBoss) applyBossSpawn(boss, lastBoss);
     // Les deux capacités, de plus en plus fréquentes à chaque boss.
     if (boss) armBoss(boss, now, true, BOSS_ABILITIES.endlessIntervalFactor ** this.endlessBosses);
   }
@@ -179,6 +182,7 @@ export class SpawnSystem {
   spawnBoss(playerX: number, playerY: number, now: number): void {
     const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
     const boss = this.spawnAt(BOSS_TYPE, last?.hpMult ?? 1, last?.speedMult ?? 1, playerX, playerY);
+    if (boss && last) applyBossSpawn(boss, last);
     if (boss) armBoss(boss, now, true, 1);
   }
 
@@ -310,4 +314,10 @@ export function armBoss(boss: Enemy, now: number, canSummon: boolean, rate: numb
   boss.abilityRate = rate;
   boss.nextChargeAt = now + BOSS_ABILITIES.charge.firstDelay * rate;
   boss.nextSummonAt = canSummon ? now + BOSS_ABILITIES.summon.firstDelay * rate : Infinity;
+}
+
+/** Réglages propres à un boss (annonce et vitesse de sa charge) ; les boss du sans fin reprennent ceux du dernier. */
+function applyBossSpawn(enemy: Enemy, def: BossSpawn): void {
+  enemy.chargeWindup = def.chargeWindup ?? 0;
+  enemy.dashSpeedMult = def.dashSpeedMult ?? 0;
 }

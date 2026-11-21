@@ -111,7 +111,10 @@ describe('SpawnSystem — vagues', () => {
     spawner.update(1 / 60, BOSS_SPAWNS[1]?.time ?? 0, 0, 0);
     const bosses = activeEnemies(pool).filter((e) => e.type === ENEMY_TYPES.boss);
     expect(bosses.map((b) => b.maxHp)).toEqual([3000, 9000]);
-    expect(bosses.map((b) => b.speedMult)).toEqual([1, 1.2]);
+    expect(bosses.map((b) => b.speedMult)).toEqual([1, 2]);
+    // Boss de 9:00 : annonce de charge plus courte, charge calculée sur une vitesse à part.
+    expect(bosses.map((b) => b.chargeWindup)).toEqual([0, 0.5]);
+    expect(bosses.map((b) => b.dashSpeedMult)).toEqual([0, 1.2]);
   });
 
   it('la fin de partie envoie surtout des petits, de plus en plus vite', () => {

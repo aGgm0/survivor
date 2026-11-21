@@ -72,7 +72,8 @@ export class MovementSystem {
     // Boss en charge : arrêt pendant l'annonce, puis ligne droite à grande vitesse (pas de foule).
     if (e.chargeState !== 'none') {
       const dash = e.chargeState === 'dash';
-      const speed = dash ? e.type.speed * e.speedMult * BOSS_ABILITIES.charge.speedMult : 0;
+      const dashMult = e.dashSpeedMult || e.speedMult;
+      const speed = dash ? e.type.speed * dashMult * BOSS_ABILITIES.charge.speedMult : 0;
       this.nextVx[index] = e.chargeDirX * speed;
       this.nextVy[index] = e.chargeDirY * speed;
       return;

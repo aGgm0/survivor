@@ -135,6 +135,13 @@ export interface BossSpawn {
   /** multiplicateur des PV de base du boss (1000) ; l'XP suit, comme pour les vagues */
   readonly hpMult: number;
   readonly speedMult: number;
+  /** s d'annonce de la charge (absent : BOSS_ABILITIES.charge.windup) */
+  readonly chargeWindup?: number;
+  /**
+   * Multiplicateur de vitesse utilisé pour la charge (absent : `speedMult`). Permet un boss qui
+   * marche vite sans que sa charge traverse tout l'écran (charge = 5 × cette vitesse).
+   */
+  readonly dashSpeedMult?: number;
 }
 
 /**
@@ -145,7 +152,9 @@ export interface BossSpawn {
  */
 export const BOSS_SPAWNS: readonly BossSpawn[] = [
   { time: 300, hpMult: 3, speedMult: 1 },
-  { time: 540, hpMult: 9, speedMult: 1.2 },
+  // 9:00 (2026-11-21, « il faut de la pression ») : marche ×1,2 → ×2 (140 px/s, toi 200),
+  // annonce de la charge 0,8 → 0,5 s, charge gardée à ~295 px (calculée sur l'ancienne vitesse).
+  { time: 540, hpMult: 9, speedMult: 2, chargeWindup: 0.5, dashSpeedMult: 1.2 },
 ];
 export const BOSS_TYPE = ENEMY_TYPES.boss;
 

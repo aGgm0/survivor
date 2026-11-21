@@ -186,7 +186,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 | Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`). 4 % de lâcher 1 pièce d'or |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile. 4 % de lâcher 1 pièce d'or |
 | Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique. 15 % de lâcher 1 pièce d'or |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×1,2**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×2 = 140 px/s**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
 
 **Mini-boss (élites)** : anneau doré pulsant, barre de PV, recul 50 % plus faible que leur version normale (`knockbackFactor`), +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
 
@@ -196,7 +196,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 | Basique élite (rouge) | 7:00 | 1150 (×50) × vague | 97 | 20 (×4) | 25 |
 
 **Capacités des boss** (`BOSS_ABILITIES`), toujours annoncées pour pouvoir les esquiver :
-- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s avec une ligne rouge sur la trajectoire, puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00).
+- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s (**0,5 s pour le boss de 9:00** et ceux du sans fin) avec une ligne rouge sur la trajectoire, puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00 : sa charge est calculée sur une vitesse ×1,2, pas sur sa marche ×2).
 - **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
 
@@ -705,6 +705,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Fournaise : portée de l'onde ×1,6 → ×1,1 (×1,32 le rayon de l'Aura de base), une onde toutes les 1,5 s → 1,8 s | Retour de jeu : « trop fort » |
 | 2026-11-21 | Épée : on garde la direction de marche (option D) ; arc 120° → 200° (240° au niv 3+), portée 110 → 125 px (150 au niv 5), recul 140 → 170. L'Estoc suit (portée ×2 : 300 px au niv 5) | En reculant, le coup partait souvent dans le vide (6 à 10 % du damage meter, bot bloqué au niveau 1 avec le Lame-mage). Viser l'ennemi le plus proche a été proposé et écarté : le choix de la direction en marchant fait l'identité de l'Épée |
 | 2026-11-21 | Son déplacé de la 0.2 à la 0.7 ; Tempête d'orbes laissée telle quelle | Son : la 0.2 vise « une partie juste », le son actuel marche, et le niveau de 30 min (0.4) demandera d'autres musiques. Tempête : un peu moins forte que les Orbes géants, mais elle les rattrape avec les bons passifs (Duplicateur, Vélocité, Taille) |
+| 2026-11-21 | Boss de 9:00 : marche ×1,2 → ×2 (140 px/s, joueur 200), annonce de la charge 0,8 → 0,5 s, charge gardée à ~295 px (`dashSpeedMult` 1,2, séparé de la marche) ; les boss du sans fin reprennent ces réglages. Or inchangé (à revoir une fois la Boutique complète) | Retour de jeu : « il faut de la pression ». Sans vitesse de charge séparée, la charge serait passée à ~525 px, presque tout l'écran |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

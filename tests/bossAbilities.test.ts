@@ -96,6 +96,22 @@ describe('capacité : charge', () => {
     movement.update(pool, 0, 0, 1 / 60);
     expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * CHARGE.speedMult);
   });
+
+  it('boss réglé à part : annonce plus courte, charge sur sa propre vitesse (pas celle de sa marche)', () => {
+    const { pool, spawner, abilities, boss } = setup();
+    boss.speedMult = 2; // marche rapide…
+    boss.dashSpeedMult = 1.2; // …mais charge calculée sur 1,2
+    boss.chargeWindup = 0.5;
+    armBoss(boss, 0, false, 1);
+    abilities.update(pool, CHARGE.firstDelay, 0, 0, spawner);
+    abilities.update(pool, CHARGE.firstDelay + 0.5, 0, 0, spawner);
+    expect(boss.chargeState).toBe('dash');
+    const collisions = new CollisionSystem(500);
+    const movement = new MovementSystem(500, collisions);
+    collisions.rebuild(pool);
+    movement.update(pool, 0, 0, 1 / 60);
+    expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * 1.2 * CHARGE.speedMult);
+  });
 });
 
 describe('capacité : invocation', () => {
