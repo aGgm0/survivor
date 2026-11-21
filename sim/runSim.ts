@@ -28,6 +28,11 @@ export interface SimResult {
   readonly seed: number;
   /** null si la partie a été arrêtée par MAX_RUN_TIME (prolongations sans fin) */
   readonly report: RunReport | null;
+  /** Niveau atteint à 3:00 et à 6:00 (null : mort avant) */
+  readonly levelAt3: number | null;
+  readonly levelAt6: number | null;
+  /** s de jeu de la première mutation prise (null : jamais) */
+  readonly firstMutationAt: number | null;
   /** Vrai si le joueur est encore en vie à l'arrêt (limite atteinte, ou victoire) */
   readonly alive: boolean;
   readonly level: number;
@@ -61,6 +66,9 @@ export function runSim(
   const rng = new Rng(seed ^ BOT_SEED_SALT);
   const thinkSteps = Math.round(BOT.thinkEvery / DT);
   let minHpShare = 1;
+  let levelAt3: number | null = null;
+  let levelAt6: number | null = null;
+  let firstMutationAt: number | null = null;
   const t0 = performance.now();
 
   for (let step = 0; !scene.isOver && scene.runTime < limit; step++) {
@@ -70,11 +78,19 @@ export function runSim(
       input.setDirection(dir.x, dir.y);
     }
     scene.update(DT);
+    if (levelAt3 === null && scene.runTime >= 180) levelAt3 = scene.progression.level;
+    if (levelAt6 === null && scene.runTime >= 360) levelAt6 = scene.progression.level;
+    if (firstMutationAt === null && !forced && scene.weapons.some((w) => w.mutation)) {
+      firstMutationAt = scene.runTime;
+    }
     minHpShare = Math.min(minHpShare, scene.player.hp / scene.player.maxHp);
   }
 
   return {
     seed,
+    levelAt3,
+    levelAt6,
+    firstMutationAt,
     alive: !scene.isOver || (scene.result?.victory ?? false),
     level: scene.progression.level,
     report: ui.end ?? scene.result,

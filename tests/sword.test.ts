@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { WEAPON_DAMAGE_MULT } from '../src/data/combat';
 import { Pool } from '../src/core/Pool';
 import { CHARACTERS } from '../src/data/characters';
 import { ENEMY_TYPES } from '../src/data/enemies';
@@ -84,8 +85,7 @@ describe('Épée — niveaux et passifs', () => {
     const w = new Weapon(SWORD);
     w.level = weaponMaxLevel(SWORD);
     w.recompute(NEUTRAL);
-    expect(w.damage).toBe(SWORD.damage + 5 + 7);
-    expect(w.damage).toBe(28);
+    expect(w.damage).toBeCloseTo((SWORD.damage + 5 + 7) * WEAPON_DAMAGE_MULT); // 28 avant le buff global
     expect(w.arc).toBeCloseTo((160 * Math.PI) / 180);
     expect(w.cooldown).toBeCloseTo(0.96);
     expect(w.range).toBe(135);
@@ -120,7 +120,7 @@ describe('Épée — mutations', () => {
   it('Tourbillon : tout autour (360°), dégâts ×0,75', () => {
     const w = mutated(0);
     expect(WHIRL.name).toBe('Tourbillon');
-    expect(w.damage).toBeCloseTo(28 * 0.75);
+    expect(w.damage).toBeCloseTo(28 * 0.75 * WEAPON_DAMAGE_MULT);
     const { run, hits } = setup(
       [
         [80, 0],

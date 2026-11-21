@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { WEAPON_DAMAGE_MULT } from '../src/data/combat';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
@@ -257,16 +258,17 @@ describe('Weapon — stats par niveau', () => {
     const w = new Weapon(BOLT);
     const mods = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
     w.recompute(mods);
-    expect([w.damage, w.count, w.cooldown]).toEqual([BOLT.damage, 1, 1]);
+    expect([w.count, w.cooldown]).toEqual([1, 1]);
+    expect(w.damage).toBeCloseTo(BOLT.damage * WEAPON_DAMAGE_MULT);
 
     w.level = 5; // +5 dégâts, +2 projectiles, cooldown -20 %
     w.recompute(mods);
-    expect(w.damage).toBe(BOLT.damage + 5);
+    expect(w.damage).toBeCloseTo((BOLT.damage + 5) * WEAPON_DAMAGE_MULT);
     expect(w.count).toBe(3);
     expect(w.cooldown).toBeCloseTo(0.8);
 
     w.recompute({ damageMult: 1.5, cooldownMult: 0.5, knockbackMult: 1 });
-    expect(w.damage).toBeCloseTo((BOLT.damage + 5) * 1.5);
+    expect(w.damage).toBeCloseTo((BOLT.damage + 5) * 1.5 * WEAPON_DAMAGE_MULT);
     expect(w.cooldown).toBeCloseTo(0.4);
   });
 });

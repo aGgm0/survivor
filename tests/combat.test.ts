@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { WEAPON_DAMAGE_MULT } from '../src/data/combat';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
 import { MAX_ORBS, WEAPONS, weaponRange, type WeaponDef } from '../src/data/weapons';
@@ -101,7 +102,7 @@ describe('Aura ardente', () => {
     weapon.level = 5;
     weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
     expect(weapon.radius).toBe(AURA.radius + 15 + 15 + 20);
-    expect(weapon.damage).toBe(AURA.damage + 2 + 3);
+    expect(weapon.damage).toBeCloseTo((AURA.damage + 2 + 3) * WEAPON_DAMAGE_MULT);
   });
 
   it('ses kills et ses dégâts comptent pour le damage meter', () => {
@@ -186,7 +187,7 @@ describe('Orbes runiques', () => {
     weapon.level = 5;
     weapon.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
     expect(weapon.count).toBe(ORBS.count + 4);
-    expect(weapon.damage).toBe(ORBS.damage + 3);
+    expect(weapon.damage).toBeCloseTo((ORBS.damage + 3) * WEAPON_DAMAGE_MULT);
   });
 });
 

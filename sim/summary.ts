@@ -22,7 +22,7 @@ function pct(x: number): string {
 /** Une ligne par partie. */
 export function formatRuns(results: readonly SimResult[]): string {
   const lines = [
-    'seed  fin        temps  niv  kills   or  build  PV min  armes (part du damage meter)',
+    'seed  fin        temps  niv  n3:00 n6:00 1re mut  kills   or  build  PV min  armes (part du damage meter)',
   ];
   for (const r of results) {
     const rep = r.report;
@@ -34,6 +34,9 @@ export function formatRuns(results: readonly SimResult[]): string {
         end.padEnd(9),
         mmss(r.time).padStart(6),
         String(rep?.level ?? '').padStart(4),
+        String(r.levelAt3 ?? '—').padStart(5),
+        String(r.levelAt6 ?? '—').padStart(5),
+        (r.firstMutationAt != null ? mmss(r.firstMutationAt) : '—').padStart(7),
         String(rep?.kills ?? '').padStart(6),
         String(rep?.gold ?? '').padStart(4),
         (rep?.maxedAt != null ? mmss(rep.maxedAt) : '—').padStart(6),
@@ -50,6 +53,9 @@ export function formatSummary(results: readonly SimResult[]): string {
   const done = results.filter((r) => r.report);
   const wins = done.filter((r) => r.report?.victory).length;
   const times = results.map((r) => r.time);
+  const levels3 = results.flatMap((r) => (r.levelAt3 != null ? [r.levelAt3] : []));
+  const levels6 = results.flatMap((r) => (r.levelAt6 != null ? [r.levelAt6] : []));
+  const mutations = results.flatMap((r) => (r.firstMutationAt != null ? [r.firstMutationAt] : []));
   const maxed = done.flatMap((r) => (r.report?.maxedAt != null ? [r.report.maxedAt] : []));
   const lines = [
     `Parties : ${results.length} (${results.length - done.length} arrêtées, trop longues)`,
@@ -58,6 +64,8 @@ export function formatSummary(results: readonly SimResult[]): string {
     `Build complet : ${maxed.length} parties${maxed.length ? `, médiane ${mmss(median(maxed))}` : ''}`,
     `Niveau atteint (médiane) : ${median(done.map((r) => r.report?.level ?? 0))}`,
     `Or gagné (médiane) : ${median(done.map((r) => r.report?.gold ?? 0))}`,
+    `Niveau à 3:00 (médiane) : ${median(levels3)}, à 6:00 : ${median(levels6)} (${levels6.length} parties y arrivent)`,
+    `Première mutation : ${mutations.length} / ${results.length} parties${mutations.length ? `, médiane ${mmss(median(mutations))}` : ''}`,
     '',
     'Part moyenne du damage meter, dans les parties où l’arme est présente :',
   ];

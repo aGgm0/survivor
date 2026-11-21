@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { WEAPON_DAMAGE_MULT } from '../src/data/combat';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { WEAPONS, weaponMaxLevel, type MutationDef } from '../src/data/weapons';
@@ -246,8 +247,8 @@ describe('mutation — effets en jeu', () => {
   it('une aura à poison empoisonne, et le poison compte pour l’aura', () => {
     const { e, w } = hitOnce(POISON_TEST);
     expect(e.poisonSource).toBe(w);
-    // Aura niv 5 sans bonus : 10 dégâts × 0,6 = 6/s (la valeur du plan validé)
-    expect(e.poisonDps).toBeCloseTo(6);
+    // Aura niv 5 sans bonus : 10 dégâts × 0,6 = 6/s (× le buff global des dégâts)
+    expect(e.poisonDps).toBeCloseTo(6 * WEAPON_DAMAGE_MULT);
     expect(slowFactor(e, 10)).toBe(1); // pas de ralentissement
   });
 
@@ -265,7 +266,7 @@ describe('mutation — effets en jeu', () => {
     w.mutation = POISON_TEST;
     w.recompute({ ...NO_MODS, damageMult: 1.5 });
     system.update(1 / 60, [w], 0, 0, 10);
-    expect(e?.poisonDps).toBeCloseTo(6 * 1.5);
+    expect(e?.poisonDps).toBeCloseTo(6 * 1.5 * WEAPON_DAMAGE_MULT);
   });
 
   it('le poison suit les dégâts de l’aura (un tick de 0,5 s passe de 3 à 4,5 avec +50 %)', () => {
@@ -273,7 +274,7 @@ describe('mutation — effets en jeu', () => {
     w.mutation = POISON_TEST;
     w.recompute({ ...NO_MODS, damageMult: 1.5 });
     const perTick = w.damage * (POISON_TEST.poison?.dpsRatio ?? 0) * 0.5;
-    expect(perTick).toBeCloseTo(4.5);
+    expect(perTick).toBeCloseTo(4.5 * WEAPON_DAMAGE_MULT);
   });
 });
 

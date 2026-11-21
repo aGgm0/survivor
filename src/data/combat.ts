@@ -1,5 +1,12 @@
 // Règles de combat générales (voir CLAUDE.md § 5.4).
 
+/**
+ * Multiplicateur de dégâts de TOUTES les armes (un seul réglage, comme le recul). 1 → 1,15
+ * (2026-11-21) : les parties en retard d'XP, sans mutation, mouraient toutes vers 6:00. Un buff
+ * des dégâts de base aide surtout celles-là, contrairement à un buff des niveaux d'armes.
+ */
+export const WEAPON_DAMAGE_MULT = 1.15;
+
 /** Un coup fait toujours au moins ce montant, même contre beaucoup d'armure. */
 export const MIN_DAMAGE = 1;
 

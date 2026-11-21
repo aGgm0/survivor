@@ -1,4 +1,5 @@
 import { SIZE_ORBIT_SHARE } from '../data/upgrades';
+import { WEAPON_DAMAGE_MULT } from '../data/combat';
 import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 
 /** Multiplicateurs venant du joueur (passifs), appliqués à toutes ses armes. */
@@ -131,7 +132,7 @@ export class Weapon {
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;
-    this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult;
+    this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult * WEAPON_DAMAGE_MULT;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
     // Passifs Taille, Vélocité, Duplicateur (neutres s'ils sont absents).
     const size = mods.sizeMult ?? 1;
