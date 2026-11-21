@@ -51,7 +51,7 @@ export const ENEMY_TYPES = {
     // Retour de jeu (2026-11-18) : XP trop lente. Une gemme sur deux vaut double (≈ +20 % d'XP
     // au total), plutôt qu'un +50 % général : ça récompense de tuer les basiques.
     bonusGem: { chance: 0.5, xpMult: 2 },
-    goldChance: 0.04,
+    goldChance: 0.02, // 4 → 2 % : or −50 %
   },
   fast: {
     id: 'fast',
@@ -61,7 +61,7 @@ export const ENEMY_TYPES = {
     xp: 1,
     radius: 10,
     color: '#f0ad4e',
-    goldChance: 0.04,
+    goldChance: 0.02, // 4 → 2 % : or −50 %
   },
   tank: {
     id: 'tank',
@@ -71,7 +71,7 @@ export const ENEMY_TYPES = {
     xp: 5,
     radius: 24,
     color: '#5cb85c',
-    goldChance: 0.15, // plus dur à tuer : plus souvent de l'or
+    goldChance: 0.075, // 15 → 7,5 % (or −50 %) ; plus dur à tuer : plus souvent de l'or
   },
   /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
   boss: {

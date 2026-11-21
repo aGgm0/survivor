@@ -162,14 +162,22 @@ export function waveAt(time: number): WaveDef {
  * depuis le début du sans fin durcit la dernière vague. Sans ça, un build complet raserait tout.
  */
 export const ENDLESS = {
-  /** PV ×1,25 par minute, cumulé (×1,56 après 2 min, ×3 vers 5 min) */
-  hpGrowthPerMinute: 1.25,
+  // 2026-11-21 : chaque minute, toutes les stats des ennemis montent (« hardcore »). Calcul en
+  // continu (pas par paliers) à l'apparition de chaque ennemi. Les boss gardent leur progression.
+  /** PV ×1,2 par minute, cumulé (×1,44 après 2 min, ×2,5 après 5 min) */
+  hpGrowthPerMinute: 1.2,
+  /** Dégâts au contact ×1,1 par minute, cumulé (×1,6 après 5 min) */
+  damageGrowthPerMinute: 1.1,
   /** ennemis par seconde en plus, par minute */
   extraPerSecondPerMinute: 2,
   /** vitesse +3 % par minute... */
   speedGrowthPerMinute: 0.03,
-  /** ...plafonnée, pour rester jouable */
-  maxSpeedMult: 1.8,
+  /** ...plafonnée à ×3 (était ×1,8 : le sans fin doit être hardcore) */
+  maxSpeedMult: 3,
+  /** Résistance au recul +8 % par minute (part du recul ignorée)... */
+  knockbackResistPerMinute: 0.08,
+  /** ...plafonnée : un ennemi recule toujours un peu */
+  maxKnockbackResist: 0.8,
   /** s entre deux boss du sans fin (le 1er arrive 3 min après le début) */
   bossInterval: 180,
   /** PV du 1er boss du sans fin = ceux du dernier boss normal × ce facteur, puis × encore à chaque boss */
@@ -182,6 +190,10 @@ export interface MutableWave {
   weights: WaveDef['weights'];
   hpMult: number;
   speedMult: number;
+  /** Sans fin seulement : dégâts au contact × ce facteur */
+  damageMult: number;
+  /** Sans fin seulement : part du recul ignorée (0 à 1) */
+  knockbackResist: number;
 }
 
 /**
@@ -197,6 +209,8 @@ export function endlessWave(base: WaveDef, minutes: number, out: MutableWave): M
     ENDLESS.maxSpeedMult,
     base.speedMult * (1 + ENDLESS.speedGrowthPerMinute * m),
   );
+  out.damageMult = ENDLESS.damageGrowthPerMinute ** m;
+  out.knockbackResist = Math.min(ENDLESS.maxKnockbackResist, ENDLESS.knockbackResistPerMinute * m);
   return out;
 }
 
@@ -240,5 +254,5 @@ export const BOSS_ABILITIES = {
   /** Boss du sans fin : les délais × ce facteur à chaque nouveau boss (10 % plus rapide) */
   endlessIntervalFactor: 0.9,
   /** Or donné à la mort d'un mini-boss */
-  eliteGold: 10,
+  eliteGold: 5, // 10 → 5 : or −50 % (2026-11-21)
 } as const;

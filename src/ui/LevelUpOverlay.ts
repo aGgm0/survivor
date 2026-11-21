@@ -26,6 +26,7 @@ const CARD_STYLES: Readonly<Record<string, { readonly tag: string; readonly css:
   passive: { tag: 'Passif', css: 'choice-passive' },
   mutation: { tag: 'Mutation', css: 'choice-mutation' },
   heal: { tag: 'Soin', css: 'choice-heal' },
+  gold: { tag: 'Or', css: 'choice-gold' },
 };
 
 /**

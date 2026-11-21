@@ -29,7 +29,8 @@ const RECYCLE_DISTANCE = SPAWN_RADIUS * SPAWN.recycleDistanceFactor;
 const FLOAT_EPSILON = 1e-9;
 
 /** Ce qu'il faut pour faire apparaître un ennemi de vague (vague normale ou vague du sans fin). */
-type SpawnParams = Pick<WaveDef, 'weights' | 'hpMult' | 'speedMult'>;
+type SpawnParams = Pick<WaveDef, 'weights' | 'hpMult' | 'speedMult'> &
+  Partial<Pick<MutableWave, 'damageMult' | 'knockbackResist'>>;
 
 /** Fait apparaître les ennemis selon la vague en cours, et les boss à leurs instants. */
 export class SpawnSystem {
@@ -52,6 +53,8 @@ export class SpawnSystem {
     weights: WAVES[0]?.weights ?? [],
     hpMult: 1,
     speedMult: 1,
+    damageMult: 1,
+    knockbackResist: 0,
   };
 
   constructor(
@@ -65,13 +68,17 @@ export class SpawnSystem {
     this.endlessBosses = 0;
   }
 
+  /** Vague en cours : la normale, ou celle du sans fin (stats qui montent chaque minute). */
+  private currentWave(now: number): SpawnParams & { readonly perSecond: number } {
+    const base = waveAt(now);
+    return this.endlessStart === null
+      ? base
+      : endlessWave(base, (now - this.endlessStart) / 60, this.endlessCurrent);
+  }
+
   /** `now` = temps de partie (s) : détermine la vague active et l'arrivée des boss. */
   update(dt: number, now: number, playerX: number, playerY: number): void {
-    const base = waveAt(now);
-    const wave =
-      this.endlessStart === null
-        ? base
-        : endlessWave(base, (now - this.endlessStart) / 60, this.endlessCurrent);
+    const wave = this.currentWave(now);
     const interval = 1 / wave.perSecond;
     this.timer += dt;
     // Tolérance : un intervalle comme 0,4 s ajouté plusieurs fois n'est pas exact en virgule
@@ -188,7 +195,7 @@ export class SpawnSystem {
    * avec les PV et la vitesse de la vague en cours. Respecte le plafond d'ennemis.
    */
   summonAround(x: number, y: number, now: number): void {
-    const wave = waveAt(now);
+    const wave = this.currentWave(now);
     const { basics, elites, radius } = BOSS_ABILITIES.summon;
     const total = basics + elites;
     for (let i = 0; i < total; i++) {
@@ -203,7 +210,10 @@ export class SpawnSystem {
         y + Math.sin(angle) * radius,
         wave.hpMult,
         wave.speedMult,
+        wave.damageMult,
+        wave.knockbackResist,
       );
+      e.summoned = true;
     }
   }
 
@@ -217,7 +227,17 @@ export class SpawnSystem {
 
   private spawnFromWave(wave: SpawnParams, playerX: number, playerY: number): boolean {
     const type = pickWeighted(wave.weights, this.rng.next());
-    return this.spawnAt(type, wave.hpMult, wave.speedMult, playerX, playerY) !== null;
+    return (
+      this.spawnAt(
+        type,
+        wave.hpMult,
+        wave.speedMult,
+        playerX,
+        playerY,
+        wave.damageMult,
+        wave.knockbackResist,
+      ) !== null
+    );
   }
 
   /** Place un ennemi sur le cercle de spawn, hors écran. null si la réserve est vide. */
@@ -227,6 +247,8 @@ export class SpawnSystem {
     speedMult: number,
     playerX: number,
     playerY: number,
+    damageMult = 1,
+    knockbackResist = 0,
   ): Enemy | null {
     const enemy = this.enemies.acquire();
     if (!enemy) return null;
@@ -237,6 +259,8 @@ export class SpawnSystem {
       playerY + Math.sin(angle) * SPAWN_RADIUS,
       hpMult,
       speedMult,
+      damageMult,
+      knockbackResist,
     );
     return enemy;
   }

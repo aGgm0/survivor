@@ -21,6 +21,12 @@ export class Enemy implements Poolable {
   xpMult = 1;
   /** Multiplicateur de vitesse de la vague au spawn (paliers de fin de partie) */
   speedMult = 1;
+  /** Sans fin : dégâts au contact × ce facteur (1 sinon) */
+  damageMult = 1;
+  /** Sans fin : part du recul ignorée, de 0 à 1 (0 sinon) */
+  knockbackResist = 0;
+  /** Invoqué par un boss (ses élites ne lâchent pas de nourriture) */
+  summoned = false;
   type: EnemyType = ENEMY_TYPES.basic;
   /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
   bossIndex = -1;
@@ -72,8 +78,19 @@ export class Enemy implements Poolable {
    * Réinitialise TOUT l'état : un ennemi recyclé ne doit rien garder de sa vie précédente.
    * `hpMult` / `speedMult` : les vagues tardives donnent plus de PV et de vitesse (voir waves.ts).
    */
-  spawn(type: EnemyType, x: number, y: number, hpMult = 1, speedMult = 1): void {
+  spawn(
+    type: EnemyType,
+    x: number,
+    y: number,
+    hpMult = 1,
+    speedMult = 1,
+    damageMult = 1,
+    knockbackResist = 0,
+  ): void {
     this.speedMult = speedMult;
+    this.damageMult = damageMult;
+    this.knockbackResist = knockbackResist;
+    this.summoned = false;
     this.type = type;
     this.bossIndex = -1;
     this.chargeState = 'none';

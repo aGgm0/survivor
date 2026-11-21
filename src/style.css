@@ -769,6 +769,7 @@ body {
 .choice-weapon,
 .choice-passive,
 .choice-heal,
+.choice-gold,
 .choice-mutation {
   border-width: 16px;
   border-image-slice: 16;
@@ -812,6 +813,16 @@ body {
 
 .choice-heal .choice-key {
   color: var(--ui-red);
+}
+
+/* Carte « +10 or » (tout est au maximum) : cadre doré, comme les mutations, sans leur lueur */
+.choice-gold {
+  border-color: var(--ui-gold);
+  border-image-source: url('/assets/ui/kenney/card-mutation.png');
+}
+
+.choice-gold .choice-key {
+  color: var(--ui-gold);
 }
 
 .choice-mutation .choice-key {

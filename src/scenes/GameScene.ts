@@ -32,7 +32,7 @@ import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
 import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
 import { BOSS_CHALLENGES } from '../data/characters';
-import { FURNITURE } from '../data/furniture';
+import { FURNITURE, PICKUPS } from '../data/furniture';
 import { applyShopBonuses } from '../data/shop';
 import { PickupSystem } from '../systems/PickupSystem';
 import { BossAbilitySystem } from '../systems/BossAbilitySystem';
@@ -663,8 +663,14 @@ export class GameScene implements Scene, Build {
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
     if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
-    if (e.type.elite && FURNITURE.eliteFood)
-      this.pickups.drop('food', FURNITURE.foodHeal, e.x, e.y);
+    // Objets lâchés en plus de la gemme : écartés de part et d'autre (sinon ils se superposent).
+    const spreadAngle = this.goldRng.range(0, Math.PI * 2);
+    const sx = Math.cos(spreadAngle) * PICKUPS.dropSpread;
+    const sy = Math.sin(spreadAngle) * PICKUPS.dropSpread;
+    // Nourriture des élites : pas pour ceux invoqués par un boss (un toutes les 10 s) ni en sans
+    // fin, sinon le sol se couvre de soins en fin de partie.
+    if (e.type.elite && FURNITURE.eliteFood && !e.summoned && !this.endless)
+      this.pickups.drop('food', FURNITURE.foodHeal, e.x - sx, e.y - sy);
     this.deathBurst(e);
     this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
     if (e.type === BOSS_TYPE) this.shake('bossKill');
@@ -676,7 +682,9 @@ export class GameScene implements Scene, Build {
     this.gems.drop(e.x, e.y, xp, this.player.x, this.player.y, bonus);
     // Une pièce de temps en temps (même aimant que les gemmes). Aléatoire séparé.
     const goldChance = e.type.goldChance ?? 0;
-    if (goldChance > 0 && this.goldRng.next() < goldChance) this.pickups.drop('gold', 1, e.x, e.y);
+    if (goldChance > 0 && this.goldRng.next() < goldChance) {
+      this.pickups.drop('gold', 1, e.x + sx, e.y + sy);
+    }
     this.enemies.release(e);
     this.killCount++;
   }
@@ -707,7 +715,7 @@ export class GameScene implements Scene, Build {
       }
       if (this.god) continue; // menu de test : invincible
       if (!e || this.elapsed < e.nextContactHitAt) continue;
-      this.player.takeHit(e.type.contactDamage);
+      this.player.takeHit(e.type.contactDamage * e.damageMult);
       this.shake('playerHit');
       this.sound('player-hurt');
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;

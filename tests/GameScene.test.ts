@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { FURNITURE } from '../src/data/furniture';
 import { makeHeadlessDeps } from '../sim/headlessDeps';
 import { CONTACT_HIT_COOLDOWN } from '../src/data/combat';
 import { ENEMY_TYPES } from '../src/data/enemies';
@@ -9,7 +10,7 @@ import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
 import { choiceKey } from '../src/systems/upgrades';
 import { PASSIVES } from '../src/data/upgrades';
-import { BOSS_TYPE } from '../src/data/waves';
+import { BOSS_ABILITIES, BOSS_TYPE } from '../src/data/waves';
 import { Weapon } from '../src/entities/Weapon';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
 
@@ -914,7 +915,7 @@ describe('GameScene — mobilier et or', () => {
     expect(scene.pickups.activeCount).toBe(1);
   });
 
-  it('boss tué : +25 or ; l’or de la partie est dans le bilan', () => {
+  it('boss tué : de l’or (FURNITURE.bossGold) ; l’or de la partie est dans le bilan', () => {
     const { scene, ui } = newScene({ armed: false });
     const boss = scene.enemies.acquire();
     if (!boss) throw new Error();
@@ -924,11 +925,11 @@ describe('GameScene — mobilier et or', () => {
     scene.weapons.push(orbs);
     boss.teleport(scene.player.x + orbs.orbitDistance, scene.player.y);
     for (let i = 0; i < 120 && boss.active; i++) scene.update(DT);
-    expect(scene.gold).toBe(25);
+    expect(scene.gold).toBe(FURNITURE.bossGold);
     scene.player.hp = 1;
     enemyOnPlayer(scene);
     for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
-    expect(ui.end?.gold).toBe(25);
+    expect(ui.end?.gold).toBe(FURNITURE.bossGold);
   });
 });
 
@@ -980,7 +981,7 @@ describe('GameScene — or des ennemis', () => {
 });
 
 describe('GameScene — mini-boss', () => {
-  it('un mini-boss tué rapporte +10 or et compte comme un kill', () => {
+  it('un mini-boss tué rapporte de l’or et compte comme un kill', () => {
     const { scene } = newScene({ armed: false });
     const elite = scene.enemies.acquire();
     if (!elite) throw new Error();
@@ -991,7 +992,7 @@ describe('GameScene — mini-boss', () => {
     elite.teleport(scene.player.x + orbs.orbitDistance, scene.player.y);
     for (let i = 0; i < 120 && elite.active; i++) scene.update(DT);
     expect(elite.active).toBe(false);
-    expect(scene.gold).toBe(10);
+    expect(scene.gold).toBe(BOSS_ABILITIES.eliteGold);
     expect(scene.kills).toBe(1);
     // Nourriture garantie sur chaque élite tué
     expect(scene.pickups.activeCount).toBe(1);
@@ -1051,5 +1052,28 @@ describe('GameScene — rendu', () => {
   it('dessine une partie chargée sans erreur (mutations n° 2)', () => {
     const scene = renderBusyRun(1, false);
     expect(scene.weapons.every((w) => w.mutation)).toBe(true);
+  });
+});
+
+describe('GameScene — nourriture des élites', () => {
+  function killElite(
+    setup: (scene: GameScene, elite: import('../src/entities/Enemy').Enemy) => void,
+  ) {
+    const { scene } = newScene({ armed: false });
+    const elite = scene.enemies.acquire();
+    if (!elite) throw new Error();
+    elite.spawn(ENEMY_TYPES.fastElite, scene.player.x + 2000, scene.player.y);
+    setup(scene, elite);
+    scene.applyDevAction({ kind: 'killAll' });
+    return scene.pickups.items.filter((p) => p.active && p.kind === 'food').length;
+  }
+
+  it('un élite normal lâche de la nourriture, un élite invoqué par un boss non', () => {
+    expect(killElite(() => {})).toBe(1);
+    expect(killElite((_s, e) => (e.summoned = true))).toBe(0);
+  });
+
+  it('en sans fin, plus aucun élite ne lâche de nourriture', () => {
+    expect(killElite((s) => s.applyDevAction({ kind: 'endless' }))).toBe(0);
   });
 });

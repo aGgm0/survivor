@@ -25,10 +25,11 @@ export function xpToNext(level: number): number {
 }
 
 /**
- * Quand tout est au maximum (armes, mutations, passifs), il faut ×4 d'XP par niveau :
- * ces level up ne donnent plus qu'un soin, et en enchaîner rendait le joueur intuable.
+ * Quand tout est au maximum (armes, mutations, passifs), il faut ×10 d'XP par niveau (×4
+ * avant le 2026-11-21 : niveau 59 en sans fin, soins à répétition). Ces level up ne donnent
+ * plus qu'un petit soin ou un peu d'or.
  */
-export const MAXED_XP_MULT = 4;
+export const MAXED_XP_MULT = 10;
 
 /** Relances des cartes de level up par partie (la boutique pourra en ajouter) */
 export const REROLLS_PER_RUN = 2;

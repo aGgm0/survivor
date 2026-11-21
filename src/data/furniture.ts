@@ -9,13 +9,13 @@ export const FURNITURE = {
   goldChance: 0.7,
   /** Pièces lâchées : entre min et max... */
   goldMin: 1,
-  goldMax: 3,
+  goldMax: 2, // 3 → 2 : or −50 % (2026-11-21, 622 or à 14:00)
   /** ...+1 toutes les `goldBonusEvery` secondes de partie (un peu plus en fin de partie) */
   goldBonusEvery: 300,
   /** PV rendus par la nourriture */
   foodHeal: 20,
   /** Or donné directement à la mort d'un boss */
-  bossGold: 25,
+  bossGold: 12, // 25 → 12 : or −50 %
   /** Un élite tué lâche toujours de la nourriture (récompense après un combat dur) */
   eliteFood: true,
 } as const;
@@ -24,6 +24,8 @@ export const FURNITURE = {
 export const PICKUPS = {
   poolSize: 200,
   goldColor: '#ffd54f',
+  /** px : écart entre les objets lâchés par un même ennemi (gemme, pièce, nourriture) */
+  dropSpread: 14,
   goldRadius: 6,
   foodColor: '#ff6f61',
   foodRadius: 8,

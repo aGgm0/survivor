@@ -231,7 +231,14 @@ describe('SpawnSystem — placement', () => {
 
 describe('mode sans fin', () => {
   const last = WAVES[WAVES.length - 1]!;
-  const out = (): MutableWave => ({ perSecond: 0, weights: [], hpMult: 0, speedMult: 0 });
+  const out = (): MutableWave => ({
+    perSecond: 0,
+    weights: [],
+    hpMult: 0,
+    speedMult: 0,
+    damageMult: 1,
+    knockbackResist: 0,
+  });
 
   it('au début du sans fin : la dernière vague telle quelle', () => {
     const w = endlessWave(last, 0, out());
@@ -241,15 +248,19 @@ describe('mode sans fin', () => {
     expect(w.weights).toBe(last.weights);
   });
 
-  it('chaque minute : PV ×1,25 cumulés, +2 ennemis/s, +3 % de vitesse', () => {
+  it('chaque minute : PV ×1,2 et dégâts ×1,1 cumulés, +2 ennemis/s, +3 % de vitesse, +8 % de résistance au recul', () => {
     const w = endlessWave(last, 2, out());
-    expect(w.hpMult).toBeCloseTo(last.hpMult * 1.25 * 1.25);
+    expect(w.hpMult).toBeCloseTo(last.hpMult * 1.2 * 1.2);
+    expect(w.damageMult).toBeCloseTo(1.1 * 1.1);
     expect(w.perSecond).toBe(last.perSecond + 4);
     expect(w.speedMult).toBeCloseTo(last.speedMult * 1.06);
+    expect(w.knockbackResist).toBeCloseTo(0.16);
   });
 
-  it('la vitesse est plafonnée', () => {
-    expect(endlessWave(last, 60, out()).speedMult).toBe(ENDLESS.maxSpeedMult);
+  it('vitesse plafonnée à ×3, résistance au recul à 80 %', () => {
+    const w = endlessWave(last, 200, out());
+    expect(w.speedMult).toBe(3);
+    expect(w.knockbackResist).toBe(0.8);
   });
 
   it('un boss toutes les 3 min, 50 % plus résistant à chaque fois', () => {

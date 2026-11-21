@@ -205,9 +205,14 @@ describe('upgrades — options et tirage', () => {
       w.level++;
     }
     expect(availableUpgrades(build)).toHaveLength(0);
+    // Tout au maximum : au choix un petit soin ou un peu d'or.
     const choices = rollUpgradeChoices([], new Rng(1), 3);
-    expect(choices).toHaveLength(1);
-    expect(choices[0]?.kind).toBe('heal');
+    expect(choices.map((c) => c.kind)).toEqual(['heal', 'gold']);
+    const goldBuild = { ...build, gold: 3 };
+    const gold = choices[1];
+    if (!gold) throw new Error();
+    applyUpgrade(gold, goldBuild);
+    expect(goldBuild.gold).toBe(13);
   });
 });
 

@@ -75,6 +75,8 @@ export function applyKnockback(enemy: Enemy, force: number, dirX: number, dirY: 
   const factor =
     KNOCKBACK.forceMult *
     (enemy.type.knockbackFactor ?? Math.min(KNOCKBACK.maxFactor, REFERENCE_MASS / enemy.mass));
-  enemy.vx += dirX * force * factor;
-  enemy.vy += dirY * force * factor;
+  // Sans fin : les ennemis résistent de plus en plus au recul.
+  const kept = factor * (1 - enemy.knockbackResist);
+  enemy.vx += dirX * force * kept;
+  enemy.vy += dirY * force * kept;
 }

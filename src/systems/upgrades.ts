@@ -1,7 +1,7 @@
 import type { Rng } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
 import { MAX_PASSIVES, MAX_WEAPONS } from '../data/progression';
-import { HEAL_UPGRADE, PASSIVES, type PassiveDef } from '../data/upgrades';
+import { GOLD_UPGRADE, HEAL_UPGRADE, PASSIVES, type PassiveDef } from '../data/upgrades';
 import { WEAPON_LIST, weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 import type { Player } from '../entities/Player';
 import { Weapon } from '../entities/Weapon';
@@ -18,6 +18,7 @@ export type UpgradeChoice = {
   | { readonly kind: 'mutation'; readonly weapon: Weapon; readonly mutation: MutationDef }
   | { readonly kind: 'passive'; readonly passive: PassiveDef }
   | { readonly kind: 'heal' }
+  | { readonly kind: 'gold' }
 );
 
 /** Icône d'un choix (id de l'arme, de la mutation ou du passif) ; aucune pour le soin. */
@@ -32,6 +33,7 @@ export function choiceIconId(choice: UpgradeChoice): string | undefined {
     case 'passive':
       return choice.passive.id;
     case 'heal':
+    case 'gold':
       return undefined;
   }
 }
@@ -51,6 +53,8 @@ export interface Build {
   readonly weapons: Weapon[];
   /** Niveau de chaque passif possédé (absent = 0) */
   readonly passiveLevels: Map<string, number>;
+  /** Or de la partie (carte « +10 or » quand tout est au maximum) */
+  gold?: number;
 }
 
 /**
@@ -164,6 +168,12 @@ function shufflePick(
         description: HEAL_UPGRADE.description,
         levelText: '',
       },
+      {
+        kind: 'gold',
+        title: GOLD_UPGRADE.name,
+        description: GOLD_UPGRADE.description,
+        levelText: '',
+      },
     ];
   }
   if (passiveWeight !== 1) return weightedPick(options, rng, count, passiveWeight);
@@ -248,6 +258,9 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
     }
     case 'heal':
       build.player.heal(HEAL_UPGRADE.amount);
+      return;
+    case 'gold':
+      build.gold = (build.gold ?? 0) + GOLD_UPGRADE.amount;
       return;
   }
 }

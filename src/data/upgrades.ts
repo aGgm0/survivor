@@ -124,9 +124,18 @@ export const PASSIVES: readonly PassiveDef[] = [
  */
 export const SIZE_ORBIT_SHARE = 0.3;
 
-/** Choix de secours quand tout est au maximum : un level up n'est jamais vide. */
+/**
+ * Choix de secours quand tout est au maximum : un level up n'est jamais vide. 2026-11-21 :
+ * +30 PV → au choix +15 PV ou +10 or (les soins de fin de partie étaient trop nombreux).
+ */
 export const HEAL_UPGRADE = {
   name: 'Soin',
-  description: '+30 PV',
-  amount: 30,
+  description: '+15 PV',
+  amount: 15,
+} as const;
+
+export const GOLD_UPGRADE = {
+  name: 'Bourse',
+  description: '+10 or',
+  amount: 10,
 } as const;
