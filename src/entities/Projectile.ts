@@ -33,8 +33,7 @@ export class Projectile implements Poolable {
 
   /**
    * Réinitialise TOUT l'état (un projectile recyclé ne garde rien de sa vie précédente).
-   * `lifetime` en s ; `damage` et `pierce` : ceux de l'arme par défaut (la vague de la Lame d'onde
-   * en a d'autres).
+   * `lifetime` en s ; `damage` et `pierce` : ceux de l'arme par défaut.
    */
   launch(
     source: Weapon,

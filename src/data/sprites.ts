@@ -153,7 +153,6 @@ const PVFX = `${import.meta.env.BASE_URL}assets/sprites/pvfx/`;
 export const EFFECT_DIRS = {
   burst: `${PVFX}arcane-burst/`,
   slash: `${PVFX}axe-smear/`,
-  wave: `${PVFX}wind-blade/`,
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -171,9 +170,6 @@ export const SLASH_FX = {
   /** Tourbillon (360°) : autant de coups répartis autour du joueur */
   fullCircleCopies: 3,
 } as const;
-
-/** Lame d'onde : la hauteur du croissant formé (px d'art, mesurée dans le manifeste) = le diamètre de la hitbox */
-export const WAVE_FX = { artHeight: 33 } as const;
 
 /**
  * Fond animé du menu : le sol du donjon qui défile lentement, des démons qui le traversent, et

@@ -158,13 +158,10 @@ export class Weapon {
       this.explosionRadius = (m?.explosion?.radius ?? 0) * size;
     }
     if (def.kind === 'melee') {
-      // La Taille allonge la portée du coup, pas son ouverture. Tourbillon : 360° imposés.
-      this.range = meleeRange * size;
+      // La Taille allonge la portée du coup, pas son ouverture. Tourbillon : 360° imposés ;
+      // Estoc : 30° imposés et portée doublée.
+      this.range = meleeRange * (m?.rangeMult ?? 1) * size;
       this.arc = (Math.min(360, m?.arcDeg ?? arcDeg) * Math.PI) / 180;
-      // Lame d'onde : la vague est un projectile, avec Vélocité et Taille comme le Trait.
-      const wave = m?.wave;
-      this.projectileSpeed = wave ? wave.speed * velocity : 0;
-      this.projectileRadius = wave ? wave.radius * size : 0;
     }
     // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
     this.cooldown =

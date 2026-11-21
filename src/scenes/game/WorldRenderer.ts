@@ -2,7 +2,7 @@
 // garde les règles, ce fichier ne fait que lire l'état et dessiner (voir CLAUDE.md § 4).
 
 import type { Camera } from '../../core/Camera';
-import { clipFrameIndex, type EffectSheet } from '../../core/EffectSheet';
+import type { EffectSheet } from '../../core/EffectSheet';
 import { lerp, Rng } from '../../core/math';
 import type { Pool } from '../../core/Pool';
 import {
@@ -20,7 +20,6 @@ import {
   enemySprite,
   HIT_FLASH_TINT,
   ORB_SPRITE,
-  WAVE_FX,
   type EffectName,
 } from '../../data/sprites';
 import { BOSS_ABILITIES, BOSS_TYPE } from '../../data/waves';
@@ -356,15 +355,8 @@ export class WorldRenderer {
   private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
     const items = this.world.projectiles.items;
     for (const weapon of this.world.weapons) {
-      // Projectiles du Trait, et vagues de la Lame d'onde (l'Épée lance aussi des projectiles).
-      if (weapon.def.kind !== 'projectile' && !weapon.mutation?.wave) continue;
-      // Trait arcanique : halo rond, puis sprite orienté. Vagues de la Lame d'onde : ronds.
-      const wave = weapon.mutation?.wave;
-      const waveSheet = this.deps.effects?.wave;
-      if (wave && waveSheet) {
-        this.renderWaves(ctx, alpha, weapon, waveSheet, wave.lifetime);
-        continue;
-      }
+      // Projectiles du Trait : halo rond, puis sprite orienté.
+      if (weapon.def.kind !== 'projectile') continue;
       const fx = weapon.def.kind === 'projectile' ? this.deps.fx : null;
       const bolt = fx?.animation(BOLT_SPRITE.anim);
       for (const pass of PROJECTILE_PASSES) {
@@ -389,31 +381,6 @@ export class WorldRenderer {
       }
     }
     ctx.globalAlpha = 1;
-  }
-
-  /**
-   * Vagues de la Lame d'onde : lame de vent orientée dans le sens du tir, jouée sur la durée de
-   * vie de la vague, sa hauteur visible = le diamètre de la hitbox.
-   */
-  private renderWaves(
-    ctx: CanvasRenderingContext2D,
-    alpha: number,
-    weapon: Weapon,
-    sheet: EffectSheet,
-    lifetime: number,
-  ): void {
-    const items = this.world.projectiles.items;
-    for (let i = 0; i < items.length; i++) {
-      const p = items[i];
-      if (!p?.active || p.source !== weapon) continue;
-      const x = p.renderX(alpha);
-      const y = p.renderY(alpha);
-      const scale = (p.radius * 2) / WAVE_FX.artHeight;
-      if (!this.isOnScreen(x, y, sheet.clip.width * scale)) continue;
-      const progress = Math.min(0.999, Math.max(0, 1 - p.life / lifetime));
-      const index = clipFrameIndex(sheet.clip, progress * sheet.clip.totalMs);
-      sheet.draw(ctx, index, x, y, scale, Math.atan2(p.vy, p.vx), 'visibleCenter');
-    }
   }
 
   /** Projectiles d'une arme en sprites, tournés dans le sens du tir, tête = taille de la hitbox. */

@@ -15,6 +15,17 @@ const SLASH_LIFETIME = 0.15;
 /** Opacité de départ de l'arc (il s'efface ensuite) */
 const SLASH_ALPHA = 0.45;
 
+/** s : durée de la traînée d'un coup d'estoc */
+const THRUST_LIFETIME = 0.22;
+/** La traînée atteint le bout de la portée en cette part de sa durée, puis s'efface */
+const THRUST_REACH = 0.35;
+/** px : taille des pixels de la traînée (comme les braises de l'aura) et pas entre deux rangées */
+const THRUST_PIXEL = 4;
+const THRUST_STEP = 8;
+const THRUST_CORE_COLOR = '#ffffff';
+/** Les deux bords du cône (défini une fois : rien d'alloué par frame) */
+const SIDES = [-1, 1] as const;
+
 /** Un anneau d'explosion qui s'agrandit et s'efface. */
 class Ring implements Poolable {
   active = false;
@@ -37,6 +48,18 @@ class Slash implements Poolable {
   color = '';
 }
 
+/** Un coup d'estoc : un cône étroit de pixels qui file jusqu'au bout de la portée. */
+class Thrust implements Poolable {
+  active = false;
+  x = 0;
+  y = 0;
+  angle = 0;
+  arc = 0;
+  range = 0;
+  age = 0;
+  color = '';
+}
+
 /** Animations du pack utilisées ici (absentes : formes simples). */
 export interface EffectSprites {
   readonly burst: EffectSheet;
@@ -47,6 +70,7 @@ export interface EffectSprites {
 export class EffectsSystem {
   private readonly rings = new Pool(POOL_SIZE, () => new Ring());
   private readonly slashes = new Pool(POOL_SIZE, () => new Slash());
+  private readonly thrusts = new Pool(POOL_SIZE, () => new Thrust());
   private readonly ringLifetime: number;
   private readonly slashLifetime: number;
 
@@ -79,8 +103,20 @@ export class EffectsSystem {
     s.color = color;
   }
 
+  thrust(x: number, y: number, angle: number, arc: number, range: number, color: string): void {
+    const t = this.thrusts.acquire();
+    if (!t) return;
+    t.x = x;
+    t.y = y;
+    t.angle = angle;
+    t.arc = arc;
+    t.range = range;
+    t.age = 0;
+    t.color = color;
+  }
+
   get activeCount(): number {
-    return this.rings.activeCount + this.slashes.activeCount;
+    return this.rings.activeCount + this.slashes.activeCount + this.thrusts.activeCount;
   }
 
   update(dt: number): void {
@@ -94,10 +130,17 @@ export class EffectsSystem {
       s.age += dt;
       if (s.age >= this.slashLifetime) this.slashes.release(s);
     }
+    for (const t of this.thrusts.items) {
+      if (!t.active) continue;
+      t.age += dt;
+      if (t.age >= THRUST_LIFETIME) this.thrusts.release(t);
+    }
   }
 
   /** À appeler entre `camera.begin` et `camera.end` (coordonnées monde). */
   render(ctx: CanvasRenderingContext2D, camera: Camera): void {
+    // Estoc : dessiné en pixels par le code, avec ou sans le pack (pas d'effet d'estoc dedans).
+    this.renderThrusts(ctx, camera);
     if (this.sprites) {
       this.renderSprites(ctx, camera, this.sprites);
       return;
@@ -123,6 +166,51 @@ export class EffectsSystem {
       ctx.arc(s.x, s.y, s.range, s.angle - s.arc / 2, s.angle + s.arc / 2);
       ctx.closePath();
       ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Traînée d'estoc : des rangées de pixels carrés le long de la ligne, de plus en plus larges
+   * (le cône qui touche). Le front file jusqu'au bout de la portée, puis tout s'efface. Le cœur
+   * est blanc, les bords à la couleur de l'arme. Positions arrondies : pixels nets.
+   */
+  private renderThrusts(ctx: CanvasRenderingContext2D, camera: Camera): void {
+    const half = THRUST_PIXEL / 2;
+    for (const t of this.thrusts.items) {
+      if (!t.active) continue;
+      if (t.x + t.range < camera.left || t.x - t.range > camera.right) continue;
+      if (t.y + t.range < camera.top || t.y - t.range > camera.bottom) continue;
+      const progress = t.age / THRUST_LIFETIME;
+      const front = t.range * Math.min(1, progress / THRUST_REACH);
+      const fade = progress < THRUST_REACH ? 1 : 1 - (progress - THRUST_REACH) / (1 - THRUST_REACH);
+      const fx = Math.cos(t.angle);
+      const fy = Math.sin(t.angle);
+      const halfTan = Math.tan(t.arc / 2);
+      let row = 0;
+      for (let d = THRUST_STEP; d <= front; d += THRUST_STEP, row++) {
+        // Plus loin de la pointe (vers le joueur) : déjà en train de s'éteindre.
+        ctx.globalAlpha = fade * (0.35 + 0.65 * (d / Math.max(front, 1)));
+        const width = d * halfTan;
+        const cx = t.x + fx * d;
+        const cy = t.y + fy * d;
+        // Cœur blanc sur toute la longueur, puis les bords en damier (un pixel sur deux, décalé
+        // d'une rangée à l'autre) : une traînée pixel art, pas un faisceau plein.
+        ctx.fillStyle = THRUST_CORE_COLOR;
+        ctx.fillRect(Math.round(cx - half), Math.round(cy - half), THRUST_PIXEL, THRUST_PIXEL);
+        ctx.fillStyle = t.color;
+        const offset = row % 2 === 0 ? THRUST_PIXEL * 2 : THRUST_PIXEL * 3;
+        for (let s = offset; s <= width; s += THRUST_PIXEL * 2) {
+          for (const side of SIDES) {
+            ctx.fillRect(
+              Math.round(cx - fy * s * side - half),
+              Math.round(cy + fx * s * side - half),
+              THRUST_PIXEL,
+              THRUST_PIXEL,
+            );
+          }
+        }
+      }
     }
     ctx.globalAlpha = 1;
   }

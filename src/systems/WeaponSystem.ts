@@ -266,7 +266,11 @@ export class WeaponSystem {
     const range = weapon.range;
     const fullCircle = weapon.arc >= Math.PI * 2 - FLOAT_EPSILON;
     const minCos = Math.cos(weapon.arc / 2);
-    this.events.onSlash?.(x, y, Math.atan2(facingY, facingX), weapon.arc, range, weapon.color);
+    const thrust = weapon.mutation?.thrust ?? false;
+    const angle = Math.atan2(facingY, facingX);
+    if (thrust) this.events.onThrust?.(x, y, angle, weapon.arc, range, weapon.color);
+    else this.events.onSlash?.(x, y, angle, weapon.arc, range, weapon.color);
+    const halfTan = Math.tan(weapon.arc / 2);
 
     const reach = range + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     const count = this.collisions.queryNeighbors(x, y, reach, this.candidates);
@@ -277,28 +281,18 @@ export class WeaponSystem {
       const dy = e.y - y;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > range + e.type.radius) continue;
-      // Un ennemi collé au joueur (dist ≈ 0) est toujours touché.
-      if (!fullCircle && dist > 0 && (dx * facingX + dy * facingY) / dist < minCos) continue;
+      if (thrust) {
+        // Estoc : le cône s'élargit avec la distance ; l'ennemi compte s'il le chevauche.
+        const along = dx * facingX + dy * facingY;
+        const side = Math.abs(dx * -facingY + dy * facingX);
+        if (along < -e.type.radius || side > Math.max(along, 0) * halfTan + e.type.radius) continue;
+      } else if (!fullCircle && dist > 0 && (dx * facingX + dy * facingY) / dist < minCos) {
+        // Un ennemi collé au joueur (dist ≈ 0) est toujours touché.
+        continue;
+      }
       const dirX = dist > 0 ? dx / dist : facingX;
       const dirY = dist > 0 ? dy / dist : facingY;
       damageEnemy(weapon, e, weapon.damage, this.events, dirX, dirY);
-    }
-
-    // Lame d'onde : une vague part devant, comme un projectile perçant.
-    const wave = weapon.mutation?.wave;
-    if (wave) {
-      this.projectiles
-        .acquire()
-        ?.launch(
-          weapon,
-          wave.lifetime,
-          x,
-          y,
-          facingX,
-          facingY,
-          weapon.damage * wave.damageRatio,
-          wave.pierce,
-        );
     }
   }
 }

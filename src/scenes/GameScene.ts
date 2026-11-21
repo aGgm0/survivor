@@ -249,6 +249,10 @@ export class GameScene implements Scene, Build {
         this.shake('auraPulse');
         this.sound('bolt-burst');
       },
+      onThrust: (x: number, y: number, angle: number, arc: number, r: number, color: string) => {
+        this.effects.thrust(x, y, angle, arc, r, color);
+        this.sound('sword-slash');
+      },
       onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) => {
         this.effects.slash(x, y, angle, arc, r, color);
         this.sound('sword-slash');

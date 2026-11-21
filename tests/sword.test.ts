@@ -13,7 +13,7 @@ import { WeaponSystem } from '../src/systems/WeaponSystem';
 
 const DT = 1 / 60;
 const SWORD = WEAPONS.sword;
-const [WHIRL, WAVE] = SWORD.mutations;
+const [WHIRL, THRUST] = SWORD.mutations;
 const NEUTRAL: WeaponModifiers = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
 
 /**
@@ -140,23 +140,33 @@ describe('Épée — mutations', () => {
     expect(hits).toHaveLength(1);
   });
 
-  it('Lame d’onde : chaque coup lance une vague perçante, à 60 % des dégâts', () => {
+  it('Estoc : portée ×2, 30°, dégâts ×2, recul ×1,5', () => {
+    const base = new Weapon(SWORD);
+    base.level = weaponMaxLevel(SWORD);
+    base.recompute(NEUTRAL);
     const w = mutated(1);
-    expect(WAVE.name).toBe('Lame d’onde');
-    // Ennemis hors de portée de l'épée (135 px), alignés devant : seule la vague les touche.
+    expect(THRUST.name).toBe('Estoc');
+    expect(w.range).toBeCloseTo(base.range * 2);
+    expect(w.arc).toBeCloseTo((30 * Math.PI) / 180);
+    expect(w.damage).toBeCloseTo(base.damage * 2);
+    expect(w.knockback).toBeCloseTo(base.knockback * 1.5);
+  });
+
+  it('Estoc : transperce toute la ligne, de près comme de loin, mais pas sur les côtés', () => {
+    const w = mutated(1);
     const { run, hits, list } = setup(
       [
-        [200, 0],
-        [260, 0],
+        [40, 20], // proche et un peu décalé : il chevauche la lame (raté par un simple test d'angle)
+        [150, 0], // sur la ligne
+        [260, 30], // loin, dans le cône élargi
+        [60, 120], // sur le côté
+        [-60, 0], // derrière
       ],
       w,
     );
-    run(0.5);
-    expect(hits).toContain(list[0]);
-    expect(hits).toContain(list[1]);
-    const tank = list[0];
-    if (!tank) throw new Error();
-    expect(tank.maxHp - tank.hp).toBe(Math.ceil(w.damage * 0.6)); // dégâts arrondis au-dessus
+    run(DT);
+    expect(hits).toHaveLength(3);
+    for (const e of list.slice(0, 3)) expect(hits).toContain(e);
   });
 });
 

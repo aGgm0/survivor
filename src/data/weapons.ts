@@ -68,17 +68,14 @@ export interface MutationDef {
   readonly orbitDistanceMult?: number;
   /** Mêlée : angle du coup imposé, en degrés (360 = tout autour) */
   readonly arcDeg?: number;
+  /** Mêlée : multiplicateur de la portée du coup */
+  readonly rangeMult?: number;
   /**
-   * Mêlée : chaque coup lance aussi une vague tranchante devant le joueur, qui traverse jusqu'à
-   * `pierce` ennemis avec `damageRatio` × les dégâts. Portée = vitesse × durée de vie.
+   * Mêlée : coup d'estoc, long et étroit. Un ennemi est touché s'il chevauche le cône (son rayon
+   * compte) : avec une ouverture de 30°, le test d'angle seul ratait les ennemis proches et un
+   * peu décalés qui touchent visiblement la lame.
    */
-  readonly wave?: {
-    readonly speed: number;
-    readonly lifetime: number;
-    readonly radius: number;
-    readonly damageRatio: number;
-    readonly pierce: number;
-  };
+  readonly thrust?: boolean;
 }
 
 interface WeaponDefBase {
@@ -348,13 +345,19 @@ export const WEAPONS = {
         damageMult: 0.75,
       },
       {
-        id: 'waveBlade',
-        name: 'Lame d’onde',
-        short: 'Lo',
+        // Remplace la Lame d'onde (« pas fun », 2026-11-21) : une ligne de loin, contre le
+        // Tourbillon tout autour de près. Dégâts ×2 demandés (×1,4 proposé).
+        id: 'thrust',
+        name: 'Estoc',
+        short: 'Es',
         description:
-          'Chaque coup lance une vague qui traverse les ennemis (~300 px, 60 % des dégâts)',
-        color: '#9ff0d0',
-        wave: { speed: 500, lifetime: 0.6, radius: 22, damageRatio: 0.6, pierce: 8 },
+          'Coup long et étroit (×2 portée, 30°) qui transperce la ligne : dégâts ×2, recul ×1,5',
+        color: '#ffd98a',
+        arcDeg: 30,
+        rangeMult: 2,
+        damageMult: 2,
+        knockbackMult: 1.5,
+        thrust: true,
       },
     ],
   },

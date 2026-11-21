@@ -26,7 +26,7 @@ const ICONS = {
   giantOrbs: 773, // anneau violet
   orbStorm: 786, // tourbillon bleu
   whirlwind: 725, // coup en tourbillon
-  waveBlade: 724, // lame en croissant
+  // thrust (Estoc) : icône de lance ou d'estoc à choisir dans le pack (en attendant, « Es »)
   // Passifs
   vitality: 659, // cœur
   swiftness: 667, // botte ailée
