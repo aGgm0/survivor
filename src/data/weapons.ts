@@ -355,10 +355,13 @@ export const WEAPONS = {
         id: 'whirlwind',
         name: 'Tourbillon',
         short: 'Tb',
-        description: 'Le coup fait le tour complet (360°), dégâts ×0,75',
+        description: 'Le coup fait le tour complet (360°), dégâts ×0,85, recul ×1,3',
         color: '#b0e0ff',
         arcDeg: 360,
-        damageMult: 0.75,
+        // 0,75 → 0,85 et recul ×1,3 (2026-11-21) : « vite inutile quand tout meurt avant, mais il
+        // est là pour se dégager » (bot : 3 victoires sur 20 contre 9 pour l'Estoc)
+        damageMult: 0.85,
+        knockbackMult: 1.3,
       },
       {
         // Remplace la Lame d'onde (« pas fun », 2026-11-21) : une ligne de loin, contre le

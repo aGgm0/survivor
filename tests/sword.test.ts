@@ -117,10 +117,11 @@ describe('Épée — mutations', () => {
     return w;
   }
 
-  it('Tourbillon : tout autour (360°), dégâts ×0,75', () => {
+  it('Tourbillon : tout autour (360°), dégâts ×0,85, recul ×1,3', () => {
     const w = mutated(0);
     expect(WHIRL.name).toBe('Tourbillon');
-    expect(w.damage).toBeCloseTo(28 * 0.75 * WEAPON_DAMAGE_MULT);
+    expect(w.damage).toBeCloseTo(28 * 0.85 * WEAPON_DAMAGE_MULT);
+    expect(w.knockback).toBeCloseTo(SWORD.knockback * 1.3);
     const { run, hits } = setup(
       [
         [80, 0],
