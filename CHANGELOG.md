@@ -2,6 +2,35 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.2.0] — 2026-11-21
+
+Une partie plus juste : nouvelles mutations, équilibrage complet des 10 minutes, cartes et annonces de boss dans le style du jeu.
+
+### Ajouté
+
+- Aura ardente : deux nouvelles mutations. **Aura de givre** (grand rayon, ralentit les ennemis de 45 %) et **Fournaise** (une onde de feu part du joueur toutes les 1,8 s, très forte contre les gros ennemis).
+- Épée : nouvelle mutation **Estoc** (vise l'ennemi le plus proche, portée ×2, dégâts ×2), à la place de la Lame d'onde.
+- Les ennemis lâchent parfois une pièce d'or (2 % pour les basiques et les rapides, 7,5 % pour les tanks).
+- Grande barre de PV du boss en haut de l'écran, et petite barre sous le joueur quand il est blessé.
+- Contour rouge quand il reste moins de 20 % des PV (il pulse plus vite sous 10 %).
+- Quand tout le build est au maximum, chaque niveau propose **+15 PV** ou **+10 or**.
+
+### Modifié
+
+- Cartes de level up refaites : sorte de la carte, touche du clavier, crans de niveau, effet avant → après, ce que l'amélioration touche ; elles arrivent une par une.
+- Survol de tous les boutons : curseur doré en pixels.
+- Annonces des boss : la charge est marquée par des chevrons en pixels qui s'allument puis clignotent de plus en plus vite, avec une fissure au point d'arrivée ; l'invocation par un anneau violet qui se resserre.
+- Barres de PV des boss et des mini-boss dans le cadre doré du jeu ; la part perdue reste claire un instant (on voit les gros coups).
+- Dégâts de toutes les armes +15 %.
+- Épée : arc 200°, portée 125 px, plus de recul. Tourbillon : dégâts ×0,85 (au lieu de ×0,75), plus de recul.
+- Boss de 9:00 : marche deux fois plus vite, charge annoncée en 0,5 s.
+- Mode sans fin bien plus dur : chaque minute, les ennemis ont plus de PV, frappent plus fort, vont plus vite et reculent moins.
+- XP nécessaire ×10 une fois le build complet. Moins de soins et d'or en fin de partie (or −50 %, plus de nourriture sur les mini-boss invoqués ni en sans fin). Les objets lâchés par un même ennemi ne se superposent plus.
+
+### Corrigé
+
+- La ligne d'annonce de la charge du boss de 9:00 était presque deux fois trop longue : elle montre maintenant la vraie trajectoire.
+
 ## [0.1.3] — 2026-11-21
 
 Confort sur petit écran et en plein écran.

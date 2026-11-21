@@ -196,8 +196,8 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 | Basique élite (rouge) | 7:00 | 1150 (×50) × vague | 97 | 20 (×4) | 25 |
 
 **Capacités des boss** (`BOSS_ABILITIES`), toujours annoncées pour pouvoir les esquiver :
-- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s (**0,5 s pour le boss de 9:00** et ceux du sans fin) avec une ligne rouge sur la trajectoire, puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00 : sa charge est calculée sur une vitesse ×1,2, pas sur sa marche ×2).
-- **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, cercle violet pendant 1 s, puis 5 basiques et 1 basique élite autour du boss.
+- **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s (**0,5 s pour le boss de 9:00** et ceux du sans fin) annoncé par des chevrons rouges en pixels sur la trajectoire (ils s'allument du boss vers le bout et clignotent de plus en plus vite, fissure au point d'arrivée), puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00 : sa charge est calculée sur une vitesse ×1,2, pas sur sa marche ×2).
+- **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, anneau de braises violettes qui se resserre pendant 1 s sur le cercle d'apparition, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté à plus de 1,35 × ce cercle (≈ 1 080 px) est replacé sur le cercle **à un angle au hasard** (boss et élites : pile en face du joueur).
@@ -370,26 +370,27 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Refactor : menu de test sorti de `GameScene` : armes, passifs et vue du panneau en fonctions pures (`scenes/game/devActions.ts`, testées) ; les actions sur le déroulement (temps, niveaux, sans fin, or, boss) restent dans `applyDevAction`
 - [x] Refactor : type `RunReport` dans `src/types/` ; `computeDamage` dans `data/combat.ts`, à côté de `MIN_DAMAGE` (une entité n'importe pas un système)
 - [x] Bot de simulation `npm run sim` : `GameScene` sans visuel, déplacement et choix d'upgrade automatiques, 20 seeds → temps de survie, build complet à, part de chaque arme ; quelques bornes larges en test. Benchmark `npm run bench` (600 ennemis, ms par update)
-- [ ] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
+- [x] **Annonces de boss et barres de PV dans la DA** : charge en flèches / fissures pixel qui clignotent (plus de rectangle rouge), barres de PV à cadre pixel, pour le joueur, les élites et les boss seulement
   - [x] Étape 1 : longueur de la charge annoncée = vraie trajectoire (`chargeSpeed`, le boss de 9:00 annonçait ~490 px pour ~295)
-  - [ ] Étape 2 : charge en chevrons pixel (carrés de 2 px) qui se remplissent pendant l'annonce et clignotent plus vite à la fin, bord en pointillés, fissure au bout
-  - [ ] Étape 3 : invocation en anneau de carrés violets qui se resserre
-  - [ ] Étape 4 : barres boss / élites avec `bar-frame` + `bar-red` du pack (rectangles en secours), **traînée** claire des dégâts récents (valeur mise à jour dans l'update) ; petite barre sous le joueur, visible seulement s'il a perdu des PV
-  - [ ] Étape 5 : grande barre du boss en haut de l'écran (HUD, avec son nom)
-  - [ ] Étape 6 : contour rouge léger sous **20 %** des PV max, pulsation plus rapide sous **10 %** (CSS dans `#ui`, coupé avec l'option tremblement)
-  - [ ] Étape 7 : `TELEGRAPH` / `BOSS_BAR` dans `data/feel.ts`, test de rendu (charge, invocation, barres avec et sans pack)
+  - [x] Étape 2 : charge en chevrons pixel (carrés de 2 px) qui se remplissent pendant l'annonce et clignotent plus vite à la fin, bord en pointillés, fissure au bout
+  - [x] Étape 3 : invocation en anneau de carrés violets qui se resserre
+  - [x] Étape 4 : barres boss / élites avec `bar-frame` + `bar-red` du pack (rectangles en secours), **traînée** claire des dégâts récents (valeur mise à jour dans l'update) ; petite barre sous le joueur, visible seulement s'il a perdu des PV
+  - [x] Étape 5 : grande barre du boss en haut de l'écran (HUD, sous le timer, « BOSS » : les boss n'ont pas encore de nom)
+  - [x] Étape 6 : contour rouge léger sous **20 %** des PV max, pulsation plus rapide sous **10 %** (`LOW_HP`, 3 bandes nettes en CSS, sans halo ; fixe si le tremblement est coupé)
+  - [x] Étape 7 : `CHARGE_TELEGRAPH`, `SUMMON_TELEGRAPH`, `HP_BARS` dans `data/feel.ts`, test de rendu (charge, invocation, barres avec et sans pack)
 - [x] **Cartes de level up et survol de TOUS les boutons refaits dans la DA** : retour de jeu (2026-11-21) « trop simple, ça ne fait pas trop dans la DA ». Aujourd'hui une carte survolée monte de 4 px et s'éclaircit, un bouton change juste de couleur de texte : effets génériques de site web. À la place, des effets pixel du pack (cadre qui s'allume, sélection marquée, apparition des cartes). Le même survol partout : menu principal, pause, Options, Boutique (boutons d'achat), Profil, choix du perso, écran de fin, relance, cartes de level up et de mutation Fait (piste A + proposition Claude Design) : curseur ▶ doré en pixels sur les boutons ; cartes avec badge de la sorte, touche de clavier, icône dans sa case, crans de niveau, effet avant → après (`systems/choiceDetails.ts`), ligne de portée (`scope` dans weapons.ts et upgrades.ts), tampon de mutation, contour doré au survol, arrivée une par une
-- [ ] Passe d'équilibrage des 10 min actuelles (**en grande partie faite le 2026-11-21**, détails dans le journal) :
+- [x] Passe d'équilibrage des 10 min actuelles (faite le 2026-11-21, détails dans le journal) :
   - [x] Dégâts de toutes les armes ×1,15 (`WEAPON_DAMAGE_MULT`)
   - [x] Armes : Épée (arc 200°, portée 125, recul 170), Fournaise (onde anti-gros), Tourbillon (dégâts ×0,85, recul ×1,3) ; Trait, Givre et Tempête inchangés
   - [x] Boss de 9:00 : vitesse ×2, annonce de charge 0,5 s
   - [x] Sans fin hardcore, XP ×10 au build complet, carte +15 PV / +10 or, soins de fin de partie réduits, or −50 %
-  - [ ] À confirmer en jouant : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
-  - [ ] Prix de la Boutique : à revoir une fois tout acheté (choix de l'utilisateur)
+  - ↪ À confirmer avec les testeurs de la 0.2 : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
+  - ↪ Prix de la Boutique : à revoir une fois tout acheté (choix de l'utilisateur)
 - [x] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
 - [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
 - [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icônes : flocon de glace (Raven n° 787) pour le givre, explosion de feu (n° 767, ex-Brasier) pour la Fournaise. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
 - [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône : épée pointée qui scintille (Raven n° 728). Vise l'ennemi le plus proche (dans la direction de marche, il frappait dans le vide) ; visuel : l'épée du pack se fend + trait d'énergie
+- [ ] Version 0.2.0 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.0` poussé
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
 ### 0.3 — Stats avancées et arsenal `[grosse]`
