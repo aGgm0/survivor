@@ -22,11 +22,11 @@ const ICONS = {
   piercingBolt: 1010, // lance de glace
   burstBolt: 774, // éclat violet
   furnace: 767, // explosion de feu (ex-Brasier)
-  // frostAura : icône de glace à choisir dans le pack (en attendant, le jeu affiche « Gv »)
+  frostAura: 1014, // cristaux de glace
   giantOrbs: 773, // anneau violet
   orbStorm: 786, // tourbillon bleu
   whirlwind: 725, // coup en tourbillon
-  // thrust (Estoc) : icône de lance ou d'estoc à choisir dans le pack (en attendant, « Es »)
+  thrust: 728, // épée pointée qui scintille (coup d'estoc)
   // Passifs
   vitality: 659, // cœur
   swiftness: 667, // botte ailée

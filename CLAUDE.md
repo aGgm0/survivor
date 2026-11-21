@@ -375,8 +375,8 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [ ] Passe d'équilibrage des 10 min actuelles : armes, mutations, vagues, boss, `steepFactor`, prix de la boutique
 - [x] **Icône de chaque arme dans le damage meter** de l'écran de fin, à gauche de son nom (icône de la mutation si l'arme est mutée, comme dans le HUD)
 - [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
-- [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icône du givre à choisir dans le pack Raven. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
-- [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône à choisir dans le pack Raven. Vise l'ennemi le plus proche (dans la direction de marche, il frappait dans le vide) ; visuel : l'épée du pack se fend + trait d'énergie
+- [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icônes : cristaux de glace (Raven n° 1014) pour le givre, explosion de feu (n° 767, ex-Brasier) pour la Fournaise. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
+- [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône : épée pointée qui scintille (Raven n° 728). Vise l'ennemi le plus proche (dans la direction de marche, il frappait dans le vide) ; visuel : l'épée du pack se fend + trait d'énergie
 - [ ] Son : musique de partie plus longue (44 s aujourd'hui), reprise là où elle en était après un boss, retouches des bruitages et des jingles
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
