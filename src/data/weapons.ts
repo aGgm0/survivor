@@ -71,9 +71,10 @@ export interface MutationDef {
   /** Mêlée : multiplicateur de la portée du coup */
   readonly rangeMult?: number;
   /**
-   * Mêlée : coup d'estoc, long et étroit. Un ennemi est touché s'il chevauche le cône (son rayon
-   * compte) : avec une ouverture de 30°, le test d'angle seul ratait les ennemis proches et un
-   * peu décalés qui touchent visiblement la lame.
+   * Mêlée : coup d'estoc, long et étroit, VERS L'ENNEMI LE PLUS PROCHE (pas la direction de
+   * marche : on marche en s'éloignant de la horde, le coup partait dans le vide). Sans ennemi à
+   * portée, l'arme attend, prête, comme le Trait. Un ennemi est touché s'il chevauche le cône
+   * (son rayon compte) : avec 30°, le test d'angle seul ratait les ennemis proches et décalés.
    */
   readonly thrust?: boolean;
 }
@@ -236,9 +237,9 @@ export const WEAPONS = {
         name: 'Aura de givre',
         short: 'Gv',
         description:
-          'Rayon ×1,4, dégâts ×0,6, gèle toutes les 0,6 s : ralentit de 45 % les ennemis dedans',
+          'Rayon ×1,7, dégâts ×0,6, gèle toutes les 0,6 s : ralentit de 45 % les ennemis dedans',
         color: '#8fd8ff',
-        radiusMult: 1.4,
+        radiusMult: 1.68, // 1,4 → 1,68 : +20 % (retour de jeu)
         damageMult: 0.6,
         cooldownMult: 1.2, // 0,5 → 0,6 s : 10 dégâts / s au niveau 5 (20 pour l'aura de base)
         // 0,7 s > 0,6 s entre deux gels : l'ennemi reste ralenti tant qu'il est dedans.
@@ -250,11 +251,15 @@ export const WEAPONS = {
         id: 'furnace',
         name: 'Fournaise',
         short: 'Fo',
-        description: 'Toutes les 1,5 s, un souffle brûle toute la zone : dégâts ×4, gros recul',
+        description:
+          'Rayon ×1,2 ; toutes les 1,5 s, un souffle de feu brûle toute la zone : dégâts ×4, recul ×1,5',
         color: '#ff5a1f',
+        radiusMult: 1.2, // +20 % (retour de jeu)
         damageMult: 4,
         cooldownMult: 3, // 0,5 → 1,5 s : 40 par souffle au niveau 5, ~27 dégâts / s (20 de base)
-        knockbackMult: 3,
+        // 3 → 1,5 : le recul sortait les ennemis de la zone avant le souffle suivant (bot : la
+        // Fournaise faisait moins bien que l'aura de base)
+        knockbackMult: 1.5,
         pulse: true,
       },
     ],
@@ -351,7 +356,7 @@ export const WEAPONS = {
         name: 'Estoc',
         short: 'Es',
         description:
-          'Coup long et étroit (×2 portée, 30°) qui transperce la ligne : dégâts ×2, recul ×1,5',
+          'Vise l’ennemi le plus proche : coup long et étroit (×2 portée, 30°) qui transperce la ligne, dégâts ×2',
         color: '#ffd98a',
         arcDeg: 30,
         rangeMult: 2,

@@ -50,25 +50,25 @@ describe('mutation — quand', () => {
 });
 
 describe('mutation — effets sur les stats', () => {
-  it('Aura de givre : rayon ×1,4, dégâts ×0,6, toutes les 0,6 s ; nouveau nom et couleur', () => {
+  it('Aura de givre : rayon ×1,68, dégâts ×0,6, toutes les 0,6 s ; nouveau nom et couleur', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     const build = { player: undefined as never, weapons: [w], passiveLevels: new Map() };
     applyUpgrade(mutationChoices(w)[0] as Parameters<typeof applyUpgrade>[0], build);
     w.recompute(NO_MODS);
-    expect(w.radius).toBeCloseTo(radius * 1.4);
+    expect(w.radius).toBeCloseTo(radius * 1.68);
     expect(w.damage).toBeCloseTo(damage * 0.6);
     expect(w.cooldown).toBeCloseTo(0.6);
     expect(w.displayName).toBe('Aura de givre');
     expect(w.color).toBe(FROST.color);
   });
 
-  it('Fournaise : même rayon, dégâts ×4, un souffle toutes les 1,5 s (la Hâte compte)', () => {
+  it('Fournaise : rayon ×1,2, dégâts ×4, un souffle toutes les 1,5 s (la Hâte compte)', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     w.mutation = FURNACE;
     w.recompute(NO_MODS);
-    expect(w.radius).toBeCloseTo(radius);
+    expect(w.radius).toBeCloseTo(radius * 1.2);
     expect(w.damage).toBeCloseTo(damage * 4);
     expect(w.cooldown).toBeCloseTo(1.5);
     w.recompute({ ...NO_MODS, cooldownMult: 0.5 });

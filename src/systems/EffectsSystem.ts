@@ -2,6 +2,7 @@ import type { Camera } from '../core/Camera';
 import { Pool, type Poolable } from '../core/Pool';
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import { EXPLOSION_FX, SLASH_FX } from '../data/sprites';
+import type { SpriteAtlas, SpriteFrame } from '../core/SpriteAtlas';
 
 // Réglages purement visuels (aucun effet sur le jeu).
 const POOL_SIZE = 64;
@@ -15,15 +16,28 @@ const SLASH_LIFETIME = 0.15;
 /** Opacité de départ de l'arc (il s'efface ensuite) */
 const SLASH_ALPHA = 0.45;
 
-/** s : durée de la traînée d'un coup d'estoc */
-const THRUST_LIFETIME = 0.22;
-/** La traînée atteint le bout de la portée en cette part de sa durée, puis s'efface */
-const THRUST_REACH = 0.35;
-/** px : taille des pixels de la traînée (comme les braises de l'aura) et pas entre deux rangées */
-const THRUST_PIXEL = 4;
-const THRUST_STEP = 8;
-const THRUST_CORE_COLOR = '#ffffff';
-/** Les deux bords du cône (défini une fois : rien d'alloué par frame) */
+/**
+ * Coup d'estoc (retour de jeu : la première traînée « ne ressemblait pas à un coup d'arme »).
+ * L'épée du pack se fend vers la cible puis revient ; un trait d'énergie fin file de sa pointe
+ * jusqu'au bout de la portée (la zone qui touche). Réglages purement visuels.
+ */
+const THRUST = {
+  /** s : durée totale du coup */
+  lifetime: 0.26,
+  /** Part de la durée pour la fente (le reste : retour et effacement) */
+  lunge: 0.35,
+  /** px : centre de l'épée au repos, puis distance gagnée par la fente */
+  restDistance: 20,
+  lungeDistance: 46,
+  /** Sprite du pack (vertical, pointe en haut) et son agrandissement */
+  sprite: 'weapon_knight_sword',
+  scale: 2,
+  /** Trait d'énergie : pixels de 4 px, un tous les 6 px, cœur blanc et un rang de chaque côté */
+  pixel: 4,
+  step: 6,
+  coreColor: '#ffffff',
+} as const;
+/** Les deux bords du trait (défini une fois : rien d'alloué par frame) */
 const SIDES = [-1, 1] as const;
 
 /** Un anneau d'explosion qui s'agrandit et s'efface. */
@@ -74,8 +88,15 @@ export class EffectsSystem {
   private readonly ringLifetime: number;
   private readonly slashLifetime: number;
 
+  /** Épée de l'estoc (atlas des persos et ennemis) ; absente : trait d'énergie seul. */
+  private readonly thrustSword: SpriteFrame | null;
+
   /** Avec les sprites, les effets durent le temps de leur animation (purement visuel). */
-  constructor(private readonly sprites: EffectSprites | null = null) {
+  constructor(
+    private readonly sprites: EffectSprites | null = null,
+    private readonly atlas: SpriteAtlas | null = null,
+  ) {
+    this.thrustSword = atlas?.animation(THRUST.sprite)[0] ?? null;
     this.ringLifetime = sprites ? EXPLOSION_FX.duration : RING_LIFETIME;
     this.slashLifetime = sprites ? SLASH_FX.duration : SLASH_LIFETIME;
   }
@@ -133,13 +154,13 @@ export class EffectsSystem {
     for (const t of this.thrusts.items) {
       if (!t.active) continue;
       t.age += dt;
-      if (t.age >= THRUST_LIFETIME) this.thrusts.release(t);
+      if (t.age >= THRUST.lifetime) this.thrusts.release(t);
     }
   }
 
   /** À appeler entre `camera.begin` et `camera.end` (coordonnées monde). */
   render(ctx: CanvasRenderingContext2D, camera: Camera): void {
-    // Estoc : dessiné en pixels par le code, avec ou sans le pack (pas d'effet d'estoc dedans).
+    // Estoc : épée de l'atlas + trait d'énergie dessiné par le code (pas d'effet d'estoc dans PVFX).
     this.renderThrusts(ctx, camera);
     if (this.sprites) {
       this.renderSprites(ctx, camera, this.sprites);
@@ -171,45 +192,58 @@ export class EffectsSystem {
   }
 
   /**
-   * Traînée d'estoc : des rangées de pixels carrés le long de la ligne, de plus en plus larges
-   * (le cône qui touche). Le front file jusqu'au bout de la portée, puis tout s'efface. Le cœur
-   * est blanc, les bords à la couleur de l'arme. Positions arrondies : pixels nets.
+   * Coup d'estoc : le trait d'énergie (cœur blanc, bords à la couleur de l'arme, pixels nets) file
+   * jusqu'au bout de la portée pendant la fente, puis s'efface ; l'épée se fend et revient.
    */
   private renderThrusts(ctx: CanvasRenderingContext2D, camera: Camera): void {
-    const half = THRUST_PIXEL / 2;
+    const half = THRUST.pixel / 2;
     for (const t of this.thrusts.items) {
       if (!t.active) continue;
       if (t.x + t.range < camera.left || t.x - t.range > camera.right) continue;
       if (t.y + t.range < camera.top || t.y - t.range > camera.bottom) continue;
-      const progress = t.age / THRUST_LIFETIME;
-      const front = t.range * Math.min(1, progress / THRUST_REACH);
-      const fade = progress < THRUST_REACH ? 1 : 1 - (progress - THRUST_REACH) / (1 - THRUST_REACH);
+      const progress = t.age / THRUST.lifetime;
+      const lunging = progress < THRUST.lunge;
+      // Fente rapide qui ralentit au bout (ease-out), puis retour.
+      const k = lunging
+        ? 1 - (1 - progress / THRUST.lunge) ** 2
+        : 1 - (progress - THRUST.lunge) / (1 - THRUST.lunge);
+      const fade = lunging ? 1 : k;
       const fx = Math.cos(t.angle);
       const fy = Math.sin(t.angle);
-      const halfTan = Math.tan(t.arc / 2);
-      let row = 0;
-      for (let d = THRUST_STEP; d <= front; d += THRUST_STEP, row++) {
-        // Plus loin de la pointe (vers le joueur) : déjà en train de s'éteindre.
-        ctx.globalAlpha = fade * (0.35 + 0.65 * (d / Math.max(front, 1)));
-        const width = d * halfTan;
+      const center = THRUST.restDistance + THRUST.lungeDistance * k;
+      const swordTip = center + ((this.thrustSword?.h ?? 0) * THRUST.scale) / 2;
+
+      // Trait d'énergie : de la pointe de l'épée jusqu'au front (qui atteint la portée à la fin
+      // de la fente).
+      const front = t.range * Math.min(1, progress / THRUST.lunge);
+      ctx.globalAlpha = 0.85 * fade;
+      for (let d = swordTip; d <= front; d += THRUST.step) {
         const cx = t.x + fx * d;
         const cy = t.y + fy * d;
-        // Cœur blanc sur toute la longueur, puis les bords en damier (un pixel sur deux, décalé
-        // d'une rangée à l'autre) : une traînée pixel art, pas un faisceau plein.
-        ctx.fillStyle = THRUST_CORE_COLOR;
-        ctx.fillRect(Math.round(cx - half), Math.round(cy - half), THRUST_PIXEL, THRUST_PIXEL);
+        ctx.fillStyle = THRUST.coreColor;
+        ctx.fillRect(Math.round(cx - half), Math.round(cy - half), THRUST.pixel, THRUST.pixel);
         ctx.fillStyle = t.color;
-        const offset = row % 2 === 0 ? THRUST_PIXEL * 2 : THRUST_PIXEL * 3;
-        for (let s = offset; s <= width; s += THRUST_PIXEL * 2) {
-          for (const side of SIDES) {
-            ctx.fillRect(
-              Math.round(cx - fy * s * side - half),
-              Math.round(cy + fx * s * side - half),
-              THRUST_PIXEL,
-              THRUST_PIXEL,
-            );
-          }
+        for (const side of SIDES) {
+          ctx.fillRect(
+            Math.round(cx - fy * THRUST.pixel * side - half),
+            Math.round(cy + fx * THRUST.pixel * side - half),
+            THRUST.pixel,
+            THRUST.pixel,
+          );
         }
+      }
+      ctx.globalAlpha = fade;
+      // L'épée, pointe vers la cible (sprite vertical : +90°), teinte de l'arme par-dessus.
+      if (this.atlas && this.thrustSword) {
+        this.atlas.drawRotated(
+          ctx,
+          this.thrustSword,
+          t.x + fx * center,
+          t.y + fy * center,
+          THRUST.scale,
+          t.angle + Math.PI / 2,
+          this.thrustSword.w / 2,
+        );
       }
     }
     ctx.globalAlpha = 1;

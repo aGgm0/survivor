@@ -8,7 +8,7 @@ import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { EffectSheet } from '../core/EffectSheet';
 import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { AURA_LOOKS, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
+import { AURA_LOOKS, AURA_PULSE, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { WorldRenderer } from './game/WorldRenderer';
 import {
@@ -228,7 +228,7 @@ export class GameScene implements Scene, Build {
       shopRanks?: Readonly<Record<string, number>>;
     } = {},
   ) {
-    this.effects = new EffectsSystem(deps.effects ?? null);
+    this.effects = new EffectsSystem(deps.effects ?? null, deps.sprites ?? null);
     if (options.sprite) this.player.sprite = options.sprite;
     // Bonus de boutique : appliqués avant tout, sans prendre d'emplacement de passif.
     this.shopRanks = options.shopRanks ?? {};
@@ -248,8 +248,8 @@ export class GameScene implements Scene, Build {
         this.shake('explosion');
         this.sound('bolt-burst');
       },
-      onAuraPulse: (x: number, y: number, r: number, color: string) => {
-        this.effects.explosion(x, y, r, color);
+      onAuraPulse: (x: number, y: number, r: number) => {
+        this.emitPulseFlames(x, y, r);
         this.shake('auraPulse');
         this.sound('bolt-burst');
       },
@@ -803,6 +803,27 @@ export class GameScene implements Scene, Build {
     this.deps.debug.setStat('contacts', this.touchingCount);
     this.deps.debug.setStat('projectiles', this.projectiles.activeCount);
     this.deps.debug.setStat('kills', this.killCount);
+  }
+
+  /** Souffle de la Fournaise : des flammes jaillissent de toute la zone (visuel, aléatoire séparé). */
+  private emitPulseFlames(x: number, y: number, radius: number): void {
+    const f = AURA_PULSE;
+    for (let i = 0; i < f.flames; i++) {
+      // Point au hasard dans le disque (racine carrée : réparti partout, pas tassé au centre).
+      const a = this.auraRng.range(0, Math.PI * 2);
+      const d = Math.sqrt(this.auraRng.next()) * radius;
+      const color =
+        f.flameColors[this.auraRng.int(0, f.flameColors.length - 1)] ?? f.flameColors[1];
+      this.particles.spawn(
+        x + Math.cos(a) * d,
+        y + Math.sin(a) * d,
+        this.auraRng.range(-f.flameSpread, f.flameSpread),
+        -f.flameRise * this.auraRng.range(0.6, 1),
+        f.flameSize,
+        f.flameLife * this.auraRng.range(0.6, 1),
+        color,
+      );
+    }
   }
 
   /** Étincelles qui montent de l'intérieur des auras (purement visuel, aléatoire séparé). */

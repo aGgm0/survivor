@@ -156,17 +156,33 @@ describe('Épée — mutations', () => {
     const w = mutated(1);
     const { run, hits, list } = setup(
       [
-        [40, 20], // proche et un peu décalé : il chevauche la lame (raté par un simple test d'angle)
-        [150, 0], // sur la ligne
+        [50, 0], // le plus proche : le coup part vers lui (+x)
+        [70, 35], // décalé à 27° : il chevauche la lame (raté par un simple test d'angle)
         [260, 30], // loin, dans le cône élargi
         [60, 120], // sur le côté
-        [-60, 0], // derrière
+        [-90, 0], // derrière
       ],
       w,
     );
     run(DT);
     expect(hits).toHaveLength(3);
     for (const e of list.slice(0, 3)) expect(hits).toContain(e);
+  });
+
+  it('Estoc : vise l’ennemi le plus proche, même derrière le joueur', () => {
+    const w = mutated(1);
+    // Le joueur regarde à droite (+x) ; l'ennemi est à gauche.
+    const { run, hits, list } = setup([[-120, 0]], w);
+    run(DT);
+    expect(hits).toEqual([list[0]]);
+  });
+
+  it('Estoc : sans ennemi à portée, l’arme attend prête et frappe dès qu’il arrive', () => {
+    const w = mutated(1);
+    const { run, hits } = setup([], w);
+    run(3); // plus que le délai : rien à frapper
+    expect(w.cooldownTimer).toBeLessThanOrEqual(0);
+    expect(hits).toHaveLength(0);
   });
 });
 

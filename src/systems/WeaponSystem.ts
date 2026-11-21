@@ -247,6 +247,8 @@ export class WeaponSystem {
   ): void {
     weapon.cooldownTimer -= dt;
     if (weapon.cooldownTimer <= 0 && weapon.strikesLeft === 0) {
+      // Estoc : sans ennemi à portée, l'arme reste prête (pas de coup dans le vide).
+      if (weapon.mutation?.thrust && !this.findNearest(x, y, weapon.range)) return;
       weapon.cooldownTimer = weapon.cooldown;
       weapon.strikesLeft = weapon.count;
       weapon.nextStrikeAt = now;
@@ -264,6 +266,15 @@ export class WeaponSystem {
    */
   private strike(weapon: Weapon, x: number, y: number, facingX: number, facingY: number): void {
     const range = weapon.range;
+    // Estoc : vise l'ennemi le plus proche au lieu de la direction de marche.
+    if (weapon.mutation?.thrust) {
+      const target = this.findNearest(x, y, range + MAX_ENEMY_RADIUS);
+      if (target) {
+        const d = Math.hypot(target.x - x, target.y - y) || 1;
+        facingX = (target.x - x) / d;
+        facingY = (target.y - y) / d;
+      }
+    }
     const fullCircle = weapon.arc >= Math.PI * 2 - FLOAT_EPSILON;
     const minCos = Math.cos(weapon.arc / 2);
     const thrust = weapon.mutation?.thrust ?? false;

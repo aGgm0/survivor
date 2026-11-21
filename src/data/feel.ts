@@ -117,10 +117,36 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
 };
 
 /**
- * Souffle de la Fournaise : le disque s'allume d'un coup puis s'éteint en `duration` s
- * (opacité de départ `alpha`), pour qu'on voie le rythme des rafales.
+ * Souffle de la Fournaise (retour de jeu : l'explosion violette « bizarre », on ne voyait pas le
+ * feu). Le disque s'allume puis s'éteint en `duration` s ; un anneau de braises vives part de
+ * `ringStart` × le rayon jusqu'au bord ; des flammes jaillissent de toute la zone et montent.
  */
-export const AURA_PULSE = { duration: 0.3, alpha: 0.35 } as const;
+export const AURA_PULSE = {
+  duration: 0.35,
+  alpha: 0.22,
+  ringStart: 0.35,
+  flames: 46,
+  flameColors: ['#fff0a8', '#ffb347', '#ff5a1f', '#c8321a'],
+  flameRise: 240,
+  flameSpread: 40,
+  flameLife: 0.55,
+  flameSize: 6,
+} as const;
+
+/** Anneau de braises du souffle : plus gros et plus vif que l'anneau de l'aura. */
+export const AURA_PULSE_RING: AuraLook = {
+  colors: ['#fff6c8', '#ffb347', '#ff5a1f'],
+  fillAlpha: 0,
+  emberSpacing: 9,
+  emberSize: 6,
+  emberInset: 6,
+  spin: 0,
+  sparksPerSecond: 0,
+  sparkColor: '#ffb347',
+  sparkRise: 0,
+  sparkLife: 0,
+  sparkSize: 0,
+};
 
 /** Trauma ajouté par événement ; `cap` : ce choc seul ne monte pas au-dessus. */
 export const SHAKE_EVENTS = {

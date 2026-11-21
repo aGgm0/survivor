@@ -12,7 +12,7 @@ import {
   type SpriteTint,
 } from '../../core/SpriteAtlas';
 import { ENEMY_TYPE_LIST } from '../../data/enemies';
-import { AURA_LOOKS, AURA_PULSE, type AuraLook } from '../../data/feel';
+import { AURA_LOOKS, AURA_PULSE, AURA_PULSE_RING, type AuraLook } from '../../data/feel';
 import {
   BOLT_SPRITE,
   ENEMY_ANIM_OFFSET,
@@ -266,7 +266,12 @@ export class WorldRenderer {
       ctx.fill();
       ctx.globalAlpha = 1;
       if (look) this.renderEmbers(ctx, px, py, w.radius, look);
-      else {
+      // Souffle : un anneau de braises vives part du centre et s'étend jusqu'au bord en s'éteignant.
+      if (flash > 0) {
+        const p = sincePulse / AURA_PULSE.duration;
+        const r = w.radius * (AURA_PULSE.ringStart + (1 - AURA_PULSE.ringStart) * p);
+        this.renderEmbers(ctx, px, py, r, AURA_PULSE_RING, 1 - p);
+      } else {
         ctx.globalAlpha = AURA_STROKE_ALPHA;
         ctx.strokeStyle = w.color;
         ctx.lineWidth = 2;
@@ -287,6 +292,7 @@ export class WorldRenderer {
     cy: number,
     radius: number,
     look: AuraLook,
+    opacity = 1,
   ): void {
     const count = Math.max(24, Math.round((Math.PI * 2 * radius) / look.emberSpacing));
     const t = this.world.runTime;
@@ -297,9 +303,9 @@ export class WorldRenderer {
     ctx.arc(cx, cy, radius - size / 2, 0, Math.PI * 2);
     ctx.strokeStyle = look.colors[2];
     ctx.lineWidth = 1;
-    ctx.globalAlpha = EMBER_RING_ALPHA;
+    ctx.globalAlpha = EMBER_RING_ALPHA * opacity;
     ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = opacity;
     for (let shade = 0; shade < 3; shade++) {
       ctx.fillStyle = look.colors[shade] ?? look.colors[1];
       for (let k = 0; k < count; k++) {
@@ -316,6 +322,7 @@ export class WorldRenderer {
         ctx.fillRect(x, y, size, size);
       }
     }
+    ctx.globalAlpha = 1;
   }
 
   /** Orbes autour du joueur, à leur angle interpolé (rotation fluide à 144/240 Hz). */
