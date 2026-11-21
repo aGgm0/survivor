@@ -47,6 +47,10 @@ export function makeHeadlessDeps(isDown: (codes: readonly string[]) => boolean =
     optionsAction: null as OptionsAction | null,
     /** Réglages changés (= sauvegardes demandées à main.ts) */
     settingsSaves: 0,
+    /** Grande barre du boss du HUD : PV / PV max (null = masquée) */
+    bossBar: null as number | null,
+    /** Contour rouge des PV bas */
+    lowHp: 'none' as 'none' | 'warn' | 'critical',
   };
   const deps: GameSceneDeps = {
     input: {
@@ -98,6 +102,8 @@ export function makeHeadlessDeps(isDown: (codes: readonly string[]) => boolean =
       setHp: () => {},
       setKills: () => {},
       setInventory: () => {},
+      setBoss: (ratio) => (ui.bossBar = ratio),
+      setLowHp: (level) => (ui.lowHp = level),
     },
     debug: { setStat: () => {}, showHitboxes: false },
     settings: { ...DEFAULT_SETTINGS },

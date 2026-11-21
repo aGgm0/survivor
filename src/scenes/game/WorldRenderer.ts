@@ -3,7 +3,7 @@
 
 import type { Camera } from '../../core/Camera';
 import type { EffectSheet } from '../../core/EffectSheet';
-import { lerp, Rng } from '../../core/math';
+import { clamp, lerp, Rng } from '../../core/math';
 import type { Pool } from '../../core/Pool';
 import {
   frameAt,
@@ -12,7 +12,15 @@ import {
   type SpriteTint,
 } from '../../core/SpriteAtlas';
 import { ENEMY_TYPE_LIST } from '../../data/enemies';
-import { AURA_LOOKS, AURA_PULSE, AURA_PULSE_RING, type AuraLook } from '../../data/feel';
+import {
+  AURA_LOOKS,
+  AURA_PULSE,
+  AURA_PULSE_RING,
+  CHARGE_TELEGRAPH,
+  HP_BARS,
+  SUMMON_TELEGRAPH,
+  type AuraLook,
+} from '../../data/feel';
 import {
   BOLT_SPRITE,
   ENEMY_ANIM_OFFSET,
@@ -27,6 +35,7 @@ import type { Enemy } from '../../entities/Enemy';
 import type { Player } from '../../entities/Player';
 import type { Projectile } from '../../entities/Projectile';
 import type { Weapon } from '../../entities/Weapon';
+import { drawHpBar, hpBarHeight, type HpBarSkin } from './hpBar';
 import { chargeDistance } from '../../systems/BossAbilitySystem';
 import type { DamageNumberSystem } from '../../systems/DamageNumberSystem';
 import type { EffectsSystem } from '../../systems/EffectsSystem';
@@ -86,19 +95,7 @@ const ELITE_LOOK = {
   ringGap: 5,
   ringPulse: 4,
   pulseSpeed: 6,
-  barScale: 0.6,
 } as const;
-
-/** Annonces des capacités de boss (purement visuel) */
-const TELEGRAPH = {
-  chargeColor: '#ff3b3b',
-  summonColor: '#b14cff',
-  summonWidth: 4,
-  alpha: 0.35,
-} as const;
-
-/** Barre de PV au-dessus du boss */
-const BOSS_BAR = { width: 90, height: 7, offset: 12, fill: '#e5484d', bg: '#1a1a1a' } as const;
 
 /**
  * Ce que le rendu lit dans la partie : rien d'autre ne lui est accessible. Les pools ont encore
@@ -124,6 +121,8 @@ export interface WorldRendererDeps {
   readonly sprites: SpriteAtlas | null;
   readonly fx: SpriteAtlas | null;
   readonly effects: Readonly<Record<EffectName, EffectSheet>> | null;
+  /** Cadre et remplissage des barres de PV (pack Dark Ages) ; null : rectangles */
+  readonly hpBars: HpBarSkin | null;
   /** Lu à chaque frame : l'overlay F3 peut l'allumer en cours de partie */
   readonly showHitboxes: () => boolean;
 }
@@ -161,6 +160,7 @@ export class WorldRenderer {
     this.renderEliteRings(ctx, alpha);
     this.renderBossBars(ctx, alpha);
     this.world.player.render(ctx, alpha, this.deps.sprites);
+    this.renderPlayerBar(ctx, alpha);
     this.renderOrbs(ctx, alpha);
     this.renderProjectiles(ctx, alpha);
     this.world.effects.render(ctx, this.world.camera);
@@ -169,25 +169,39 @@ export class WorldRenderer {
     this.world.camera.end(ctx);
   }
 
-  /** Barre de PV au-dessus de chaque boss visible (1000 PV : on veut voir où il en est). */
+  /** Barre de PV au-dessus des boss et des mini-boss (plus courte pour ces derniers). */
   private renderBossBars(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const skin = this.deps.hpBars;
     const items = this.world.enemies.items;
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
-      // Barre de PV pour les boss et les mini-boss (plus courte pour ces derniers).
       if (!e?.active || (e.type !== BOSS_TYPE && !e.type.elite)) continue;
+      const look = e.type.elite ? HP_BARS.elite : HP_BARS.boss;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       // Au-dessus de la tête (le sprite dépasse la hitbox vers le haut).
-      const barY = this.enemyTop(e, y) - BOSS_BAR.offset - BOSS_BAR.height;
-      if (!this.isOnScreen(x, y, y - barY)) continue;
-      const width = e.type.elite ? BOSS_BAR.width * ELITE_LOOK.barScale : BOSS_BAR.width;
-      const barX = x - width / 2;
-      ctx.fillStyle = BOSS_BAR.bg;
-      ctx.fillRect(barX, barY, width, BOSS_BAR.height);
-      ctx.fillStyle = BOSS_BAR.fill;
-      ctx.fillRect(barX, barY, width * Math.max(0, e.hp / e.maxHp), BOSS_BAR.height);
+      const barY = this.enemyTop(e, y) - look.offset - hpBarHeight(skin, look.scale);
+      if (!this.isOnScreen(x, y, Math.max(y - barY, look.width / 2))) continue;
+      drawHpBar(ctx, skin, x, barY, look.width, look.scale, e.hp / e.maxHp, e.hpTrail / e.maxHp);
     }
+  }
+
+  /** Petite barre sous le joueur, seulement s'il a perdu des PV (le HUD donne le chiffre exact). */
+  private renderPlayerBar(ctx: CanvasRenderingContext2D, alpha: number): void {
+    const p = this.world.player;
+    if (p.hpTrail >= p.maxHp && p.hp >= p.maxHp) return;
+    const look = HP_BARS.player;
+    const y = p.renderY(alpha) + p.radius + look.offset;
+    drawHpBar(
+      ctx,
+      this.deps.hpBars,
+      p.renderX(alpha),
+      y,
+      look.width,
+      look.scale,
+      p.hp / p.maxHp,
+      p.hpTrail / p.maxHp,
+    );
   }
 
   /** Anneau doré qui pulse autour des mini-boss : on les repère au milieu de la horde. */
@@ -211,34 +225,105 @@ export class WorldRenderer {
   }
 
   /**
-   * Annonces des capacités de boss : ligne rouge (trajectoire de la charge) et cercle violet
-   * qui grandit (invocation). Lisibles même en pleine horde : c'est ce qui permet d'esquiver.
+   * Annonces des capacités de boss : chevrons pixel sur la trajectoire de la charge, anneau de
+   * braises violettes pour l'invocation. Lisibles même en pleine horde : c'est ce qui permet
+   * d'esquiver.
    */
   private renderBossTelegraphs(ctx: CanvasRenderingContext2D, alpha: number): void {
     const summon = BOSS_ABILITIES.summon;
+    const now = this.world.runTime;
     for (const e of this.world.enemies.items) {
       if (!e.active || e.type !== BOSS_TYPE) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       if (e.chargeState === 'windup') {
-        const length = chargeDistance(e);
-        ctx.strokeStyle = TELEGRAPH.chargeColor;
-        ctx.lineWidth = e.type.radius * 2;
-        ctx.globalAlpha = TELEGRAPH.alpha;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + e.chargeDirX * length, y + e.chargeDirY * length);
-        ctx.stroke();
+        const windup = e.chargeWindup || BOSS_ABILITIES.charge.windup;
+        const progress = clamp(1 - (e.chargeUntil - now) / windup, 0, 1);
+        this.renderChargeTelegraph(ctx, e, x, y, progress);
       }
       if (e.summonAt > 0) {
-        const progress = 1 - Math.max(0, e.summonAt - this.world.runTime) / summon.cast;
-        ctx.strokeStyle = TELEGRAPH.summonColor;
-        ctx.lineWidth = TELEGRAPH.summonWidth;
-        ctx.globalAlpha = TELEGRAPH.alpha + (1 - TELEGRAPH.alpha) * progress;
-        ctx.beginPath();
-        ctx.arc(x, y, summon.radius * progress + e.type.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        const progress = clamp(1 - (e.summonAt - now) / summon.cast, 0, 1);
+        const t = SUMMON_TELEGRAPH;
+        const r = summon.radius * lerp(t.startScale, 1, progress) + e.type.radius;
+        this.renderEmbers(ctx, x, y, r, t.look, lerp(t.startAlpha, 1, progress));
       }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Charge annoncée : bande légère, bords en pointillés, chevrons qui s'allument du boss vers le
+   * bout (`progress` de 0 à 1) et clignotent de plus en plus vite, fissure au point d'arrivée.
+   * Pixels calés sur une grille de 2 px, jamais tournés : même rendu que les sprites ×2.
+   */
+  private renderChargeTelegraph(
+    ctx: CanvasRenderingContext2D,
+    e: Enemy,
+    x: number,
+    y: number,
+    progress: number,
+  ): void {
+    const t = CHARGE_TELEGRAPH;
+    const length = chargeDistance(e);
+    const dx = e.chargeDirX;
+    const dy = e.chargeDirY;
+    // Perpendiculaire à la trajectoire (vers la gauche de la charge)
+    const nx = -dy;
+    const ny = dx;
+    const half = e.type.radius;
+    const p = t.pixel;
+
+    // Bande très légère : la zone touchée
+    ctx.globalAlpha = t.fillAlpha;
+    ctx.fillStyle = t.colors[1];
+    ctx.beginPath();
+    ctx.moveTo(x + nx * half, y + ny * half);
+    ctx.lineTo(x + nx * half + dx * length, y + ny * half + dy * length);
+    ctx.lineTo(x - nx * half + dx * length, y - ny * half + dy * length);
+    ctx.lineTo(x - nx * half, y - ny * half);
+    ctx.fill();
+
+    // Bords en pointillés
+    ctx.globalAlpha = t.edgeAlpha;
+    const edges = Math.floor(length / t.edgeSpacing);
+    for (let k = 0; k <= edges; k++) {
+      const along = k * t.edgeSpacing;
+      const cx = x + dx * along;
+      const cy = y + dy * along;
+      pixelAt(ctx, cx + nx * half, cy + ny * half, p);
+      pixelAt(ctx, cx - nx * half, cy - ny * half, p);
+    }
+
+    // Chevrons : allumés jusqu'à `progress`, ils clignotent ; les autres restent sombres.
+    const blinkHz = lerp(t.blinkStart, t.blinkEnd, progress);
+    const blinkOn = Math.sin(this.world.runTime * blinkHz * Math.PI * 2) > -0.3;
+    const arm = Math.max(2, Math.round((half * t.chevronArm) / p));
+    const count = Math.max(1, Math.floor((length - half) / t.chevronSpacing));
+    for (let pass = 0; pass < 2; pass++) {
+      const lit = pass === 1;
+      if (lit && !blinkOn) continue;
+      ctx.globalAlpha = lit ? 1 : 0.6;
+      ctx.fillStyle = lit ? t.colors[0] : t.colors[2];
+      for (let k = 1; k <= count; k++) {
+        if (k / count <= progress !== lit) continue;
+        const along = half + k * t.chevronSpacing;
+        // Pointe du chevron, puis les deux branches qui reculent en s'écartant
+        for (let j = 0; j <= arm; j++) {
+          const back = along - j * p;
+          const side = j * p * 1.2;
+          pixelAt(ctx, x + dx * back + nx * side, y + dy * back + ny * side, p);
+          if (j > 0) pixelAt(ctx, x + dx * back - nx * side, y + dy * back - ny * side, p);
+        }
+      }
+    }
+
+    // Fissure au point d'arrivée, de plus en plus visible
+    const endX = x + dx * length;
+    const endY = y + dy * length;
+    ctx.globalAlpha = 0.4 + 0.6 * progress;
+    ctx.fillStyle = t.colors[2];
+    for (let k = 0; k + 1 < t.crack.length; k += 2) {
+      pixelAt(ctx, endX + (t.crack[k] ?? 0) * p, endY + (t.crack[k + 1] ?? 0) * p, p);
     }
     ctx.globalAlpha = 1;
   }
@@ -570,4 +655,9 @@ export class WorldRenderer {
     ctx.lineWidth = 1;
     ctx.stroke();
   }
+}
+
+/** Un pixel d'annonce centré sur (x, y), calé sur la grille de 2 px. */
+function pixelAt(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+  ctx.fillRect(Math.round((x - size / 2) / 2) * 2, Math.round((y - size / 2) / 2) * 2, size, size);
 }

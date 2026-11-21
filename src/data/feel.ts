@@ -147,6 +147,12 @@ export const AURA_PULSE_RING: AuraLook = {
   sparkSize: 0,
 };
 
+/**
+ * Contour rouge quand les PV sont bas (part des PV max : les PV max vont de 100 à ~200, un seuil
+ * fixe arriverait trop tard). Pulsation plus rapide sous `critical`.
+ */
+export const LOW_HP = { warn: 0.2, critical: 0.1 } as const;
+
 /** Trauma ajouté par événement ; `cap` : ce choc seul ne monte pas au-dessus. */
 export const SHAKE_EVENTS = {
   /** Plafonné : au milieu de la horde, l'écran ne doit pas trembler en continu */
@@ -158,4 +164,72 @@ export const SHAKE_EVENTS = {
   auraPulse: { amount: 0.08, cap: 0.25 },
   /** À peine : il y en a beaucoup avec le Trait éclaté */
   explosion: { amount: 0.04, cap: 0.2 },
+} as const;
+
+/**
+ * Annonce de la charge d'un boss, en pixels carrés comme les braises de l'aura (retour de jeu :
+ * la bande rouge lisse « ne fait pas DA »). Chevrons qui s'allument du boss vers le bout pendant
+ * l'annonce, bords en pointillés (largeur touchée), fissure au point d'arrivée.
+ */
+export const CHARGE_TELEGRAPH = {
+  /** Claire (chevron allumé), moyenne (bords), sombre (chevron éteint, fissure) */
+  colors: ['#ffd2c4', '#ff3b3b', '#7a1414'],
+  /** px : taille d'un pixel d'annonce (calé sur une grille de 2 px) */
+  pixel: 4,
+  /** px entre deux chevrons */
+  chevronSpacing: 30,
+  /** Longueur d'une branche du chevron, en part du rayon du boss */
+  chevronArm: 0.45,
+  /** px entre deux points des bords */
+  edgeSpacing: 10,
+  edgeAlpha: 0.7,
+  /** Bande très légère sous les pixels : la zone reste lisible entre deux clignotements */
+  fillAlpha: 0.08,
+  /** Hz : clignotement des chevrons allumés, du début à la fin de l'annonce */
+  blinkStart: 3,
+  blinkEnd: 12,
+  /** Fissure au point d'arrivée : cases (en pixels d'annonce) x, y à la suite, autour du centre */
+  crack: [
+    0, 0, 1, -1, 2, -1, 3, -2, 4, -2, -1, 1, -2, 1, -2, 2, -3, 3, 1, 1, 1, 2, 2, 3, -1, -1, -1, -2,
+    -2, -3, 3, 0, 4, 1,
+  ],
+} as const;
+
+/** Annonce de l'invocation : anneau de braises violettes qui se resserre sur le cercle d'apparition. */
+export const SUMMON_TELEGRAPH = {
+  /** Rayon de départ, en multiple du cercle d'apparition des sbires */
+  startScale: 1.8,
+  /** Opacité au début de l'annonce (monte à 1 à la fin) */
+  startAlpha: 0.35,
+  look: {
+    colors: ['#f0d0ff', '#b14cff', '#5a1a8a'],
+    fillAlpha: 0,
+    emberSpacing: 9,
+    emberSize: 4,
+    emberInset: 4,
+    spin: -1.2,
+    sparksPerSecond: 0,
+    sparkColor: '#b14cff',
+    sparkRise: 0,
+    sparkLife: 0,
+    sparkSize: 0,
+  } satisfies AuraLook,
+} as const;
+
+/**
+ * Barres de PV dans le monde : cadre `bar-body` et remplissage `bar-red` du pack Dark Ages (comme
+ * la barre du HUD), rectangles en secours. Boss, élites, et le joueur seulement s'il est blessé.
+ */
+export const HP_BARS = {
+  /** `scale` : agrandissement des pixels du pack (×2 comme les sprites) ; `offset` : px d'écart */
+  boss: { width: 170, scale: 2, offset: 8 },
+  elite: { width: 100, scale: 2, offset: 6 },
+  player: { width: 44, scale: 1, offset: 6 },
+  /**
+   * Traînée : la part perdue reste claire `hold` s, puis fond vers les PV ; vitesse = `rate` × l'écart
+   * par seconde, au moins `minRate` × PV max par seconde (elle finit toujours par rattraper).
+   */
+  trail: { hold: 0.35, rate: 4, minRate: 0.15, color: '#ffe3a3' },
+  /** Secours sans le pack (tests, pack absent) */
+  fallback: { background: '#1a1a1a', fill: '#e5484d', outline: '#000', height: 5 },
 } as const;

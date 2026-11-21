@@ -5,6 +5,12 @@ import type { ENEMY_TYPES } from './enemies';
 
 const BASE = `${import.meta.env.BASE_URL}assets/sprites/0x72/`;
 
+/** Barres de PV du monde : morceaux du pack Dark Ages (ignoré par git : absent = rectangles). */
+export const HP_BAR_URLS = {
+  frame: `${import.meta.env.BASE_URL}assets/ui/darkages/bar-body.png`,
+  fill: `${import.meta.env.BASE_URL}assets/ui/darkages/bar-red.png`,
+} as const;
+
 export const ATLAS_URLS = {
   image: `${BASE}0x72_DungeonTilesetII_v1.7.png`,
   list: `${BASE}tile_list_v1.7`,

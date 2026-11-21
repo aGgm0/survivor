@@ -1049,9 +1049,60 @@ describe('GameScene — rendu', () => {
     expect(scene.weapons.every((w) => w.mutation)).toBe(true);
   });
 
+  it('dessine les annonces de boss et les barres du pack sans erreur', () => {
+    const { deps } = newScene();
+    const image = { naturalWidth: 86, naturalHeight: 9 } as HTMLImageElement;
+    const scene = new GameScene({ ...deps, hpBars: { frame: image, fill: image } }, 99, {});
+    scene.enter();
+    const ctx = fakeCanvasContext();
+    scene.applyDevAction({ kind: 'god' });
+    scene.applyDevAction({ kind: 'time', seconds: 530 });
+    scene.applyDevAction({ kind: 'boss' });
+    scene.applyDevAction({ kind: 'elite', index: 1 });
+    scene.applyDevAction({ kind: 'close' });
+    scene.player.hp = 10;
+    let windups = 0;
+    let summons = 0;
+    for (let i = 0; i < 15 * 60; i++) {
+      scene.update(DT);
+      scene.render(ctx, 0.5);
+      const boss = scene.enemies.items.find((e) => e.active && e.type === BOSS_TYPE);
+      if (boss?.chargeState === 'windup') windups++;
+      if (boss && boss.summonAt > 0) summons++;
+    }
+    expect(windups).toBeGreaterThan(0);
+    expect(summons).toBeGreaterThan(0);
+  });
+
   it('dessine une partie chargée sans erreur (mutations n° 2)', () => {
     const scene = renderBusyRun(1, false);
     expect(scene.weapons.every((w) => w.mutation)).toBe(true);
+  });
+});
+
+describe('GameScene — HUD : barre du boss et PV bas', () => {
+  it('grande barre du boss affichée tant qu’un boss est en vie', () => {
+    const { scene, ui } = newScene({ armed: false });
+    const ctx = fakeCanvasContext();
+    scene.render(ctx, 1);
+    expect(ui.bossBar).toBeNull();
+    scene.applyDevAction({ kind: 'boss' });
+    scene.update(DT);
+    scene.render(ctx, 1);
+    expect(ui.bossBar).toBe(1);
+  });
+
+  it('contour rouge sous 20 % des PV max, critique sous 10 %', () => {
+    const { scene, ui } = newScene({ armed: false });
+    const ctx = fakeCanvasContext();
+    const at = (part: number) => {
+      scene.player.hp = scene.player.maxHp * part;
+      scene.render(ctx, 1);
+      return ui.lowHp;
+    };
+    expect(at(0.5)).toBe('none');
+    expect(at(0.15)).toBe('warn');
+    expect(at(0.05)).toBe('critical');
   });
 });
 

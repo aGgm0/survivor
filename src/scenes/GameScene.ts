@@ -8,7 +8,7 @@ import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { EffectSheet } from '../core/EffectSheet';
 import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { AURA_LOOKS, AURA_PULSE, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
+import { AURA_LOOKS, AURA_PULSE, LOW_HP, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { WorldRenderer } from './game/WorldRenderer';
 import {
@@ -18,6 +18,8 @@ import {
   devSetWeaponLevel,
   devToggleWeapon,
 } from './game/devActions';
+import type { HpBarSkin } from './game/hpBar';
+import { updateHpTrail } from '../systems/hpTrail';
 import { applyOptionsAction } from './options';
 import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
 import {
@@ -107,6 +109,8 @@ export interface GameSceneDeps {
     | 'setHp'
     | 'setKills'
     | 'setInventory'
+    | 'setBoss'
+    | 'setLowHp'
   >;
   debug: Pick<DebugOverlay, 'setStat' | 'showHitboxes'>;
   /** Réglages du joueur (écran Options), lus en direct ; modifiables depuis la pause */
@@ -131,6 +135,8 @@ export interface GameSceneDeps {
   fx?: SpriteAtlas | null;
   /** Effets animés du pack PVFX (explosion, épée, auras, vague). Absents : formes simples. */
   effects?: Readonly<Record<EffectName, EffectSheet>> | null;
+  /** Cadre et remplissage des barres de PV (pack Dark Ages). Absents : rectangles. */
+  hpBars?: HpBarSkin | null;
   /** Bruitages. Absent (tests) : partie muette. */
   sfx?: SoundPlayer<SfxName>;
   /** Musique. Absente (tests) : partie muette. */
@@ -284,6 +290,7 @@ export class GameScene implements Scene, Build {
         sprites: deps.sprites ?? null,
         fx: deps.fx ?? null,
         effects: deps.effects ?? null,
+        hpBars: deps.hpBars ?? null,
         showHitboxes: () => deps.debug.showHitboxes,
       },
       seed,
@@ -466,6 +473,7 @@ export class GameScene implements Scene, Build {
     );
     this.projectileSystem.update(dt, this.projectiles);
     this.statusSystem.update(this.enemies, this.elapsed);
+    this.updateHpTrails(dt);
     // Sagesse (boutique) : plus d'XP par gemme.
     const gemXp = this.gems.update(dt, this.player);
     if (gemXp > 0) this.sound('gem-pickup');
@@ -808,6 +816,16 @@ export class GameScene implements Scene, Build {
     this.deps.hud.setKills(this.killCount);
     this.deps.hud.setGold(this.gold);
     this.deps.hud.setInventory(this.buildVersion, this.weapons, this.passiveLevels);
+    this.renderBossHud();
+    const hpRatio = this.player.hp / this.player.maxHp;
+    this.deps.hud.setLowHp(
+      this.report || hpRatio > LOW_HP.warn
+        ? 'none'
+        : hpRatio > LOW_HP.critical
+          ? 'warn'
+          : 'critical',
+      this.deps.settings.screenShake,
+    );
     this.deps.debug.setStat('gemmes', this.gems.gems.activeCount);
     this.deps.debug.setStat('ennemis', this.enemies.activeCount);
     this.deps.debug.setStat('contacts', this.touchingCount);
@@ -884,6 +902,25 @@ export class GameScene implements Scene, Build {
   }
 
   /** Applique une action du menu de test. Toute action fait de la partie une partie de test. */
+  /** Grande barre du HUD : le premier boss en vie (il n'y en a qu'un à la fois, sauf en test). */
+  private renderBossHud(): void {
+    for (const e of this.enemies.items) {
+      if (e.active && e.type === BOSS_TYPE) {
+        this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp);
+        return;
+      }
+    }
+    this.deps.hud.setBoss(null, 0);
+  }
+
+  /** Traînées des barres de PV : seulement celles qui sont dessinées (joueur, boss, élites). */
+  private updateHpTrails(dt: number): void {
+    updateHpTrail(this.player, dt);
+    for (const e of this.enemies.items) {
+      if (e.active && (e.type === BOSS_TYPE || e.type.elite)) updateHpTrail(e, dt);
+    }
+  }
+
   applyDevAction(action: DevAction): void {
     this.testRun = true;
     this.deps.hud.setTest(true);

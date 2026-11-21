@@ -37,6 +37,9 @@ export class Enemy implements Poolable {
   /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
   bossIndex = -1;
   // Capacités de boss (voir BossAbilitySystem). Dates en temps de partie, comme les autres délais.
+  /** Traînée claire de la barre de PV (boss, élites : voir systems/hpTrail.ts) */
+  hpTrail = 0;
+  hpTrailHold = 0;
   /** Charge : rien, arrêt annoncé (ligne rouge), ou charge en ligne droite */
   chargeState: 'none' | 'windup' | 'dash' = 'none';
   /** Fin de l'étape de charge en cours */
@@ -110,6 +113,8 @@ export class Enemy implements Poolable {
     this.abilityRate = 1;
     this.maxHp = type.hp * hpMult;
     this.hp = this.maxHp;
+    this.hpTrail = this.maxHp;
+    this.hpTrailHold = 0;
     // Plus de PV à percer = plus d'XP : sinon monter de niveau ralentit à chaque vague.
     this.xpMult = hpMult;
     this.nextContactHitAt = 0;

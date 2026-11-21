@@ -28,8 +28,11 @@ import {
   CHARACTER_SPRITES,
   EFFECT_DIRS,
   FX_ATLAS_URLS,
+  HP_BAR_URLS,
   type EffectName,
 } from './data/sprites';
+import { loadImage } from './core/loadImage';
+import type { HpBarSkin } from './scenes/game/hpBar';
 import { EffectSheet } from './core/EffectSheet';
 import { AudioEngine } from './core/AudioEngine';
 import {
@@ -141,6 +144,10 @@ const hud = new Hud({
   test: getElement('hud-test', HTMLDivElement),
   weapons: getElement('hud-weapons', HTMLDivElement),
   passives: getElement('hud-passives', HTMLDivElement),
+  boss: getElement('hud-boss', HTMLDivElement),
+  bossFill: getElement('hud-bossfill', HTMLDivElement),
+  bossTrail: getElement('hud-bosstrail', HTMLDivElement),
+  lowHp: getElement('hud-lowhp', HTMLDivElement),
 });
 const game = new Game(renderer, debug, input);
 
@@ -210,10 +217,19 @@ const effectsLoading = Promise.all(effectNames.map((name) => EffectSheet.load(EF
   .catch((error: unknown) => {
     console.warn('Effets PVFX non chargés, formes simples à la place :', error);
   });
+// Barres de PV : pack Dark Ages (ignoré par git). Absent : rectangles, sans bloquer « Jouer ».
+let hpBars: HpBarSkin | null = null;
+const hpBarsLoading = Promise.all([loadImage(HP_BAR_URLS.frame), loadImage(HP_BAR_URLS.fill)])
+  .then(([frame, fill]) => {
+    hpBars = { frame, fill };
+  })
+  .catch((error: unknown) => {
+    console.warn('Barres de PV du pack non chargées, rectangles à la place :', error);
+  });
 // « Jouer » reste grisé jusqu'ici. Chaque chargement attrape déjà son erreur : un fichier manquant
 // débloque quand même le bouton (partie en formes simples) au lieu de le griser pour toujours.
 let assetsReady = false;
-void Promise.allSettled([spritesLoading, fxLoading, effectsLoading]).then(() => {
+void Promise.allSettled([spritesLoading, fxLoading, effectsLoading, hpBarsLoading]).then(() => {
   assetsReady = true;
 });
 
@@ -273,6 +289,7 @@ function startRun(chosen: CharacterDef = character): void {
       sprites,
       fx,
       effects,
+      hpBars,
       sfx,
       music,
     },

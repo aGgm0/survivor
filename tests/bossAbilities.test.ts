@@ -112,7 +112,9 @@ describe('capacité : charge', () => {
     movement.update(pool, 0, 0, 1 / 60);
     expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * 1.2 * CHARGE.speedMult);
     // L'annonce montre la vraie trajectoire (bug : elle prenait la marche ×2, ~490 px au lieu de ~295).
-    expect(chargeDistance(boss)).toBeCloseTo(BOSS_TYPE.speed * 1.2 * CHARGE.speedMult * CHARGE.duration);
+    expect(chargeDistance(boss)).toBeCloseTo(
+      BOSS_TYPE.speed * 1.2 * CHARGE.speedMult * CHARGE.duration,
+    );
   });
 });
 

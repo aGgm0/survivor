@@ -23,6 +23,12 @@ export interface HudElements {
   weapons: HTMLElement;
   /** Rangée des passifs possédés */
   passives: HTMLElement;
+  /** Grande barre du boss en haut de l'écran : conteneur, remplissage, traînée */
+  boss: HTMLElement;
+  bossFill: HTMLElement;
+  bossTrail: HTMLElement;
+  /** Contour rouge des PV bas */
+  lowHp: HTMLElement;
 }
 
 /**
@@ -41,6 +47,10 @@ export class Hud {
   private shownKills = -1;
   private shownGold = -1;
   private shownInventoryVersion = -1;
+  private shownBossFill = -1;
+  private shownBossTrail = -1;
+  private shownLowHp: 'none' | 'warn' | 'critical' = 'none';
+  private shownLowHpPulse = true;
   /** Liste d'armes affichée : une nouvelle partie en crée une nouvelle (voir setInventory). */
   private shownWeapons: readonly Weapon[] | null = null;
 
@@ -144,6 +154,37 @@ export class Hud {
       this.shownHpFill = fill;
       this.el.hpFill.style.width = `${fill / 10}%`;
     }
+  }
+
+  /**
+   * Grande barre du boss (`hpRatio` null : aucun boss en vie, barre masquée). Elle reste lisible
+   * quand le boss est hors de l'écran, pendant une charge par exemple.
+   */
+  setBoss(hpRatio: number | null, trailRatio: number): void {
+    const visible = hpRatio !== null;
+    if (this.el.boss.hidden === visible) this.el.boss.hidden = !visible;
+    if (!visible) return;
+    const fill = toTenthsOfPercent(hpRatio);
+    if (fill !== this.shownBossFill) {
+      this.shownBossFill = fill;
+      this.el.bossFill.style.width = `${fill / 10}%`;
+    }
+    const trail = toTenthsOfPercent(trailRatio);
+    if (trail !== this.shownBossTrail) {
+      this.shownBossTrail = trail;
+      this.el.bossTrail.style.width = `${trail / 10}%`;
+    }
+  }
+
+  /** Contour rouge selon la part de PV restante ; `pulse` faux : contour fixe (effets réduits). */
+  setLowHp(level: 'none' | 'warn' | 'critical', pulse: boolean): void {
+    if (level === this.shownLowHp && pulse === this.shownLowHpPulse) return;
+    this.shownLowHp = level;
+    this.shownLowHpPulse = pulse;
+    const c = this.el.lowHp.classList;
+    c.toggle('low-warn', level === 'warn');
+    c.toggle('low-critical', level === 'critical');
+    c.toggle('low-static', !pulse);
   }
 
   setKills(kills: number): void {
