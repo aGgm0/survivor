@@ -310,10 +310,10 @@ describe('Fournaise : onde de feu', () => {
       ['basic', reach - 30],
       ['basic', reach + 60],
     ]);
-    run(10, 0.05); // début de l'onde : seul le proche est touché
+    run(10, 0.12); // début de l'onde : seul le proche est touché
     expect(hits.has(list[0]!)).toBe(true);
     expect(hits.has(list[1]!)).toBe(false);
-    run(10.06, 0.4); // fin de l'onde
+    run(10.13, 0.4); // fin de l'onde
     expect(hits.has(list[1]!)).toBe(true);
     expect(hits.has(list[2]!)).toBe(false);
   });
