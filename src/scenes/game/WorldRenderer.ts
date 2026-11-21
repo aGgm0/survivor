@@ -158,7 +158,7 @@ export class WorldRenderer {
     this.renderEnemies(ctx, alpha);
     this.world.particles.render(ctx, alpha, this.world.camera); // éclats par-dessus les corps, sous le joueur
     this.renderEliteRings(ctx, alpha);
-    this.renderBossBars(ctx, alpha);
+    this.renderEliteBars(ctx, alpha);
     this.world.player.render(ctx, alpha, this.deps.sprites);
     this.renderPlayerBar(ctx, alpha);
     this.renderOrbs(ctx, alpha);
@@ -169,14 +169,15 @@ export class WorldRenderer {
     this.world.camera.end(ctx);
   }
 
-  /** Barre de PV au-dessus des boss et des mini-boss (plus courte pour ces derniers). */
-  private renderBossBars(ctx: CanvasRenderingContext2D, alpha: number): void {
+  /** Barre de PV au-dessus des mini-boss : on suit leur combat au milieu de la horde. */
+  private renderEliteBars(ctx: CanvasRenderingContext2D, alpha: number): void {
     const skin = this.deps.hpBars;
     const items = this.world.enemies.items;
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
-      if (!e?.active || (e.type !== BOSS_TYPE && !e.type.elite)) continue;
-      const look = e.type.elite ? HP_BARS.elite : HP_BARS.boss;
+      // Pas le boss : sa barre est en haut de l'écran (HUD), une seule barre suffit.
+      if (!e?.active || !e.type.elite) continue;
+      const look = HP_BARS.elite;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       // Au-dessus de la tête (le sprite dépasse la hitbox vers le haut).

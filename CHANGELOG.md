@@ -20,7 +20,7 @@ Une partie plus juste : nouvelles mutations, équilibrage complet des 10 minutes
 - Cartes de level up refaites : sorte de la carte, touche du clavier, crans de niveau, effet avant → après, ce que l'amélioration touche ; elles arrivent une par une.
 - Survol de tous les boutons : curseur doré en pixels.
 - Annonces des boss : la charge est marquée par des chevrons en pixels qui s'allument puis clignotent de plus en plus vite, avec une fissure au point d'arrivée ; l'invocation par un anneau violet qui se resserre.
-- Barres de PV des boss et des mini-boss dans le cadre doré du jeu ; la part perdue reste claire un instant (on voit les gros coups).
+- Barres de PV des mini-boss dans le cadre doré du jeu ; la part perdue reste claire un instant (on voit les gros coups). Le boss n'a plus de barre au-dessus de lui : la sienne est en haut de l'écran.
 - Dégâts de toutes les armes +15 %.
 - Épée : arc 200°, portée 125 px, plus de recul. Tourbillon : dégâts ×0,85 (au lieu de ×0,75), plus de recul.
 - Boss de 9:00 : marche deux fois plus vite, charge annoncée en 0,5 s.

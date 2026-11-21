@@ -374,7 +374,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
   - [x] Étape 1 : longueur de la charge annoncée = vraie trajectoire (`chargeSpeed`, le boss de 9:00 annonçait ~490 px pour ~295)
   - [x] Étape 2 : charge en chevrons pixel (carrés de 2 px) qui se remplissent pendant l'annonce et clignotent plus vite à la fin, bord en pointillés, fissure au bout
   - [x] Étape 3 : invocation en anneau de carrés violets qui se resserre
-  - [x] Étape 4 : barres boss / élites avec `bar-frame` + `bar-red` du pack (rectangles en secours), **traînée** claire des dégâts récents (valeur mise à jour dans l'update) ; petite barre sous le joueur, visible seulement s'il a perdu des PV
+  - [x] Étape 4 : barres des élites (plus au-dessus du boss : sa grande barre du HUD suffit, retour de jeu) avec `bar-frame` + `bar-red` du pack (rectangles en secours), **traînée** claire des dégâts récents (valeur mise à jour dans l'update) ; petite barre sous le joueur, visible seulement s'il a perdu des PV
   - [x] Étape 5 : grande barre du boss en haut de l'écran (HUD, sous le timer, « BOSS » : les boss n'ont pas encore de nom)
   - [x] Étape 6 : contour rouge léger sous **20 %** des PV max, pulsation plus rapide sous **10 %** (`LOW_HP`, 3 bandes nettes en CSS, sans halo ; fixe si le tremblement est coupé)
   - [x] Étape 7 : `CHARGE_TELEGRAPH`, `SUMMON_TELEGRAPH`, `HP_BARS` dans `data/feel.ts`, test de rendu (charge, invocation, barres avec et sans pack)

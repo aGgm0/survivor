@@ -218,11 +218,11 @@ export const SUMMON_TELEGRAPH = {
 
 /**
  * Barres de PV dans le monde : cadre `bar-body` et remplissage `bar-red` du pack Dark Ages (comme
- * la barre du HUD), rectangles en secours. Boss, élites, et le joueur seulement s'il est blessé.
+ * la barre du HUD), rectangles en secours. Élites, et le joueur seulement s'il est blessé (le boss a
+ * sa grande barre dans le HUD : retour de jeu, une seule barre suffit).
  */
 export const HP_BARS = {
   /** `scale` : agrandissement des pixels du pack (×2 comme les sprites) ; `offset` : px d'écart */
-  boss: { width: 170, scale: 2, offset: 8 },
   elite: { width: 100, scale: 2, offset: 6 },
   player: { width: 44, scale: 1, offset: 6 },
   /**
