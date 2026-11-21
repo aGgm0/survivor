@@ -16,6 +16,15 @@ export const ATLAS_URLS = {
   list: `${BASE}tile_list_v1.7`,
 } as const;
 
+/**
+ * Monstres faits maison à partir du pack (`node tools/sprites/tank-demon.mjs`), collés sous
+ * l'atlas du pack au chargement : leurs animations se lisent comme celles du pack.
+ */
+export const MONSTERS_ATLAS_URLS = {
+  image: `${import.meta.env.BASE_URL}assets/sprites/monsters/monsters.png`,
+  list: `${import.meta.env.BASE_URL}assets/sprites/monsters/monsters_list`,
+} as const;
+
 /** Apparence d'une entité animée */
 export interface SpriteDef {
   /** Animation à l'arrêt */
@@ -28,6 +37,8 @@ export interface SpriteDef {
   readonly frameTime: number;
   /** Teinte permanente (élites) */
   readonly tint?: SpriteTint;
+  /** Apparence de secours si l'animation manque à l'atlas (monstre fait maison non chargé) */
+  readonly fallback?: SpriteDef;
 }
 
 export const PLAYER_SPRITE: SpriteDef = {
@@ -81,7 +92,14 @@ export const ELITE_TINT: SpriteTint = { color: '#ffd36b', mode: 'multiply' };
 export const ENEMY_SPRITES: Partial<Record<keyof typeof ENEMY_TYPES, SpriteDef>> = {
   basic: { idle: 'chort_idle_anim', run: 'chort_run_anim', scale: 2, frameTime: 0.1 },
   fast: { idle: 'imp_idle_anim', run: 'imp_run_anim', scale: 2, frameTime: 0.08 },
-  tank: { idle: 'ogre_idle_anim', run: 'ogre_run_anim', scale: 2, frameTime: 0.13 },
+  // Démon fait à partir de l'orc `ogre` du pack (tools/sprites/tank-demon.mjs), même animation.
+  tank: {
+    idle: 'tank_demon_idle_anim',
+    run: 'tank_demon_run_anim',
+    scale: 2,
+    frameTime: 0.13,
+    fallback: { idle: 'ogre_idle_anim', run: 'ogre_run_anim', scale: 2, frameTime: 0.13 },
+  },
   boss: { idle: 'big_demon_idle_anim', run: 'big_demon_run_anim', scale: 3, frameTime: 0.13 },
   fastElite: {
     idle: 'imp_idle_anim',
@@ -196,7 +214,7 @@ export const MENU_BACKDROP = {
   walkers: [
     { anim: 'chort_run_anim', scale: 2, y: 600, speed: 42, offset: 0 },
     { anim: 'imp_run_anim', scale: 2, y: 640, speed: 75, offset: 500 },
-    { anim: 'ogre_run_anim', scale: 2, y: 700, speed: 30, offset: 900 },
+    { anim: 'tank_demon_run_anim', scale: 2, y: 700, speed: 30, offset: 900 },
     { anim: 'big_demon_run_anim', scale: 3, y: 712, speed: 22, offset: 250 },
     { anim: 'chort_run_anim', scale: 2, y: 140, speed: -38, offset: 300 },
     { anim: 'imp_run_anim', scale: 2, y: 96, speed: -64, offset: 1000 },

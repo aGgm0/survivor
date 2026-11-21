@@ -29,6 +29,7 @@ import {
   HIT_FLASH_TINT,
   ORB_SPRITE,
   type EffectName,
+  type SpriteDef,
 } from '../../data/sprites';
 import { BOSS_ABILITIES, BOSS_TYPE } from '../../data/waves';
 import type { Enemy } from '../../entities/Enemy';
@@ -570,7 +571,7 @@ export class WorldRenderer {
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
       if (!e?.active || (type && e.type !== type)) continue;
-      if (this.deps.sprites && enemySprite(e.type.id)) continue; // déjà dessiné en sprite
+      if (this.deps.sprites && this.enemyLook(e.type.id, this.deps.sprites)) continue; // déjà dessiné en sprite
       if (e.flashUntil > this.world.runTime !== flashing) continue;
       const r = e.type.radius;
       const x = e.renderX(alpha);
@@ -595,7 +596,7 @@ export class WorldRenderer {
     for (let i = 0; i < items.length; i++) {
       const e = items[i];
       if (!e?.active) continue;
-      const look = enemySprite(e.type.id);
+      const look = this.enemyLook(e.type.id, sprites);
       if (!look) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
@@ -619,9 +620,15 @@ export class WorldRenderer {
     }
   }
 
+  /** Apparence d'un type d'ennemi, ou celle de secours si son animation manque à l'atlas. */
+  private enemyLook(typeId: string, sprites: SpriteAtlas): SpriteDef | undefined {
+    const look = enemySprite(typeId);
+    return look && sprites.animation(look.run).length === 0 ? look.fallback : look;
+  }
+
   /** Haut de l'ennemi à l'écran : haut de son sprite s'il en a un, sinon haut de sa hitbox. */
   private enemyTop(e: Enemy, y: number): number {
-    const look = this.deps.sprites ? enemySprite(e.type.id) : undefined;
+    const look = this.deps.sprites ? this.enemyLook(e.type.id, this.deps.sprites) : undefined;
     const frame = look && this.deps.sprites?.animation(look.run)[0];
     return look && frame ? y + e.type.radius - frame.h * look.scale : y - e.type.radius;
   }

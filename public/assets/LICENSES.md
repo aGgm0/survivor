@@ -19,4 +19,6 @@ Avant d'ajouter un pack : vérifier la licence sur sa page (pas de "non commerci
 
 Les fichiers de `sprites/` hors des sous-dossiers de packs (`player.png`, `basic.png`, `boss.png`) et le dossier `sprites/fx/` sont générés par `tools/sprites/build.mjs` (création du projet).
 
+Le dossier `sprites/monsters/` est généré par `tools/sprites/tank-demon.mjs` à partir du sprite `ogre` du pack 0x72 (CC0) : repeint et retouché (cornes, yeux). Le CC0 autorise la modification et la publication.
+
 Les bruitages de `audio/sfx/` sont générés par `tools/audio/build-sfx.mjs` (création du projet, CC0). Écoute : `tools/audio/preview.html`.

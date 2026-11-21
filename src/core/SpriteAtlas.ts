@@ -80,6 +80,24 @@ export function frameAt(
   return anim[index < 0 ? index + anim.length : index];
 }
 
+/**
+ * Animations de deux atlas réunis, le second posé sous le premier (ses rectangles descendent de
+ * `dy`). En cas de nom en double, celui du second gagne.
+ */
+export function stackAnimations(
+  first: ReadonlyMap<string, SpriteAnimation>,
+  second: ReadonlyMap<string, SpriteAnimation>,
+  dy: number,
+): Map<string, SpriteAnimation> {
+  const anims = new Map(first);
+  for (const [name, anim] of second)
+    anims.set(
+      name,
+      anim.map((f) => ({ ...f, y: f.y + dy })),
+    );
+  return anims;
+}
+
 /** Abscisse d'un sprite dans l'atlas retourné horizontalement (le miroir inverse les x). */
 export function mirroredX(frame: SpriteFrame, atlasWidth: number): number {
   return atlasWidth - frame.x - frame.w;
@@ -99,7 +117,7 @@ export class SpriteAtlas {
   private readonly base: Sheet;
 
   private constructor(
-    private readonly image: HTMLImageElement,
+    private readonly image: HTMLImageElement | HTMLCanvasElement,
     private readonly anims: ReadonlyMap<string, SpriteAnimation>,
   ) {
     this.base = { normal: image, mirrored: mirror(image) };
@@ -113,6 +131,21 @@ export class SpriteAtlas {
     if (!response.ok) throw new Error(`Liste de sprites introuvable : ${listUrl}`);
     const frames = parseTileList(await response.text());
     return new SpriteAtlas(image, groupAnimations(frames));
+  }
+
+  /**
+   * Un seul atlas fait de deux : l'image de `extra` est collée sous celle de `base`. Sert aux
+   * monstres faits maison (tools/sprites/) : le rendu reste le même, une seule image à dessiner.
+   */
+  static stack(base: SpriteAtlas, extra: SpriteAtlas): SpriteAtlas {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(base.image.width, extra.image.width);
+    canvas.height = base.image.height + extra.image.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D non supporté');
+    ctx.drawImage(base.image, 0, 0);
+    ctx.drawImage(extra.image, 0, base.image.height);
+    return new SpriteAtlas(canvas, stackAnimations(base.anims, extra.anims, base.image.height));
   }
 
   /** Animation par son nom (sans `_fN`). Vide si elle n'existe pas : rien ne sera dessiné. */
@@ -258,7 +291,10 @@ function mirror(source: HTMLImageElement | HTMLCanvasElement): HTMLCanvasElement
 }
 
 /** Copie teintée de l'image (la transparence est gardée). */
-function tint(source: HTMLImageElement, spriteTint: SpriteTint): HTMLCanvasElement {
+function tint(
+  source: HTMLImageElement | HTMLCanvasElement,
+  spriteTint: SpriteTint,
+): HTMLCanvasElement {
   const { canvas, ctx } = makeCanvas(source);
   ctx.drawImage(source, 0, 0);
   ctx.fillStyle = spriteTint.color;

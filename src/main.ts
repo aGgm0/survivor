@@ -28,6 +28,7 @@ import {
   CHARACTER_SPRITES,
   EFFECT_DIRS,
   FX_ATLAS_URLS,
+  MONSTERS_ATLAS_URLS,
   HP_BAR_URLS,
   type EffectName,
 } from './data/sprites';
@@ -190,9 +191,17 @@ let character: CharacterDef = DEFAULT_CHARACTER;
 // Sprites : chargés en arrière-plan pendant que le menu s'affiche (le jeu n'attend pas).
 // Une partie lancée avant la fin du chargement, ou une image introuvable : formes simples.
 let sprites: SpriteAtlas | null = null;
-const spritesLoading = SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list)
-  .then((atlas) => {
-    sprites = atlas;
+// Les monstres faits maison sont collés sous l'atlas du pack ; s'ils manquent, le pack seul suffit
+// (chaque ennemi concerné reprend son apparence de secours, voir `fallback` dans data/sprites.ts).
+const spritesLoading = Promise.all([
+  SpriteAtlas.load(ATLAS_URLS.image, ATLAS_URLS.list),
+  SpriteAtlas.load(MONSTERS_ATLAS_URLS.image, MONSTERS_ATLAS_URLS.list).catch((error: unknown) => {
+    console.warn('Monstres faits maison non chargés, sprites du pack à la place :', error);
+    return null;
+  }),
+])
+  .then(([pack, monsters]) => {
+    sprites = monsters ? SpriteAtlas.stack(pack, monsters) : pack;
   })
   .catch((error: unknown) => {
     console.warn('Sprites non chargés, formes simples à la place :', error);

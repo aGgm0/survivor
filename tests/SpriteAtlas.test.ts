@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { frameAt, groupAnimations, mirroredX, parseTileList } from '../src/core/SpriteAtlas';
+import {
+  frameAt,
+  groupAnimations,
+  mirroredX,
+  parseTileList,
+  stackAnimations,
+} from '../src/core/SpriteAtlas';
 
 describe('parseTileList', () => {
   it('lit nom x y largeur hauteur, ignore les lignes vides ou mal formées', () => {
@@ -43,5 +49,21 @@ describe('mirroredX', () => {
   it('inverse la position dans un atlas retourné', () => {
     expect(mirroredX({ x: 0, y: 0, w: 16, h: 16 }, 512)).toBe(496);
     expect(mirroredX({ x: 496, y: 0, w: 16, h: 16 }, 512)).toBe(0);
+  });
+});
+
+describe('stackAnimations', () => {
+  it('descend les sprites du 2e atlas sous le 1er, sans toucher au 1er', () => {
+    const pack = groupAnimations(parseTileList('ogre_run_anim_f0 16 380 32 36\n'));
+    const monsters = groupAnimations(
+      parseTileList('tank_demon_run_anim_f0 0 0 32 36\ntank_demon_run_anim_f1 32 0 32 36\n'),
+    );
+    const anims = stackAnimations(pack, monsters, 512);
+    expect(anims.get('ogre_run_anim')).toEqual([{ x: 16, y: 380, w: 32, h: 36 }]);
+    expect(anims.get('tank_demon_run_anim')?.map((f) => [f.x, f.y])).toEqual([
+      [0, 512],
+      [32, 512],
+    ]);
+    expect(monsters.get('tank_demon_run_anim')?.[0]?.y).toBe(0);
   });
 });

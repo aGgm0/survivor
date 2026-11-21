@@ -1,0 +1,8 @@
+tank_demon_idle_anim_f0 0 0 32 36
+tank_demon_idle_anim_f1 32 0 32 36
+tank_demon_idle_anim_f2 64 0 32 36
+tank_demon_idle_anim_f3 96 0 32 36
+tank_demon_run_anim_f0 128 0 32 36
+tank_demon_run_anim_f1 160 0 32 36
+tank_demon_run_anim_f2 192 0 32 36
+tank_demon_run_anim_f3 224 0 32 36
