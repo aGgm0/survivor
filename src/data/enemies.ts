@@ -22,6 +22,8 @@ export interface EnemyType {
   readonly prop?: boolean;
   /** Mini-boss (élite) : anneau doré, barre de PV, +or à sa mort */
   readonly elite?: boolean;
+  /** Gros ennemi (tank, élites, boss) : certaines armes leur font plus de dégâts (Fournaise) */
+  readonly big?: boolean;
   /**
    * Recul imposé (× la force de l'arme), à la place du calcul par la masse. Sert aux élites :
    * plus gros, ils reculeraient beaucoup moins qu'on ne le veut. Absent = calcul par la masse.
@@ -65,6 +67,7 @@ export const ENEMY_TYPES = {
   },
   tank: {
     id: 'tank',
+    big: true,
     hp: 90, // 60 → 66 → 90 : gros buff (retour de jeu)
     speed: 72, // 50 → 60 → 72 : gros buff
     contactDamage: 10,
@@ -76,6 +79,7 @@ export const ENEMY_TYPES = {
   /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
   boss: {
     id: 'boss',
+    big: true,
     hp: 1000,
     speed: 70,
     contactDamage: 20,
@@ -88,6 +92,7 @@ export const ENEMY_TYPES = {
   /** Mini-boss de 3:00 : un rapide très boosté (PV ×60, dégâts ×4, taille ×1,8). */
   fastElite: {
     id: 'fastElite',
+    big: true,
     hp: 300,
     speed: 135,
     contactDamage: 12,
@@ -101,6 +106,7 @@ export const ENEMY_TYPES = {
   /** Mini-boss de 7:00 : un basique très boosté (PV ×50, dégâts ×4, taille ×1,8, vitesse ×1,1). */
   basicElite: {
     id: 'basicElite',
+    big: true,
     hp: 1150,
     speed: 97,
     contactDamage: 20,

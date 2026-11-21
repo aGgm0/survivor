@@ -27,6 +27,8 @@ export class Enemy implements Poolable {
   knockbackResist = 0;
   /** Invoqué par un boss (ses élites ne lâchent pas de nourriture) */
   summoned = false;
+  /** N° de la dernière onde de Fournaise qui l'a touché : une seule brûlure par onde */
+  waveHit = -1;
   type: EnemyType = ENEMY_TYPES.basic;
   /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
   bossIndex = -1;
@@ -91,6 +93,7 @@ export class Enemy implements Poolable {
     this.damageMult = damageMult;
     this.knockbackResist = knockbackResist;
     this.summoned = false;
+    this.waveHit = -1;
     this.type = type;
     this.bossIndex = -1;
     this.chargeState = 'none';

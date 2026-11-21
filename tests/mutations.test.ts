@@ -278,36 +278,57 @@ describe('mutation — effets en jeu', () => {
   });
 });
 
-describe('Fournaise : souffle commun', () => {
-  function setup() {
-    const enemies = new Pool(10, (i) => new Enemy(i));
-    const a = enemies.acquire();
-    const b = enemies.acquire();
-    a?.spawn(ENEMY_TYPES.tank, 50, 0);
-    b?.spawn(ENEMY_TYPES.tank, -50, 0);
-    const collisions = new CollisionSystem(10);
+describe('Fournaise : onde de feu', () => {
+  /** Ennemis aux positions données (sur l'axe x), joueur en (0, 0) ; on note les dégâts reçus. */
+  function setup(placed: [keyof typeof ENEMY_TYPES, number][]) {
+    const enemies = new Pool(20, (i) => new Enemy(i));
+    for (const [type, x] of placed) enemies.acquire()?.spawn(ENEMY_TYPES[type], x, 0);
+    const collisions = new CollisionSystem(20);
     collisions.rebuild(enemies);
-    let hits = 0;
+    const hits = new Map<Enemy, number>();
     let pulses = 0;
-    const system = new WeaponSystem(10, collisions, new Pool(1, () => new Projectile()), {
-      onHit: () => hits++,
+    const system = new WeaponSystem(20, collisions, new Pool(1, () => new Projectile()), {
+      onHit: (e, damage) => hits.set(e, (hits.get(e) ?? 0) + damage),
       onKill: () => {},
       onAuraPulse: () => pulses++,
     });
     const w = maxedAura();
     w.mutation = FURNACE;
     w.recompute(NO_MODS);
-    return { system, w, count: () => ({ hits, pulses }) };
+    const list = enemies.items.filter((e) => e.active);
+    /** Joue `seconds` s à partir du temps de partie `from`. */
+    const run = (from: number, seconds: number) => {
+      for (let t = 0; t <= seconds + 1e-9; t += 1 / 60) system.update(1 / 60, [w], 0, 0, from + t);
+    };
+    return { w, list, hits, run, pulses: () => pulses };
   }
 
-  it('brûle tous les ennemis de la zone en même temps, puis rien jusqu’au souffle suivant', () => {
-    const { system, w, count } = setup();
-    system.update(1 / 60, [w], 0, 0, 10);
-    expect(count()).toEqual({ hits: 2, pulses: 1 });
-    system.update(1 / 60, [w], 0, 0, 11); // 1 s plus tard : pas encore
-    expect(count()).toEqual({ hits: 2, pulses: 1 });
-    system.update(1 / 60, [w], 0, 0, 11.6); // 1,6 s après : souffle suivant
-    expect(count()).toEqual({ hits: 4, pulses: 2 });
-    expect(w.lastPulseAt).toBe(11.6);
+  it('l’onde s’étend jusqu’à ×1,6 le rayon : proche d’abord, loin ensuite, pas au-delà', () => {
+    const reach = (maxedAura().radius * 1.2 * 1.6) | 0; // rayon de l'aura × Fournaise × onde
+    const { list, hits, run } = setup([
+      ['basic', 40],
+      ['basic', reach - 30],
+      ['basic', reach + 60],
+    ]);
+    run(10, 0.05); // début de l'onde : seul le proche est touché
+    expect(hits.has(list[0]!)).toBe(true);
+    expect(hits.has(list[1]!)).toBe(false);
+    run(10.06, 0.4); // fin de l'onde
+    expect(hits.has(list[1]!)).toBe(true);
+    expect(hits.has(list[2]!)).toBe(false);
+  });
+
+  it('une seule brûlure par onde ; dégâts ×2 sur les gros, ×0,6 sur les autres', () => {
+    const { w, list, hits, run, pulses } = setup([
+      ['tank', 60],
+      ['basic', -60],
+    ]);
+    run(10, 1); // une onde, puis rien jusqu'à la suivante (1,5 s)
+    expect(pulses()).toBe(1);
+    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 2));
+    expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.6));
+    run(11.5, 0.5); // onde suivante
+    expect(pulses()).toBe(2);
+    expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 2) * 2);
   });
 });

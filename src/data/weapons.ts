@@ -44,10 +44,18 @@ export interface MutationDef {
   /** Aura : chaque ennemi brûlé est ralenti de `amount` (0,3 = 30 %) pendant `duration` s */
   readonly slow?: { readonly amount: number; readonly duration: number };
   /**
-   * Aura : un souffle commun toutes les `cooldown` s brûle en même temps tous les ennemis de la
-   * zone (au lieu d'une horloge par ennemi). Le souffle se voit et s'entend.
+   * Aura : toutes les `cooldown` s, une onde de feu part du joueur et s'étend jusqu'à
+   * `reachMult` × le rayon de l'aura en `travel` s ; elle touche chaque ennemi une fois à son
+   * passage, avec les dégâts × `bigMult` sur les gros (`big` dans enemies.ts) et × `smallMult`
+   * sur les autres. Elle atteint la horde avant les autres armes (2026-11-21 : le souffle sur
+   * place arrivait après elles, sur des ennemis déjà morts : 11 % du damage meter).
    */
-  readonly pulse?: boolean;
+  readonly pulse?: {
+    readonly reachMult: number;
+    readonly travel: number;
+    readonly bigMult: number;
+    readonly smallMult: number;
+  };
   /**
    * Aura : chaque ennemi brûlé est empoisonné pendant `duration` s (renouvelé). Plus utilisé par
    * une arme depuis le 2026-11-21 (Aura toxique remplacée), gardé pour les enchantements.
@@ -252,7 +260,7 @@ export const WEAPONS = {
         name: 'Fournaise',
         short: 'Fo',
         description:
-          'Rayon ×1,2 ; toutes les 1,5 s, un souffle de feu brûle toute la zone : dégâts ×4, recul ×1,5',
+          'Toutes les 1,5 s, une onde de feu part de toi (×1,9 rayon) : dégâts ×8 sur les gros, ×2,4 sur les autres',
         color: '#ff5a1f',
         radiusMult: 1.2, // +20 % (retour de jeu)
         damageMult: 4,
@@ -260,7 +268,7 @@ export const WEAPONS = {
         // 3 → 1,5 : le recul sortait les ennemis de la zone avant le souffle suivant (bot : la
         // Fournaise faisait moins bien que l'aura de base)
         knockbackMult: 1.5,
-        pulse: true,
+        pulse: { reachMult: 1.6, travel: 0.4, bigMult: 2, smallMult: 0.6 },
       },
     ],
   },

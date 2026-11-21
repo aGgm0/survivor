@@ -117,14 +117,15 @@ export const AURA_LOOKS: Readonly<Record<string, AuraLook | undefined>> = {
 };
 
 /**
- * Souffle de la Fournaise (retour de jeu : l'explosion violette « bizarre », on ne voyait pas le
- * feu). Le disque s'allume puis s'éteint en `duration` s ; un anneau de braises vives part de
- * `ringStart` × le rayon jusqu'au bord ; des flammes jaillissent de toute la zone et montent.
+ * Onde de la Fournaise (retour de jeu : l'explosion violette « bizarre », on ne voyait pas le
+ * feu). Le disque s'allume puis s'éteint en `duration` s ; l'anneau de braises suit le front de
+ * l'onde (voir `pulse` dans weapons.ts) ; des flammes jaillissent de toute sa portée.
  */
 export const AURA_PULSE = {
-  duration: 0.35,
-  alpha: 0.22,
-  ringStart: 0.35,
+  duration: 0.3,
+  alpha: 0.18,
+  /** s : l'anneau de l'onde s'éteint en ce temps une fois sa portée atteinte */
+  fade: 0.15,
   flames: 46,
   flameColors: ['#fff0a8', '#ffb347', '#ff5a1f', '#c8321a'],
   flameRise: 240,

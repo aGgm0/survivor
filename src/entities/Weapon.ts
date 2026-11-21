@@ -32,6 +32,8 @@ export class Weapon {
   /** Aura à souffle (Fournaise) : temps de partie du prochain souffle, et du dernier (visuel) */
   nextPulseAt = 0;
   lastPulseAt = -Infinity;
+  /** N° de l'onde en cours (compare à `Enemy.waveHit`) */
+  pulseIndex = 0;
   angle = 0;
   prevAngle = 0;
   /** Dégâts réellement infligés (sans l'excédent sur un ennemi déjà presque mort) */

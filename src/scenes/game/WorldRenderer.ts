@@ -256,27 +256,32 @@ export class WorldRenderer {
       ctx.beginPath();
       ctx.arc(px, py, w.radius, 0, Math.PI * 2);
       ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-      // Souffle (Fournaise) : le disque s'allume puis s'éteint. Lecture seule de l'état de l'arme.
+      // Onde de feu (Fournaise) : lecture seule de l'état de l'arme.
+      const pulse = w.mutation?.pulse;
       const sincePulse = this.world.runTime - w.lastPulseAt;
       const flash =
-        sincePulse >= 0 && sincePulse < AURA_PULSE.duration
+        pulse && sincePulse >= 0 && sincePulse < AURA_PULSE.duration
           ? AURA_PULSE.alpha * (1 - sincePulse / AURA_PULSE.duration)
           : 0;
       ctx.globalAlpha = (look ? look.fillAlpha : AURA_FILL_ALPHA) + flash;
       ctx.fill();
       ctx.globalAlpha = 1;
       if (look) this.renderEmbers(ctx, px, py, w.radius, look);
-      // Souffle : un anneau de braises vives part du centre et s'étend jusqu'au bord en s'éteignant.
-      if (flash > 0) {
-        const p = sincePulse / AURA_PULSE.duration;
-        const r = w.radius * (AURA_PULSE.ringStart + (1 - AURA_PULSE.ringStart) * p);
-        this.renderEmbers(ctx, px, py, r, AURA_PULSE_RING, 1 - p);
-      } else {
+      else {
         ctx.globalAlpha = AURA_STROKE_ALPHA;
         ctx.strokeStyle = w.color;
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.globalAlpha = 1;
+      }
+      // Le front de l'onde : un anneau de braises vives qui part du joueur jusqu'à la portée
+      // de l'onde (là où elle touche vraiment), puis s'éteint.
+      if (pulse && sincePulse >= 0 && sincePulse < pulse.travel + AURA_PULSE.fade) {
+        const reach = w.radius * pulse.reachMult;
+        const r = Math.max(8, reach * Math.min(1, sincePulse / pulse.travel));
+        const opacity =
+          sincePulse <= pulse.travel ? 1 : 1 - (sincePulse - pulse.travel) / AURA_PULSE.fade;
+        this.renderEmbers(ctx, px, py, r, AURA_PULSE_RING, opacity);
       }
     }
   }

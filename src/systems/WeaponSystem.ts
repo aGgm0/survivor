@@ -4,6 +4,7 @@ import {
   type MeleeWeaponDef,
   type OrbitWeaponDef,
   type ProjectileWeaponDef,
+  type MutationDef,
 } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
@@ -154,28 +155,68 @@ export class WeaponSystem {
    * après un tick traverser presque 0,5 s sans rien prendre.)
    */
   private updateAura(weapon: Weapon, x: number, y: number, now: number): void {
-    const pulse = weapon.mutation?.pulse ?? false;
-    // Souffle (Fournaise) : une horloge commune ; entre deux souffles, l'aura ne fait rien.
+    const pulse = weapon.mutation?.pulse;
     if (pulse) {
-      if (now < weapon.nextPulseAt) return;
-      weapon.nextPulseAt = now + weapon.cooldown;
-      weapon.lastPulseAt = now;
-      this.events.onAuraPulse?.(x, y, weapon.radius, weapon.color);
+      this.updateFireWave(weapon, pulse, x, y, now);
+      return;
     }
     const radius = weapon.radius;
     const reach = radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN;
     const count = this.collisions.queryNeighbors(x, y, reach, this.candidates);
     for (let i = 0; i < count; i++) {
       const e = this.candidates[i];
-      if (!e?.active || (!pulse && now < e.nextAuraHitAt)) continue;
+      if (!e?.active || now < e.nextAuraHitAt) continue;
       const touch = radius + e.type.radius; // le cercle de l'aura touche le bord de l'ennemi
       const dx = e.x - x;
       const dy = e.y - y;
       if (dx * dx + dy * dy > touch * touch) continue;
-      if (!pulse) e.nextAuraHitAt = now + weapon.cooldown;
+      e.nextAuraHitAt = now + weapon.cooldown;
       // Recul vers l'extérieur, depuis le joueur.
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
       damageEnemy(weapon, e, weapon.damage, this.events, dx / dist, dy / dist);
+      if (e.active) this.applyAuraMutation(weapon, e, now);
+    }
+  }
+
+  /**
+   * Fournaise : une onde part toutes les `cooldown` s et s'étend du joueur jusqu'à sa portée
+   * en `travel` s. Chaque ennemi est touché une fois par onde, quand le front l'atteint (son
+   * bord compte), plus fort s'il est gros.
+   */
+  private updateFireWave(
+    weapon: Weapon,
+    pulse: NonNullable<MutationDef['pulse']>,
+    x: number,
+    y: number,
+    now: number,
+  ): void {
+    const reach = weapon.radius * pulse.reachMult;
+    if (now >= weapon.nextPulseAt) {
+      weapon.nextPulseAt = now + weapon.cooldown;
+      weapon.lastPulseAt = now;
+      weapon.pulseIndex++;
+      this.events.onAuraPulse?.(x, y, reach, weapon.color);
+    }
+    const age = now - weapon.lastPulseAt;
+    if (age > pulse.travel + FLOAT_EPSILON) return;
+    const front = reach * Math.min(1, age / pulse.travel);
+    const count = this.collisions.queryNeighbors(
+      x,
+      y,
+      front + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN,
+      this.candidates,
+    );
+    for (let i = 0; i < count; i++) {
+      const e = this.candidates[i];
+      if (!e?.active || e.waveHit === weapon.pulseIndex) continue;
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist - e.type.radius > front) continue;
+      e.waveHit = weapon.pulseIndex;
+      const damage = weapon.damage * (e.type.big ? pulse.bigMult : pulse.smallMult);
+      const d = dist || 1;
+      damageEnemy(weapon, e, damage, this.events, dx / d, dy / d);
       if (e.active) this.applyAuraMutation(weapon, e, now);
     }
   }
