@@ -8,9 +8,22 @@
   font-display: block;
 }
 
+/* Texte courant (0.2.1) : monogram (datagoblin, CC0), même auteur que DUNGEON.mode */
+@font-face {
+  font-family: 'Monogram';
+  src: url('/assets/fonts/monogram-extended.ttf') format('truetype');
+  font-display: block;
+}
+
 :root {
   /* Police pixel DUNGEON.mode (datagoblin, CC0) : glyphes de 8 × 8, nette en 8 / 16 / 24 / 32 px */
   --ui-font: 'DungeonMode', monospace;
+  /* Texte courant (descriptions, libellés) : monogram, pixels nets à 32 px (×2 de sa grille) */
+  --ui-font-text: 'Monogram', monospace;
+  --ui-text-size: 32px;
+  --ui-text-line: 26px;
+  --ui-text-small: 24px;
+  --ui-text-small-line: 20px;
   --ui-bg: #14121a; /* fond des menus */
   --ui-panel: #1f2420; /* intérieur des panneaux sombres */
   --ui-charcoal: #2e322a;
@@ -1588,4 +1601,32 @@ body {
   .choice:focus-visible .icon {
     animation: none;
   }
+}
+
+/*
+ * Texte courant en monogram (0.2.1) : DUNGEON.mode, large et très typée, reste pour les titres,
+ * noms, boutons, chiffres du HUD et nombres de dégâts ; les phrases à lire passent en monogram,
+ * plus fine. 32 px (pixels ×2 exacts) pour le texte principal ; 24 px pour ce qui était en 12 px
+ * à côté d'un nom en DUNGEON.mode 12 px : en 32 px, il passait devant le nom.
+ */
+.choice-desc,
+#levelup-choices .choice-desc,
+.choice-change,
+.overlay-info,
+.option-row,
+.meter-label {
+  font-family: var(--ui-font-text);
+  font-size: var(--ui-text-size);
+  line-height: var(--ui-text-line);
+}
+
+.choice-scope,
+.choice-reason,
+.overlay-hint,
+.shop-effect,
+.profile-list,
+.end-stat-label {
+  font-family: var(--ui-font-text);
+  font-size: var(--ui-text-small);
+  line-height: var(--ui-text-small-line);
 }

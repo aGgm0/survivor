@@ -2,6 +2,12 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.2.1] — 2026-11-21
+
+### Modifié
+
+- Nouvelle police pour le texte courant (descriptions des cartes, défis des persos, Boutique, Profil, Options, aides en bas des écrans) : **monogram**, plus fine et plus lisible. Les titres, noms, boutons et chiffres gardent la police pixel du jeu.
+
 ## [0.2.0] — 2026-11-21
 
 Une partie plus juste : nouvelles mutations, équilibrage complet des 10 minutes, cartes et annonces de boss dans le style du jeu.

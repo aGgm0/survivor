@@ -16,3 +16,7 @@ assets-src/
 
 # Zip prêt pour itch.io (npm run release:itch)
 /release/
+
+# Polices candidates de la page de comparaison (tools/ui/fonts-preview.html) : seule la police
+# choisie va dans public/assets/fonts/.
+/tools/ui/fonts-candidates/

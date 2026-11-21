@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Comparaison des polices pour le texte courant (0.2.1). Ouvrir avec le serveur de dev :
+  http://localhost:5173/tools/ui/fonts-preview.html
+  Les candidates sont dans tools/ui/fonts-candidates/ (ignoré par git) ; une police absente
+  s'affiche en police de secours (à ignorer).
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Polices du texte courant</title>
+    <style>
+      @font-face {
+        font-family: 'DungeonMode';
+        src: url('/assets/fonts/dungeon-mode.ttf');
+      }
+      @font-face {
+        font-family: 'Monogram';
+        src: url('fonts-candidates/monogram-extended.ttf');
+      }
+      @font-face {
+        font-family: 'PixelOperator';
+        src: url('fonts-candidates/PixelOperator.ttf');
+      }
+      @font-face {
+        font-family: 'Silver';
+        src: url('fonts-candidates/Silver.ttf');
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+        font-synthesis: none;
+      }
+      body {
+        background: #14121a;
+        color: #ece6d6;
+        padding: 24px;
+        font-family: 'DungeonMode', monospace;
+        -webkit-font-smoothing: none;
+      }
+      h1 {
+        color: #dcc47c;
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      .row {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+      }
+      .label {
+        width: 100%;
+        color: #9f8873;
+        font-size: 16px;
+      }
+      .card {
+        width: 290px;
+        background: #1f2420;
+        border: 4px solid #4f8fd0;
+        padding: 14px;
+      }
+      .card .title {
+        font-family: 'DungeonMode', monospace;
+        color: #dcc47c;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      .card .badge {
+        font-family: 'DungeonMode', monospace;
+        font-size: 12px;
+        color: #4f8fd0;
+        margin-bottom: 10px;
+      }
+      .text .bonus {
+        color: #5dff5d;
+      }
+      .text .muted {
+        color: #9f8873;
+      }
+      .sample {
+        width: 520px;
+        background: #1f2420;
+        padding: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Texte courant : quelle police ?</h1>
+    <div id="rows"></div>
+    <script>
+      const CANDIDATES = [
+        ['DungeonMode (aujourd’hui)', 'DungeonMode', [12, 16]],
+        ['monogram', 'Monogram', [16, 24, 32]],
+        ['Pixel Operator', 'PixelOperator', [16, 24, 32]],
+        ['Silver', 'Silver', [19, 24, 38]],
+      ];
+      const CARD = `
+        <div class="bonus">+1 projectile (2 → 3)</div>
+        <div>Dégâts 19 → 22</div>
+        <p style="margin-top:8px">Tire vers l’ennemi le plus proche et disparaît au premier impact.</p>
+        <p class="muted" style="margin-top:8px">Touche : projectiles · Vélocité, Taille, Duplicateur</p>`;
+      const SAMPLE = `
+        <p>Pyromancien — Tuer 5 000 ennemis avec l’Aura ardente, cumulés sur toutes les parties (3 250 / 5 000).</p>
+        <p style="margin-top:8px">Sagesse : +3 % d’XP gagnée. Rang 2 / 5 — 200 or.</p>
+        <p class="muted" style="margin-top:8px">àâçéèêëîïôùûü œ « » ’ — 0123456789 %+/×→</p>`;
+      const rows = document.getElementById('rows');
+      for (const [name, family, sizes] of CANDIDATES) {
+        for (const size of sizes) {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const style = `font-family:'${family}',monospace;font-size:${size}px;line-height:1.25`;
+          row.innerHTML = `
+            <div class="label">${name} — ${size} px</div>
+            <div class="card"><div class="badge">1 · Arme</div><div class="title">Trait arcanique · Niv 3</div>
+              <div class="text" style="${style}">${CARD}</div></div>
+            <div class="sample text" style="${style}">${SAMPLE}</div>`;
+          rows.append(row);
+        }
+      }
+    </script>
+  </body>
+</html>
