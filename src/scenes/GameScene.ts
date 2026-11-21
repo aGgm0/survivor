@@ -83,6 +83,8 @@ const VISUAL_SEED_SALT = 0x9e3779b9;
 const PARTICLE_SEED_SALT = 0xc2b2ae35;
 /** Idem pour les étincelles d'aura */
 const AURA_SEED_SALT = 0x27d4eb2f;
+/** Idem pour l'or lâché par les ennemis (séparé : n'influe pas sur le reste de la partie) */
+const GOLD_SEED_SALT = 0x165667b1;
 
 /**
  * Ce dont la scène a besoin. Les `Pick` ne demandent que les méthodes utilisées :
@@ -157,6 +159,8 @@ export class GameScene implements Scene, Build {
   readonly particles: ParticleSystem;
   /** Aléatoire visuel des étincelles d'aura (séparé de celui du jeu, comme les particules) */
   private readonly auraRng: Rng;
+  /** Tirages de l'or des ennemis : à part, pour qu'ajouter de l'or ne change pas les autres tirages */
+  private readonly goldRng: Rng;
   /** Étincelles d'aura dues mais pas encore émises (fraction qui s'accumule d'une update à l'autre) */
   private auraSparkDebt = 0;
   readonly gems = new GemSystem();
@@ -272,6 +276,7 @@ export class GameScene implements Scene, Build {
       PARTICLES.drag,
     );
     this.auraRng = new Rng(seed ^ AURA_SEED_SALT);
+    this.goldRng = new Rng(seed ^ GOLD_SEED_SALT);
     this.renderer = new WorldRenderer(
       this,
       {
@@ -669,6 +674,9 @@ export class GameScene implements Scene, Build {
     const bonus = bonusGem !== undefined && this.rng.next() < bonusGem.chance;
     const xp = e.type.xp * e.xpMult * (bonus && bonusGem ? bonusGem.xpMult : 1);
     this.gems.drop(e.x, e.y, xp, this.player.x, this.player.y, bonus);
+    // Une pièce de temps en temps (même aimant que les gemmes). Aléatoire séparé.
+    const goldChance = e.type.goldChance ?? 0;
+    if (goldChance > 0 && this.goldRng.next() < goldChance) this.pickups.drop('gold', 1, e.x, e.y);
     this.enemies.release(e);
     this.killCount++;
   }

@@ -32,6 +32,11 @@ export interface EnemyType {
    * `xpMult` fois plus d'XP. Absent = jamais.
    */
   readonly bonusGem?: { readonly chance: number; readonly xpMult: number };
+  /**
+   * Chance (0 à 1) de lâcher une pièce d'or à sa mort (2026-11-21 : remplir la Boutique en ~25
+   * parties complètes). Absent = jamais (les élites et les boss donnent leur or directement).
+   */
+  readonly goldChance?: number;
 }
 
 export const ENEMY_TYPES = {
@@ -46,6 +51,7 @@ export const ENEMY_TYPES = {
     // Retour de jeu (2026-11-18) : XP trop lente. Une gemme sur deux vaut double (≈ +20 % d'XP
     // au total), plutôt qu'un +50 % général : ça récompense de tuer les basiques.
     bonusGem: { chance: 0.5, xpMult: 2 },
+    goldChance: 0.04,
   },
   fast: {
     id: 'fast',
@@ -55,6 +61,7 @@ export const ENEMY_TYPES = {
     xp: 1,
     radius: 10,
     color: '#f0ad4e',
+    goldChance: 0.04,
   },
   tank: {
     id: 'tank',
@@ -64,6 +71,7 @@ export const ENEMY_TYPES = {
     xp: 5,
     radius: 24,
     color: '#5cb85c',
+    goldChance: 0.15, // plus dur à tuer : plus souvent de l'or
   },
   /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
   boss: {

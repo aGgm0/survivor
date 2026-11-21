@@ -21,7 +21,9 @@ function pct(x: number): string {
 
 /** Une ligne par partie. */
 export function formatRuns(results: readonly SimResult[]): string {
-  const lines = ['seed  fin        temps  niv  kills  build  PV min  armes (part du damage meter)'];
+  const lines = [
+    'seed  fin        temps  niv  kills   or  build  PV min  armes (part du damage meter)',
+  ];
   for (const r of results) {
     const rep = r.report;
     const end = !rep ? 'trop long' : rep.victory ? 'VICTOIRE' : 'mort';
@@ -33,6 +35,7 @@ export function formatRuns(results: readonly SimResult[]): string {
         mmss(r.time).padStart(6),
         String(rep?.level ?? '').padStart(4),
         String(rep?.kills ?? '').padStart(6),
+        String(rep?.gold ?? '').padStart(4),
         (rep?.maxedAt != null ? mmss(rep.maxedAt) : '—').padStart(6),
         pct(r.minHpShare).padStart(7),
         ` ${weapons}`,
@@ -54,6 +57,7 @@ export function formatSummary(results: readonly SimResult[]): string {
     `Temps de survie : médiane ${mmss(median(times))}, min ${mmss(Math.min(...times))}, max ${mmss(Math.max(...times))}`,
     `Build complet : ${maxed.length} parties${maxed.length ? `, médiane ${mmss(median(maxed))}` : ''}`,
     `Niveau atteint (médiane) : ${median(done.map((r) => r.report?.level ?? 0))}`,
+    `Or gagné (médiane) : ${median(done.map((r) => r.report?.gold ?? 0))}`,
     '',
     'Part moyenne du damage meter, dans les parties où l’arme est présente :',
   ];

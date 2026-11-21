@@ -964,6 +964,21 @@ describe('GameScene — bonus de boutique', () => {
   });
 });
 
+describe('GameScene — or des ennemis', () => {
+  it('un tank tué lâche parfois une pièce (15 %)', () => {
+    const { scene } = newScene({ armed: false });
+    // Loin du joueur : les pièces restent au sol (hors de l'aimant), on peut les compter.
+    for (let i = 0; i < 150; i++) {
+      scene.enemies.acquire()?.spawn(ENEMY_TYPES.tank, scene.player.x + 2000, scene.player.y);
+      scene.applyDevAction({ kind: 'killAll' });
+    }
+    const drops = scene.pickups.activeCount;
+    // 150 tirages à 15 % : ~22 attendus ; bornes larges.
+    expect(drops).toBeGreaterThan(8);
+    expect(drops).toBeLessThan(40);
+  });
+});
+
 describe('GameScene — mini-boss', () => {
   it('un mini-boss tué rapporte +10 or et compte comme un kill', () => {
     const { scene } = newScene({ armed: false });
