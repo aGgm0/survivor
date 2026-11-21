@@ -22,7 +22,7 @@ const ICONS = {
   piercingBolt: 1010, // lance de glace
   burstBolt: 774, // éclat violet
   furnace: 767, // explosion de feu (ex-Brasier)
-  frostAura: 1014, // cristaux de glace
+  frostAura: 787, // flocon de glace qui rayonne
   giantOrbs: 773, // anneau violet
   orbStorm: 786, // tourbillon bleu
   whirlwind: 725, // coup en tourbillon
