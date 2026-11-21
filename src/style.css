@@ -128,13 +128,14 @@ body {
   left: 12px;
   right: 12px;
   /* 18 → 26 px (remplissage visible 6 → 14 px) : retour de testeur, barre trop discrète.
-     Tout le HUD en dessous est descendu de 8 px. */
-  height: 26px;
+     Tout le HUD en dessous est descendu de 8 px. +2 px : la bordure du bas passe de 6 à 4. */
+  height: 28px;
   border-style: solid;
-  border-width: 6px 0;
+  border-width: 6px 0 4px;
   border-color: var(--ui-gold-dark);
-  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
-     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  /* Le creux sombre du cadre dépasse ses bordures (4 px sur les côtés, 2 px en bas) : cadre dessiné
+     4 px au-delà des côtés (outset) et bordure du bas de 4 px sous une image de 6 px. Le
+     remplissage couvre alors tout le creux, sans trou sombre aux bouts ni en bas. */
   border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;
@@ -194,12 +195,13 @@ body {
   top: 56px;
   left: 104px;
   width: 208px;
-  height: 22px;
+  height: 24px;
   border-style: solid;
-  border-width: 6px 0;
+  border-width: 6px 0 4px;
   border-color: var(--ui-gold-dark);
-  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
-     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  /* Le creux sombre du cadre dépasse ses bordures (4 px sur les côtés, 2 px en bas) : cadre dessiné
+     4 px au-delà des côtés (outset) et bordure du bas de 4 px sous une image de 6 px. Le
+     remplissage couvre alors tout le creux, sans trou sombre aux bouts ni en bas. */
   border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;
@@ -228,12 +230,13 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 428px;
-  height: 22px;
+  height: 24px;
   border-style: solid;
-  border-width: 6px 0;
+  border-width: 6px 0 4px;
   border-color: var(--ui-gold-dark);
-  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
-     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  /* Le creux sombre du cadre dépasse ses bordures (4 px sur les côtés, 2 px en bas) : cadre dessiné
+     4 px au-delà des côtés (outset) et bordure du bas de 4 px sous une image de 6 px. Le
+     remplissage couvre alors tout le creux, sans trou sombre aux bouts ni en bas. */
   border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;

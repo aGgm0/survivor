@@ -367,7 +367,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 
 ### 0.2.2 — Tank démon et barre de PV `[petite]`
 - [x] **Tank en démon** (avancé de la 0.4) : l'orc `ogre` du pack repeint aux couleurs des démons, cornes en croissant, yeux blancs (`tools/sprites/tank-demon.mjs`, atlas `sprites/monsters/`)
-- [x] Barres du HUD (PV, XP, boss) : trou sombre à chaque bout une fois pleines. Le cadre faisait 8 px de côté mais son creux commence à 4 px : le cadre est maintenant dessiné 4 px au-delà de la barre (`border-image-outset`)
+- [x] Barres du HUD (PV, XP, boss) : trou sombre à chaque bout une fois pleines. Le cadre faisait 8 px de côté mais son creux commence à 4 px : le cadre est maintenant dessiné 4 px au-delà de la barre (`border-image-outset`) ; même chose pour le pixel sombre du bas (bordure du bas 6 → 4 px sous une image de 6 px)
 - [x] Outils : planche des icônes Raven (`tools/ui/icons-preview.html`), page des variantes de sprites (`tools/sprites/variants-preview.html`)
 - [ ] Version 0.2.2 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.2` poussé
 - **Finie quand :** zip sur itch ; tank démon en jeu, barres pleines sans trou.
