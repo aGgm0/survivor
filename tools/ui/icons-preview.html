@@ -1,0 +1,261 @@
+<!doctype html>
+<!--
+  Planche des icônes Raven Fantasy Icons. Ouvrir avec le serveur de dev :
+  http://localhost:5173/tools/ui/icons-preview.html
+  1) Icônes du jeu : public/assets/ui/raven/ (copiées par copy-raven.mjs).
+  2) Pack complet : décompresser « Free - Raven Fantasy Icons » dans tools/ui/raven-pack/
+     (ignoré par git : licence qui interdit de redistribuer les fichiers).
+  Les choix sont dans raven-icons.mjs ; cliquer une icône du pack copie son numéro.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Icônes Raven</title>
+    <style>
+      @font-face {
+        font-family: 'DungeonMode';
+        src: url('/assets/fonts/dungeon-mode.ttf');
+      }
+      @font-face {
+        font-family: 'Monogram';
+        src: url('/assets/fonts/monogram-extended.ttf');
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+        font-synthesis: none;
+      }
+      body {
+        background: #14121a;
+        color: #ece6d6;
+        padding: 24px;
+        font-family: 'DungeonMode', monospace;
+        -webkit-font-smoothing: none;
+      }
+      h1 {
+        font-size: 24px;
+        color: #e8c25a;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        color: #e8c25a;
+        margin: 24px 0 12px;
+      }
+      p,
+      .hint {
+        font-family: 'Monogram', monospace;
+        font-size: 24px;
+        color: #a89f8c;
+      }
+      code {
+        color: #ece6d6;
+      }
+      img {
+        image-rendering: pixelated;
+        display: block;
+      }
+      .used {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .used .cell {
+        width: 132px;
+        padding: 10px;
+        border: 2px solid #3a3446;
+        background: #1d1a24;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        text-align: center;
+      }
+      .used img {
+        width: 64px;
+        height: 64px;
+      }
+      .num {
+        color: #a89f8c;
+      }
+      .toolbar {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .toolbar input {
+        font: inherit;
+        font-size: 12px;
+        background: #1d1a24;
+        color: #ece6d6;
+        border: 2px solid #3a3446;
+        padding: 6px 8px;
+        width: 120px;
+      }
+      .toolbar label {
+        font-size: 12px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .pack {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+        gap: 4px;
+      }
+      .pack .cell {
+        padding: 6px 2px 4px;
+        border: 2px solid transparent;
+        background: #1d1a24;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .pack .cell:hover {
+        border-color: #6b6280;
+      }
+      .pack .cell.in-game {
+        border-color: #e8c25a;
+      }
+      .pack .cell.hidden {
+        display: none;
+      }
+      .pack img {
+        width: 48px;
+        height: 48px;
+      }
+      #toast {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        background: #e8c25a;
+        color: #14121a;
+        padding: 8px 12px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Icônes Raven</h1>
+    <p>
+      Choix dans <code>tools/ui/raven-icons.mjs</code>, puis
+      <code>node tools/ui/copy-raven.mjs &lt;pack&gt;</code> pour les copier dans le jeu.
+    </p>
+
+    <h2>Dans le jeu</h2>
+    <div id="groups"></div>
+
+    <h2>Pack complet</h2>
+    <div class="toolbar">
+      <input id="search" type="text" placeholder="N° (ex. 787)" />
+      <label><input id="only-used" type="checkbox" /> Seulement celles du jeu</label>
+      <span id="count" class="hint"></span>
+    </div>
+    <div id="pack" class="pack"></div>
+    <div id="toast"></div>
+
+    <script type="module">
+      import { ICON_GROUPS } from './raven-icons.mjs';
+
+      const PACK_DIR = 'raven-pack/Separated Files/16x16/';
+      // Le pack gratuit va de fa1 à fa2192 (16 × 16) : on tente un peu plus large et on cache les absents.
+      const MAX_ICON = 2400;
+
+      /** numéro dans le pack → ids du jeu qui l'utilisent */
+      const usedBy = new Map();
+      for (const icons of Object.values(ICON_GROUPS)) {
+        for (const [id, n] of Object.entries(icons)) usedBy.set(n, [...(usedBy.get(n) ?? []), id]);
+      }
+
+      const groups = document.getElementById('groups');
+      for (const [name, icons] of Object.entries(ICON_GROUPS)) {
+        const title = document.createElement('p');
+        title.className = 'hint';
+        title.textContent = name;
+        title.style.margin = '8px 0';
+        const row = document.createElement('div');
+        row.className = 'used';
+        for (const [id, n] of Object.entries(icons)) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.innerHTML = `<img src="/assets/ui/raven/${id}.png" alt=""><span>${id}</span><span class="num">n° ${n}</span>`;
+          row.append(cell);
+        }
+        groups.append(title, row);
+      }
+
+      const pack = document.getElementById('pack');
+      const count = document.getElementById('count');
+      const toast = document.getElementById('toast');
+      let loaded = 0;
+      let settled = 0;
+      const showCount = () => {
+        count.textContent =
+          settled < MAX_ICON
+            ? `Chargement… ${loaded}`
+            : loaded > 0
+              ? `${loaded} icônes`
+              : 'Pack absent : décompresse « Free - Raven Fantasy Icons » dans tools/ui/raven-pack/';
+      };
+
+      for (let n = 1; n <= MAX_ICON; n++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell hidden';
+        cell.dataset.n = String(n);
+        const ids = usedBy.get(n);
+        if (ids) {
+          cell.classList.add('in-game');
+          cell.title = ids.join(', ');
+        }
+        const img = new Image();
+        img.onload = () => {
+          cell.dataset.ok = '1';
+          loaded++;
+          settled++;
+          applyFilter(cell);
+          showCount();
+        };
+        img.onerror = () => {
+          cell.remove();
+          settled++;
+          showCount();
+        };
+        img.src = `${PACK_DIR}fa${n}.png`;
+        const label = document.createElement('span');
+        label.textContent = String(n);
+        cell.append(img, label);
+        cell.addEventListener('click', () => {
+          navigator.clipboard?.writeText(String(n));
+          toast.textContent = `n° ${n} copié${ids ? ` (utilisé : ${ids.join(', ')})` : ''}`;
+          toast.style.opacity = '1';
+          clearTimeout(toast.timer);
+          toast.timer = setTimeout(() => (toast.style.opacity = '0'), 1500);
+        });
+        pack.append(cell);
+      }
+
+      const search = document.getElementById('search');
+      const onlyUsed = document.getElementById('only-used');
+      function applyFilter(cell) {
+        const q = search.value.trim();
+        const visible =
+          cell.dataset.ok === '1' &&
+          (!q || cell.dataset.n.startsWith(q)) &&
+          (!onlyUsed.checked || cell.classList.contains('in-game'));
+        cell.classList.toggle('hidden', !visible);
+      }
+      const applyAll = () => pack.querySelectorAll('.cell').forEach(applyFilter);
+      search.addEventListener('input', applyAll);
+      onlyUsed.addEventListener('change', applyAll);
+      showCount();
+    </script>
+  </body>
+</html>

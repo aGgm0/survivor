@@ -20,3 +20,6 @@ assets-src/
 # Polices candidates de la page de comparaison (tools/ui/fonts-preview.html) : seule la police
 # choisie va dans public/assets/fonts/.
 /tools/ui/fonts-candidates/
+
+# Pack Raven complet pour la planche tools/ui/icons-preview.html (licence : pas de redistribution).
+/tools/ui/raven-pack/
