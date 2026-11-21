@@ -390,7 +390,7 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 - [x] Or lâché (rarement) par les ennemis : basique / rapide 4 %, tank 15 % (objectif : Boutique complète en ~25 parties complètes, à vérifier en jouant : le bot ne casse pas les caisses)
 - [x] Mutations de l'Aura ardente repensées : **Aura de givre** (ralentit) et **Fournaise** (souffle en rafale), à la place de Brasier / Aura toxique (avancé de la 0.3 : « le poison c'est nul »). Icônes : flocon de glace (Raven n° 787) pour le givre, explosion de feu (n° 767, ex-Brasier) pour la Fournaise. Rayons +20 % et recul de la Fournaise ×3 → ×1,5 (retour de jeu)
 - [x] **Lame d'onde remplacée par l'Estoc** : portée ×2, 30°, dégâts ×2, recul ×1,5 ; traînée de pixels en damier. Icône : épée pointée qui scintille (Raven n° 728). Vise l'ennemi le plus proche (dans la direction de marche, il frappait dans le vide) ; visuel : l'épée du pack se fend + trait d'énergie
-- [ ] Version 0.2.0 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.0` poussé
+- [x] Version 0.2.0 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.2.0` poussé (2026-11-21)
 - **Finie quand :** métriques du bot stables sur 20 seeds, aucune arme sous ~10 % du damage meter dans les builds où elle est, 5 parties jouées + 2 testeurs : « dur mais juste ».
 
 ### 0.3 — Stats avancées et arsenal `[grosse]`
