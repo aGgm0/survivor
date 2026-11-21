@@ -125,15 +125,17 @@ body {
 #hud-xpbar {
   position: absolute;
   top: 4px;
-  left: 8px;
-  right: 8px;
+  left: 12px;
+  right: 12px;
   /* 18 → 26 px (remplissage visible 6 → 14 px) : retour de testeur, barre trop discrète.
      Tout le HUD en dessous est descendu de 8 px. */
   height: 26px;
   border-style: solid;
-  border-width: 6px 8px;
+  border-width: 6px 0;
   border-color: var(--ui-gold-dark);
-  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px stretch;
+  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
+     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;
 }
@@ -190,13 +192,15 @@ body {
 #hud-hp {
   position: absolute;
   top: 56px;
-  left: 100px;
-  width: 200px;
+  left: 104px;
+  width: 208px;
   height: 22px;
   border-style: solid;
-  border-width: 6px 8px;
+  border-width: 6px 0;
   border-color: var(--ui-gold-dark);
-  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px stretch;
+  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
+     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;
 }
@@ -223,12 +227,14 @@ body {
   top: 84px;
   left: 50%;
   transform: translateX(-50%);
-  width: 420px;
+  width: 428px;
   height: 22px;
   border-style: solid;
-  border-width: 6px 8px;
+  border-width: 6px 0;
   border-color: var(--ui-gold-dark);
-  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px stretch;
+  /* Cadre dessiné 4 px au-delà des côtés (outset) : le remplissage commence pile au bord du
+     creux sombre du cadre. Avec une bordure de 8 px, il restait 4 px de creux vide à chaque bout. */
+  border-image: url('/assets/ui/darkages/bar-body.png') 3 4 fill / 6px 8px / 0 4px stretch;
   image-rendering: pixelated;
   pointer-events: none;
 }
