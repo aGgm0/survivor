@@ -1,4 +1,5 @@
 import type { SoundSettings } from '../core/SoundLimiter';
+import type { WeaponDef } from './weapons';
 
 /** Dossier des bruitages (générés par tools/audio/build-sfx.mjs). */
 export const SFX_DIR = `${import.meta.env.BASE_URL}assets/audio/sfx/`;
@@ -46,14 +47,14 @@ export type SfxName = keyof typeof SFX;
 
 /**
  * Son d'impact selon le type d'arme. L'épée garde l'impact standard : on entend déjà son
- * « swoosh » à chaque coup.
+ * « swoosh » à chaque coup. Un nouveau type d'arme doit avoir son son (vérifié par TypeScript).
  */
 export const HIT_SOUNDS = {
   projectile: 'enemy-hit',
   melee: 'enemy-hit',
   orbit: 'orb-hit',
   aura: 'aura-burn',
-} as const satisfies Record<string, SfxName>;
+} as const satisfies Record<WeaponDef['kind'], SfxName>;
 
 /** Dossier des musiques (OGG à −16 LUFS, originaux dans assets-src/). */
 export const MUSIC_DIR = `${import.meta.env.BASE_URL}assets/audio/music/`;

@@ -5,6 +5,8 @@ import { MAX_PASSIVES, MAX_WEAPONS } from '../data/progression';
 import { GOLD_UPGRADE, HEAL_UPGRADE, type PassiveDef } from '../data/upgrades';
 import { weaponMaxLevel } from '../data/weapons';
 import { Weapon } from '../entities/Weapon';
+import { formatNumber as fmt } from '../ui/formatNumber';
+import { behaviorOf } from '../weapons/registry';
 import type { Build, UpgradeChoice } from './upgrades';
 
 /** Une stat qui change, avec sa valeur avant et après (déjà mises en forme). */
@@ -25,34 +27,10 @@ export interface ChoiceDetails {
   readonly reason?: string;
 }
 
-/** Nombre à la française (virgule), sans décimale inutile. */
-function fmt(n: number, decimals = 0): string {
-  const rounded = Number(n.toFixed(decimals));
-  return String(rounded).replace('.', ',');
-}
-
 /** Stats comparables d'une arme, mises en forme ; seules celles qui changent seront montrées. */
 function weaponStats(w: Weapon): [string, string][] {
-  const stats: [string, string][] = [['dégâts', fmt(Math.ceil(w.damage))]];
-  switch (w.def.kind) {
-    case 'projectile':
-      stats.push(['projectiles', fmt(w.count)], ['délai', `${fmt(w.cooldown, 2)} s`]);
-      break;
-    case 'aura':
-      stats.push(['rayon', `${fmt(w.radius)} px`], ['délai', `${fmt(w.cooldown, 2)} s`]);
-      break;
-    case 'orbit':
-      stats.push(['orbes', fmt(w.count)], ['orbite', `${fmt(w.orbitDistance)} px`]);
-      break;
-    case 'melee':
-      stats.push(
-        ['ouverture', `${fmt((w.arc * 180) / Math.PI)}°`],
-        ['portée', `${fmt(w.range)} px`],
-        ['délai', `${fmt(w.cooldown, 2)} s`],
-      );
-      break;
-  }
-  return stats;
+  // Les dégâts d'abord, puis ce qui dépend du type (voir src/weapons/).
+  return [['dégâts', fmt(Math.ceil(w.damage))], ...behaviorOf(w.def).cardStats(w, w.def)];
 }
 
 /** Ce qui change entre l'arme actuelle et la même au niveau suivant (avec les passifs du joueur). */
