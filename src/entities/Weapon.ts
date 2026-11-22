@@ -1,6 +1,7 @@
-import { SIZE_ORBIT_SHARE } from '../data/upgrades';
 import { WEAPON_DAMAGE_MULT } from '../data/combat';
 import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
+import { behaviorOf } from '../weapons/registry';
+import type { LevelTotals } from '../weapons/WeaponBehavior';
 
 /** Multiplicateurs venant du joueur (passifs), appliqués à toutes ses armes. */
 export interface WeaponModifiers {
@@ -15,8 +16,16 @@ export interface WeaponModifiers {
   readonly extraCount?: number;
 }
 
-/** En dessous, le cooldown deviendrait absurde (tir à chaque update). */
-const MIN_COOLDOWN = 0.05;
+/** Bonus des niveaux additionnés : un seul objet réutilisé par tous les recalculs. */
+const TOTALS: LevelTotals = {
+  damage: 0,
+  count: 0,
+  radius: 0,
+  cooldownPct: 0,
+  orbitDistance: 0,
+  arcDeg: 0,
+  range: 0,
+};
 
 /**
  * Une arme possédée par le joueur : sa définition (stats fixes) + son état pendant la partie.
@@ -44,26 +53,26 @@ export class Weapon {
   // `recompute()` seulement quand elles changent (level up), pas à chaque tir.
   damage: number;
   /** s entre deux tirs (projectile) ou deux brûlures d'un même ennemi (aura) ; 0 pour l'orbite */
-  cooldown: number;
+  cooldown = 0;
   /** Projectiles par tir (projectile) ou nombre d'orbes (orbite) */
-  count: number;
+  count = 0;
   /** px, rayon de l'aura */
-  radius: number;
+  radius = 0;
   /** px/s de recul donné à un ennemi de poids moyen */
   knockback: number;
   /** Orbite : taille d'un orbe (px) et vitesse de rotation (rad/s) ; 0 pour les autres armes */
-  orbRadius: number;
-  angularSpeed: number;
+  orbRadius = 0;
+  angularSpeed = 0;
   /** Orbite : distance joueur → centre des orbes (px) ; 0 pour les autres armes */
-  orbitDistance: number;
+  orbitDistance = 0;
   /** Projectile : vitesse (px/s), taille (px) et portée (px) ; 0 pour les autres armes */
-  projectileSpeed: number;
-  projectileRadius: number;
-  range: number;
+  projectileSpeed = 0;
+  projectileRadius = 0;
+  range = 0;
   /** Trait éclaté : rayon de l'explosion (px) ; 0 sans explosion */
   explosionRadius = 0;
   /** Mêlée : ouverture du coup en radians (2π = tout autour) ; 0 pour les autres armes */
-  arc: number;
+  arc = 0;
   /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */
   strikesLeft = 0;
   nextStrikeAt = 0;
@@ -71,22 +80,8 @@ export class Weapon {
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
     this.knockback = def.knockback;
-    this.cooldown = def.kind === 'orbit' ? 0 : def.cooldown;
-    this.count = def.kind === 'aura' ? 0 : def.count;
-    this.radius = def.kind === 'aura' ? def.radius : 0;
-    this.orbRadius = def.kind === 'orbit' ? def.orbRadius : 0;
-    this.angularSpeed = def.kind === 'orbit' ? def.angularSpeed : 0;
-    this.orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
-    this.projectileSpeed = def.kind === 'projectile' ? def.projectileSpeed : 0;
-    this.projectileRadius = def.kind === 'projectile' ? def.projectileRadius : 0;
-    // Portée : distance parcourue par le projectile, ou rayon du coup de mêlée.
-    this.range =
-      def.kind === 'projectile'
-        ? def.projectileSpeed * def.projectileLifetime
-        : def.kind === 'melee'
-          ? def.range
-          : 0;
-    this.arc = def.kind === 'melee' ? (def.arcDeg * Math.PI) / 180 : 0;
+    // Les stats propres au type (délai, nombre, rayon, portée...) : voir src/weapons/.
+    behaviorOf(def).init(this, def);
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */
@@ -113,66 +108,33 @@ export class Weapon {
 
   recompute(mods: WeaponModifiers): void {
     const def = this.def;
-    let damage = def.damage;
-    let count = def.kind === 'aura' ? 0 : def.count;
-    let radius = def.kind === 'aura' ? def.radius : 0;
-    let cooldownPct = 0;
-    let orbitDistance = def.kind === 'orbit' ? def.orbitDistance : 0;
-    let arcDeg = def.kind === 'melee' ? def.arcDeg : 0;
-    let meleeRange = def.kind === 'melee' ? def.range : 0;
+    const behavior = behaviorOf(def);
+    const t = TOTALS;
+    t.damage = def.damage;
+    t.count = 0;
+    t.radius = 0;
+    t.cooldownPct = 0;
+    t.orbitDistance = 0;
+    t.arcDeg = 0;
+    t.range = 0;
+    behavior.levelBase(def, t);
     // Bonus des niveaux 2 à `level` (index 0 = niveau 2).
     for (let i = 0; i < this.level - 1; i++) {
       const bonus = def.levels[i];
       if (!bonus) continue;
-      damage += bonus.damage ?? 0;
-      count += bonus.count ?? 0;
-      radius += bonus.radius ?? 0;
-      cooldownPct += bonus.cooldownPct ?? 0;
-      orbitDistance += bonus.orbitDistance ?? 0;
-      arcDeg += bonus.arcDeg ?? 0;
-      meleeRange += bonus.range ?? 0;
+      t.damage += bonus.damage ?? 0;
+      t.count += bonus.count ?? 0;
+      t.radius += bonus.radius ?? 0;
+      t.cooldownPct += bonus.cooldownPct ?? 0;
+      t.orbitDistance += bonus.orbitDistance ?? 0;
+      t.arcDeg += bonus.arcDeg ?? 0;
+      t.range += bonus.range ?? 0;
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;
-    this.damage = damage * (m?.damageMult ?? 1) * mods.damageMult * WEAPON_DAMAGE_MULT;
+    this.damage = t.damage * (m?.damageMult ?? 1) * mods.damageMult * WEAPON_DAMAGE_MULT;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
-    // Passifs Taille, Vélocité, Duplicateur (neutres s'ils sont absents).
-    const size = mods.sizeMult ?? 1;
-    const velocity = mods.projectileSpeedMult ?? 1;
-    const extra = mods.extraCount ?? 0;
-    // Une mutation peut imposer un nombre (3 orbes géants, 9 orbes de tempête) ; le Duplicateur
-    // s'ajoute APRÈS, donc aussi aux mutations. L'aura n'a rien à dupliquer, et l'Épée n'en
-    // profite plus (nerf : le combo la rendait trop forte).
-    const duplicated = def.kind === 'melee' ? 0 : extra;
-    this.count = def.kind === 'aura' ? 0 : (m?.count ?? count) + duplicated;
-    this.radius = radius * (m?.radiusMult ?? 1) * size;
-    if (def.kind === 'orbit') {
-      this.orbRadius = def.orbRadius * (m?.orbRadiusMult ?? 1) * size;
-      this.angularSpeed = def.angularSpeed * (m?.angularSpeedMult ?? 1) * velocity;
-      // L'orbite ne s'éloigne qu'avec une petite part du bonus de Taille (les orbes, eux, grossissent).
-      this.orbitDistance =
-        orbitDistance * (m?.orbitDistanceMult ?? 1) * (1 + (size - 1) * SIZE_ORBIT_SHARE);
-    }
-    if (def.kind === 'projectile') {
-      this.projectileSpeed = def.projectileSpeed * velocity;
-      this.projectileRadius = def.projectileRadius * size;
-      // Durée de vie fixe : plus rapide = porte plus loin (et vise plus loin).
-      this.range = this.projectileSpeed * def.projectileLifetime;
-      this.explosionRadius = (m?.explosion?.radius ?? 0) * size;
-    }
-    if (def.kind === 'melee') {
-      // La Taille allonge la portée du coup, pas son ouverture. Tourbillon : 360° imposés ;
-      // Estoc : 30° imposés et portée doublée.
-      this.range = meleeRange * (m?.rangeMult ?? 1) * size;
-      this.arc = (Math.min(360, m?.arcDeg ?? arcDeg) * Math.PI) / 180;
-    }
-    // La Hâte accélère les tirs et les brûlures d'aura. L'orbite n'a pas de cooldown.
-    this.cooldown =
-      def.kind === 'orbit'
-        ? 0
-        : Math.max(
-            MIN_COOLDOWN,
-            def.cooldown * (1 + cooldownPct) * (m?.cooldownMult ?? 1) * mods.cooldownMult,
-          );
+    // Le reste dépend du type (Taille, Vélocité, Duplicateur, Hâte...).
+    behavior.applyStats(this, def, t, mods);
   }
 }

@@ -43,7 +43,7 @@ import type { EffectsSystem } from '../../systems/EffectsSystem';
 import type { GemSystem } from '../../systems/GemSystem';
 import type { ParticleSystem } from '../../systems/ParticleSystem';
 import type { PickupSystem } from '../../systems/PickupSystem';
-import { WeaponSystem } from '../../systems/WeaponSystem';
+import { orbX, orbY } from '../../weapons/orbit';
 import { buildFloor } from '../floor';
 
 /** px entre deux lignes de la grille de fond */
@@ -431,16 +431,16 @@ export class WorldRenderer {
         const scale = (w.orbRadius * 2) / ORB_SPRITE.diameter;
         const tint = weaponTint(w.color);
         for (let o = 0; o < w.count; o++) {
-          const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
-          const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
+          const x = orbX(px, angle, o, w.count, w.orbitDistance);
+          const y = orbY(py, angle, o, w.count, w.orbitDistance);
           fx.draw(ctx, frame, x, y + (frame.h * scale) / 2, scale, false, tint);
         }
         continue;
       }
       ctx.beginPath();
       for (let o = 0; o < w.count; o++) {
-        const x = WeaponSystem.orbX(px, angle, o, w.count, w.orbitDistance);
-        const y = WeaponSystem.orbY(py, angle, o, w.count, w.orbitDistance);
+        const x = orbX(px, angle, o, w.count, w.orbitDistance);
+        const y = orbY(py, angle, o, w.count, w.orbitDistance);
         ctx.moveTo(x + w.orbRadius, y);
         ctx.arc(x, y, w.orbRadius, 0, Math.PI * 2);
       }
