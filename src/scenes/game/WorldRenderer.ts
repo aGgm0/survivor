@@ -5,29 +5,14 @@ import type { Camera } from '../../core/Camera';
 import type { EffectSheet } from '../../core/EffectSheet';
 import { clamp, lerp, Rng } from '../../core/math';
 import type { Pool } from '../../core/Pool';
-import {
-  frameAt,
-  type SpriteAnimation,
-  type SpriteAtlas,
-  type SpriteTint,
-} from '../../core/SpriteAtlas';
+import { frameAt, type SpriteAtlas } from '../../core/SpriteAtlas';
 import { ENEMY_TYPE_LIST } from '../../data/enemies';
+import { CHARGE_TELEGRAPH, HP_BARS, SUMMON_TELEGRAPH } from '../../data/feel';
 import {
-  AURA_LOOKS,
-  AURA_PULSE,
-  AURA_PULSE_RING,
-  CHARGE_TELEGRAPH,
-  HP_BARS,
-  SUMMON_TELEGRAPH,
-  type AuraLook,
-} from '../../data/feel';
-import {
-  BOLT_SPRITE,
   ENEMY_ANIM_OFFSET,
   ENEMY_IDLE_SPEED,
   enemySprite,
   HIT_FLASH_TINT,
-  ORB_SPRITE,
   type EffectName,
   type SpriteDef,
 } from '../../data/sprites';
@@ -43,20 +28,15 @@ import type { EffectsSystem } from '../../systems/EffectsSystem';
 import type { GemSystem } from '../../systems/GemSystem';
 import type { ParticleSystem } from '../../systems/ParticleSystem';
 import type { PickupSystem } from '../../systems/PickupSystem';
-import { orbX, orbY } from '../../weapons/orbit';
+import { behaviorOf } from '../../weapons/registry';
+import type { WeaponRenderContext } from '../../weapons/WeaponBehavior';
+import { drawEmberRing } from './embers';
 import { buildFloor } from '../floor';
 
 /** px entre deux lignes de la grille de fond */
 const GRID_SIZE = 64;
 const GRID_COLOR = '#2c2c3d';
 const HITBOX_COLOR = '#00e5ff';
-
-/** Halo autour des projectiles : taille (× rayon) et opacité */
-const PROJECTILE_GLOW_SCALE = 2;
-const PROJECTILE_GLOW_ALPHA = 0.3;
-
-/** Deux passes de dessin (halo puis cœur), définies une fois pour ne rien allouer par frame. */
-const PROJECTILE_PASSES = [PROJECTILE_GLOW_SCALE, 1] as const;
 
 /** Opacité du flash sur les sprites */
 const ENEMY_FLASH_ALPHA = 0.65;
@@ -65,29 +45,8 @@ const ENEMY_FLASH_COLOR = '#ffffff';
 /** Constante quelconque pour dériver la seed du tirage des dalles du sol de celle du jeu. */
 const FLOOR_SEED_SALT = 0x85ebca6b;
 
-/**
- * Teinte « multiply » à la couleur d'une arme. Une seule par couleur, créée la première fois puis
- * gardée : c'est l'objet qui sert de clé à la copie teintée de l'atlas.
- */
-const WEAPON_TINTS = new Map<string, SpriteTint>();
-function weaponTint(color: string): SpriteTint {
-  let tint = WEAPON_TINTS.get(color);
-  if (!tint) {
-    tint = { color, mode: 'multiply' };
-    WEAPON_TINTS.set(color, tint);
-  }
-  return tint;
-}
-
-/** Opacité du disque de l'aura (le contour est plus marqué) */
-const AURA_FILL_ALPHA = 0.12;
-const AURA_STROKE_ALPHA = 0.5;
-
-/** rad/s du scintillement des braises d'aura */
-const EMBER_FLICKER_SPEED = 6;
-
-/** Opacité du trait sombre sous les braises */
-const EMBER_RING_ALPHA = 0.6;
+/** Calque de dessin des armes */
+type WeaponLayer = 'ground' | 'above';
 
 /** Mini-boss : anneau doré pulsant (réglages purement visuels) */
 const ELITE_LOOK = {
@@ -133,6 +92,8 @@ export class WorldRenderer {
   private readonly floorTiles: HTMLCanvasElement | null;
   /** Motif répété tiré de `floorTiles`, créé au premier rendu (il faut le contexte du canvas) */
   private floorPattern: CanvasPattern | null = null;
+  /** Contexte de dessin passé aux armes : un seul objet, mis à jour à chaque rendu */
+  private readonly weaponContext: WeaponRenderContext;
 
   constructor(
     private readonly world: WorldView,
@@ -142,6 +103,15 @@ export class WorldRenderer {
     this.floorTiles = deps.sprites
       ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
       : null;
+    this.weaponContext = {
+      alpha: 0,
+      playerX: 0,
+      playerY: 0,
+      time: 0,
+      fx: deps.fx,
+      projectiles: world.projectiles,
+      isOnScreen: (x, y, r) => this.isOnScreen(x, y, r),
+    };
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {
@@ -154,7 +124,7 @@ export class WorldRenderer {
     // Les gemmes sont au sol : dessinées sous les ennemis.
     this.world.gems.render(ctx, alpha, this.world.camera, this.deps.fx);
     this.world.pickups.render(ctx, alpha, this.world.camera, this.deps.sprites, this.world.runTime);
-    this.renderAuras(ctx, alpha); // au sol, sous les ennemis
+    this.renderWeapons(ctx, alpha, 'ground'); // auras : au sol, sous les ennemis
     this.renderBossTelegraphs(ctx, alpha); // au sol aussi : la zone à éviter
     this.renderEnemies(ctx, alpha);
     this.world.particles.render(ctx, alpha, this.world.camera); // éclats par-dessus les corps, sous le joueur
@@ -162,8 +132,7 @@ export class WorldRenderer {
     this.renderEliteBars(ctx, alpha);
     this.world.player.render(ctx, alpha, this.deps.sprites);
     this.renderPlayerBar(ctx, alpha);
-    this.renderOrbs(ctx, alpha);
-    this.renderProjectiles(ctx, alpha);
+    this.renderWeapons(ctx, alpha, 'above'); // orbes, projectiles
     this.world.effects.render(ctx, this.world.camera);
     this.world.damageNumbers.render(ctx, alpha, this.world.camera);
     if (this.deps.showHitboxes()) this.renderHitboxes(ctx, alpha);
@@ -247,7 +216,7 @@ export class WorldRenderer {
         const progress = clamp(1 - (e.summonAt - now) / summon.cast, 0, 1);
         const t = SUMMON_TELEGRAPH;
         const r = summon.radius * lerp(t.startScale, 1, progress) + e.type.radius;
-        this.renderEmbers(ctx, x, y, r, t.look, lerp(t.startAlpha, 1, progress));
+        drawEmberRing(ctx, x, y, r, t.look, this.world.runTime, lerp(t.startAlpha, 1, progress));
       }
     }
     ctx.globalAlpha = 1;
@@ -330,183 +299,17 @@ export class WorldRenderer {
     ctx.globalAlpha = 1;
   }
 
-  /**
-   * Auras : disque très léger (pour voir la zone) et anneau de braises carrées posé sur le bord,
-   * qui tourne et scintille (voir AURA_LOOKS). Rien n'est modifié ici : tout dépend du temps.
-   */
-  private renderAuras(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const px = this.world.player.renderX(alpha);
-    const py = this.world.player.renderY(alpha);
+  /** Armes dessinées au sol (aura), sous les ennemis, ou par-dessus le joueur (orbes, projectiles). */
+  private renderWeapons(ctx: CanvasRenderingContext2D, alpha: number, layer: WeaponLayer): void {
+    const rc = this.weaponContext;
+    rc.alpha = alpha;
+    rc.playerX = this.world.player.renderX(alpha);
+    rc.playerY = this.world.player.renderY(alpha);
+    rc.time = this.world.runTime;
     for (const w of this.world.weapons) {
-      if (w.def.kind !== 'aura') continue;
-      const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
-      // Onde de feu (Fournaise) : rien de permanent autour du joueur, seulement l'onde
-      // (retour de jeu : l'anneau constant ne servait à rien, c'est l'onde qui touche).
-      const pulse = w.mutation?.pulse;
-      const sincePulse = this.world.runTime - w.lastPulseAt;
-      if (!pulse) {
-        ctx.beginPath();
-        ctx.arc(px, py, w.radius, 0, Math.PI * 2);
-        ctx.fillStyle = w.color; // couleur de la mutation si l'aura a muté
-        ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        if (look) this.renderEmbers(ctx, px, py, w.radius, look);
-        else {
-          ctx.globalAlpha = AURA_STROKE_ALPHA;
-          ctx.strokeStyle = w.color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-      }
-      // Le front de l'onde : un anneau de braises vives qui part du joueur jusqu'à la portée
-      // de l'onde (là où elle touche vraiment), puis s'éteint.
-      if (pulse && sincePulse >= 0 && sincePulse < pulse.travel + AURA_PULSE.fade) {
-        const reach = w.radius * pulse.reachMult;
-        const r = Math.max(8, reach * Math.min(1, sincePulse / pulse.travel));
-        const opacity =
-          sincePulse <= pulse.travel ? 1 : 1 - (sincePulse - pulse.travel) / AURA_PULSE.fade;
-        this.renderEmbers(ctx, px, py, r, AURA_PULSE_RING, opacity);
-      }
-    }
-  }
-
-  /**
-   * Braises le long du cercle : leur nombre suit la circonférence (l'anneau garde le même aspect
-   * quand le rayon grandit). Chacune scintille à son rythme et prend la couleur claire, moyenne
-   * ou sombre selon sa luminosité. Un passage par couleur : 3 changements de fillStyle seulement.
-   */
-  private renderEmbers(
-    ctx: CanvasRenderingContext2D,
-    cx: number,
-    cy: number,
-    radius: number,
-    look: AuraLook,
-    opacity = 1,
-  ): void {
-    const count = Math.max(24, Math.round((Math.PI * 2 * radius) / look.emberSpacing));
-    const t = this.world.runTime;
-    const spin = t * look.spin;
-    const size = look.emberSize;
-    // Trait sombre continu sous les braises : l'anneau reste lisible entre deux scintillements.
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius - size / 2, 0, Math.PI * 2);
-    ctx.strokeStyle = look.colors[2];
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = EMBER_RING_ALPHA * opacity;
-    ctx.stroke();
-    ctx.globalAlpha = opacity;
-    for (let shade = 0; shade < 3; shade++) {
-      ctx.fillStyle = look.colors[shade] ?? look.colors[1];
-      for (let k = 0; k < count; k++) {
-        // Scintillement de 0 à 1, décalé d'une braise à l'autre.
-        const flicker = 0.5 + 0.5 * Math.sin(t * EMBER_FLICKER_SPEED + k * 2.3);
-        const kShade = flicker > 0.66 ? 0 : flicker > 0.33 ? 1 : 2;
-        if (kShade !== shade) continue;
-        const a = spin + (k / count) * Math.PI * 2;
-        // Une braise sur deux rentrée de `emberInset` (0 : un seul rang, anneau fin).
-        const r = radius - (k % 2) * look.emberInset;
-        // Positions calées sur une grille de 2 px : des pixels nets, comme les sprites ×2.
-        const x = Math.round((cx + Math.cos(a) * r - size / 2) / 2) * 2;
-        const y = Math.round((cy + Math.sin(a) * r - size / 2) / 2) * 2;
-        ctx.fillRect(x, y, size, size);
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /** Orbes autour du joueur, à leur angle interpolé (rotation fluide à 144/240 Hz). */
-  private renderOrbs(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const px = this.world.player.renderX(alpha);
-    const py = this.world.player.renderY(alpha);
-    for (const w of this.world.weapons) {
-      if (w.def.kind !== 'orbit') continue;
-      const angle = lerp(w.prevAngle, w.angle, alpha);
-      const fx = this.deps.fx;
-      const frame =
-        fx && frameAt(fx.animation(ORB_SPRITE.anim), this.world.runTime, ORB_SPRITE.frameTime);
-      if (fx && frame) {
-        // Sprite à la taille exacte de la hitbox (niveaux, mutation, passif Taille compris).
-        const scale = (w.orbRadius * 2) / ORB_SPRITE.diameter;
-        const tint = weaponTint(w.color);
-        for (let o = 0; o < w.count; o++) {
-          const x = orbX(px, angle, o, w.count, w.orbitDistance);
-          const y = orbY(py, angle, o, w.count, w.orbitDistance);
-          fx.draw(ctx, frame, x, y + (frame.h * scale) / 2, scale, false, tint);
-        }
-        continue;
-      }
-      ctx.beginPath();
-      for (let o = 0; o < w.count; o++) {
-        const x = orbX(px, angle, o, w.count, w.orbitDistance);
-        const y = orbY(py, angle, o, w.count, w.orbitDistance);
-        ctx.moveTo(x + w.orbRadius, y);
-        ctx.arc(x, y, w.orbRadius, 0, Math.PI * 2);
-      }
-      ctx.fillStyle = w.color;
-      ctx.fill();
-    }
-  }
-
-  /** Projectiles groupés par arme (une couleur = un chemin) : un halo, puis le cœur. */
-  private renderProjectiles(ctx: CanvasRenderingContext2D, alpha: number): void {
-    const items = this.world.projectiles.items;
-    for (const weapon of this.world.weapons) {
-      // Projectiles du Trait : halo rond, puis sprite orienté.
-      if (weapon.def.kind !== 'projectile') continue;
-      const fx = weapon.def.kind === 'projectile' ? this.deps.fx : null;
-      const bolt = fx?.animation(BOLT_SPRITE.anim);
-      for (const pass of PROJECTILE_PASSES) {
-        if (fx && bolt && bolt.length > 0 && pass === 1) {
-          this.renderBolts(ctx, alpha, weapon, fx, bolt);
-          continue;
-        }
-        ctx.beginPath();
-        for (let i = 0; i < items.length; i++) {
-          const p = items[i];
-          if (!p?.active || p.source !== weapon) continue;
-          const x = p.renderX(alpha);
-          const y = p.renderY(alpha);
-          const r = p.radius * pass;
-          if (!this.isOnScreen(x, y, r)) continue;
-          ctx.moveTo(x + r, y);
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-        }
-        ctx.globalAlpha = pass === 1 ? 1 : PROJECTILE_GLOW_ALPHA;
-        ctx.fillStyle = weapon.color;
-        ctx.fill();
-      }
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /** Projectiles d'une arme en sprites, tournés dans le sens du tir, tête = taille de la hitbox. */
-  private renderBolts(
-    ctx: CanvasRenderingContext2D,
-    alpha: number,
-    weapon: Weapon,
-    fx: SpriteAtlas,
-    bolt: SpriteAnimation,
-  ): void {
-    ctx.globalAlpha = 1;
-    const tint = weaponTint(weapon.color);
-    const items = this.world.projectiles.items;
-    for (let i = 0; i < items.length; i++) {
-      const p = items[i];
-      if (!p?.active || p.source !== weapon) continue;
-      const x = p.renderX(alpha);
-      const y = p.renderY(alpha);
-      const scale = (p.radius * 2) / BOLT_SPRITE.headDiameter;
-      if (!this.isOnScreen(x, y, BOLT_SPRITE.headCenterX * scale)) continue;
-      const frame = frameAt(
-        bolt,
-        this.world.runTime + i * ENEMY_ANIM_OFFSET,
-        BOLT_SPRITE.frameTime,
-      );
-      if (!frame) continue;
-      const angle = Math.atan2(p.vy, p.vx);
-      fx.drawRotated(ctx, frame, x, y, scale, angle, BOLT_SPRITE.headCenterX, tint);
+      const behavior = behaviorOf(w.def);
+      if (layer === 'ground') behavior.renderGround?.(ctx, w, w.def, rc);
+      else behavior.renderAbove?.(ctx, w, w.def, rc);
     }
   }
 
