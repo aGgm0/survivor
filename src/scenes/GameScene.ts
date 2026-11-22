@@ -8,7 +8,7 @@ import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { EffectSheet } from '../core/EffectSheet';
 import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { AURA_LOOKS, AURA_PULSE, LOW_HP, PARTICLES, SHAKE, SHAKE_EVENTS } from '../data/feel';
+import { LOW_HP, PARTICLES, SHAKE } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { WorldRenderer } from './game/WorldRenderer';
 import {
@@ -50,8 +50,8 @@ import { MovementSystem } from '../systems/MovementSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
 import { StatusSystem } from '../systems/status';
-import type { HitKind } from '../systems/damage';
-import { STATUS } from '../data/status';
+import type { HitEvents } from '../systems/damage';
+import { Feedback } from './game/Feedback';
 import { WeaponSystem } from '../systems/WeaponSystem';
 import { XpSystem } from '../systems/XpSystem';
 import {
@@ -74,18 +74,12 @@ import type { DevAction, DevPanel } from '../ui/DevPanel';
 import type { Settings } from '../data/settings';
 import type { SoundPlayer } from '../core/AudioEngine';
 import type { MusicControl } from '../core/MusicPlayer';
-import { HIT_SOUNDS, type MusicName, type SfxName } from '../data/audio';
+import type { MusicName, SfxName } from '../data/audio';
 
-/** s pendant lesquelles un ennemi touché est affiché en blanc */
-const ENEMY_HIT_FLASH = 0.08;
-/** s minimum entre la fin d'un flash et le suivant (un ennemi pris sous un gros DPS clignote) */
-const ENEMY_FLASH_GAP = 0.25;
 /** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
 const VISUAL_SEED_SALT = 0x9e3779b9;
 /** Idem pour les particules */
 const PARTICLE_SEED_SALT = 0xc2b2ae35;
-/** Idem pour les étincelles d'aura */
-const AURA_SEED_SALT = 0x27d4eb2f;
 /** Idem pour l'or lâché par les ennemis (séparé : n'influe pas sur le reste de la partie) */
 const GOLD_SEED_SALT = 0x165667b1;
 
@@ -164,12 +158,10 @@ export class GameScene implements Scene, Build {
   readonly damageNumbers: DamageNumberSystem;
   /** Éclats purement visuels (morts, caisses, level up) */
   readonly particles: ParticleSystem;
-  /** Aléatoire visuel des étincelles d'aura (séparé de celui du jeu, comme les particules) */
-  private readonly auraRng: Rng;
+  /** Le ressenti : sons, tremblement, particules, nombres de dégâts (écoute les événements) */
+  private readonly feedback: Feedback;
   /** Tirages de l'or des ennemis : à part, pour qu'ajouter de l'or ne change pas les autres tirages */
   private readonly goldRng: Rng;
-  /** Étincelles d'aura dues mais pas encore émises (fraction qui s'accumule d'une update à l'autre) */
-  private auraSparkDebt = 0;
   readonly gems = new GemSystem();
   /** Rangs de boutique de cette partie, et le bonus d'XP qu'ils donnent (Sagesse) */
   private readonly shopRanks: Readonly<Record<string, number>>;
@@ -246,29 +238,15 @@ export class GameScene implements Scene, Build {
     this.runDuration = options.runDuration ?? RUN_DURATION;
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng);
-    const hitEvents = {
-      onHit: (e: Enemy, damage: number, kind: HitKind, source: Weapon) =>
-        this.onEnemyHit(e, damage, kind, source),
-      onKill: (e: Enemy) => this.killEnemy(e),
-      onExplosion: (x: number, y: number, r: number, color: string) => {
-        this.effects.explosion(x, y, r, color);
-        this.shake('explosion');
-        this.sound('bolt-burst');
-      },
-      onAuraPulse: (x: number, y: number, r: number) => {
-        this.emitPulseFlames(x, y, r);
-        this.shake('auraPulse');
-        this.sound('bolt-burst');
-      },
-      onThrust: (x: number, y: number, angle: number, arc: number, r: number, color: string) => {
-        this.effects.thrust(x, y, angle, arc, r, color);
-        this.sound('sword-slash');
-      },
-      onSlash: (x: number, y: number, angle: number, arc: number, r: number, color: string) => {
-        this.effects.slash(x, y, angle, arc, r, color);
-        this.sound('sword-slash');
-      },
-      onFire: () => this.sound('bolt-shoot'),
+    // Systèmes → scène : les coups et les kills (règles), le reste va droit au ressenti.
+    const hitEvents: HitEvents = {
+      onHit: (e, damage, kind, source) => this.feedback.enemyHit(e, damage, kind, source),
+      onKill: (e) => this.killEnemy(e),
+      onExplosion: (x, y, r, color) => this.feedback.explosion(x, y, r, color),
+      onAuraPulse: (x, y, r) => this.feedback.auraPulse(x, y, r),
+      onThrust: (x, y, angle, arc, r, color) => this.feedback.thrust(x, y, angle, arc, r, color),
+      onSlash: (x, y, angle, arc, r, color) => this.feedback.slash(x, y, angle, arc, r, color),
+      onFire: () => this.feedback.fired(),
     };
     this.weaponSystem = new WeaponSystem(
       ENEMY_POOL_SIZE,
@@ -282,8 +260,19 @@ export class GameScene implements Scene, Build {
       new Rng(seed ^ PARTICLE_SEED_SALT),
       PARTICLES.drag,
     );
-    this.auraRng = new Rng(seed ^ AURA_SEED_SALT);
     this.goldRng = new Rng(seed ^ GOLD_SEED_SALT);
+    this.feedback = new Feedback(
+      {
+        camera: this.camera,
+        particles: this.particles,
+        effects: this.effects,
+        damageNumbers: this.damageNumbers,
+        settings: () => deps.settings,
+        sfx: deps.sfx,
+        now: () => this.elapsed,
+      },
+      seed,
+    );
     this.renderer = new WorldRenderer(
       this,
       {
@@ -453,9 +442,9 @@ export class GameScene implements Scene, Build {
       this.player.y,
       this.spawner,
     );
-    if (charges > 0) this.shake('bossCharge');
-    if (this.bossAbilities.chargeWarnings > 0) this.sound('boss-charge');
-    if (this.bossAbilities.summonWarnings > 0) this.sound('boss-summon');
+    if (charges > 0) this.feedback.bossCharge();
+    if (this.bossAbilities.chargeWarnings > 0) this.feedback.chargeWarning();
+    if (this.bossAbilities.summonWarnings > 0) this.feedback.summonWarning();
     this.collisions.rebuild(this.enemies);
     this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
@@ -476,31 +465,20 @@ export class GameScene implements Scene, Build {
     this.updateHpTrails(dt);
     // Sagesse (boutique) : plus d'XP par gemme.
     const gemXp = this.gems.update(dt, this.player);
-    if (gemXp > 0) this.sound('gem-pickup');
+    if (gemXp > 0) this.feedback.gemsPicked();
     const levelsGained = this.progression.addXp(gemXp * this.xpGainMult);
-    if (levelsGained > 0) {
-      this.sound('level-up');
-      // Anneau d'étincelles : il part au moment du level up, puis reprend après le choix.
-      this.particles.burst(
-        this.player.x,
-        this.player.y,
-        PARTICLES.levelUp,
-        PARTICLES.levelUpColor,
-        PARTICLES.levelUp.count,
-        true,
-      );
-    }
+    if (levelsGained > 0) this.feedback.levelUp(this.player.x, this.player.y);
     this.pendingLevelUps += levelsGained;
     this.pickups.update(dt, this.player);
     this.gold += this.pickups.gold;
-    if (this.pickups.gold > 0) this.sound('coin-pickup');
+    if (this.pickups.gold > 0) this.feedback.goldPicked();
     if (this.pickups.heal > 0) {
       this.player.heal(this.pickups.heal);
-      this.sound('heal');
+      this.feedback.healed();
     }
     this.damageNumbers.update(dt);
     this.effects.update(dt);
-    this.emitAuraSparks(dt);
+    this.feedback.update(dt, this.weapons, this.player.x, this.player.y);
     this.particles.update(dt);
     if (this.pendingLevelUps > 0) this.openLevelUp();
   }
@@ -547,7 +525,7 @@ export class GameScene implements Scene, Build {
   rerollChoices(): void {
     if (!this.choices || !this.canReroll) return;
     this.rerollsLeft--;
-    this.sound('ui-click');
+    this.feedback.uiClick();
     this.openLevelUp(this.choices);
   }
 
@@ -567,7 +545,7 @@ export class GameScene implements Scene, Build {
     const choice = this.choices?.[index];
     if (!choice) return;
     // Ici plutôt que sur le clic : le choix au clavier (1-2-3) sonne aussi.
-    this.sound('ui-click');
+    this.feedback.uiClick();
     applyUpgrade(choice, this);
     this.recomputeWeapons();
     this.buildVersion++;
@@ -588,26 +566,6 @@ export class GameScene implements Scene, Build {
   /** Après un changement de niveau d'arme ou de passif : recalcule les stats de chaque arme. */
   private recomputeWeapons(): void {
     for (const weapon of this.weapons) weapon.recompute(this.player);
-  }
-
-  /** Retour visuel d'un impact : flash blanc + nombre de dégâts au-dessus de l'ennemi. */
-  private onEnemyHit(e: Enemy, damage: number, kind: HitKind, source: Weapon): void {
-    // Bruitage selon l'arme (le poison n'en a pas : il tique sans arrêt). Une caisse ne fait
-    // pas de bruit d'impact, seulement celui de sa casse.
-    if (kind === 'direct' && !e.type.prop) this.sound(HIT_SOUNDS[source.def.kind]);
-    const showNumbers = this.deps.settings.damageNumbers; // réglage Options
-    if (kind === 'poison') {
-      // Poison : nombre vert, sans flash (sinon les empoisonnés clignoteraient sans arrêt).
-      if (showNumbers) {
-        this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage, STATUS.poisonColor);
-      }
-      return;
-    }
-    // Pas de nouveau flash juste après le précédent : sous un gros DPS, l'ennemi resterait blanc.
-    if (this.elapsed - e.flashUntil >= ENEMY_FLASH_GAP) {
-      e.flashUntil = this.elapsed + ENEMY_HIT_FLASH;
-    }
-    if (showNumbers) this.damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
   }
 
   /**
@@ -633,39 +591,11 @@ export class GameScene implements Scene, Build {
     return !this.report && !this.endless && this.elapsed >= this.runDuration;
   }
 
-  /** Bruitage (réglages et limites dans data/audio.ts). Sans moteur audio (tests) : rien. */
-  private sound(name: SfxName): void {
-    this.deps.sfx?.play(name);
-  }
-
-  /** Choc qui fait trembler l'écran (voir SHAKE_EVENTS dans data/feel.ts). */
-  private shake(event: keyof typeof SHAKE_EVENTS): void {
-    const { amount, cap } = SHAKE_EVENTS[event];
-    this.camera.addTrauma(amount, cap);
-  }
-
-  /** Éclats à la couleur du monstre : plus il est gros, plus il y en a ; une gerbe pour le boss. */
-  private deathBurst(e: Enemy): void {
-    if (e.type === BOSS_TYPE) {
-      this.particles.burst(e.x, e.y, PARTICLES.bossDeath, e.type.color);
-      return;
-    }
-    const d = PARTICLES.death;
-    this.particles.burst(
-      e.x,
-      e.y,
-      d,
-      e.type.color,
-      d.count + Math.round(e.type.radius * d.perRadius),
-    );
-  }
-
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
   private killEnemy(e: Enemy): void {
     // Mobilier cassé : de l'or ou de la nourriture, pas d'XP ni de kill.
     if (e.type.prop) {
-      this.particles.burst(e.x, e.y, PARTICLES.crate, PARTICLES.crateColor);
-      this.sound('crate-break');
+      this.feedback.crateBroken(e.x, e.y);
       this.dropLoot(e.x, e.y);
       this.enemies.release(e);
       return;
@@ -681,10 +611,7 @@ export class GameScene implements Scene, Build {
     // fin, sinon le sol se couvre de soins en fin de partie.
     if (e.type.elite && FURNITURE.eliteFood && !e.summoned && !this.endless)
       this.pickups.drop('food', FURNITURE.foodHeal, e.x - sx, e.y - sy);
-    this.deathBurst(e);
-    this.sound(e.type === BOSS_TYPE ? 'boss-death' : 'enemy-death');
-    if (e.type === BOSS_TYPE) this.shake('bossKill');
-    else if (e.type.elite) this.shake('eliteKill');
+    this.feedback.enemyKilled(e);
     // Gemme verte (basique) : tirée avec l'aléatoire de la partie, donc reproductible avec la seed.
     const bonusGem = 'bonusGem' in e.type ? e.type.bonusGem : undefined;
     const bonus = bonusGem !== undefined && this.rng.next() < bonusGem.chance;
@@ -726,8 +653,7 @@ export class GameScene implements Scene, Build {
       if (this.god) continue; // menu de test : invincible
       if (!e || this.elapsed < e.nextContactHitAt) continue;
       this.player.takeHit(e.type.contactDamage * e.damageMult);
-      this.shake('playerHit');
-      this.sound('player-hurt');
+      this.feedback.playerHit();
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
@@ -833,53 +759,6 @@ export class GameScene implements Scene, Build {
     this.deps.debug.setStat('kills', this.killCount);
   }
 
-  /** Souffle de la Fournaise : des flammes jaillissent de toute la zone (visuel, aléatoire séparé). */
-  private emitPulseFlames(x: number, y: number, radius: number): void {
-    const f = AURA_PULSE;
-    for (let i = 0; i < f.flames; i++) {
-      // Point au hasard dans le disque (racine carrée : réparti partout, pas tassé au centre).
-      const a = this.auraRng.range(0, Math.PI * 2);
-      const d = Math.sqrt(this.auraRng.next()) * radius;
-      const color =
-        f.flameColors[this.auraRng.int(0, f.flameColors.length - 1)] ?? f.flameColors[1];
-      this.particles.spawn(
-        x + Math.cos(a) * d,
-        y + Math.sin(a) * d,
-        this.auraRng.range(-f.flameSpread, f.flameSpread),
-        -f.flameRise * this.auraRng.range(0.6, 1),
-        f.flameSize,
-        f.flameLife * this.auraRng.range(0.6, 1),
-        color,
-      );
-    }
-  }
-
-  /** Étincelles qui montent de l'intérieur des auras (purement visuel, aléatoire séparé). */
-  private emitAuraSparks(dt: number): void {
-    for (const w of this.weapons) {
-      if (w.def.kind !== 'aura') continue;
-      const look = AURA_LOOKS[w.mutation?.id ?? w.def.id];
-      if (!look) continue;
-      this.auraSparkDebt += look.sparksPerSecond * dt;
-      while (this.auraSparkDebt >= 1) {
-        this.auraSparkDebt -= 1;
-        // Point au hasard dans le disque (racine carrée : répartition uniforme, pas tassée au centre).
-        const a = this.auraRng.range(0, Math.PI * 2);
-        const d = Math.sqrt(this.auraRng.next()) * w.radius;
-        this.particles.spawn(
-          this.player.x + Math.cos(a) * d,
-          this.player.y + Math.sin(a) * d,
-          this.auraRng.range(-15, 15),
-          -look.sparkRise * this.auraRng.range(0.7, 1),
-          look.sparkSize,
-          look.sparkLife * this.auraRng.range(0.6, 1),
-          look.sparkColor,
-        );
-      }
-    }
-  }
-
-  /** F2 ouvre/ferme ; Échap ferme aussi. Les actions cliquées sont appliquées ici, dans l'update. */
   private updateDevPanel(panel: NonNullable<GameSceneDeps['devPanel']>): void {
     const { input } = this.deps;
     if (!this.devOpen) {
