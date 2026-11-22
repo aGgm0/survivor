@@ -42,6 +42,8 @@ export interface SimResult {
   readonly minHpShare: number;
   /** s réelles pour simuler la partie */
   readonly wallSeconds: number;
+  /** La partie à l'arrêt (test d'empreinte : état complet à comparer) */
+  readonly scene: GameScene;
 }
 
 /** `limit` : s de jeu après lesquelles on arrête (test rapide) ; par défaut toute la partie. */
@@ -97,5 +99,6 @@ export function runSim(
     time: scene.runTime,
     minHpShare,
     wallSeconds: (performance.now() - t0) / 1000,
+    scene,
   };
 }
