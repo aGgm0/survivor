@@ -102,27 +102,30 @@ Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && np
 │   │   ├── SpatialGrid.ts # partition spatiale pour les collisions
 │   │   └── math.ts        # Vec2, clamp, lerp, random seedé
 │   ├── scenes/            # MenuScene, GameScene (règles de la partie)
-│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin), devActions (menu F2)
+│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin), Feedback (sons, tremblement, particules), devActions (menu F2)
 │   ├── entities/          # Player, Enemy, Projectile, XpGem, Pickup
 │   ├── systems/           # logique qui agit sur des groupes d'entités
 │   │   ├── MovementSystem.ts
 │   │   ├── CollisionSystem.ts
 │   │   ├── SpawnSystem.ts     # vagues d'ennemis
-│   │   ├── WeaponSystem.ts    # tir automatique
+│   │   ├── WeaponSystem.ts    # fait agir chaque arme via son comportement (src/weapons/)
 │   │   └── XpSystem.ts        # XP, level up
 │   ├── data/              # ⭐ données de jeu (data-driven)
 │   │   ├── weapons.ts
 │   │   ├── enemies.ts
 │   │   ├── upgrades.ts
 │   │   └── waves.ts
+│   ├── weapons/           # un comportement par type d'arme (projectile, aura, orbit, melee) + registry.ts
 │   ├── ui/                # HUD et menus en HTML/CSS
-│   └── types/             # types partagés (RunReport : bilan de partie)
+│   └── types/             # types partagés (RunReport : bilan de partie, RunEvents : événements de partie)
 ├── sim/                   # bot de simulation (npm run sim / bench), faux objets partagés avec les tests
 └── tests/                 # tests Vitest (logique pure)
 ```
 
 **Principes d'archi :**
-- **Data-driven** : stats des armes, ennemis, vagues et upgrades vivent dans `src/data/`. Ajouter une arme = ajouter une entrée de config, pas toucher au moteur.
+- **Data-driven** : stats des armes, ennemis, vagues et upgrades vivent dans `src/data/`. Ajouter une arme d'un type existant = ajouter une entrée de config, pas toucher au moteur (testé : `tests/newWeapon.test.ts`). Un nouveau **type** d'arme = un module dans `src/weapons/` (stats, update, dessin, stats de carte) + une ligne dans `registry.ts` + son d'impact dans `HIT_SOUNDS` (TypeScript signale ce qui manque).
+- **Règles / ressenti** : les règles annoncent ce qui se passe (`RunEvents`) ; `Feedback` décide du son, du tremblement et des particules. Pas de son ni de particule dans les règles.
+- **Refactor sans changement de gameplay** : `tests/fingerprint.test.ts` compare l'état de 16 parties du bot à un instantané ; il doit rester vert. Changement de gameplay voulu : `npx vitest run tests/fingerprint.test.ts -u`.
 - **Séparation logique / rendu** : `update(dt)` ne dessine jamais, `render()` ne modifie jamais l'état.
 - **`core/` ne connaît pas le gameplay** : aucun import de `entities/` ou `data/` dans `core/`.
 - **Scènes** : une seule scène active, avec `enter()`, `exit()`, `update(dt)`, `render(ctx)`.
@@ -411,9 +414,11 @@ Correctifs de confort (retour de jeu du 2026-11-21), sortis avant le bot. Contie
 But : des ennemis qui résistent obligent à varier son build (seul vrai choix du joueur dans un jeu à tir automatique), et une nouvelle arme ne demande plus de toucher au moteur. Ordre : refactors → types de dégâts → armes → correctifs de la 0.2. Un plan court à valider avant chaque bloc.
 
 **Bloc A — Refactors (rien de visible en jeu)** : `npm run sim` donne les mêmes chiffres avant et après, sur les mêmes seeds
-- [ ] Registre de comportements d'armes : un module par type (`recompute`, `update`, `render`, détails de carte) au lieu des `switch` sur `def.kind` (`entities/Weapon.ts`, `WeaponSystem`, `WorldRenderer`, `choiceDetails`)
-- [ ] Événements de partie typés (`RunEvents` : kill, coup reçu, level up, ramassage, boss…) + module `Feedback` (son, tremblement, particules) qui les écoute ; `killEnemy` ne garde que les règles
-- [ ] Test : une fausse arme d'un type existant s'ajoute en ne touchant que `data/`
+- [x] Test d'empreinte (`tests/fingerprint.test.ts`) : 4 persos × 3 min + chaque arme imposée, sans mutation et avec chacune (1 min), comparés à un instantané ; vert à chaque commit du bloc
+- [x] Registre de comportements d'armes : un module par type dans `src/weapons/` (`init`, `levelBase` / `applyStats`, `update`, `renderGround` / `renderAbove`, `cardStats`) au lieu des `switch` sur `def.kind` (`entities/Weapon.ts`, `WeaponSystem`, `WorldRenderer`, `choiceDetails`)
+- [x] Événements de partie typés (`types/RunEvents.ts` : kill, coup reçu, level up, ramassages, boss, coups d'armes…) + module `scenes/game/Feedback.ts` (son, tremblement, particules, flash, nombres de dégâts) qui les écoute ; `killEnemy` ne garde que les règles (`GameScene` 1 042 → 921 lignes)
+- [x] Test : une arme neuve de chaque type, faite seulement d'une définition, tire, tue, compte dans le damage meter, se dessine et a sa carte (`tests/newWeapon.test.ts`)
+- [x] `npm run sim` (20 seeds) identique avant / après
 
 **Bloc B — Types de dégâts et résistances**
 - [ ] **2 types de dégâts** : `damageType` physique / magique sur chaque arme, affiché sur sa carte et dans le HUD <!-- TODO: type des 4 armes actuelles (proposition : Épée physique, les 3 autres magiques) -->
@@ -780,6 +785,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Survol « RPG » (piste A) : curseur ▶ doré en pixels dans le bouton, carte qui monte de 4 px d'un coup avec un contour doré ; cartes refaites d'après une proposition de Claude Design (badge, touche, crans, avant → après, portée en bas, 300 px de haut au moins) ; animations coupées avec `prefers-reduced-motion` | Retour de jeu : « trop simple, ça ne fait pas trop dans la DA ». `button-hover.png` du pack ne diffère du bouton que d'un pixel. Le curseur est dans le bouton : les boutons remplissent leur panneau, il n'y a pas de place dehors |
 | 2026-11-21 | Enchantements avancés de la 0.6 à la 0.4, à la place de « armes au niveau 12 / emplacements 5 + 5 » ; idée notée : niveaux 7 à 11 en choix après la mutation, niveau 12 = mutation améliorée selon ces choix (à concevoir) | Argument de l'utilisateur : c'est en 30 min qu'on en a besoin, pour que le build ne soit pas complet trop tôt. Des choix valent mieux que des chiffres en plus. Les stats communes dont ils dépendent (pénétration, types de dégâts) arrivent en 0.3 |
 | 2026-11-21 | Tank : l'ogre du pack transformé en démon par un script (couleurs des démons du pack, cornes en croissant choisies parmi 3 essais, yeux blancs) plutôt que dessiné de zéro ; atlas `monsters` collé sous celui du pack au chargement (`SpriteAtlas.stack`), `fallback` vers l'ogre s'il manque | Un premier essai de sprites dessinés de zéro avait été rejeté (« trop bizarre ») ; partir d'un dessin du pack garde le style et les animations. Une seule image au rendu : rien ne change pour les 500 ennemis. Méthode à reprendre pour les élites et les boss (0.4) |
+| 2026-11-22 | Bloc A de la 0.3 : comportements d'armes dans `src/weapons/` (un module par type, registre typé : il manque un module → erreur de compilation) ; champs de `Weapon` gardés à plat ; `HIT_SOUNDS` et `AURA_LOOKS` restent des données ; un seul écouteur des événements (`Feedback`), pas de bus générique ; test d'empreinte plutôt que `npm run sim` à chaque étape | Plan validé (« ok reco »). Ranger les champs par type aurait doublé le chantier pour rien. Un bus d'événements attendra un deuxième écouteur (`RunFlow`, 0.4). L'empreinte (7 s) attrape le moindre écart ; le bot (lent) ne sert qu'à la fin |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
