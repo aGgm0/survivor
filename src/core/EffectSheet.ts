@@ -128,6 +128,42 @@ export class EffectSheet {
   }
 
   /**
+   * Dessine l'image `index` étirée d'un point à l'autre : le pivot de l'effet sur (x1, y1), le
+   * bord droit de sa zone visible (toutes images confondues) sur (x2, y2). `thickness` :
+   * agrandissement en travers. Pour les éclairs du pack, dessinés de gauche à droite.
+   */
+  drawStretched(
+    ctx: CanvasRenderingContext2D,
+    index: number,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    thickness: number,
+  ): void {
+    const f = this.clip.frames[index];
+    if (!f?.bounds) return;
+    const reach = this.clip.bounds[2] - this.clip.pivotX || 1;
+    const length = Math.hypot(x2 - x1, y2 - y1);
+    const sx = length / reach;
+    ctx.save();
+    ctx.translate(x1, y1);
+    ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
+    ctx.drawImage(
+      this.image,
+      f.x,
+      f.y,
+      f.w,
+      f.h,
+      -this.clip.pivotX * sx,
+      -this.clip.pivotY * thickness,
+      f.w * sx,
+      f.h * thickness,
+    );
+    ctx.restore();
+  }
+
+  /**
    * Dessine l'image `index` agrandie `scale` fois et tournée de `angle` (radians), son ancre posée
    * en (`x`, `y`). Les effets du pack sont tournés vers la droite.
    */

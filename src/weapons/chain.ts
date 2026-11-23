@@ -2,7 +2,9 @@
 // Mutations : Orage (des chaînes partent aussi d'ennemis au hasard) et Arc continu (plus de
 // sauts, sans perte de dégâts).
 
+import { clipFrameIndex } from '../core/EffectSheet';
 import { CHAIN_LOOK } from '../data/feel';
+import { CHAIN_FX } from '../data/sprites';
 import type { ChainWeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
@@ -15,8 +17,10 @@ import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
 const STRIKE_SIZE = 70;
 /** Segments d'éclair gardés pour le dessin (les plus vieux sont remplacés) */
 const MAX_BOLTS = 64;
-/** Valeurs par segment dans `Weapon.bolts` : x1, y1, x2, y2, temps */
-const BOLT_STRIDE = 5;
+/** Valeurs par segment dans `Weapon.bolts` : x1, y1, x2, y2, temps, sorte (0 : 1er coup, 1 : saut) */
+const BOLT_STRIDE = 6;
+const FIRST = 0;
+const JUMP = 1;
 
 /**
  * Ennemis déjà touchés par la décharge en cours (toutes ses chaînes) : une chaîne ne revient
@@ -80,7 +84,15 @@ function randomFree(ctx: WeaponUpdateContext, x: number, y: number, range: numbe
 }
 
 /** Garde un segment pour le dessin (tableau en boucle, aucun objet créé). */
-function recordBolt(weapon: Weapon, x1: number, y1: number, x2: number, y2: number, now: number) {
+function recordBolt(
+  weapon: Weapon,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  now: number,
+  kind: number,
+) {
   const bolts = weapon.bolts;
   if (!bolts) return;
   const o = weapon.boltNext * BOLT_STRIDE;
@@ -89,6 +101,7 @@ function recordBolt(weapon: Weapon, x1: number, y1: number, x2: number, y2: numb
   bolts[o + 2] = x2;
   bolts[o + 3] = y2;
   bolts[o + 4] = now;
+  bolts[o + 5] = kind;
   weapon.boltNext = (weapon.boltNext + 1) % MAX_BOLTS;
 }
 
@@ -109,7 +122,7 @@ function runChain(
     const tx = target.x;
     const ty = target.y;
     // Pas de segment de longueur nulle (départ de l'Orage : la foudre du pack le remplace).
-    if (tx !== px || ty !== py) recordBolt(weapon, px, py, tx, ty, ctx.now);
+    if (tx !== px || ty !== py) recordBolt(weapon, px, py, tx, ty, ctx.now, j === 0 ? FIRST : JUMP);
     // Recul dans le sens du saut.
     const d = Math.hypot(tx - px, ty - py) || 1;
     damageEnemy(weapon, target, damage, ctx.events, (tx - px) / d, (ty - py) / d);
@@ -187,14 +200,25 @@ export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
     const bolts = weapon.bolts;
     if (!bolts) return;
     const look = CHAIN_LOOK;
+    // Effets du pack : fouet électrique au 1er coup (du joueur à la cible), éclair en chaîne à
+    // chaque ricochet, étirés entre les deux bouts. Sans le pack : trait brisé dessiné ici.
+    const first = rc.effects?.[CHAIN_FX.first];
+    const jump = rc.effects?.[CHAIN_FX.jump];
     for (let i = 0; i < MAX_BOLTS; i++) {
       const o = i * BOLT_STRIDE;
       const age = rc.time - (bolts[o + 4] ?? -Infinity);
-      if (!(age >= 0 && age < look.life)) continue;
       const x1 = bolts[o] ?? 0;
       const y1 = bolts[o + 1] ?? 0;
       const x2 = bolts[o + 2] ?? 0;
       const y2 = bolts[o + 3] ?? 0;
+      const sheet = bolts[o + 5] === FIRST ? first : jump;
+      if (sheet) {
+        if (!(age >= 0 && age < CHAIN_FX.life)) continue;
+        const index = clipFrameIndex(sheet.clip, (age / CHAIN_FX.life) * sheet.clip.totalMs);
+        sheet.drawStretched(ctx, index, x1, y1, x2, y2, CHAIN_FX.thickness);
+        continue;
+      }
+      if (!(age >= 0 && age < look.life)) continue;
       const len = Math.hypot(x2 - x1, y2 - y1) || 1;
       // Perpendiculaire à la ligne, pour décaler les coudes.
       const nx = -(y2 - y1) / len;

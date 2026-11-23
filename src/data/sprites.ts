@@ -220,6 +220,11 @@ export const EFFECT_DIRS = {
   barrel: `${PVFX}barrel-explosion/`,
   vines: `${PVFX}vine-snare/`,
   strike: `${PVFX}lightning-strike/`,
+  // Demandés par l'utilisateur (2026-11-23) : neige dans l'Aura de givre, fouet électrique au
+  // premier coup de l'Éclair en chaîne, éclair en chaîne à chaque ricochet.
+  snow: `${PVFX}snowfall/`,
+  whip: `${PVFX}lightning-whip/`,
+  chainBolt: `${PVFX}chain-lightning/`,
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -242,6 +247,16 @@ export type OneShotName = keyof typeof ONE_SHOT_FX;
  * cette image tant que la zone dure, puis joue sa fin pendant les derniers instants de la zone.
  * `cover` : part du diamètre de la zone couverte par la largeur visible de l'effet.
  */
+/** Aura de givre : neige du pack qui tombe dans le cercle (boucle), un peu transparente */
+export const FROST_SNOW_FX = { effect: 'snow', alpha: 0.85 } as const;
+
+/**
+ * Éclair en chaîne : chaque saut est un effet du pack étiré entre ses deux bouts (`whip` pour le
+ * premier coup, du joueur à la cible ; `chainBolt` pour les ricochets). `life` : s pour jouer
+ * toute l'animation ; `thickness` : agrandissement en travers du trait.
+ */
+export const CHAIN_FX = { first: 'whip', jump: 'chainBolt', life: 0.45, thickness: 0.9 } as const;
+
 export const ZONE_FX = {
   spikes: { effect: 'spikes', holdFrame: 6, cover: 1.15 },
   brambles: { effect: 'vines', holdFrame: 7, cover: 1.25 },

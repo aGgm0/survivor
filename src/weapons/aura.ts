@@ -1,7 +1,9 @@
 // Aura (Aura ardente) : brûle les ennemis qui touchent le cercle autour du joueur. Mutations :
 // Aura de givre (ralentit) et Fournaise (onde de feu qui s'étend, voir `pulse`).
 
+import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import { AURA_LOOKS, AURA_PULSE, AURA_PULSE_RING } from '../data/feel';
+import { FROST_SNOW_FX } from '../data/sprites';
 import type { AuraWeaponDef, MutationDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
@@ -17,6 +19,28 @@ import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
 const AURA_STROKE_ALPHA = 0.5;
+
+/** Neige qui tombe dans le cercle de l'aura : l'effet en boucle, étiré au diamètre, découpé. */
+function drawSnow(
+  ctx: CanvasRenderingContext2D,
+  snow: EffectSheet,
+  x: number,
+  y: number,
+  radius: number,
+  time: number,
+): void {
+  const { width, height, pivotX, pivotY } = snow.clip;
+  const scale = (radius * 2) / Math.min(width, height);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.globalAlpha = FROST_SNOW_FX.alpha;
+  const index = clipFrameIndex(snow.clip, time * 1000);
+  // Pivot de l'effet = son centre : posé sur le joueur.
+  snow.draw(ctx, index, x + (pivotX - width / 2) * scale, y + (pivotY - height / 2) * scale, scale);
+  ctx.restore();
+}
 
 /** Effets d'état des auras mutées (Aura de givre : ralentit ; poison : pour plus tard). */
 function applyAuraMutation(weapon: Weapon, e: Enemy, now: number): void {
@@ -140,6 +164,9 @@ export const AURA_BEHAVIOR: WeaponBehavior<AuraWeaponDef> = {
       ctx.globalAlpha = look ? look.fillAlpha : AURA_FILL_ALPHA;
       ctx.fill();
       ctx.globalAlpha = 1;
+      // Aura de givre : la neige du pack tombe dans le cercle (boucle, découpée au rayon).
+      const snow = w.mutation?.slow ? rc.effects?.[FROST_SNOW_FX.effect] : undefined;
+      if (snow) drawSnow(ctx, snow, px, py, w.radius, rc.time);
       if (look) drawEmberRing(ctx, px, py, w.radius, look, rc.time);
       else {
         ctx.globalAlpha = AURA_STROKE_ALPHA;
