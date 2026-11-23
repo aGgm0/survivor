@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.2.2 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.0 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -444,7 +444,7 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [x] **Chausse-trapes** : nouveau type `zone` (`src/weapons/zone.ts`), zones dans un tableau fixe de l'arme (24 au plus, la plus ancienne remplacée). Une zone de 40 px sous le joueur toutes les 2 s, qui dure 4 s ; 8 dégâts dès l'entrée puis toutes les 0,5 s (horloge par ennemi `nextZoneHitAt`, à part de celle de l'Aura) ; les zones en plus d'une pose tombent autour du joueur (aléatoire des armes). Visuels PVFX (retour : « trop simple, pas dans le thème ») : pointes de terre `earth-spike` qui jaillissent, restent dressées et s'effritent, étincelles `metal-clang` à chaque coup ; Mines = bombe du pack, lumière rouge, mèche, anneau de danger en pointillés, explosion `barrel-explosion` ; ronces = lianes `vine-snare` qui poussent puis sèchent (`ZONE_FX`, `ONE_SHOT_FX` dans data/sprites.ts) ; tuiles `floor_spikes_anim` en secours sans le pack. Mutations **Mines** (explosent au premier contact d'un ennemi : 80 px, ×4) / **Champ de ronces** (×1,6 plus grandes, ×1,5 plus longues, ralentit de 30 %, pas les élites ni les boss). Icônes Raven 1016 / 764 / 241
 - [ ] Une arme à la fois : données, module de comportement si nouveau type, visuel, tests ; essai en jeu (F2) avant la suivante
 - [x] Outil : planche animée des effets PVFX (`tools/vfx/vfx-preview.html`) : les effets du jeu avec leur usage, et les 253 effets du pack (filtre, catégorie, vitesse, fond ; clic = copie de l'id). Pack dans `tools/vfx/pvfx-pack/` (ignoré par git)
-- [ ] Bot (`SIM_FORCE`) sur chaque mutation, puis petite passe d'équilibrage : aucune arme sous ~10 % du damage meter
+- ↪ 0.3.1 : bot (`SIM_FORCE`) sur chaque nouvelle arme et mutation, puis petite passe d'équilibrage (aucune arme sous ~10 % du damage meter), avec les retours de jeu des testeurs
 
 **Bloc D — Correctifs de la 0.2** (retours des testeurs sur la 0.2 ; peut sortir à part en 0.2.2 si c'est urgent)
 - [ ] Équilibrage confirmé avec les testeurs : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
@@ -459,7 +459,9 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [ ] Limite connue : petits ennemis coincés entre deux tanks, à reprendre seulement si les testeurs le remarquent
 
 **Sortie**
-- [ ] Version 0.3.0 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.3.0` poussé
+- [x] Version 0.3.0 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.0-itch.zip` (2026-11-23)
+- [ ] Zip testé sur itch, tag `v0.3.0` poussé
+- Sortie décidée avant l'équilibrage des nouvelles armes et le bloc D : ce sont les testeurs qui donneront les retours (choix de l'utilisateur). Reste pour la **0.3.1** : équilibrage des 4 nouvelles armes au bot et en jeu, bloc D (équilibrage confirmé, prix de la Boutique, retours des testeurs)
 
 **Ce qu'apporte la 0.3 (côté joueur) :** 8 armes au lieu de 4, chaque arme physique ou magique, des ennemis qui résistent à l'un des deux types, la pénétration pour percer leurs défenses, et les correctifs de la 0.2.
 - **Finie quand :** une arme d'un type existant s'ajoute en ne touchant que `data/` ; le bot montre qu'aucun type de dégâts ne domine ; les testeurs de la 0.2 confirment l'équilibrage.
@@ -809,6 +811,7 @@ Format : date — décision — raison.
 | 2026-11-23 | Boucliers des résistances à côté des barres du boss et des élites (icônes Raven 597 / 598) ; malus (621 / 622) gardés pour un futur effet « brise-armure » (0.4) | Idée de l'utilisateur, « ok reco ». Aucun effet ne baisse encore l'armure d'un ennemi : la pénétration est celle de l'arme, pas un état de l'ennemi, et elle change d'une arme à l'autre ; une icône de malus aurait été à moitié fausse |
 | 2026-11-23 | Retours de jeu : Fournaise une onde / 1,5 s et ×0,5 sur les petits ; élites et boss insensibles au ralentissement ; sans fin +10 % de résistance au ralentissement par minute (plafond 80 %) ; recul des élites −50 % (0,375 / 0,25) ; Givre inchangé en chiffres | « ok reco ». Bot : la Fournaise faisait moins bien que l'Aura sans mutation (7:13 contre 8:51), elle se faisait déborder par la horde (22 % des dégâts de l'Aura sur les petits). Le Givre brillait surtout en gelant élites et boss : l'immunité suffit à le ramener au niveau de l'Aura de base (8:47). Plafond de 80 % : le Givre garde un effet en sans fin |
 | 2026-11-23 | Bloc C : Arc (à la place de l'Arbalète), Hache de lancer (aller-retour), Chausse-trapes (zones au sol), Éclair en chaîne ; 4 physiques / 4 magiques. Ordre : Arc (données seules), Éclair, Hache, Chausse-trapes ; une arme essayée en jeu avant la suivante | « ok reco », Arc demandé à la place de l'Arbalète. Risque noté : les Chausse-trapes demandent de tourner autour de la horde, le bot (qui fuit en ligne) les jouera mal. Arc : un champ `look` plutôt qu'une arme qui ressemble au Trait teint en marron |
+| 2026-11-23 | 0.3.0 publiée avant l'équilibrage des 4 nouvelles armes et avant le bloc D, repoussés en 0.3.1 | Choix de l'utilisateur : les testeurs donnent les retours d'équilibrage sur les nouvelles armes ; le bot ne joue pas bien les Chausse-trapes ni la Hache (il fuit en ligne) |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

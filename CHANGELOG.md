@@ -2,6 +2,30 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [0.3.0] — 2026-11-23
+
+Stats avancées et arsenal : les armes sont physiques ou magiques, des ennemis résistent à l'un des deux, et 4 nouvelles armes.
+
+### Ajouté
+
+- **4 nouvelles armes**, chacune avec 2 mutations :
+  - **Arc** (physique) : une flèche rapide qui porte loin et traverse 2 ennemis. Mutations **Flèche lourde** (perce les blindés) et **Volée** (5 flèches en éventail).
+  - **Hache de lancer** (physique) : elle part vers l'ennemi le plus proche et **revient vers toi**, en frappant à l'aller et au retour. Mutations **Haches jumelles** et **Hache du bourreau**.
+  - **Chausse-trapes** (physique) : des pointes posées au sol sous toi, qui blessent ce qui marche dessus. Mutations **Mines** (explosent au premier ennemi) et **Champ de ronces** (ralentissent).
+  - **Éclair en chaîne** (magique) : frappe l'ennemi le plus proche puis saute de proche en proche. Mutations **Orage** (la foudre tombe aussi au hasard) et **Arc continu** (plus de sauts, sans perte).
+- **Dégâts physiques et magiques** : chaque arme a son type, affiché sur sa carte et par un coin de couleur dans sa case (gris acier : physique, bleu : magique).
+- **Résistances des ennemis** : le tank résiste à la magie (l'Épée et les armes physiques en viennent à bout), le basique élite au physique, le rapide élite à la magie, le boss un peu aux deux, et le basique très légèrement aux deux. Les boucliers à côté des barres de PV du boss et des mini-boss montrent leurs résistances, et les nombres de dégâts deviennent **gris** quand un coup est bien réduit.
+- **Pénétration** : nouveau passif (+5 par niveau) qui perce les résistances ; l'Estoc, la Fournaise et le Trait perçant en ont aussi.
+- Quand toutes tes armes sont du même type, chaque level up te propose une nouvelle arme de l'autre type.
+- Nouveaux effets visuels (pack PVFX Foundry) : pointes de terre, explosion de mine, ronces, foudre de l'Orage, éclairs étirés entre les ennemis, neige dans l'Aura de givre, flèches animées qui se fichent.
+
+### Modifié
+
+- **Fournaise** plus forte : une onde toutes les 1,5 s (au lieu de 1,8 s), et bien plus de dégâts sur les petits ennemis.
+- Les **mini-boss et les boss** ne sont plus ralentis par rien, et les mini-boss reculent moitié moins.
+- Mode sans fin : les ennemis résistent de plus en plus aux ralentissements (+10 % par minute, jusqu'à 80 %).
+- Icône de la Hâte : un grimoire (l'éclair va à l'Éclair en chaîne).
+
 ## [0.2.2] — 2026-11-21
 
 ### Modifié
