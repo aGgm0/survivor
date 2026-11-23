@@ -40,6 +40,8 @@ export class Player {
   projectileSpeedMult = 1;
   /** Projectiles / orbes en plus (passif Duplicateur) */
   extraCount = 0;
+  /** Retirée de la résistance des ennemis, pour toutes les armes (passif Pénétration) */
+  penetration = 0;
   /** Secondes de flash restantes (retour visuel d'un coup reçu, aucun effet de jeu). */
   hitFlashTimer = 0;
   /** Temps (s) qui fait avancer l'animation du sprite (aucun effet de jeu). */

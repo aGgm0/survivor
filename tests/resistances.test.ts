@@ -3,7 +3,9 @@ import { MIN_DAMAGE, resistReduction } from '../src/data/combat';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
 import { WEAPONS } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
+import { Player } from '../src/entities/Player';
 import { Weapon } from '../src/entities/Weapon';
+import { rebuildPassiveStats } from '../src/systems/upgrades';
 import { damageEnemy, type HitEvents } from '../src/systems/damage';
 
 const events: HitEvents = { onHit: () => {}, onKill: () => {} };
@@ -61,5 +63,20 @@ describe('résistances et pénétration', () => {
     sword.mutation = { ...base, penetration: 25 };
     sword.recompute({ damageMult: 1, cooldownMult: 1, knockbackMult: 1 });
     expect(sword.penetration).toBe(25);
+  });
+});
+
+describe('passif Pénétration', () => {
+  it('+10 par niveau, ajoutée à la pénétration de chaque arme ; le recalcul la remet à zéro', () => {
+    const player = new Player();
+    const levels = new Map([['penetration', 3]]);
+    rebuildPassiveStats(player, levels);
+    expect(player.penetration).toBe(30);
+    const bolt = new Weapon(WEAPONS.arcaneBolt);
+    bolt.recompute(player);
+    expect(bolt.penetration).toBe(30);
+    expect(hit(ENEMY_TYPES.tank, bolt, 30)).toBe(25); // 30 × (1 − 20/120)
+    rebuildPassiveStats(player, new Map());
+    expect(player.penetration).toBe(0);
   });
 });

@@ -56,6 +56,7 @@ function passiveTotal(passive: PassiveDef, level: number): string {
     case 'maxHp':
       return `+${fmt(n)}`;
     case 'extraCount':
+    case 'penetration':
       return `+${fmt(n)}`;
     // La Hâte RÉDUIT le délai : même signe que sa description (« −8 % cooldown »)
     case 'cooldownPct':

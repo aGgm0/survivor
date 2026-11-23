@@ -10,7 +10,8 @@ export type PassiveStat =
   | 'knockbackPct'
   | 'sizePct'
   | 'velocityPct'
-  | 'extraCount';
+  | 'extraCount'
+  | 'penetration';
 
 export interface PassiveDef {
   readonly id: string;
@@ -126,6 +127,18 @@ export const PASSIVES: readonly PassiveDef[] = [
     scope: 'Projectiles et orbes',
     stat: 'extraCount',
     amount: 1,
+  },
+  {
+    id: 'penetration',
+    name: 'Pénétration',
+    short: 'Pé',
+    description: '+10 pénétration (toutes armes)',
+    // 0.3 : +50 au niveau 5 annule la résistance d'un tank (50) et du boss (30). Une pénétration
+    // plus forte que la résistance ne fait pas plus de dégâts (voir resistReduction).
+    maxLevel: 5,
+    scope: 'Armure et résistance magique des ennemis',
+    stat: 'penetration',
+    amount: 10,
   },
 ];
 

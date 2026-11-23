@@ -5,162 +5,48 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneB
   "activeEnemies": 11,
   "enemies": [
     [
-      "basic",
-      -2525.582,
-      -296.229,
-      23,
-    ],
-    [
-      "basic",
-      -1567.221,
-      -20.315,
-      23,
+      "fast",
+      -1771.255,
+      -111.795,
+      5,
     ],
     [
       "crate",
-      -995.233,
-      -346.39,
+      -1732.498,
+      133.179,
       10,
     ],
     [
       "basic",
-      -2122.663,
-      -1338.524,
+      -653.298,
+      -632.627,
       23,
     ],
     [
       "fast",
-      -2048.777,
-      -543.726,
+      -778.765,
+      -373.236,
+      5,
+    ],
+    [
+      "fast",
+      -1033.621,
+      -845.295,
       5,
     ],
   ],
-  "gold": 0,
-  "hp": 99.633,
+  "gold": 1,
+  "hp": 115,
   "level": 4,
   "player": [
-    -1804.755,
-    -608.528,
+    -1407.626,
+    -597.332,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       5,
-      651,
-      57,
-    ],
-    [
-      "burningAura",
-      1,
-      27,
-      3,
-    ],
-  ],
-}
-`;
-
-exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneBolt imposée, mutation 0, 1 min 1`] = `
-{
-  "activeEnemies": 9,
-  "enemies": [
-    [
-      "basic",
-      -1330.809,
-      594.881,
-      23,
-    ],
-    [
-      "crate",
-      -2475.227,
-      -297.353,
-      10,
-    ],
-    [
-      "fast",
-      -2217.341,
-      803.325,
-      5,
-    ],
-    [
-      "fast",
-      -1489.369,
-      -88.65,
-      5,
-    ],
-    [
-      "basic",
-      -962.861,
-      534.427,
-      23,
-    ],
-  ],
-  "gold": 1,
-  "hp": 100,
-  "level": 3,
-  "player": [
-    -1800.174,
-    122.668,
-  ],
-  "time": 60.017,
-  "weapons": [
-    [
-      "piercingBolt",
-      6,
-      593,
-      61,
-    ],
-  ],
-}
-`;
-
-exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneBolt imposée, mutation 1, 1 min 1`] = `
-{
-  "activeEnemies": 12,
-  "enemies": [
-    [
-      "crate",
-      -1652.971,
-      -564.99,
-      10,
-    ],
-    [
-      "basic",
-      -1355.457,
-      -387.141,
-      23,
-    ],
-    [
-      "fast",
-      -1794.57,
-      544.885,
-      5,
-    ],
-    [
-      "basic",
-      -1560.13,
-      -164.774,
-      23,
-    ],
-    [
-      "fast",
-      -1051.584,
-      -270.514,
-      5,
-    ],
-  ],
-  "gold": 0,
-  "hp": 115,
-  "level": 4,
-  "player": [
-    -1328.354,
-    -57.921,
-  ],
-  "time": 60.017,
-  "weapons": [
-    [
-      "burstBolt",
-      6,
       655,
       59,
     ],
@@ -168,47 +54,155 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneB
 }
 `;
 
-exports[`empreinte des parties (refactors sans changement de gameplay) > burningAura imposée, mutation -1, 1 min 1`] = `
+exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneBolt imposée, mutation 0, 1 min 1`] = `
 {
   "activeEnemies": 13,
   "enemies": [
     [
-      "crate",
-      -1882.701,
-      528.52,
-      10,
-    ],
-    [
       "fast",
-      -1545.341,
-      -79.953,
+      -2372.639,
+      -102.631,
       5,
     ],
     [
       "basic",
-      -1519.945,
-      -127.659,
-      13,
-    ],
-    [
-      "basic",
-      -2089.06,
-      -326.656,
+      -2953.585,
+      -572.52,
       23,
     ],
     [
-      "crate",
-      -1860.339,
-      -6.162,
-      10,
+      "fast",
+      -1912.371,
+      87.025,
+      5,
+    ],
+    [
+      "basic",
+      -2187.975,
+      -331.093,
+      1,
+    ],
+    [
+      "fast",
+      -2487.221,
+      590.948,
+      5,
+    ],
+  ],
+  "gold": 1,
+  "hp": 94.865,
+  "level": 3,
+  "player": [
+    -2276.812,
+    -153.872,
+  ],
+  "time": 60.017,
+  "weapons": [
+    [
+      "piercingBolt",
+      6,
+      662,
+      58,
+    ],
+  ],
+}
+`;
+
+exports[`empreinte des parties (refactors sans changement de gameplay) > arcaneBolt imposée, mutation 1, 1 min 1`] = `
+{
+  "activeEnemies": 9,
+  "enemies": [
+    [
+      "basic",
+      -1370.698,
+      -419.137,
+      23,
+    ],
+    [
+      "basic",
+      -1514.027,
+      -482.162,
+      6,
+    ],
+    [
+      "fast",
+      -2058.932,
+      38.889,
+      5,
+    ],
+    [
+      "fast",
+      -1835.17,
+      -1392.319,
+      5,
+    ],
+    [
+      "fast",
+      -1893.611,
+      -17.028,
+      5,
+    ],
+  ],
+  "gold": 1,
+  "hp": 100,
+  "level": 3,
+  "player": [
+    -1637.054,
+    -637.054,
+  ],
+  "time": 60.017,
+  "weapons": [
+    [
+      "burstBolt",
+      6,
+      628,
+      61,
+    ],
+  ],
+}
+`;
+
+exports[`empreinte des parties (refactors sans changement de gameplay) > burningAura imposée, mutation -1, 1 min 1`] = `
+{
+  "activeEnemies": 14,
+  "enemies": [
+    [
+      "basic",
+      -590.317,
+      59.374,
+      23,
+    ],
+    [
+      "basic",
+      -882.204,
+      567.591,
+      23,
+    ],
+    [
+      "basic",
+      -1583.013,
+      49.104,
+      23,
+    ],
+    [
+      "basic",
+      -1811.008,
+      559.971,
+      23,
+    ],
+    [
+      "fast",
+      -1316.292,
+      870.119,
+      5,
     ],
   ],
   "gold": 0,
-  "hp": 97.97,
+  "hp": 100,
   "level": 4,
   "player": [
-    -1552.927,
-    -202.179,
+    -1337.812,
+    70.384,
   ],
   "time": 60.017,
   "weapons": [
@@ -216,19 +210,13 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > burning
       "arcaneBolt",
       1,
       477,
-      37,
+      38,
     ],
     [
       "furnace",
       6,
-      185,
-      20,
-    ],
-    [
-      "runicOrbs",
-      1,
-      16,
-      1,
+      150,
+      19,
     ],
   ],
 }
@@ -236,59 +224,59 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > burning
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > burningAura imposée, mutation 0, 1 min 1`] = `
 {
-  "activeEnemies": 13,
+  "activeEnemies": 11,
   "enemies": [
     [
+      "basic",
+      -2372.926,
+      -1095.498,
+      23,
+    ],
+    [
+      "basic",
+      -2076.209,
+      -565.8,
+      23,
+    ],
+    [
+      "basic",
+      -2427.908,
+      -533.459,
+      23,
+    ],
+    [
       "crate",
-      -2133.92,
-      43.473,
+      -1834.898,
+      -21.31,
       10,
     ],
     [
       "basic",
-      -1874.973,
-      -846.393,
+      -1478.207,
+      -904.902,
       16,
-    ],
-    [
-      "basic",
-      -2090.885,
-      -528.378,
-      4,
-    ],
-    [
-      "basic",
-      -1185.736,
-      -646.643,
-      23,
-    ],
-    [
-      "basic",
-      -2127.93,
-      -1414.677,
-      23,
     ],
   ],
   "gold": 0,
   "hp": 115,
   "level": 4,
   "player": [
-    -1804.333,
-    -687.037,
+    -1633.623,
+    -788.181,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      446,
-      35,
+      448,
+      36,
     ],
     [
       "frostAura",
       6,
-      267,
-      23,
+      292,
+      24,
     ],
   ],
 }
@@ -296,65 +284,65 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > burning
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > burningAura imposée, mutation 1, 1 min 1`] = `
 {
-  "activeEnemies": 12,
+  "activeEnemies": 13,
   "enemies": [
     [
       "basic",
-      -208.811,
-      109.942,
+      -146.742,
+      77.872,
       23,
     ],
     [
       "fast",
-      272.811,
-      185.788,
+      310.11,
+      180.139,
       5,
     ],
     [
       "basic",
-      -981.33,
-      143.975,
+      -698.452,
+      -186.084,
       23,
     ],
     [
       "basic",
-      -674.67,
-      -181.969,
+      -889.049,
+      170.643,
       23,
     ],
     [
-      "fast",
-      -247.596,
-      -76.018,
-      5,
+      "basic",
+      -843.312,
+      344.738,
+      23,
     ],
   ],
   "gold": 0,
-  "hp": 115,
+  "hp": 100,
   "level": 4,
   "player": [
-    -451.402,
-    -128.598,
+    -162.673,
+    -50.955,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      436,
-      38,
+      442,
+      39,
     ],
     [
       "furnace",
       6,
-      86,
-      14,
+      81,
+      13,
     ],
     [
       "sword",
       1,
-      66,
-      8,
+      42,
+      7,
     ],
   ],
 }
@@ -362,53 +350,53 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > burning
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > perso arcanist, 3 min 1`] = `
 {
-  "activeEnemies": 317,
+  "activeEnemies": 339,
   "enemies": [
     [
+      "basic",
+      -1481.936,
+      -253.624,
+      4,
+    ],
+    [
       "fast",
-      -2103.917,
-      -257.6,
+      -1418.319,
+      -621.706,
       5,
     ],
     [
       "basic",
-      -2042.102,
-      -357.722,
+      -1479.661,
+      -228.061,
       4,
     ],
     [
-      "basic",
-      -2155.569,
-      -346.783,
-      23,
+      "fast",
+      -1364.315,
+      -434.747,
+      5,
     ],
     [
-      "basic",
-      -2089.359,
-      -403.462,
-      23,
-    ],
-    [
-      "basic",
-      -2019.791,
-      -366.186,
-      4,
+      "fast",
+      -1378.137,
+      -390.909,
+      5,
     ],
   ],
   "gold": 5,
-  "hp": 91.462,
+  "hp": 115,
   "level": 5,
   "player": [
-    -1679.091,
-    -441.871,
+    -1219.236,
+    -615.942,
   ],
   "time": 180,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      1845.2,
-      144,
+      1660.8,
+      121,
     ],
   ],
 }
@@ -542,65 +530,65 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > perso p
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > perso runist, 3 min 1`] = `
 {
-  "activeEnemies": 219,
+  "activeEnemies": 196,
   "enemies": [
     [
-      "basic",
-      -46.131,
-      -1078.697,
-      0.6,
+      "fast",
+      -908.321,
+      -45.584,
+      6,
     ],
     [
       "basic",
-      -41.466,
-      -1103.276,
-      10,
-    ],
-    [
-      "basic",
-      -155.167,
-      -933.501,
-      14.6,
-    ],
-    [
-      "basic",
-      -71.87,
-      -1076.22,
-      23,
+      -707.866,
+      55.035,
+      27.6,
     ],
     [
       "fast",
-      -133.641,
-      -955.407,
+      -939.545,
+      94.939,
       6,
     ],
+    [
+      "tank",
+      -687.675,
+      -48.179,
+      108,
+    ],
+    [
+      "basic",
+      -804.076,
+      -28.782,
+      27.6,
+    ],
   ],
-  "gold": 9,
-  "hp": 75.397,
+  "gold": 7,
+  "hp": 55.397,
   "level": 8,
   "player": [
-    -522.355,
-    -706.762,
+    -1050.223,
+    -205.757,
   ],
   "time": 180,
   "weapons": [
     [
       "runicOrbs",
       3,
-      1753.2,
-      174,
+      1967,
+      201,
     ],
     [
       "sword",
       1,
-      591.6,
-      38,
+      539.6,
+      40,
     ],
     [
-      "burningAura",
+      "arcaneBolt",
       1,
-      250.6,
-      29,
+      333.2,
+      23,
     ],
   ],
 }
@@ -744,32 +732,32 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > runicOr
   "enemies": [
     [
       "fast",
-      -812.989,
-      -937.124,
+      -800.416,
+      -936.684,
       5,
     ],
     [
       "fast",
-      -884.104,
-      -358.749,
+      -871.832,
+      -379.64,
       5,
     ],
     [
       "basic",
-      -877.708,
-      -271.828,
+      -876.153,
+      -283.002,
       23,
     ],
     [
       "fast",
-      -917.898,
-      565.412,
+      -869.613,
+      540.56,
       5,
     ],
     [
       "basic",
-      -1368.305,
-      -503.481,
+      -1355.095,
+      -534.367,
       23,
     ],
   ],
@@ -777,28 +765,28 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > runicOr
   "hp": 100,
   "level": 4,
   "player": [
-    -689.78,
-    -197.817,
+    -640.519,
+    -220.313,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      434,
-      37,
+      426,
+      36,
     ],
     [
       "orbStorm",
       6,
-      213,
-      21,
+      210,
+      23,
     ],
     [
       "sword",
       1,
-      13,
-      2,
+      24,
+      1,
     ],
     [
       "burningAura",
@@ -872,25 +860,25 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > sword i
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > sword imposée, mutation 0, 1 min 1`] = `
 {
-  "activeEnemies": 14,
+  "activeEnemies": 12,
   "enemies": [
     [
+      "crate",
+      -1405.202,
+      592.67,
+      10,
+    ],
+    [
+      "fast",
+      -1590.821,
+      -9.413,
+      5,
+    ],
+    [
       "basic",
-      -1937.89,
-      -209.224,
+      -1800.458,
+      -137.358,
       23,
-    ],
-    [
-      "fast",
-      -1746.056,
-      -384.191,
-      5,
-    ],
-    [
-      "fast",
-      -1985.011,
-      17.55,
-      5,
     ],
     [
       "crate",
@@ -899,38 +887,38 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > sword i
       10,
     ],
     [
-      "basic",
-      -2093.91,
-      -732.381,
-      23,
+      "fast",
+      -1015.965,
+      -134.767,
+      5,
     ],
   ],
   "gold": 0,
   "hp": 115,
   "level": 4,
   "player": [
-    -1448.354,
-    -412.479,
+    -1426.932,
+    -207.626,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      500,
-      36,
+      495,
+      39,
     ],
     [
       "whirlwind",
       6,
-      134,
+      159,
       17,
     ],
     [
       "runicOrbs",
       1,
-      31,
-      4,
+      38,
+      3,
     ],
   ],
 }

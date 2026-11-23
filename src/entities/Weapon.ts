@@ -14,6 +14,8 @@ export interface WeaponModifiers {
   readonly projectileSpeedMult?: number;
   /** Projectiles / orbes en plus (passif Duplicateur). Absent = 0 */
   readonly extraCount?: number;
+  /** Retirée de la résistance des ennemis (passif Pénétration). Absent = 0 */
+  readonly penetration?: number;
 }
 
 /** Bonus des niveaux additionnés : un seul objet réutilisé par tous les recalculs. */
@@ -58,7 +60,7 @@ export class Weapon {
   count = 0;
   /** px, rayon de l'aura */
   radius = 0;
-  /** Retirée de la résistance de l'ennemi : arme + mutation (+ joueur, étape suivante) */
+  /** Retirée de la résistance de l'ennemi : arme + mutation + joueur */
   penetration = 0;
   /** px/s de recul donné à un ennemi de poids moyen */
   knockback: number;
@@ -141,7 +143,8 @@ export class Weapon {
     const m = this.mutation;
     this.damage = t.damage * (m?.damageMult ?? 1) * mods.damageMult * WEAPON_DAMAGE_MULT;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
-    this.penetration = (def.penetration ?? 0) + (m?.penetration ?? 0);
+    // Pénétration : celle de l'arme, de sa mutation et du joueur s'additionnent.
+    this.penetration = (def.penetration ?? 0) + (m?.penetration ?? 0) + (mods.penetration ?? 0);
     // Le reste dépend du type (Taille, Vélocité, Duplicateur, Hâte...).
     behavior.applyStats(this, def, t, mods);
   }

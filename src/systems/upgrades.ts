@@ -297,6 +297,9 @@ function applyPassive(player: Player, passive: PassiveDef): void {
     case 'extraCount':
       player.extraCount += passive.amount;
       return;
+    case 'penetration':
+      player.penetration += passive.amount;
+      return;
   }
 }
 
@@ -320,6 +323,7 @@ export function rebuildPassiveStats(
   player.sizeMult = 1;
   player.projectileSpeedMult = 1;
   player.extraCount = 0;
+  player.penetration = 0;
   for (const passive of PASSIVES) {
     const level = passiveLevels.get(passive.id) ?? 0;
     for (let i = 0; i < level; i++) applyPassive(player, passive);
