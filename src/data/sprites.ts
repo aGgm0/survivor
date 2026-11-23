@@ -11,6 +11,11 @@ export const HP_BAR_URLS = {
   fill: `${import.meta.env.BASE_URL}assets/ui/darkages/bar-red.png`,
 } as const;
 
+/** Icône Raven (copiée par tools/ui/copy-raven.mjs, ignorée par git) */
+export function ravenIconUrl(id: string): string {
+  return `${import.meta.env.BASE_URL}assets/ui/raven/${id}.png`;
+}
+
 export const ATLAS_URLS = {
   image: `${BASE}0x72_DungeonTilesetII_v1.7.png`,
   list: `${BASE}tile_list_v1.7`,

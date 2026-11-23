@@ -31,8 +31,8 @@
   --ui-gold: #dcc47c; /* titres, accents */
   --ui-gold-dark: #c19149;
   /* types de dégâts (coin des cases d'armes) */
-  --dmg-physical: #c9d3da;
-  --dmg-magical: #a77bff;
+  --dmg-physical: #bfddd1; /* clair du bouclier gris (Raven 597) */
+  --dmg-magical: #009ce9; /* bleu du bouclier magique (Raven 598) */
   --ui-tan: #9f8873; /* texte secondaire */
   --ui-text: #ece6d6;
   --ui-blue: #4f8fd0; /* XP, valeurs */
@@ -271,6 +271,37 @@ body {
   color: var(--ui-gold);
   text-align: center;
   text-shadow: 1px 1px 0 #000;
+}
+
+/* Résistances du boss : boucliers à droite de sa barre (gris physique, bleu magique) */
+#hud-bossresist {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: -4px;
+  display: flex;
+  gap: 8px;
+}
+
+.resist-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font: 12px var(--ui-font);
+  text-shadow: 1px 1px 0 #000;
+}
+
+.resist-badge .icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.resist-physical {
+  color: var(--dmg-physical);
+}
+
+.resist-magical {
+  color: var(--dmg-magical);
 }
 
 /*

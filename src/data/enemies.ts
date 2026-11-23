@@ -1,6 +1,9 @@
 // Types d'ennemis (voir CLAUDE.md § 5.5). Leur fréquence d'apparition est dans waves.ts.
 import type { DamageType } from './combat';
 
+/** Résistance à chaque type de dégâts (absent = 0) */
+export type Resistances = Readonly<Partial<Record<DamageType, number>>>;
+
 export interface EnemyType {
   readonly id: string;
   readonly hp: number;
@@ -19,7 +22,7 @@ export interface EnemyType {
    * Résistance à chaque type de dégâts (armure physique, résistance magique), réduite par la
    * pénétration de l'arme : voir `resistReduction` dans combat.ts. Absent = 0.
    */
-  readonly resistances?: Readonly<Partial<Record<DamageType, number>>>;
+  readonly resistances?: Resistances;
   /** Part des ralentissements ignorée (0,85 = ne subit que 15 % du ralentissement). Absent = 0 */
   readonly slowResist?: number;
   /**

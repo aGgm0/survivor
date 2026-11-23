@@ -19,6 +19,7 @@ import {
   devToggleWeapon,
 } from './game/devActions';
 import type { HpBarSkin } from './game/hpBar';
+import type { ResistIcons } from './game/WorldRenderer';
 import { updateHpTrail } from '../systems/hpTrail';
 import { applyOptionsAction } from './options';
 import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
@@ -132,6 +133,8 @@ export interface GameSceneDeps {
   effects?: Readonly<Record<EffectName, EffectSheet>> | null;
   /** Cadre et remplissage des barres de PV (pack Dark Ages). Absents : rectangles. */
   hpBars?: HpBarSkin | null;
+  /** Boucliers des résistances au-dessus des élites (pack Raven). Absents : rien. */
+  resistIcons?: ResistIcons | null;
   /** Bruitages. Absent (tests) : partie muette. */
   sfx?: SoundPlayer<SfxName>;
   /** Musique. Absente (tests) : partie muette. */
@@ -282,6 +285,7 @@ export class GameScene implements Scene, Build {
         fx: deps.fx ?? null,
         effects: deps.effects ?? null,
         hpBars: deps.hpBars ?? null,
+        resistIcons: deps.resistIcons ?? null,
         showHitboxes: () => deps.debug.showHitboxes,
       },
       seed,
@@ -789,7 +793,7 @@ export class GameScene implements Scene, Build {
   private renderBossHud(): void {
     for (const e of this.enemies.items) {
       if (e.active && e.type === BOSS_TYPE) {
-        this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp);
+        this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp, e.type.resistances);
         return;
       }
     }

@@ -1054,6 +1054,43 @@ describe('GameScene — rendu', () => {
     expect(summons).toBeGreaterThan(0);
   });
 
+  it('élites : un bouclier par résistance à gauche de leur barre ; boss : boucliers dans le HUD', () => {
+    const { deps } = newScene();
+    const physical = { id: 'physical' } as unknown as HTMLImageElement;
+    const magical = { id: 'magical' } as unknown as HTMLImageElement;
+    let bossResist: unknown = null;
+    const hud = {
+      ...deps.hud,
+      setBoss: (_r: number | null, _t: number, res?: unknown) => (bossResist = res),
+    };
+    const scene = new GameScene({ ...deps, hud, resistIcons: { physical, magical } }, 99, {});
+    scene.enter();
+    const drawn: unknown[] = [];
+    const base = fakeCanvasContext();
+    const ctx = new Proxy(base, {
+      get: (t, prop) =>
+        prop === 'drawImage'
+          ? (img: unknown) => {
+              drawn.push(img);
+            }
+          : Reflect.get(t, prop),
+    });
+    scene.applyDevAction({ kind: 'god' });
+    scene.applyDevAction({ kind: 'elite', index: 1 }); // basique élite : armure physique
+    scene.applyDevAction({ kind: 'boss' });
+    scene.applyDevAction({ kind: 'close' });
+    scene.update(DT);
+    // Les élites apparaissent hors écran : on en amène un près du joueur.
+    const elite = scene.enemies.items.find((e) => e.active && e.type.elite);
+    if (!elite) throw new Error('pas d’élite');
+    elite.x = elite.prevX = scene.player.x + 100;
+    elite.y = elite.prevY = scene.player.y;
+    scene.render(ctx, 1);
+    expect(drawn).toContain(physical);
+    expect(drawn).not.toContain(magical);
+    expect(bossResist).toEqual(BOSS_TYPE.resistances);
+  });
+
   it('dessine une partie chargée sans erreur (mutations n° 2)', () => {
     const scene = renderBusyRun(1, false);
     expect(scene.weapons.every((w) => w.mutation)).toBe(true);

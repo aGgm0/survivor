@@ -30,8 +30,11 @@ import {
   FX_ATLAS_URLS,
   MONSTERS_ATLAS_URLS,
   HP_BAR_URLS,
+  ravenIconUrl,
   type EffectName,
 } from './data/sprites';
+import { DAMAGE_TYPES, RESIST_ICONS } from './data/combat';
+import type { ResistIcons } from './scenes/game/WorldRenderer';
 import { loadImage } from './core/loadImage';
 import type { HpBarSkin } from './scenes/game/hpBar';
 import { EffectSheet } from './core/EffectSheet';
@@ -148,6 +151,7 @@ const hud = new Hud({
   boss: getElement('hud-boss', HTMLDivElement),
   bossFill: getElement('hud-bossfill', HTMLDivElement),
   bossTrail: getElement('hud-bosstrail', HTMLDivElement),
+  bossResist: getElement('hud-bossresist', HTMLDivElement),
   lowHp: getElement('hud-lowhp', HTMLDivElement),
 });
 const game = new Game(renderer, debug, input);
@@ -235,10 +239,27 @@ const hpBarsLoading = Promise.all([loadImage(HP_BAR_URLS.frame), loadImage(HP_BA
   .catch((error: unknown) => {
     console.warn('Barres de PV du pack non chargées, rectangles à la place :', error);
   });
+// Boucliers des résistances (pack Raven, ignoré par git) au-dessus des élites. Absents : rien.
+let resistIcons: ResistIcons | null = null;
+const resistIconsLoading = Promise.all(
+  DAMAGE_TYPES.map((t) => loadImage(ravenIconUrl(RESIST_ICONS[t]))),
+)
+  .then(([physical, magical]) => {
+    if (physical && magical) resistIcons = { physical, magical };
+  })
+  .catch((error: unknown) => {
+    console.warn('Icônes de résistance non chargées :', error);
+  });
 // « Jouer » reste grisé jusqu'ici. Chaque chargement attrape déjà son erreur : un fichier manquant
 // débloque quand même le bouton (partie en formes simples) au lieu de le griser pour toujours.
 let assetsReady = false;
-void Promise.allSettled([spritesLoading, fxLoading, effectsLoading, hpBarsLoading]).then(() => {
+void Promise.allSettled([
+  spritesLoading,
+  fxLoading,
+  effectsLoading,
+  hpBarsLoading,
+  resistIconsLoading,
+]).then(() => {
   assetsReady = true;
 });
 
@@ -299,6 +320,7 @@ function startRun(chosen: CharacterDef = character): void {
       fx,
       effects,
       hpBars,
+      resistIcons,
       sfx,
       music,
     },

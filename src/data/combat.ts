@@ -16,6 +16,15 @@ export const MIN_DAMAGE = 1;
  */
 export type DamageType = 'physical' | 'magical';
 
+/** Ordre d'affichage des types (boucliers des barres de PV) */
+export const DAMAGE_TYPES: readonly DamageType[] = ['physical', 'magical'];
+
+/** Icône de résistance de chaque type (pack Raven, voir tools/ui/raven-icons.mjs) */
+export const RESIST_ICONS: Readonly<Record<DamageType, string>> = {
+  physical: 'armor-physical',
+  magical: 'armor-magical',
+};
+
 /** Noms affichés des types de dégâts */
 export const DAMAGE_TYPE_NAMES: Readonly<Record<DamageType, string>> = {
   physical: 'Physique',

@@ -231,6 +231,8 @@ export const SUMMON_TELEGRAPH = {
 export const HP_BARS = {
   /** `scale` : agrandissement des pixels du pack (×2 comme les sprites) ; `offset` : px d'écart */
   elite: { width: 100, scale: 2, offset: 6 },
+  /** Boucliers des résistances à gauche de la barre des élites : taille (px) et écart */
+  resistIcon: { size: 16, gap: 4 },
   player: { width: 44, scale: 1, offset: 6 },
   /**
    * Traînée : la part perdue reste claire `hold` s, puis fond vers les PV ; vitesse = `rate` × l'écart

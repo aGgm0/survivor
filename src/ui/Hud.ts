@@ -1,4 +1,5 @@
-import { DAMAGE_TYPE_NAMES } from '../data/combat';
+import { DAMAGE_TYPE_NAMES, DAMAGE_TYPES, RESIST_ICONS } from '../data/combat';
+import type { Resistances } from '../data/enemies';
 import { PASSIVES } from '../data/upgrades';
 import type { Weapon } from '../entities/Weapon';
 import { formatTime } from './formatTime';
@@ -28,6 +29,8 @@ export interface HudElements {
   boss: HTMLElement;
   bossFill: HTMLElement;
   bossTrail: HTMLElement;
+  /** Boucliers des résistances du boss, à droite de sa barre */
+  bossResist: HTMLElement;
   /** Contour rouge des PV bas */
   lowHp: HTMLElement;
 }
@@ -54,6 +57,8 @@ export class Hud {
   private shownLowHpPulse = true;
   /** Liste d'armes affichée : une nouvelle partie en crée une nouvelle (voir setInventory). */
   private shownWeapons: readonly Weapon[] | null = null;
+  /** Résistances affichées à côté de la barre du boss (null : rien encore) */
+  private shownBossResist: Resistances | undefined | null = null;
 
   constructor(private readonly el: HudElements) {}
 
@@ -170,10 +175,15 @@ export class Hud {
    * Grande barre du boss (`hpRatio` null : aucun boss en vie, barre masquée). Elle reste lisible
    * quand le boss est hors de l'écran, pendant une charge par exemple.
    */
-  setBoss(hpRatio: number | null, trailRatio: number): void {
+  setBoss(hpRatio: number | null, trailRatio: number, resistances?: Resistances): void {
     const visible = hpRatio !== null;
     if (this.el.boss.hidden === visible) this.el.boss.hidden = !visible;
     if (!visible) return;
+    // Les boucliers ne changent qu'avec le type du boss : reconstruits seulement dans ce cas.
+    if (resistances !== this.shownBossResist) {
+      this.shownBossResist = resistances;
+      this.el.bossResist.replaceChildren(...resistBadges(resistances));
+    }
     const fill = toTenthsOfPercent(hpRatio);
     if (fill !== this.shownBossFill) {
       this.shownBossFill = fill;
@@ -228,6 +238,26 @@ function slot(
   lvl.textContent = String(level);
   box.append(label, lvl);
   return box;
+}
+
+/**
+ * Un bouclier par type de dégâts auquel l'ennemi résiste, avec sa valeur (gris : armure
+ * physique, bleu : résistance magique). Rien pour un type à 0.
+ */
+function resistBadges(resistances: Resistances | undefined): HTMLElement[] {
+  const badges: HTMLElement[] = [];
+  for (const type of DAMAGE_TYPES) {
+    const value = resistances?.[type] ?? 0;
+    if (value <= 0) continue;
+    const badge = document.createElement('span');
+    badge.className = `resist-badge resist-${type}`;
+    badge.title = `${type === 'physical' ? 'Armure physique' : 'Résistance magique'} ${value}`;
+    const text = document.createElement('span');
+    text.textContent = String(value);
+    badge.append(iconElement(RESIST_ICONS[type], type === 'physical' ? 'AP' : 'RM'), text);
+    badges.push(badge);
+  }
+  return badges;
 }
 
 function toTenthsOfPercent(ratio: number): number {

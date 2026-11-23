@@ -6,6 +6,7 @@ import type { EffectSheet } from '../../core/EffectSheet';
 import { clamp, lerp, Rng } from '../../core/math';
 import type { Pool } from '../../core/Pool';
 import { frameAt, type SpriteAtlas } from '../../core/SpriteAtlas';
+import { DAMAGE_TYPES, type DamageType } from '../../data/combat';
 import { ENEMY_TYPE_LIST } from '../../data/enemies';
 import { CHARGE_TELEGRAPH, HP_BARS, SUMMON_TELEGRAPH } from '../../data/feel';
 import {
@@ -76,6 +77,9 @@ export interface WorldView {
   readonly runTime: number;
 }
 
+/** Icône de résistance de chaque type de dégâts (bouclier gris, bouclier bleu) */
+export type ResistIcons = Readonly<Record<DamageType, CanvasImageSource>>;
+
 /** Ressources graphiques (absentes dans les tests ou avant chargement : formes simples). */
 export interface WorldRendererDeps {
   readonly sprites: SpriteAtlas | null;
@@ -83,6 +87,8 @@ export interface WorldRendererDeps {
   readonly effects: Readonly<Record<EffectName, EffectSheet>> | null;
   /** Cadre et remplissage des barres de PV (pack Dark Ages) ; null : rectangles */
   readonly hpBars: HpBarSkin | null;
+  /** Boucliers des résistances au-dessus des élites ; null : rien */
+  readonly resistIcons: ResistIcons | null;
   /** Lu à chaque frame : l'overlay F3 peut l'allumer en cours de partie */
   readonly showHitboxes: () => boolean;
 }
@@ -154,6 +160,31 @@ export class WorldRenderer {
       const barY = this.enemyTop(e, y) - look.offset - hpBarHeight(skin, look.scale);
       if (!this.isOnScreen(x, y, Math.max(y - barY, look.width / 2))) continue;
       drawHpBar(ctx, skin, x, barY, look.width, look.scale, e.hp / e.maxHp, e.hpTrail / e.maxHp);
+      this.renderResistIcons(ctx, e, x - look.width / 2, barY + hpBarHeight(skin, look.scale) / 2);
+    }
+  }
+
+  /**
+   * Boucliers des résistances d'un élite, à gauche de sa barre de PV (un par type auquel il
+   * résiste) : on voit de loin qu'il faut changer de type de dégâts.
+   */
+  private renderResistIcons(
+    ctx: CanvasRenderingContext2D,
+    e: Enemy,
+    barLeft: number,
+    barMidY: number,
+  ): void {
+    const icons = this.deps.resistIcons;
+    const resistances = e.type.resistances;
+    if (!icons || !resistances) return;
+    const { size, gap } = HP_BARS.resistIcon;
+    let x = barLeft - gap - size;
+    // Dernier type le plus près de la barre : on dessine de droite à gauche.
+    for (let i = DAMAGE_TYPES.length - 1; i >= 0; i--) {
+      const type = DAMAGE_TYPES[i];
+      if (!type || (resistances[type] ?? 0) <= 0) continue;
+      ctx.drawImage(icons[type], Math.round(x), Math.round(barMidY - size / 2), size, size);
+      x -= size + gap;
     }
   }
 
