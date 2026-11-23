@@ -172,7 +172,7 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 | Arme | Comportement | Dégâts | Cooldown | Notes |
 |---|---|---|---|---|
 | **Trait arcanique** (projectile) | Tire vers l'ennemi le plus proche à portée ; 450 px/s, 1,4 s de vie (~630 px), disparaît au 1er impact | 16 | 1 s | +1 projectile aux niv 3 et 5 |
-| **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px. Mutations : **Aura de givre** (rayon ×1,68, dégâts ×0,6 toutes les 0,6 s, ralentit 45 %) / **Fournaise** (rayon ×1,2 ; toutes les 1,8 s, une **onde de feu** part du joueur jusqu'à ×1,1 ce rayon en 0,4 s et touche chaque ennemi une fois : dégâts ×4, puis ×1,4 sur les gros (tank, élites, boss : `big`) et ×0,2 sur les autres ; recul ×1,5 ; rien de dessiné en permanence, seulement l'onde) |
+| **Aura ardente** (aura) | Brûle chaque ennemi dont le bord touche le cercle (rayon 70 px) : dès qu'il entre, puis toutes les 0,5 s tant qu'il reste dedans (horloge par ennemi) | 5/tick | 0,5 s par ennemi | Niv 2 : +2 dégâts ; niv 3 et 4 : rayon +15 px ; niv 5 : +3 dégâts, rayon +20 px. Mutations : **Aura de givre** (rayon ×1,68, dégâts ×0,6 toutes les 0,6 s, ralentit 45 %) / **Fournaise** (rayon ×1,2 ; toutes les 1,5 s, une **onde de feu** part du joueur jusqu'à ×1,1 ce rayon en 0,4 s et touche chaque ennemi une fois : dégâts ×4, puis ×1,4 sur les gros (tank, élites, boss : `big`) et ×0,5 sur les autres ; pénétration 30 ; recul ×1,5 ; rien de dessiné en permanence, seulement l'onde) |
 | **Épée** (mêlée) | Coup en arc devant le joueur, dans sa direction de marche (gardée à l'arrêt) : 125 px, 200°, chaque ennemi touché une fois par coup | 16 | 1,2 s | Niv 2 +5 dégâts, niv 3 arc +40°, niv 4 délai −20 %, niv 5 +7 dégâts et portée +25 px (28 au niv 5). Recul 170. Le Duplicateur ne s'applique pas à l'Épée. Mutations : **Tourbillon** (360°, dégâts ×0,85, recul ×1,3) / **Estoc** (vise l'ennemi le plus proche et attend s'il n'y en a pas ; portée ×2, 30°, dégâts ×2, recul ×1,5 ; touche tout ennemi qui chevauche le cône) |
 | **Orbes runiques** (orbite) | 2 orbes de 13 px à 80 px du joueur, 3 rad/s | 10 | contact, 0,5 s de délai de re-touche par orbe et par ennemi | +1 orbe par niveau, +3 dégâts au niv 4, orbite 80 → 105 px au niv 5 (Orbes géants : ×1,25 ≈ 131 px) |
 
@@ -191,9 +191,9 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 | Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`). 4 % de lâcher 1 pièce d'or |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile. 4 % de lâcher 1 pièce d'or |
 | Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique. 15 % de lâcher 1 pièce d'or |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×2 = 140 px/s**) ; rayon 48 px, barre de PV, aucun recul, ne subit que 15 % des ralentissements (`BOSS_SPAWNS` dans waves.ts) |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×2 = 140 px/s**) ; rayon 48 px, barre de PV, aucun recul, **insensible au ralentissement** (`BOSS_SPAWNS` dans waves.ts) |
 
-**Mini-boss (élites)** : anneau doré pulsant, barre de PV, recul 50 % plus faible que leur version normale (`knockbackFactor`), +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
+**Mini-boss (élites)** : anneau doré pulsant, barre de PV, recul 75 % plus faible que leur version normale (`knockbackFactor` 0,375 et 0,25), **insensibles au ralentissement**, +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
 
 | Élite | Arrive à | PV (base) | Vitesse | Dégâts | Rayon |
 |---|---|---|---|---|---|
@@ -230,7 +230,7 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 
 - **Défaite** : PV à 0 → écran Game Over (temps survécu, kills, niveau atteint, damage meter).
 - **Victoire** : survivre jusqu'au timer (10 min pour le MVP) **et** que le boss de 9:00 soit mort → tout se fige, écran de victoire avec le même bilan. Boss encore en vie à 10:00 → **prolongations** : le timer continue (vagues de fin toujours actives) jusqu'à la mort du boss (victoire) ou du joueur (défaite).
-- **Mode sans fin** : sur l'écran de victoire, bouton **Continuer en sans fin** (ou **C**). Le timer continue, et chaque minute (depuis le début du sans fin) tous les ennemis qui apparaissent sont plus forts : PV ×1,2 et dégâts au contact ×1,1 cumulés, vitesse +3 % (plafond ×3), résistance au recul +8 % (plafond 80 %), et +2 ennemis/s. Un boss toutes les 3 min, 50 % plus résistant à chaque fois (`ENDLESS` dans waves.ts). Seule la mort termine la partie, qui compte comme **victoire + sans fin** (le meilleur temps du profil compte le sans fin).
+- **Mode sans fin** : sur l'écran de victoire, bouton **Continuer en sans fin** (ou **C**). Le timer continue, et chaque minute (depuis le début du sans fin) tous les ennemis qui apparaissent sont plus forts : PV ×1,2 et dégâts au contact ×1,1 cumulés, vitesse +3 % (plafond ×3), résistance au recul +8 % (plafond 80 %), résistance au ralentissement +10 % (plafond 80 %), et +2 ennemis/s. Un boss toutes les 3 min, 50 % plus résistant à chaque fois (`ENDLESS` dans waves.ts). Seule la mort termine la partie, qui compte comme **victoire + sans fin** (le meilleur temps du profil compte le sans fin).
 - Bouton "Rejouer" qui relance une run propre (aucun état qui fuit d'une run à l'autre).
 
 ### 5.9 Méta-progression
@@ -445,12 +445,12 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [ ] Équilibrage confirmé avec les testeurs : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
 - [ ] Prix de la Boutique revus une fois tout acheté
 - [ ] Bugs et retours signalés sur la 0.2 <!-- TODO: liste à compléter avec les retours des testeurs -->
-  - [ ] Retours de jeu du 2026-11-23 (valeurs exactes à proposer et valider avant d'y toucher) :
-    - [ ] **Fournaise trop faible** : buff
-    - [ ] **Aura de givre un peu trop forte** : petit nerf
-    - [ ] **Élites : 50 % de recul en moins** que leur version normale, pour les deux. Aujourd'hui `knockbackFactor` vaut 0,5 pour le basique élite mais **0,75** pour le rapide élite
-    - [ ] **Élites et boss insensibles au ralentissement**. Aujourd'hui les élites n'ont aucune résistance et le boss a `slowResist` 0,85 (il garde 15 % du ralentissement)
-    - [ ] **Sans fin : +10 % de résistance au ralentissement par minute** pour les ennemis qui apparaissent (plafond à décider), comme la résistance au recul
+  - [x] Retours de jeu du 2026-11-23 (bot, Aura imposée niv 5, 20 parties : sans mutation 8:51 → 8:51, Givre 9:05 → 8:47, Fournaise 7:13 → 8:30) :
+    - [x] **Fournaise trop faible** : une onde toutes les 1,8 → 1,5 s, petits ×0,2 → ×0,5 (+ pénétration 30 du bloc B)
+    - [x] **Aura de givre un peu trop forte** : nerfée par l'immunité des élites et du boss, sans toucher à ses chiffres (elle revient au niveau de l'Aura sans mutation)
+    - [x] **Élites : 50 % de recul en moins** qu'avant : `knockbackFactor` 0,75 → 0,375 (rapide élite), 0,5 → 0,25 (basique élite)
+    - [x] **Élites et boss insensibles au ralentissement** : `slowResist` 1 (boss 0,85 avant, élites 0)
+    - [x] **Sans fin : +10 % de résistance au ralentissement par minute**, plafond 80 % (`ENDLESS.slowResistPerMinute`, `Enemy.slowResist`)
 - [ ] Limite connue : petits ennemis coincés entre deux tanks, à reprendre seulement si les testeurs le remarquent
 
 **Sortie**
@@ -802,6 +802,7 @@ Format : date — décision — raison.
 | 2026-11-23 | Types de dégâts : Épée physique, Trait / Aura / Orbes magiques ; résistances basique 10 / 10, tank 0 / 50, rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30 ; pénétration par arme et par mutation (Estoc 30, Fournaise 30, Trait perçant 20, autres 0) + passif Pénétration (+10 / niv, 5 niv ; nerf à +5 le même jour : « sinon broken ») ; une pénétration plus forte que la résistance ne donne pas de bonus | « ok reco » + idée de l'utilisateur (chaque ennemi a les deux stats, chaque arme et mutation sa pénétration). Tank résistant à la magie plutôt que blindé : avec une seule arme physique, une armure physique n'aurait affaibli que l'Épée, déjà la plus faible ; ainsi elle devient l'arme anti-tank. Pénétration sur 3 mutations seulement : l'équilibrage reste gérable. Basique 10 / 10 : léger buff demandé, toujours 2 coups de Trait. Bloc C : viser 3 physiques et 1 magique pour 4 / 4 |
 | 2026-11-23 | Lisibilité des types : type sur les cartes et coin coloré dans le HUD, nombres gris à partir de 15 % de réduction, aucun repère sur les ennemis ; nouvelle arme de l'autre type garantie à chaque level up tant que le build n'a qu'un type et qu'il reste une place | « ok reco ». Seuil de 15 % : le basique résiste de 9 % à tout, sans seuil presque tous les nombres seraient gris. Bot : la partie est ~25 s plus courte (armure du basique, résistance des tanks), l'Épée est bien plus prise ; à confirmer en jouant |
 | 2026-11-23 | Boucliers des résistances à côté des barres du boss et des élites (icônes Raven 597 / 598) ; malus (621 / 622) gardés pour un futur effet « brise-armure » (0.4) | Idée de l'utilisateur, « ok reco ». Aucun effet ne baisse encore l'armure d'un ennemi : la pénétration est celle de l'arme, pas un état de l'ennemi, et elle change d'une arme à l'autre ; une icône de malus aurait été à moitié fausse |
+| 2026-11-23 | Retours de jeu : Fournaise une onde / 1,5 s et ×0,5 sur les petits ; élites et boss insensibles au ralentissement ; sans fin +10 % de résistance au ralentissement par minute (plafond 80 %) ; recul des élites −50 % (0,375 / 0,25) ; Givre inchangé en chiffres | « ok reco ». Bot : la Fournaise faisait moins bien que l'Aura sans mutation (7:13 contre 8:51), elle se faisait déborder par la horde (22 % des dégâts de l'Aura sur les petits). Le Givre brillait surtout en gelant élites et boss : l'immunité suffit à le ramener au niveau de l'Aura de base (8:47). Plafond de 80 % : le Givre garde un effet en sans fin |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
