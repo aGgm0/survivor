@@ -9,7 +9,7 @@ export const ICON_GROUPS = {
     runicOrbs: 776, // cercle runique violet
     sword: 156, // épée bleue
     bow: 1564, // arc
-    chainLightning: 1019, // éclair bleu (pas l'éclair orange de la Hâte)
+    chainLightning: 1025, // éclair (celui de la Hâte jusqu'au 2026-11-23)
   },
   Mutations: {
     piercingBolt: 1010, // lance de glace
@@ -30,7 +30,7 @@ export const ICON_GROUPS = {
     swiftness: 667, // botte ailée
     attraction: 118, // aimant
     power: 657, // bras musclé
-    haste: 1025, // éclair
+    haste: 98, // grimoire ouvert (lancer plus vite) ; l'éclair 1025 va à l'Éclair en chaîne
     impact: 1044, // marteau doré
     size: 865, // flèche vers le haut
     velocity: 1018, // trait rapide
