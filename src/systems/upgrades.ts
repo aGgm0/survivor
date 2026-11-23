@@ -1,3 +1,4 @@
+import type { DamageType } from '../data/combat';
 import type { Rng } from '../core/math';
 import { PLAYER_BASE } from '../data/player';
 import { MAX_PASSIVES, MAX_WEAPONS } from '../data/progression';
@@ -118,6 +119,10 @@ export function availableUpgrades(build: Build): UpgradeChoice[] {
  * sinon une relance pourrait reproposer exactement les mêmes cartes.
  * `passiveWeight` : chances relatives d'une carte de passif (0,5 = deux fois moins souvent
  * qu'une carte d'arme). 1 = tirage uniforme.
+ * `missingType` : type de dégâts absent du build (toutes ses armes sont de l'autre type). Si
+ * aucune nouvelle arme de ce type n'est sortie alors qu'il en reste, une carte est remplacée
+ * par l'une d'elles (de préférence une nouvelle arme de l'autre type : la garantie de nouvelle
+ * arme tient toujours).
  */
 export function rollUpgradeChoices(
   options: readonly UpgradeChoice[],
@@ -126,6 +131,7 @@ export function rollUpgradeChoices(
   guaranteeNewWeapon = false,
   exclude: readonly UpgradeChoice[] = [],
   passiveWeight = 1,
+  missingType: DamageType | null = null,
 ): UpgradeChoice[] {
   let picks: UpgradeChoice[];
   let fresh: readonly UpgradeChoice[] = options;
@@ -151,7 +157,49 @@ export function rollUpgradeChoices(
       else picks[picks.length - 1] = forced;
     }
   }
+  if (missingType) guaranteeType(picks, options, fresh, rng, count, missingType);
   return picks;
+}
+
+/** Vrai pour une carte de nouvelle arme de type `type`. */
+function newWeaponOfType(c: UpgradeChoice, type: DamageType): boolean {
+  return c.kind === 'newWeapon' && c.def.damageType === type;
+}
+
+/** Voir `missingType` de rollUpgradeChoices. Modifie `picks`. */
+function guaranteeType(
+  picks: UpgradeChoice[],
+  options: readonly UpgradeChoice[],
+  fresh: readonly UpgradeChoice[],
+  rng: Rng,
+  count: number,
+  type: DamageType,
+): void {
+  if (picks.some((c) => newWeaponOfType(c, type))) return;
+  const freshOfType = fresh.filter((c) => newWeaponOfType(c, type));
+  const candidates =
+    freshOfType.length > 0 ? freshOfType : options.filter((c) => newWeaponOfType(c, type));
+  const forced = candidates[rng.int(0, candidates.length - 1)];
+  if (!forced) return;
+  if (picks.length < count) {
+    picks.push(forced);
+    return;
+  }
+  // On remplace une nouvelle arme de l'autre type s'il y en a une, sinon la dernière carte.
+  const otherWeapon = picks.findIndex((c) => c.kind === 'newWeapon');
+  picks[otherWeapon >= 0 ? otherWeapon : picks.length - 1] = forced;
+}
+
+/**
+ * Type de dégâts qui manque au build : celui qu'aucune arme n'a, si toutes sont du même type.
+ * null s'il n'y a pas d'arme ou si les deux types sont déjà là.
+ */
+export function missingDamageType(weapons: readonly Weapon[]): DamageType | null {
+  const first = weapons[0];
+  if (!first) return null;
+  const type = first.damageType;
+  if (weapons.some((w) => w.damageType !== type)) return null;
+  return type === 'physical' ? 'magical' : 'physical';
 }
 
 function shufflePick(

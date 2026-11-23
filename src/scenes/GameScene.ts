@@ -58,6 +58,7 @@ import {
   applyUpgrade,
   availableUpgrades,
   choiceIconId,
+  missingDamageType,
   rollUpgradeChoices,
   type Build,
   type UpgradeChoice,
@@ -497,6 +498,8 @@ export class GameScene implements Scene, Build {
       exclude,
       // Début de partie : passifs moins souvent (un passif niv 1 pèse peu face à une arme).
       level < EARLY_PASSIVES.untilLevel ? EARLY_PASSIVES.weight : 1,
+      // Build d'un seul type de dégâts : une nouvelle arme de l'autre type est proposée.
+      missingDamageType(this.weapons),
     );
     // Créer ces petits objets est sans risque : seulement au level up.
     this.deps.levelUpOverlay.show(
