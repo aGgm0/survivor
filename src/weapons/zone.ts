@@ -2,8 +2,9 @@
 // dessus. Mutations : Mines (explosent au premier contact) et Champ de ronces (plus grandes,
 // plus longues, ralentissent). Les zones vivent dans un tableau fixe de l'arme.
 
-import { frameAt } from '../core/SpriteAtlas';
-import { CALTROPS_SPRITE } from '../data/sprites';
+import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
+import type { SpriteTint } from '../core/SpriteAtlas';
+import { CALTROPS_SPRITE, ZONE_FX } from '../data/sprites';
 import type { ZoneWeaponDef } from '../data/weapons';
 import type { Weapon } from '../entities/Weapon';
 import { MAX_ENEMY_RADIUS } from '../systems/CollisionSystem';
@@ -12,8 +13,10 @@ import { GRID_STALENESS_MARGIN } from '../systems/ProjectileSystem';
 import { applySlow } from '../systems/status';
 import { formatNumber } from '../ui/formatNumber';
 import { cooldownStat, scaledCooldown, weaponTint } from './shared';
-import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
+import type { WeaponBehavior, WeaponRenderContext, WeaponUpdateContext } from './WeaponBehavior';
 
+/** px : largeur des étincelles d'acier sur un ennemi touché */
+const CLANG_SIZE = 26;
 /** Zones posées au plus pour une arme (au-delà, la plus ancienne est remplacée) */
 const MAX_ZONES = 24;
 /** px : distance au joueur des zones en plus d'une même pose (× leur rayon) */
@@ -22,8 +25,6 @@ const EXTRA_ZONE_DISTANCE = 1.6;
 const TILE_SPACING = 0.8;
 /** Les tuiles dont le centre est à moins de (rayon − ce facteur × taille) sont dessinées */
 const TILE_INSET = 0.3;
-/** Opacité du disque qui montre la zone */
-const ZONE_FILL_ALPHA = 0.18;
 
 // Rangement d'une zone dans `Weapon.zones`.
 const ACTIVE = 0; // 1 : posée, 0 : libre
@@ -68,7 +69,8 @@ function explode(weapon: Weapon, o: number, ctx: WeaponUpdateContext): void {
   const y = z[o + Y] ?? 0;
   const radius = mine.radius * weapon.explosionRadius; // explosionRadius = Taille du joueur
   z[o + ACTIVE] = 0;
-  ctx.events.onExplosion?.(x, y, radius, weapon.color);
+  // Explosion de baril du pack (feu puis fumée), large comme la zone qui frappe.
+  ctx.events.onEffect?.('barrel', x, y, radius * 2);
   const candidates = ctx.candidates;
   const count = ctx.collisions.queryNeighbors(x, y, radius + MAX_ENEMY_RADIUS, candidates);
   for (let k = 0; k < count; k++) {
@@ -123,7 +125,162 @@ function updateZone(weapon: Weapon, def: ZoneWeaponDef, i: number, ctx: WeaponUp
     e.nextZoneHitAt = ctx.now + def.tick;
     const d = Math.hypot(dx, dy) || 1;
     damageEnemy(weapon, e, weapon.damage, ctx.events, dx / d, dy / d);
-    if (e.active && slow) applySlow(e, slow.amount, slow.duration, ctx.now);
+    if (slow) {
+      if (e.active) applySlow(e, slow.amount, slow.duration, ctx.now);
+    } else {
+      // Pointes de fer : étincelles d'acier aux pieds de l'ennemi.
+      ctx.events.onEffect?.('clang', e.x, e.y + e.type.radius / 2, CLANG_SIZE);
+    }
+  }
+}
+
+/** px de pointillé de l'anneau qui montre le bord d'une zone (défini une fois : rien d'alloué) */
+const DASH: number[] = [4, 4];
+const RING_COLOR = '#1a1a1a';
+const RING_ALPHA = 0.45;
+/** Mine : lumière rouge (clignote), mèche (étincelles), anneau de danger qui pulse */
+const MINE_LOOK = {
+  light: '#ff3b30',
+  lightSize: 4,
+  blinkHz: 3,
+  sparks: ['#ffd36b', '#ff9f43'],
+  ringColor: '#ff9f43',
+  ringAlpha: [0.25, 0.6],
+  ringPulseHz: 1.5,
+} as const;
+
+/** Anneau en pointillés (le bord d'une zone ou le rayon d'une explosion). */
+function dashedRing(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  color: string,
+  alpha: number,
+): void {
+  ctx.save();
+  ctx.setLineDash(DASH);
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Largeur visible (px d'art) d'un effet, toutes images confondues. */
+function boundsWidth(sheet: EffectSheet): number {
+  const [x0, , x1] = sheet.clip.bounds;
+  return x1 - x0 || 1;
+}
+
+/** Dessine l'image `index` d'un effet avec le centre de sa zone visible posé en (x, y). */
+function drawCentered(
+  ctx: CanvasRenderingContext2D,
+  sheet: EffectSheet,
+  index: number,
+  x: number,
+  y: number,
+  scale: number,
+): void {
+  const { pivotX, pivotY, bounds } = sheet.clip;
+  const cx = (bounds[0] + bounds[2]) / 2;
+  const cy = (bounds[1] + bounds[3]) / 2;
+  sheet.draw(ctx, index, x + (pivotX - cx) * scale, y + (pivotY - cy) * scale, scale);
+}
+
+/**
+ * Image d'un effet qui vit avec sa zone : son début à la pose, puis l'image `hold` tant que la
+ * zone dure, puis sa fin pendant les derniers instants (`left` s avant la disparition).
+ */
+function zoneFrame(sheet: EffectSheet, hold: number, age: number, left: number): number {
+  const frames = sheet.clip.frames;
+  let introMs = 0;
+  for (let k = 0; k < hold; k++) introMs += frames[k]?.durationMs ?? 0;
+  const ageMs = age * 1000;
+  if (ageMs < introMs) return clipFrameIndex(sheet.clip, ageMs);
+  let outroMs = 0;
+  for (let k = hold + 1; k < frames.length; k++) outroMs += frames[k]?.durationMs ?? 0;
+  const leftMs = left * 1000;
+  if (leftMs >= outroMs) return hold;
+  // Fin : on avance dans les images après `hold`, au rythme de leur durée.
+  let t = outroMs - leftMs;
+  for (let k = hold + 1; k < frames.length; k++) {
+    t -= frames[k]?.durationMs ?? 0;
+    if (t < 0) return k;
+  }
+  return frames.length - 1;
+}
+
+/** Mine : anneau de danger qui pulse, bombe du pack, lumière rouge qui clignote, mèche. */
+function renderMine(
+  ctx: CanvasRenderingContext2D,
+  rc: WeaponRenderContext,
+  x: number,
+  y: number,
+  dangerRadius: number,
+  i: number,
+  color: string,
+): void {
+  const pulse = 0.5 + 0.5 * Math.sin(rc.time * Math.PI * 2 * MINE_LOOK.ringPulseHz);
+  const [low, high] = MINE_LOOK.ringAlpha;
+  dashedRing(ctx, x, y, dangerRadius, MINE_LOOK.ringColor, low + (high - low) * pulse);
+  const bomb = rc.sprites?.animation(CALTROPS_SPRITE.bomb)[0];
+  const scale = CALTROPS_SPRITE.scale;
+  if (bomb && rc.sprites) {
+    rc.sprites.draw(ctx, bomb, x, y + (bomb.h * scale) / 2, scale, false);
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  const top = y - ((bomb?.h ?? 10) * scale) / 2;
+  // Lumière rouge : allumée la moitié du temps, décalée d'une mine à l'autre.
+  if (Math.sin((rc.time + i * 0.37) * Math.PI * 2 * MINE_LOOK.blinkHz) > 0) {
+    const s = MINE_LOOK.lightSize;
+    ctx.fillStyle = MINE_LOOK.light;
+    ctx.fillRect(Math.round(x - s / 2), Math.round(y - s / 2), s, s);
+  }
+  // Mèche : 3 étincelles de 2 px qui sautent au-dessus de la bombe (formule fixe, pas d'aléa).
+  for (let k = 0; k < 3; k++) {
+    const phase = rc.time * 9 + k * 2.1 + i;
+    const sx = x + 6 + Math.sin(phase * 1.7) * 3;
+    const sy = top - 2 - Math.abs(Math.sin(phase)) * 5;
+    ctx.fillStyle = MINE_LOOK.sparks[k % 2] ?? MINE_LOOK.light;
+    ctx.fillRect(Math.round(sx), Math.round(sy), 2, 2);
+  }
+}
+
+/** Secours sans les effets du pack : tuiles de pointes de l'atlas en grille dans la zone. */
+function renderTiles(
+  ctx: CanvasRenderingContext2D,
+  rc: WeaponRenderContext,
+  x: number,
+  y: number,
+  r: number,
+  age: number,
+  left: number,
+  tint: SpriteTint | undefined,
+): void {
+  const sprites = rc.sprites;
+  const spikes = sprites?.animation(CALTROPS_SPRITE.spikes);
+  if (!sprites || !spikes || spikes.length === 0) return;
+  // Les pointes sortent à la pose, restent sorties, rentrent à la fin.
+  const t = Math.min(age, left) / CALTROPS_SPRITE.riseTime;
+  const frame = spikes[Math.min(spikes.length - 1, Math.max(0, Math.floor(t * spikes.length)))];
+  if (!frame) return;
+  const scale = CALTROPS_SPRITE.scale;
+  const tile = frame.w * scale;
+  const step = tile * TILE_SPACING;
+  const limit = r - tile * TILE_INSET;
+  const n = Math.floor(limit / step);
+  for (let gx = -n; gx <= n; gx++) {
+    for (let gy = -n; gy <= n; gy++) {
+      if ((gx * step) ** 2 + (gy * step) ** 2 > limit * limit) continue;
+      sprites.draw(ctx, frame, x + gx * step, y + gy * step + tile / 2, scale, false, tint);
+    }
   }
 }
 
@@ -178,54 +335,37 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
   },
 
   /**
-   * Au sol, sous les ennemis : un disque discret pour voir la zone, et des tuiles de pointes
-   * du pack en grille dedans, qui sortent à la pose et rentrent à la fin. Mine : une bombe.
+   * Au sol, sous les ennemis. Chausse-trapes : pointes de terre du pack qui jaillissent, restent
+   * dressées puis s'effritent ; Champ de ronces : lianes qui poussent puis sèchent ; Mines : la
+   * bombe, sa lumière rouge, sa mèche et l'anneau de danger. Rien n'est modifié ici.
    */
   renderGround(ctx, weapon, _def, rc) {
     const z = weapon.zones;
     if (!z) return;
-    const sprites = rc.sprites;
-    const spikes = sprites?.animation(CALTROPS_SPRITE.spikes);
-    const bomb = sprites?.animation(CALTROPS_SPRITE.bomb);
-    const tint = weapon.mutation ? weaponTint(weapon.color) : undefined;
-    const scale = CALTROPS_SPRITE.scale;
+    const mutation = weapon.mutation;
+    const look = mutation?.slow ? ZONE_FX.brambles : ZONE_FX.spikes;
+    const sheet = mutation?.mine ? undefined : rc.effects?.[look.effect];
     for (let i = 0; i < MAX_ZONES; i++) {
       const o = i * STRIDE;
       if (z[o + ACTIVE] !== 1) continue;
       const x = z[o + X] ?? 0;
       const y = z[o + Y] ?? 0;
       const r = weapon.radius;
-      if (!rc.isOnScreen(x, y, r)) continue;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = weapon.color;
-      ctx.globalAlpha = ZONE_FILL_ALPHA;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      if (weapon.mutation?.mine) {
-        const frame = bomb && frameAt(bomb, rc.time + i, CALTROPS_SPRITE.bombFrameTime);
-        if (frame && sprites) sprites.draw(ctx, frame, x, y + (frame.h * scale) / 2, scale, false);
-        continue;
-      }
-      if (!spikes || spikes.length === 0 || !sprites) continue;
-      // Image des pointes : elles sortent à la pose, restent sorties, rentrent à la fin.
+      const mineRadius = mutation?.mine ? mutation.mine.radius * weapon.explosionRadius : 0;
+      if (!rc.isOnScreen(x, y, Math.max(r, mineRadius))) continue;
       const age = rc.time - (z[o + BORN] ?? 0);
       const left = (z[o + EXPIRES] ?? 0) - rc.time;
-      const t = Math.min(age, left) / CALTROPS_SPRITE.riseTime;
-      const frame = spikes[Math.min(spikes.length - 1, Math.max(0, Math.floor(t * spikes.length)))];
-      if (!frame) continue;
-      // Grille de tuiles un peu serrées (elles se chevauchent) dont le centre tient dans le
-      // cercle : une croix de 5 pour le rayon de départ, un carré de 9 dès 50 px.
-      const tile = frame.w * scale;
-      const step = tile * TILE_SPACING;
-      const limit = r - tile * TILE_INSET;
-      const n = Math.floor(limit / step);
-      for (let gx = -n; gx <= n; gx++) {
-        for (let gy = -n; gy <= n; gy++) {
-          if ((gx * step) ** 2 + (gy * step) ** 2 > limit * limit) continue;
-          sprites.draw(ctx, frame, x + gx * step, y + gy * step + tile / 2, scale, false, tint);
-        }
+      if (mutation?.mine) {
+        renderMine(ctx, rc, x, y, mineRadius, i, weapon.color);
+        continue;
       }
+      dashedRing(ctx, x, y, r, mutation?.slow ? weapon.color : RING_COLOR, RING_ALPHA);
+      if (sheet) {
+        const index = zoneFrame(sheet, look.holdFrame, age, left);
+        drawCentered(ctx, sheet, index, x, y, (r * 2 * look.cover) / boundsWidth(sheet));
+        continue;
+      }
+      renderTiles(ctx, rc, x, y, r, age, left, mutation ? weaponTint(weapon.color) : undefined);
     }
   },
 

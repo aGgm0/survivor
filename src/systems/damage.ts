@@ -1,6 +1,7 @@
 import { KNOCKBACK, MIN_DAMAGE, resistReduction } from '../data/combat';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
+import type { OneShotName } from '../data/sprites';
 
 /** `direct` : coup d'arme ; `poison` : dégâts d'un effet d'état (affichés en vert, sans recul). */
 export type HitKind = 'direct' | 'poison';
@@ -23,6 +24,8 @@ export interface HitEvents {
   onThrust?(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
   /** Optionnel : un coup d'épée (pour l'effet visuel). `angle` = direction, `arc` = ouverture (rad). */
   onSlash?(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
+  /** Optionnel : un effet du pack à jouer en (x, y), large de `size` px (mine, foudre, coup). */
+  onEffect?(name: OneShotName, x: number, y: number, size: number): void;
   /** Optionnel : une arme à projectiles vient de tirer (pour le bruitage). */
   onFire?(weapon: Weapon): void;
 }

@@ -1,7 +1,13 @@
 import type { Camera } from '../core/Camera';
 import { Pool, type Poolable } from '../core/Pool';
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
-import { EXPLOSION_FX, SLASH_FX } from '../data/sprites';
+import {
+  EXPLOSION_FX,
+  ONE_SHOT_FX,
+  SLASH_FX,
+  type EffectName,
+  type OneShotName,
+} from '../data/sprites';
 import type { SpriteAtlas, SpriteFrame } from '../core/SpriteAtlas';
 
 // Réglages purement visuels (aucun effet sur le jeu).
@@ -74,17 +80,28 @@ class Thrust implements Poolable {
   color = '';
 }
 
-/** Animations du pack utilisées ici (absentes : formes simples). */
-export interface EffectSprites {
-  readonly burst: EffectSheet;
-  readonly slash: EffectSheet;
+/** Un effet du pack joué une fois (coup, explosion, foudre), à la taille demandée. */
+class OneShot implements Poolable {
+  active = false;
+  name: OneShotName = 'clang';
+  x = 0;
+  y = 0;
+  /** px : largeur visible voulue */
+  size = 0;
+  age = 0;
+  /** s : durée de l'animation à sa vitesse de lecture */
+  lifetime = 0;
 }
+
+/** Animations du pack utilisées ici (absentes : formes simples). */
+export type EffectSprites = Readonly<Record<EffectName, EffectSheet>>;
 
 /** Effets visuels éphémères (explosions, coups d'épée). En pool : aucune allocation en jeu. */
 export class EffectsSystem {
   private readonly rings = new Pool(POOL_SIZE, () => new Ring());
   private readonly slashes = new Pool(POOL_SIZE, () => new Slash());
   private readonly thrusts = new Pool(POOL_SIZE, () => new Thrust());
+  private readonly oneShots = new Pool(POOL_SIZE, () => new OneShot());
   private readonly ringLifetime: number;
   private readonly slashLifetime: number;
 
@@ -136,8 +153,30 @@ export class EffectsSystem {
     t.color = color;
   }
 
+  /**
+   * Joue l'effet `name` du pack en (x, y), sa largeur visible = `size` px. Sans le pack, ou la
+   * réserve pleine : rien (purement visuel).
+   */
+  play(name: OneShotName, x: number, y: number, size: number): void {
+    const sheet = this.sprites?.[name];
+    if (!sheet) return;
+    const o = this.oneShots.acquire();
+    if (!o) return;
+    o.name = name;
+    o.x = x;
+    o.y = y;
+    o.size = size;
+    o.age = 0;
+    o.lifetime = sheet.clip.totalMs / 1000 / ONE_SHOT_FX[name].speed;
+  }
+
   get activeCount(): number {
-    return this.rings.activeCount + this.slashes.activeCount + this.thrusts.activeCount;
+    return (
+      this.rings.activeCount +
+      this.slashes.activeCount +
+      this.thrusts.activeCount +
+      this.oneShots.activeCount
+    );
   }
 
   update(dt: number): void {
@@ -155,6 +194,11 @@ export class EffectsSystem {
       if (!t.active) continue;
       t.age += dt;
       if (t.age >= THRUST.lifetime) this.thrusts.release(t);
+    }
+    for (const o of this.oneShots.items) {
+      if (!o.active) continue;
+      o.age += dt;
+      if (o.age >= o.lifetime) this.oneShots.release(o);
     }
   }
 
@@ -258,6 +302,16 @@ export class EffectsSystem {
     camera: Camera,
     sprites: EffectSprites,
   ): void {
+    // Effets joués une fois : pivot du pack (pied de la flamme, sol sous la foudre) posé sur le
+    // point visé ; largeur visible = la taille demandée.
+    for (const o of this.oneShots.items) {
+      if (!o.active) continue;
+      if (o.x + o.size < camera.left || o.x - o.size > camera.right) continue;
+      if (o.y + o.size * 2 < camera.top || o.y - o.size * 2 > camera.bottom) continue;
+      const sheet = sprites[o.name];
+      const [x0, , x1] = sheet.clip.bounds;
+      sheet.draw(ctx, progressFrame(sheet, o.age / o.lifetime), o.x, o.y, o.size / (x1 - x0));
+    }
     const burst = sprites.burst;
     const [bx0, , bx1] = burst.clip.bounds;
     for (const ring of this.rings.items) {

@@ -214,8 +214,38 @@ const PVFX = `${import.meta.env.BASE_URL}assets/sprites/pvfx/`;
 export const EFFECT_DIRS = {
   burst: `${PVFX}arcane-burst/`,
   slash: `${PVFX}axe-smear/`,
+  // 0.3, bloc C (retour de jeu : « visuel trop simple, pas dans le thème de l'arme »)
+  spikes: `${PVFX}earth-spike/`,
+  clang: `${PVFX}metal-clang/`,
+  barrel: `${PVFX}barrel-explosion/`,
+  vines: `${PVFX}vine-snare/`,
+  strike: `${PVFX}lightning-strike/`,
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
+
+/**
+ * Effets joués une fois là où il se passe quelque chose (coup, explosion, foudre) : `speed` =
+ * vitesse de lecture (2 = deux fois plus vite que dans le pack).
+ */
+export const ONE_SHOT_FX = {
+  /** Étincelles d'acier sur un ennemi touché par les chausse-trapes */
+  clang: { speed: 1.5 },
+  /** Explosion d'une mine : feu puis colonne de fumée (2 s dans le pack, accélérée) */
+  barrel: { speed: 1.6 },
+  /** Foudre de l'Orage, qui tombe sur l'ennemi */
+  strike: { speed: 1.4 },
+} as const satisfies Partial<Record<EffectName, { speed: number }>>;
+export type OneShotName = keyof typeof ONE_SHOT_FX;
+
+/**
+ * Zones au sol qui vivent avec leur effet : il se joue jusqu'à `holdFrame` à la pose, reste sur
+ * cette image tant que la zone dure, puis joue sa fin pendant les derniers instants de la zone.
+ * `cover` : part du diamètre de la zone couverte par la largeur visible de l'effet.
+ */
+export const ZONE_FX = {
+  spikes: { effect: 'spikes', holdFrame: 6, cover: 1.15 },
+  brambles: { effect: 'vines', holdFrame: 7, cover: 1.25 },
+} as const satisfies Record<string, { effect: EffectName; holdFrame: number; cover: number }>;
 
 /** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
 export const EXPLOSION_FX = {

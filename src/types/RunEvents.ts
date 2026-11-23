@@ -5,6 +5,7 @@
 
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
+import type { OneShotName } from '../data/sprites';
 import type { HitKind } from '../systems/damage';
 
 export interface RunEvents {
@@ -36,6 +37,8 @@ export interface RunEvents {
   /** Coup d'épée en arc, ou d'estoc. `angle` = direction, `arc` = ouverture (rad) */
   slash(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
   thrust(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
+  /** Effet du pack à jouer (explosion d'une mine, foudre de l'Orage, étincelles d'un coup) */
+  effect(name: OneShotName, x: number, y: number, size: number): void;
   /** Une arme à projectiles vient de tirer */
   fired(): void;
   /** Un choix validé dans un écran de la partie (carte de level up, relance) */

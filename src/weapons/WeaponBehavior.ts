@@ -4,7 +4,9 @@
 
 import type { Rng } from '../core/math';
 import type { Pool } from '../core/Pool';
+import type { EffectSheet } from '../core/EffectSheet';
 import type { SpriteAtlas } from '../core/SpriteAtlas';
+import type { EffectName } from '../data/sprites';
 import type { WeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
@@ -71,6 +73,8 @@ export interface WeaponRenderContext {
   readonly fx: SpriteAtlas | null;
   /** Atlas du pack (persos, ennemis, objets, armes) ; null : formes simples */
   readonly sprites: SpriteAtlas | null;
+  /** Effets PVFX (zones au sol qui vivent avec leur effet) ; null : formes simples */
+  readonly effects: Readonly<Record<EffectName, EffectSheet>> | null;
   readonly projectiles: Pool<Projectile>;
   isOnScreen(x: number, y: number, r: number): boolean;
 }

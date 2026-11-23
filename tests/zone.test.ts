@@ -28,7 +28,9 @@ function setup(positions: [number, number][], type: EnemyType = ENEMY_TYPES.basi
   const system = new WeaponSystem(20, collisions, new Pool(1, () => new Projectile()), {
     onHit: (e) => hits.set(e, (hits.get(e) ?? 0) + 1),
     onKill: () => {},
-    onExplosion: () => explosions++,
+    onEffect: (name) => {
+      if (name === 'barrel') explosions++;
+    },
   });
   const run = (w: Weapon, from: number, seconds: number, playerX = 0) => {
     for (let t = 0; t < seconds - 1e-9; t += DT) {

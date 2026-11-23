@@ -17,6 +17,7 @@ import type { DamageNumberSystem } from '../../systems/DamageNumberSystem';
 import type { EffectsSystem } from '../../systems/EffectsSystem';
 import type { ParticleSystem } from '../../systems/ParticleSystem';
 import type { RunEvents } from '../../types/RunEvents';
+import type { OneShotName } from '../../data/sprites';
 
 /** s pendant lesquelles un ennemi touché est affiché en blanc */
 const ENEMY_HIT_FLASH = 0.08;
@@ -155,6 +156,17 @@ export class Feedback implements RunEvents {
   thrust(x: number, y: number, angle: number, arc: number, range: number, color: string): void {
     this.deps.effects.thrust(x, y, angle, arc, range, color);
     this.sound('sword-slash');
+  }
+
+  effect(name: OneShotName, x: number, y: number, size: number): void {
+    this.deps.effects.play(name, x, y, size);
+    // Les grosses explosions se sentent et s'entendent ; les étincelles restent discrètes.
+    if (name === 'barrel') {
+      this.shake('explosion');
+      this.sound('bolt-burst');
+    } else if (name === 'strike') {
+      this.sound('bolt-burst');
+    }
   }
 
   fired(): void {

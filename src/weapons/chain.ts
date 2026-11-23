@@ -11,6 +11,8 @@ import { formatNumber } from '../ui/formatNumber';
 import { cooldownStat, scaledCooldown } from './shared';
 import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
 
+/** px : largeur de la foudre de l'Orage */
+const STRIKE_SIZE = 70;
 /** Segments d'éclair gardés pour le dessin (les plus vieux sont remplacés) */
 const MAX_BOLTS = 64;
 /** Valeurs par segment dans `Weapon.bolts` : x1, y1, x2, y2, temps */
@@ -106,7 +108,8 @@ function runChain(
     hit[hitCount++] = target;
     const tx = target.x;
     const ty = target.y;
-    recordBolt(weapon, px, py, tx, ty, ctx.now);
+    // Pas de segment de longueur nulle (départ de l'Orage : la foudre du pack le remplace).
+    if (tx !== px || ty !== py) recordBolt(weapon, px, py, tx, ty, ctx.now);
     // Recul dans le sens du saut.
     const d = Math.hypot(tx - px, ty - py) || 1;
     damageEnemy(weapon, target, damage, ctx.events, (tx - px) / d, (ty - py) / d);
@@ -168,7 +171,9 @@ export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
     for (let s = 0; storm && s < storm.count; s++) {
       const start = randomFree(ctx, x, y, storm.range);
       if (!start) break;
-      runChain(weapon, ctx, start, start.x, start.y - 200); // la foudre tombe du ciel
+      // La foudre tombe du ciel sur la cible (effet du pack), puis la chaîne repart de là.
+      ctx.events.onEffect?.('strike', start.x, start.y, STRIKE_SIZE);
+      runChain(weapon, ctx, start, start.x, start.y);
     }
     weapon.cooldownTimer = weapon.cooldown;
     ctx.events.onFire?.(weapon);

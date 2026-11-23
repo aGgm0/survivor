@@ -28,6 +28,7 @@ describe('Arc : les flèches du pack', () => {
       time: 0,
       fx: null,
       sprites,
+      effects: null,
       projectiles,
       isOnScreen: () => true,
     };
