@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { WEAPON_DAMAGE_MULT } from '../src/data/combat';
 import { Pool } from '../src/core/Pool';
-import { ENEMY_TYPES } from '../src/data/enemies';
+import { PLAIN_ENEMY_TYPES as ENEMY_TYPES } from '../sim/plainEnemies';
 import { WEAPONS, weaponMaxLevel, type MutationDef } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Projectile } from '../src/entities/Projectile';

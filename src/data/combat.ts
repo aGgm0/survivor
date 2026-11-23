@@ -11,6 +11,34 @@ export const WEAPON_DAMAGE_MULT = 1.15;
 export const MIN_DAMAGE = 1;
 
 /**
+ * Type de dégâts d'une arme. Chaque ennemi résiste plus ou moins à chacun (`resistances` dans
+ * enemies.ts) : un build d'un seul type bute sur les ennemis qui y résistent.
+ */
+export type DamageType = 'physical' | 'magical';
+
+/** Noms affichés des types de dégâts */
+export const DAMAGE_TYPE_NAMES: Readonly<Record<DamageType, string>> = {
+  physical: 'Physique',
+  magical: 'Magique',
+};
+
+/**
+ * Valeur de résistance qui réduit les dégâts de moitié. Réduction = A / (A + RESIST_HALF) :
+ * 25 → 20 %, 50 → 33 %, 100 → 50 %. Jamais 100 % : aucune immunité, quelle que soit la valeur.
+ */
+export const RESIST_HALF = 100;
+
+/**
+ * Part des dégâts retirée par une résistance, après la pénétration de l'arme. Une pénétration
+ * plus forte que la résistance ne fait PAS plus de dégâts (sinon un passif au max deviendrait
+ * un bonus de dégâts déguisé).
+ */
+export function resistReduction(resistance: number, penetration: number): number {
+  const a = Math.max(0, resistance - penetration);
+  return a / (a + RESIST_HALF);
+}
+
+/**
  * Dégâts réellement subis : l'armure retire un montant fixe, mais un coup fait toujours
  * au moins MIN_DAMAGE (sinon 3 points d'armure rendraient immunisé aux ennemis rapides).
  */

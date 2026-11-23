@@ -5,7 +5,7 @@ import { Player } from '../src/entities/Player';
 import { damageEnemy } from '../src/systems/damage';
 import { Enemy } from '../src/entities/Enemy';
 import { Weapon } from '../src/entities/Weapon';
-import { ENEMY_TYPES } from '../src/data/enemies';
+import { PLAIN_ENEMY_TYPES as ENEMY_TYPES } from '../sim/plainEnemies';
 import { WEAPONS } from '../src/data/weapons';
 
 describe('computeDamage', () => {

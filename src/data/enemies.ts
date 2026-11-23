@@ -1,4 +1,6 @@
 // Types d'ennemis (voir CLAUDE.md § 5.5). Leur fréquence d'apparition est dans waves.ts.
+import type { DamageType } from './combat';
+
 export interface EnemyType {
   readonly id: string;
   readonly hp: number;
@@ -13,6 +15,11 @@ export interface EnemyType {
   readonly color: string;
   /** Vrai : aucune arme ne le fait reculer (boss) */
   readonly knockbackImmune?: boolean;
+  /**
+   * Résistance à chaque type de dégâts (armure physique, résistance magique), réduite par la
+   * pénétration de l'arme : voir `resistReduction` dans combat.ts. Absent = 0.
+   */
+  readonly resistances?: Readonly<Partial<Record<DamageType, number>>>;
   /** Part des ralentissements ignorée (0,85 = ne subit que 15 % du ralentissement). Absent = 0 */
   readonly slowResist?: number;
   /**
@@ -75,6 +82,8 @@ export const ENEMY_TYPES = {
     radius: 24,
     color: '#5cb85c',
     goldChance: 0.075, // 15 → 7,5 % (or −50 %) ; plus dur à tuer : plus souvent de l'or
+    // 0.3 : −33 % contre la magie. L'Épée (physique) devient l'arme anti-tank.
+    resistances: { magical: 50 },
   },
   /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
   boss: {
@@ -87,6 +96,7 @@ export const ENEMY_TYPES = {
     radius: 48,
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
+    resistances: { physical: 30, magical: 30 }, // −23 % contre tout : la pénétration compte
     slowResist: 0.85, // retour de jeu : le Brasier (−30 %, remplacé par l'Aura de givre) le ralentissait beaucoup trop
   },
   /** Mini-boss de 3:00 : un rapide très boosté (PV ×60, dégâts ×4, taille ×1,8). */
@@ -101,6 +111,7 @@ export const ENEMY_TYPES = {
     color: '#f0ad4e',
     // 50 % du recul d'un rapide normal (1,5, le plafond des ennemis légers)
     knockbackFactor: 0.75,
+    resistances: { magical: 40 }, // −29 % contre la magie
     elite: true,
   },
   /** Mini-boss de 7:00 : un basique très boosté (PV ×50, dégâts ×4, taille ×1,8, vitesse ×1,1). */
@@ -115,6 +126,7 @@ export const ENEMY_TYPES = {
     color: '#d9534f',
     // 50 % du recul d'un basique normal (1, l'ennemi de référence)
     knockbackFactor: 0.5,
+    resistances: { physical: 50 }, // −33 % contre le physique
     elite: true,
   },
   /** Mobilier cassable (voir data/furniture.ts) : apparaît hors écran, ne bouge pas. */

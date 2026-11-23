@@ -1,3 +1,5 @@
+import type { DamageType } from './combat';
+
 // Armes (voir CLAUDE.md § 5.4). Data-driven : ajouter une arme = ajouter une entrée ici.
 // Trois comportements (`kind`) : projectile, aura, orbite. Chacun a ses propres réglages.
 
@@ -76,6 +78,8 @@ export interface MutationDef {
   readonly orbitDistanceMult?: number;
   /** Mêlée : angle du coup imposé, en degrés (360 = tout autour) */
   readonly arcDeg?: number;
+  /** Pénétration ajoutée à celle de l'arme (de son type de dégâts). Absent = 0 */
+  readonly penetration?: number;
   /** Mêlée : multiplicateur de la portée du coup */
   readonly rangeMult?: number;
   /**
@@ -99,6 +103,13 @@ interface WeaponDefBase {
   readonly scope: string;
   /** Dégâts par coup au niveau 1 */
   readonly damage: number;
+  /** Physique ou magique : chaque ennemi résiste plus ou moins à chacun */
+  readonly damageType: DamageType;
+  /**
+   * Retirée de la résistance de l'ennemi au type de l'arme (voir `resistReduction`). S'ajoute à
+   * celle de la mutation et à celle du joueur. Absent = 0
+   */
+  readonly penetration?: number;
   /**
    * px/s : vitesse donnée à l'ennemi touché, en s'éloignant (pour un ennemi de poids moyen ;
    * voir KNOCKBACK dans combat.ts). L'ennemi ralentit ensuite et revient vers le joueur.
@@ -182,6 +193,7 @@ export type WeaponDef = ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef | M
 export const WEAPONS = {
   arcaneBolt: {
     kind: 'projectile',
+    damageType: 'magical',
     id: 'arcaneBolt',
     name: 'Trait arcanique',
     short: 'TA',
@@ -225,6 +237,7 @@ export const WEAPONS = {
   },
   burningAura: {
     kind: 'aura',
+    damageType: 'magical',
     id: 'burningAura',
     name: 'Aura ardente',
     short: 'AA',
@@ -279,6 +292,7 @@ export const WEAPONS = {
   },
   runicOrbs: {
     kind: 'orbit',
+    damageType: 'magical',
     id: 'runicOrbs',
     name: 'Orbes runiques',
     short: 'OR',
@@ -334,6 +348,7 @@ export const WEAPONS = {
   },
   sword: {
     kind: 'melee',
+    damageType: 'physical',
     id: 'sword',
     name: 'Épée',
     short: 'ÉP',

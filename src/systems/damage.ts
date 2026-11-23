@@ -1,4 +1,4 @@
-import { KNOCKBACK } from '../data/combat';
+import { KNOCKBACK, MIN_DAMAGE, resistReduction } from '../data/combat';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
 
@@ -33,7 +33,8 @@ const DAMAGE_CEIL_EPSILON = 1e-6;
  * Blesse un ennemi avec une arme. Point de passage unique pour toutes les armes
  * (projectile, aura, orbite) : les stats du damage meter et le recul restent cohérents.
  * (`dirX`, `dirY`) : direction du recul, de longueur 1 (ex. sens du projectile).
- * Les dégâts sont arrondis à l'entier supérieur.
+ * Les dégâts sont réduits par la résistance de l'ennemi au type de l'arme (moins sa
+ * pénétration), puis arrondis à l'entier supérieur ; jamais moins de MIN_DAMAGE.
  */
 export function damageEnemy(
   source: Weapon,
@@ -44,9 +45,12 @@ export function damageEnemy(
   dirY: number,
   kind: HitKind = 'direct',
 ): void {
+  // Résistance de l'ennemi au type de l'arme, moins la pénétration de l'arme.
+  const resistance = enemy.type.resistances?.[source.damageType] ?? 0;
+  if (resistance > 0) amount *= 1 - resistReduction(resistance, source.penetration);
   // Arrondi à l'entier supérieur : un petit bonus en % (Puissance, boutique) compte toujours.
   // La marge évite qu'une erreur de virgule (16,0000001) ne coûte un point de plus.
-  amount = Math.ceil(amount - DAMAGE_CEIL_EPSILON);
+  amount = Math.max(MIN_DAMAGE, Math.ceil(amount - DAMAGE_CEIL_EPSILON));
   // Seuls les dégâts réellement utiles comptent : 10 sur un ennemi à 3 PV = 3.
   // Le mobilier ne compte ni dans le damage meter ni dans les kills (défis des persos).
   const prop = enemy.type.prop === true;

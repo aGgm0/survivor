@@ -1,4 +1,4 @@
-import { WEAPON_DAMAGE_MULT } from '../data/combat';
+import { WEAPON_DAMAGE_MULT, type DamageType } from '../data/combat';
 import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
 import { behaviorOf } from '../weapons/registry';
 import type { LevelTotals } from '../weapons/WeaponBehavior';
@@ -58,6 +58,8 @@ export class Weapon {
   count = 0;
   /** px, rayon de l'aura */
   radius = 0;
+  /** Retirée de la résistance de l'ennemi : arme + mutation (+ joueur, étape suivante) */
+  penetration = 0;
   /** px/s de recul donné à un ennemi de poids moyen */
   knockback: number;
   /** Orbite : taille d'un orbe (px) et vitesse de rotation (rad/s) ; 0 pour les autres armes */
@@ -80,6 +82,7 @@ export class Weapon {
   constructor(readonly def: WeaponDef) {
     this.damage = def.damage;
     this.knockback = def.knockback;
+    this.penetration = def.penetration ?? 0;
     // Les stats propres au type (délai, nombre, rayon, portée...) : voir src/weapons/.
     behaviorOf(def).init(this, def);
   }
@@ -87,6 +90,10 @@ export class Weapon {
   /** Nom affiché : celui de la mutation si l'arme a muté. */
   get displayName(): string {
     return this.mutation?.name ?? this.def.name;
+  }
+
+  get damageType(): DamageType {
+    return this.def.damageType;
   }
 
   get color(): string {
@@ -134,6 +141,7 @@ export class Weapon {
     const m = this.mutation;
     this.damage = t.damage * (m?.damageMult ?? 1) * mods.damageMult * WEAPON_DAMAGE_MULT;
     this.knockback = def.knockback * (m?.knockbackMult ?? 1) * mods.knockbackMult;
+    this.penetration = (def.penetration ?? 0) + (m?.penetration ?? 0);
     // Le reste dépend du type (Taille, Vélocité, Duplicateur, Hâte...).
     behavior.applyStats(this, def, t, mods);
   }
