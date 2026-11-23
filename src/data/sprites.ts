@@ -171,6 +171,17 @@ export const BOLT_SPRITE = {
   frameTime: 0.08,
 } as const;
 
+/**
+ * Flèche (Arc) : sprite `weapon_arrow` du pack 0x72, vertical (pointe en haut), dessiné à sa
+ * couleur (sans teinte ni halo) et tourné dans le sens du tir. `scale` : largeur ≈ la hitbox.
+ */
+export const ARROW_SPRITE = {
+  frame: 'weapon_arrow',
+  scale: 1.5,
+  /** Le sprite pointe vers le haut : un quart de tour de plus que le sens du tir */
+  rotation: Math.PI / 2,
+} as const;
+
 /** Orbe runique (gris, teint) : son diamètre (`diameter` px d'art) = celui de la hitbox. */
 export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as const;
 

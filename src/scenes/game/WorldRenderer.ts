@@ -115,6 +115,7 @@ export class WorldRenderer {
       playerY: 0,
       time: 0,
       fx: deps.fx,
+      sprites: deps.sprites,
       projectiles: world.projectiles,
       isOnScreen: (x, y, r) => this.isOnScreen(x, y, r),
     };

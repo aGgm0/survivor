@@ -26,13 +26,15 @@ describe('carte de l’autre type de dégâts', () => {
     expect(missingDamageType(build(WEAPONS.arcaneBolt, WEAPONS.sword).weapons)).toBeNull();
   });
 
-  it('un build tout magique se voit toujours proposer l’Épée, garantie de nouvelle arme comprise', () => {
+  it('un build tout magique se voit toujours proposer une arme physique, garantie de nouvelle arme comprise', () => {
     const b = build(WEAPONS.arcaneBolt, WEAPONS.burningAura);
     const options = availableUpgrades(b);
     for (let seed = 0; seed < 200; seed++) {
       const picks = rollUpgradeChoices(options, new Rng(seed), 3, true, [], 1, 'physical');
       expect(picks).toHaveLength(3);
-      expect(picks.some((c) => c.kind === 'newWeapon' && c.def.id === 'sword')).toBe(true);
+      expect(picks.some((c) => c.kind === 'newWeapon' && c.def.damageType === 'physical')).toBe(
+        true,
+      );
       expect(new Set(picks.map((c) => c.title)).size).toBe(3);
     }
   });

@@ -8,6 +8,7 @@ export const ICON_GROUPS = {
     burningAura: 758, // spirale de feu
     runicOrbs: 776, // cercle runique violet
     sword: 156, // épée bleue
+    bow: 1564, // arc
   },
   Mutations: {
     piercingBolt: 1010, // lance de glace
@@ -18,6 +19,8 @@ export const ICON_GROUPS = {
     orbStorm: 786, // tourbillon bleu
     whirlwind: 725, // coup en tourbillon
     thrust: 728, // épée pointée qui scintille (coup d'estoc)
+    heavyArrow: 401, // flèche à pointe d'acier
+    volley: 1136, // pluie de flèches
   },
   Passifs: {
     vitality: 659, // cœur

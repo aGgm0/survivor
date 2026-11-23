@@ -43,7 +43,7 @@ export class Projectile implements Poolable {
     dirX: number,
     dirY: number,
     damage: number = source.damage,
-    pierce: number = source.mutation?.pierce ?? 1,
+    pierce: number = source.pierce,
   ): void {
     this.source = source;
     this.x = x;

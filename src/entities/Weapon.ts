@@ -73,6 +73,8 @@ export class Weapon {
   projectileSpeed = 0;
   projectileRadius = 0;
   range = 0;
+  /** Projectile : ennemis traversés avant de disparaître (1 = s'arrête au premier) */
+  pierce = 1;
   /** Trait éclaté : rayon de l'explosion (px) ; 0 sans explosion */
   explosionRadius = 0;
   /** Mêlée : ouverture du coup en radians (2π = tout autour) ; 0 pour les autres armes */

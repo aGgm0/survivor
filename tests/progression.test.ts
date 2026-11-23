@@ -6,7 +6,7 @@ import { ENEMY_TYPES } from '../src/data/enemies';
 import { PLAYER_BASE } from '../src/data/player';
 import { EARLY_PASSIVES, MAX_PASSIVES, MAX_WEAPONS, xpToNext } from '../src/data/progression';
 import { HEAL_UPGRADE, PASSIVES } from '../src/data/upgrades';
-import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
+import { WEAPON_LIST, WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Player } from '../src/entities/Player';
 import { Projectile } from '../src/entities/Projectile';
@@ -71,10 +71,12 @@ describe('XpSystem', () => {
 });
 
 describe('upgrades — options et tirage', () => {
-  it('au départ : Trait arcanique niv 2, les 3 autres armes et tous les passifs', () => {
+  it('au départ : Trait arcanique niv 2, toutes les autres armes et tous les passifs', () => {
     const options = availableUpgrades(makeBuild());
-    expect(options).toHaveLength(1 + 3 + PASSIVES.length);
+    const others = WEAPON_LIST.length - 1;
+    expect(options).toHaveLength(1 + others + PASSIVES.length);
     expect(options.filter((o) => o.kind === 'newWeapon').map((o) => o.title)).toEqual([
+      WEAPONS.bow.name,
       WEAPONS.burningAura.name,
       WEAPONS.runicOrbs.name,
       WEAPONS.sword.name,
@@ -171,7 +173,11 @@ describe('upgrades — options et tirage', () => {
     applyUpgrade(aura, build);
     expect(build.weapons.map((w) => w.def.id)).toEqual(['arcaneBolt', 'burningAura']);
     const again = availableUpgrades(build).filter((o) => o.kind === 'newWeapon');
-    expect(again.map((o) => o.title)).toEqual([WEAPONS.runicOrbs.name, WEAPONS.sword.name]);
+    expect(again.map((o) => o.title)).toEqual([
+      WEAPONS.bow.name,
+      WEAPONS.runicOrbs.name,
+      WEAPONS.sword.name,
+    ]);
   });
 
   it('4 passifs possédés : plus de nouveau passif, mais les possédés montent encore', () => {

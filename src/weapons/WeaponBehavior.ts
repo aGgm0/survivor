@@ -64,6 +64,8 @@ export interface WeaponRenderContext {
   time: number;
   /** Atlas des effets générés ; null : formes simples */
   readonly fx: SpriteAtlas | null;
+  /** Atlas du pack (persos, ennemis, objets, armes) ; null : formes simples */
+  readonly sprites: SpriteAtlas | null;
   readonly projectiles: Pool<Projectile>;
   isOnScreen(x: number, y: number, r: number): boolean;
 }

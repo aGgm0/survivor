@@ -137,6 +137,10 @@ export interface ProjectileWeaponDef extends WeaponDefBase {
   readonly projectileLifetime: number;
   /** px, taille du projectile (affichage et hitbox) */
   readonly projectileRadius: number;
+  /** Ennemis traversés avant de disparaître (1 = s'arrête au premier). Une mutation le remplace. Absent = 1 */
+  readonly pierce?: number;
+  /** Apparence des projectiles : trait magique teint (défaut) ou flèche du pack */
+  readonly look?: 'bolt' | 'arrow';
 }
 
 /**
@@ -233,6 +237,58 @@ export const WEAPONS = {
         description: 'Explose à l’impact : 70 % des dégâts aux ennemis à moins de 75 px',
         color: '#ff8fd6',
         explosion: { radius: 75, damageRatio: 0.7 }, // rayon 60 → 75
+      },
+    ],
+  },
+  /**
+   * Arc (0.3, bloc C) : la version physique du tir à distance. Plus lent que le Trait, mais une
+   * flèche rapide qui porte loin, frappe fort et traverse 2 ennemis. Seulement des données : le
+   * comportement est celui des projectiles (critère du bloc A).
+   */
+  bow: {
+    kind: 'projectile',
+    damageType: 'physical',
+    id: 'bow',
+    name: 'Arc',
+    short: 'Ar',
+    description: 'Flèche rapide vers l’ennemi le plus proche, qui en traverse 2',
+    damage: 34,
+    knockback: 220,
+    cooldown: 1.8,
+    count: 1,
+    spreadDeg: 10,
+    projectileSpeed: 900,
+    projectileLifetime: 0.9, // ~810 px : la plus longue portée
+    projectileRadius: 5,
+    pierce: 2,
+    look: 'arrow',
+    color: '#d9a066',
+    scope: 'Projectile · vise le plus proche, traverse',
+    levels: [
+      { description: '+8 dégâts', damage: 8 },
+      { description: '+1 flèche', count: 1 },
+      { description: 'Cooldown -20 %', cooldownPct: -0.2 },
+      { description: '+12 dégâts et +1 flèche', damage: 12, count: 1 },
+    ],
+    mutations: [
+      {
+        id: 'heavyArrow',
+        name: 'Flèche lourde',
+        short: 'Fl',
+        description: 'Dégâts ×1,6, recul ×2, pénétration +40 : perce les blindés',
+        color: '#e8e8f0',
+        damageMult: 1.6,
+        knockbackMult: 2,
+        penetration: 40,
+      },
+      {
+        id: 'volley',
+        name: 'Volée',
+        short: 'Vo',
+        description: '5 flèches en éventail à chaque tir, dégâts ×0,6',
+        color: '#ffcf6b',
+        count: 5,
+        damageMult: 0.6,
       },
     ],
   },

@@ -1,7 +1,12 @@
 // Projectile (Trait arcanique) : tire vers l'ennemi le plus proche quand le délai est écoulé.
 
-import { frameAt, type SpriteAnimation, type SpriteAtlas } from '../core/SpriteAtlas';
-import { BOLT_SPRITE, ENEMY_ANIM_OFFSET } from '../data/sprites';
+import {
+  frameAt,
+  type SpriteAnimation,
+  type SpriteAtlas,
+  type SpriteFrame,
+} from '../core/SpriteAtlas';
+import { ARROW_SPRITE, BOLT_SPRITE, ENEMY_ANIM_OFFSET } from '../data/sprites';
 import type { ProjectileWeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
@@ -42,6 +47,27 @@ function fire(
   return fired > 0;
 }
 
+/** Flèches : sprite du pack à sa couleur, centré sur le projectile, pointe dans le sens du tir. */
+function renderArrows(
+  ctx: CanvasRenderingContext2D,
+  weapon: Weapon,
+  rc: WeaponRenderContext,
+  sprites: SpriteAtlas,
+  frame: SpriteFrame,
+): void {
+  const items = rc.projectiles.items;
+  const { scale, rotation } = ARROW_SPRITE;
+  const pivot = frame.w / 2;
+  for (let i = 0; i < items.length; i++) {
+    const p = items[i];
+    if (!p?.active || p.source !== weapon) continue;
+    const x = p.renderX(rc.alpha);
+    const y = p.renderY(rc.alpha);
+    if (!rc.isOnScreen(x, y, (frame.h * scale) / 2)) continue;
+    sprites.drawRotated(ctx, frame, x, y, scale, Math.atan2(p.vy, p.vx) + rotation, pivot);
+  }
+}
+
 /** Projectiles d'une arme en sprites, tournés dans le sens du tir, tête = taille de la hitbox. */
 function renderBolts(
   ctx: CanvasRenderingContext2D,
@@ -75,6 +101,7 @@ export const PROJECTILE_BEHAVIOR: WeaponBehavior<ProjectileWeaponDef> = {
     weapon.projectileRadius = def.projectileRadius;
     // Portée : distance parcourue par le projectile.
     weapon.range = def.projectileSpeed * def.projectileLifetime;
+    weapon.pierce = def.pierce ?? 1;
   },
 
   levelBase(def, t) {
@@ -92,6 +119,7 @@ export const PROJECTILE_BEHAVIOR: WeaponBehavior<ProjectileWeaponDef> = {
     // Durée de vie fixe : plus rapide = porte plus loin (et vise plus loin).
     weapon.range = weapon.projectileSpeed * def.projectileLifetime;
     weapon.explosionRadius = (m?.explosion?.radius ?? 0) * size;
+    weapon.pierce = m?.pierce ?? def.pierce ?? 1;
     weapon.cooldown = scaledCooldown(def.cooldown, t.cooldownPct, m, mods);
   },
 
@@ -111,7 +139,13 @@ export const PROJECTILE_BEHAVIOR: WeaponBehavior<ProjectileWeaponDef> = {
   },
 
   /** Un halo rond, puis le cœur (sprite orienté, ou disque sans atlas). Un chemin par passe. */
-  renderAbove(ctx, weapon, _def, rc) {
+  renderAbove(ctx, weapon, def, rc) {
+    // Flèches (Arc) : le sprite du pack, sans halo.
+    const arrow = def.look === 'arrow' ? rc.sprites?.animation(ARROW_SPRITE.frame)[0] : undefined;
+    if (arrow && rc.sprites) {
+      renderArrows(ctx, weapon, rc, rc.sprites, arrow);
+      return;
+    }
     const items = rc.projectiles.items;
     const fx = rc.fx;
     const bolt = fx?.animation(BOLT_SPRITE.anim);
