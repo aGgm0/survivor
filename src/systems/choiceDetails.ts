@@ -3,7 +3,8 @@
 
 import { MAX_PASSIVES, MAX_WEAPONS } from '../data/progression';
 import { GOLD_UPGRADE, HEAL_UPGRADE, type PassiveDef } from '../data/upgrades';
-import { weaponMaxLevel } from '../data/weapons';
+import { DAMAGE_TYPE_NAMES } from '../data/combat';
+import { weaponMaxLevel, type WeaponDef } from '../data/weapons';
 import { Weapon } from '../entities/Weapon';
 import { formatNumber as fmt } from '../ui/formatNumber';
 import { behaviorOf } from '../weapons/registry';
@@ -25,6 +26,11 @@ export interface ChoiceDetails {
   readonly scope: string;
   /** Pourquoi la carte apparaît (soin, or : tout est au maximum) */
   readonly reason?: string;
+}
+
+/** Bas de la carte d'une arme : son type de dégâts d'abord (« Magique · Projectile... »). */
+function weaponScope(def: WeaponDef): string {
+  return `${DAMAGE_TYPE_NAMES[def.damageType]} · ${def.scope}`;
 }
 
 /** Stats comparables d'une arme, mises en forme ; seules celles qui changent seront montrées. */
@@ -88,17 +94,20 @@ export function describeChoice(choice: UpgradeChoice, build: Build): ChoiceDetai
         level: choice.weapon.level,
         maxLevel: weaponMaxLevel(choice.weapon.def),
         changes: weaponLevelChanges(choice.weapon, build),
-        scope: choice.weapon.def.scope,
+        scope: weaponScope(choice.weapon.def),
       };
     case 'newWeapon':
       return {
         level: 0,
         maxLevel: weaponMaxLevel(choice.def),
         changes: [],
-        scope: `${choice.def.scope} · emplacement ${build.weapons.length + 1} / ${MAX_WEAPONS}`,
+        scope: `${weaponScope(choice.def)} · emplacement ${build.weapons.length + 1} / ${MAX_WEAPONS}`,
       };
     case 'mutation':
-      return { changes: [], scope: 'Choix parmi 2 · ne se change plus' };
+      return {
+        changes: [],
+        scope: `${DAMAGE_TYPE_NAMES[choice.weapon.damageType]} · Choix parmi 2 · ne se change plus`,
+      };
     case 'passive': {
       const level = build.passiveLevels.get(choice.passive.id) ?? 0;
       const slot =

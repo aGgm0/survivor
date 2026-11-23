@@ -240,7 +240,8 @@ export class GameScene implements Scene, Build {
     this.spawner = new SpawnSystem(this.enemies, this.rng);
     // Systèmes → scène : les coups et les kills (règles), le reste va droit au ressenti.
     const hitEvents: HitEvents = {
-      onHit: (e, damage, kind, source) => this.feedback.enemyHit(e, damage, kind, source),
+      onHit: (e, damage, kind, source, reduction) =>
+        this.feedback.enemyHit(e, damage, kind, source, reduction),
       onKill: (e) => this.killEnemy(e),
       onExplosion: (x, y, r, color) => this.feedback.explosion(x, y, r, color),
       onAuraPulse: (x, y, r) => this.feedback.auraPulse(x, y, r),

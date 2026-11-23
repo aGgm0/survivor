@@ -1,3 +1,4 @@
+import { DAMAGE_TYPE_NAMES } from '../data/combat';
 import { PASSIVES } from '../data/upgrades';
 import type { Weapon } from '../entities/Weapon';
 import { formatTime } from './formatTime';
@@ -95,7 +96,16 @@ export class Hud {
     this.el.weapons.replaceChildren(
       ...weapons.map((w) => {
         const icon = w.mutation?.id ?? w.def.id;
-        const box = slot(icon, w.short, w.level, `${w.displayName} — niv ${w.level}`, w.color);
+        const type = DAMAGE_TYPE_NAMES[w.damageType];
+        const box = slot(
+          icon,
+          w.short,
+          w.level,
+          `${w.displayName} (${type}) — niv ${w.level}`,
+          w.color,
+        );
+        // Coin coloré du type de dégâts : on voit d'un coup d'œil si le build est d'un seul type.
+        box.classList.add(`slot-${w.damageType}`);
         // Arme mutée : étoile à la place du niveau (elle est au max) et bordure dorée.
         if (w.mutation) {
           box.classList.add('slot-mutated');

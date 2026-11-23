@@ -30,6 +30,9 @@
   --ui-night: #15202f;
   --ui-gold: #dcc47c; /* titres, accents */
   --ui-gold-dark: #c19149;
+  /* types de dégâts (coin des cases d'armes) */
+  --dmg-physical: #c9d3da;
+  --dmg-magical: #a77bff;
   --ui-tan: #9f8873; /* texte secondaire */
   --ui-text: #ece6d6;
   --ui-blue: #4f8fd0; /* XP, valeurs */
@@ -347,6 +350,26 @@ body {
   image-rendering: pixelated;
   font: 12px var(--ui-font);
   color: var(--ui-text);
+}
+
+/* Type de dégâts d'une arme : petit coin en pixels en haut à gauche de sa case */
+.slot-physical::before,
+.slot-magical::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: -6px;
+  width: 6px;
+  height: 6px;
+  box-shadow: 1px 1px 0 #000;
+}
+
+.slot-physical::before {
+  background: var(--dmg-physical);
+}
+
+.slot-magical::before {
+  background: var(--dmg-magical);
 }
 
 .slot-mutated {

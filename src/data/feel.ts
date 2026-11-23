@@ -153,6 +153,13 @@ export const AURA_PULSE_RING: AuraLook = {
  */
 export const LOW_HP = { warn: 0.2, critical: 0.1 } as const;
 
+/**
+ * Nombres de dégâts d'un coup réduit par la résistance de l'ennemi : gris au lieu de blanc, à
+ * partir de `minReduction` seulement (le basique résiste de 9 % à tout : sans seuil, presque
+ * tous les nombres seraient gris et le repère ne voudrait plus rien dire).
+ */
+export const RESISTED_NUMBERS = { minReduction: 0.15, color: '#9a9a9a' } as const;
+
 /** Trauma ajouté par événement ; `cap` : ce choc seul ne monte pas au-dessus. */
 export const SHAKE_EVENTS = {
   /** Plafonné : au milieu de la horde, l'écran ne doit pas trembler en continu */

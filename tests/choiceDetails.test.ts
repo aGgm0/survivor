@@ -29,7 +29,7 @@ describe('détails des cartes de level up', () => {
     );
     expect([d.level, d.maxLevel]).toEqual([2, weaponMaxLevel(WEAPONS.arcaneBolt)]);
     expect(d.changes).toEqual([{ label: 'projectiles', before: '1', after: '2' }]);
-    expect(d.scope).toBe(WEAPONS.arcaneBolt.scope);
+    expect(d.scope).toBe(`Magique · ${WEAPONS.arcaneBolt.scope}`); // type de dégâts d'abord
   });
 
   it('nouvelle arme : niveau 0 et l’emplacement qu’elle prend', () => {

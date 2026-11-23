@@ -6,7 +6,7 @@ import type { SoundPlayer } from '../../core/AudioEngine';
 import type { Camera } from '../../core/Camera';
 import { Rng } from '../../core/math';
 import { HIT_SOUNDS, type SfxName } from '../../data/audio';
-import { AURA_LOOKS, AURA_PULSE, PARTICLES, SHAKE_EVENTS } from '../../data/feel';
+import { AURA_LOOKS, AURA_PULSE, PARTICLES, RESISTED_NUMBERS, SHAKE_EVENTS } from '../../data/feel';
 import type { Settings } from '../../data/settings';
 import { STATUS } from '../../data/status';
 import { BOSS_TYPE } from '../../data/waves';
@@ -57,7 +57,7 @@ export class Feedback implements RunEvents {
   }
 
   /** Retour visuel d'un impact : son, flash blanc et nombre de dégâts au-dessus de l'ennemi. */
-  enemyHit(e: Enemy, damage: number, kind: HitKind, source: Weapon): void {
+  enemyHit(e: Enemy, damage: number, kind: HitKind, source: Weapon, reduction: number): void {
     // Bruitage selon l'arme (le poison n'en a pas : il tique sans arrêt). Une caisse ne fait
     // pas de bruit d'impact, seulement celui de sa casse.
     if (kind === 'direct' && !e.type.prop) this.sound(HIT_SOUNDS[source.def.kind]);
@@ -71,7 +71,13 @@ export class Feedback implements RunEvents {
     // Pas de nouveau flash juste après le précédent : sous un gros DPS, l'ennemi resterait blanc.
     const now = this.deps.now();
     if (now - e.flashUntil >= ENEMY_FLASH_GAP) e.flashUntil = now + ENEMY_HIT_FLASH;
-    if (showNumbers) damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
+    if (!showNumbers) return;
+    // Coup bien réduit par la résistance : nombre gris (« cet ennemi encaisse ce type »).
+    if (reduction >= RESISTED_NUMBERS.minReduction) {
+      damageNumbers.spawn(e.x, e.y - e.type.radius, damage, RESISTED_NUMBERS.color);
+    } else {
+      damageNumbers.spawn(e.x, e.y - e.type.radius, damage);
+    }
   }
 
   enemyKilled(e: Enemy): void {

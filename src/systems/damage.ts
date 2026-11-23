@@ -9,9 +9,10 @@ export type HitKind = 'direct' | 'poison';
 export interface HitEvents {
   /**
    * Un ennemi vient d'être touché (appelé à chaque coup, y compris le coup fatal).
-   * `source` : l'arme qui frappe (le bruitage dépend de l'arme).
+   * `source` : l'arme qui frappe (le bruitage dépend de l'arme). `reduction` : part des dégâts
+   * retirée par la résistance de l'ennemi (0 à 1), pour l'affichage.
    */
-  onHit(enemy: Enemy, damage: number, kind: HitKind, source: Weapon): void;
+  onHit(enemy: Enemy, damage: number, kind: HitKind, source: Weapon, reduction: number): void;
   /** Un ennemi tombe à 0 PV : la scène le retire, compte le kill, etc. */
   onKill(enemy: Enemy): void;
   /** Optionnel : une explosion a eu lieu (pour l'effet visuel). */
@@ -47,7 +48,8 @@ export function damageEnemy(
 ): void {
   // Résistance de l'ennemi au type de l'arme, moins la pénétration de l'arme.
   const resistance = enemy.type.resistances?.[source.damageType] ?? 0;
-  if (resistance > 0) amount *= 1 - resistReduction(resistance, source.penetration);
+  const reduction = resistance > 0 ? resistReduction(resistance, source.penetration) : 0;
+  amount *= 1 - reduction;
   // Arrondi à l'entier supérieur : un petit bonus en % (Puissance, boutique) compte toujours.
   // La marge évite qu'une erreur de virgule (16,0000001) ne coûte un point de plus.
   amount = Math.max(MIN_DAMAGE, Math.ceil(amount - DAMAGE_CEIL_EPSILON));
@@ -56,7 +58,7 @@ export function damageEnemy(
   const prop = enemy.type.prop === true;
   if (!prop) source.totalDamage += Math.min(amount, enemy.hp);
   enemy.hp -= amount;
-  events.onHit(enemy, amount, kind, source);
+  events.onHit(enemy, amount, kind, source, reduction);
   if (enemy.hp <= 0) {
     if (!prop) source.kills++;
     events.onKill(enemy);

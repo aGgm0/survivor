@@ -3,7 +3,7 @@ import { Camera } from '../src/core/Camera';
 import { Rng } from '../src/core/math';
 import type { SfxName } from '../src/data/audio';
 import { ENEMY_TYPES } from '../src/data/enemies';
-import { PARTICLES } from '../src/data/feel';
+import { PARTICLES, RESISTED_NUMBERS } from '../src/data/feel';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
 import { BOSS_TYPE } from '../src/data/waves';
 import { WEAPONS } from '../src/data/weapons';
@@ -40,7 +40,7 @@ describe('Feedback (son, tremblement, particules)', () => {
     const { feedback, played, damageNumbers } = setup();
     const e = new Enemy();
     e.type = ENEMY_TYPES.basic;
-    feedback.enemyHit(e, 12, 'direct', new Weapon(WEAPONS.runicOrbs));
+    feedback.enemyHit(e, 12, 'direct', new Weapon(WEAPONS.runicOrbs), 0);
     expect(played).toEqual(['orb-hit']);
     expect(e.flashUntil).toBeGreaterThan(10);
     expect(damageNumbers.numbers.activeCount).toBe(1);
@@ -49,12 +49,22 @@ describe('Feedback (son, tremblement, particules)', () => {
   it('le poison : ni son ni flash ; nombres coupés dans les Options', () => {
     const { feedback, played, damageNumbers, settings } = setup();
     const e = new Enemy();
-    feedback.enemyHit(e, 3, 'poison', new Weapon(WEAPONS.burningAura));
+    feedback.enemyHit(e, 3, 'poison', new Weapon(WEAPONS.burningAura), 0);
     expect(played).toEqual([]);
     expect(e.flashUntil).toBeLessThan(10);
     settings.damageNumbers = false;
-    feedback.enemyHit(e, 3, 'poison', new Weapon(WEAPONS.burningAura));
+    feedback.enemyHit(e, 3, 'poison', new Weapon(WEAPONS.burningAura), 0);
     expect(damageNumbers.numbers.activeCount).toBe(1);
+  });
+
+  it('un coup bien réduit par la résistance : nombre gris ; un coup à peine réduit : blanc', () => {
+    const { feedback, damageNumbers } = setup();
+    const e = new Enemy();
+    const bolt = new Weapon(WEAPONS.arcaneBolt);
+    feedback.enemyHit(e, 12, 'direct', bolt, 0.33);
+    feedback.enemyHit(e, 12, 'direct', bolt, 0.09);
+    const colors = damageNumbers.numbers.items.filter((n) => n.active).map((n) => n.color);
+    expect(colors).toEqual([RESISTED_NUMBERS.color, '#ffffff']);
   });
 
   it('la mort du boss : son du boss, gros tremblement, gerbe d’éclats', () => {

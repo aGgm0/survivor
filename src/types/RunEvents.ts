@@ -8,8 +8,11 @@ import type { Weapon } from '../entities/Weapon';
 import type { HitKind } from '../systems/damage';
 
 export interface RunEvents {
-  /** Un ennemi (ou une caisse) vient d'être touché, coup fatal compris */
-  enemyHit(enemy: Enemy, damage: number, kind: HitKind, source: Weapon): void;
+  /**
+   * Un ennemi (ou une caisse) vient d'être touché, coup fatal compris. `reduction` : part des
+   * dégâts retirée par sa résistance (0 à 1)
+   */
+  enemyHit(enemy: Enemy, damage: number, kind: HitKind, source: Weapon, reduction: number): void;
   /** Un ennemi tombe (pas le mobilier : voir `crateBroken`) */
   enemyKilled(enemy: Enemy): void;
   /** Une caisse ou un tonneau est cassé */
