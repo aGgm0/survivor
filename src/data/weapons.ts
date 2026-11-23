@@ -257,8 +257,10 @@ export const WEAPONS = {
     cooldown: 1.8,
     count: 1,
     spreadDeg: 10,
-    projectileSpeed: 900,
-    projectileLifetime: 0.9, // ~810 px : la plus longue portée
+    // 900 → 600 px/s (retour de jeu : « les flèches vont super vite ») ; durée de vie allongée
+    // pour garder la même portée (~810 px, la plus longue)
+    projectileSpeed: 600,
+    projectileLifetime: 1.35,
     projectileRadius: 5,
     pierce: 2,
     look: 'arrow',
