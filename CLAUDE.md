@@ -439,7 +439,8 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 **Bloc C — 4 nouvelles armes** (2 physiques, 2 magiques, 2 mutations chacune, au moins 2 nouveaux comportements)
 - [x] Design des 4 armes validé (2026-11-23) : **Arc** (physique, projectile), **Hache de lancer** (physique, `boomerang`), **Chausse-trapes** (physique, `zone` au sol), **Éclair en chaîne** (magique, `chain`) ; chiffres de départ et mutations dans le journal, à ajuster en jouant
 - [x] **Arc** : données seulement (`bow` dans weapons.ts) + 2 champs génériques des projectiles : `pierce` de base (traverse 2) et `look: 'arrow'` (sprite `weapon_arrow` du pack, sans teinte). 34 dégâts / 1,8 s, 600 px/s (900 d'abord : « les flèches vont super vite »), ~810 px. Mutations **Flèche lourde** (×1,6, recul ×2, pénétration +40) / **Volée** (5 flèches, ×0,6). Icônes Raven 1564 / 401 / 1136
-- [ ] Éclair en chaîne, Hache de lancer, Chausse-trapes
+- [x] **Éclair en chaîne** : nouveau type `chain` (`src/weapons/chain.ts`). 14 dégâts / 1,3 s, première cible à 350 px, 3 sauts de 150 px au plus, −15 % par saut ; jamais deux fois le même ennemi dans une décharge ; Duplicateur = une chaîne de plus, Taille = sauts plus longs. Mutations **Orage** (2 chaînes en plus depuis des ennemis au hasard à 600 px, aléatoire des armes séparé de celui du jeu) / **Arc continu** (+4 sauts, sans perte). Trait brisé qui s'efface en 0,2 s (`CHAIN_LOOK`). Icônes Raven 1019 / 1031 / 1037
+- [ ] Hache de lancer, Chausse-trapes
 - [ ] Une arme à la fois : données, module de comportement si nouveau type, visuel, tests ; essai en jeu (F2) avant la suivante
 - [ ] Bot (`SIM_FORCE`) sur chaque mutation, puis petite passe d'équilibrage : aucune arme sous ~10 % du damage meter
 
