@@ -23,6 +23,8 @@ export interface WeaponLevelBonus {
   readonly range?: number;
   /** Sauts en plus (éclair en chaîne) */
   readonly jumps?: number;
+  /** s de durée en plus (zones au sol) */
+  readonly duration?: number;
 }
 
 /**
@@ -84,6 +86,13 @@ export interface MutationDef {
   readonly penetration?: number;
   /** Boomerang : multiplicateur de la vitesse de vol */
   readonly speedMult?: number;
+  /** Zone : multiplicateur de la durée des zones */
+  readonly durationMult?: number;
+  /**
+   * Zone : chaque zone devient une mine, qui explose au premier ennemi qui la touche (rayon
+   * `radius` px, dégâts × `damageMult`) puis disparaît ; elle ne blesse plus en continu.
+   */
+  readonly mine?: { readonly radius: number; readonly damageMult: number };
   /** Sprite du pack à la place de celui de l'arme (Hache du bourreau : la grande hache double) */
   readonly sprite?: string;
   /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
@@ -247,13 +256,29 @@ export interface BoomerangWeaponDef extends WeaponDefBase {
   readonly radius: number;
 }
 
+/**
+ * Pose toutes les `cooldown` s, sous le joueur, une zone au sol de `radius` px qui dure
+ * `duration` s : chaque ennemi dedans est blessé tout de suite, puis toutes les `tick` s tant
+ * qu'il y reste (horloge par ennemi, comme l'Aura). `count` = zones par pose (les suivantes
+ * tombent autour du joueur).
+ */
+export interface ZoneWeaponDef extends WeaponDefBase {
+  readonly kind: 'zone';
+  readonly cooldown: number;
+  readonly count: number;
+  readonly radius: number;
+  readonly duration: number;
+  readonly tick: number;
+}
+
 export type WeaponDef =
   | ProjectileWeaponDef
   | AuraWeaponDef
   | OrbitWeaponDef
   | MeleeWeaponDef
   | ChainWeaponDef
-  | BoomerangWeaponDef;
+  | BoomerangWeaponDef
+  | ZoneWeaponDef;
 
 export const WEAPONS = {
   arcaneBolt: {
@@ -352,6 +377,55 @@ export const WEAPONS = {
         color: '#ffcf6b',
         count: 5,
         damageMult: 0.6,
+      },
+    ],
+  },
+  /**
+   * Chausse-trapes (0.3, bloc C) : physique, des pointes posées au sol derrière soi. Récompense
+   * le fait de tourner autour de la horde (elle marche dessus en te suivant).
+   */
+  caltrops: {
+    kind: 'zone',
+    damageType: 'physical',
+    id: 'caltrops',
+    name: 'Chausse-trapes',
+    short: 'Ct',
+    description: 'Pose des pointes au sol : elles blessent ce qui marche dessus pendant 4 s',
+    damage: 8,
+    knockback: 30,
+    cooldown: 2,
+    count: 1,
+    radius: 40,
+    duration: 4,
+    tick: 0.5,
+    color: '#c9c9d1',
+    scope: 'Zone au sol · sous toi',
+    levels: [
+      { description: '+3 dégâts', damage: 3 },
+      { description: 'Rayon +10 px', radius: 10 },
+      { description: 'Durée +2 s', duration: 2 },
+      { description: '+3 dégâts et 2 zones par pose', damage: 3, count: 1 },
+    ],
+    mutations: [
+      {
+        id: 'mines',
+        name: 'Mines',
+        short: 'Mi',
+        description:
+          'Chaque zone devient une mine : elle explose au premier contact (80 px, dégâts ×4)',
+        color: '#ff9f43',
+        mine: { radius: 80, damageMult: 4 },
+      },
+      {
+        id: 'brambles',
+        name: 'Champ de ronces',
+        short: 'Cr',
+        description:
+          'Zones ×1,6 plus grandes, durent ×1,5, ralentissent de 30 % (pas les élites ni les boss)',
+        color: '#6fbf4a',
+        radiusMult: 1.6,
+        durationMult: 1.5,
+        slow: { amount: 0.3, duration: 0.6 },
       },
     ],
   },

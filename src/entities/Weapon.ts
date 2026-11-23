@@ -29,6 +29,7 @@ const TOTALS: LevelTotals = {
   arcDeg: 0,
   range: 0,
   jumps: 0,
+  duration: 0,
 };
 
 /**
@@ -97,6 +98,10 @@ export class Weapon {
    * Voir src/weapons/boomerang.ts pour le rangement des valeurs.
    */
   flights: Float64Array | null = null;
+  /** Zone : durée d'une zone (s) */
+  duration = 0;
+  /** Zone : zones posées (voir src/weapons/zone.ts), créé une fois par l'arme ; null sinon */
+  zones: Float64Array | null = null;
   /** Boomerang : ids des ennemis déjà touchés par chaque arme en vol, pendant l'aller ou le retour */
   flightHits: Int32Array | null = null;
   /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */
@@ -164,6 +169,7 @@ export class Weapon {
     t.arcDeg = 0;
     t.range = 0;
     t.jumps = 0;
+    t.duration = 0;
     behavior.levelBase(def, t);
     // Bonus des niveaux 2 à `level` (index 0 = niveau 2).
     for (let i = 0; i < this.level - 1; i++) {
@@ -177,6 +183,7 @@ export class Weapon {
       t.arcDeg += bonus.arcDeg ?? 0;
       t.range += bonus.range ?? 0;
       t.jumps += bonus.jumps ?? 0;
+      t.duration += bonus.duration ?? 0;
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;

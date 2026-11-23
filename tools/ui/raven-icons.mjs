@@ -10,6 +10,7 @@ export const ICON_GROUPS = {
     sword: 156, // épée bleue
     bow: 1564, // arc
     throwingAxe: 1457, // hache
+    caltrops: 1016, // pointes qui sortent du sol
     chainLightning: 1025, // éclair (celui de la Hâte jusqu'au 2026-11-23)
   },
   Mutations: {
@@ -23,6 +24,8 @@ export const ICON_GROUPS = {
     thrust: 728, // épée pointée qui scintille (coup d'estoc)
     heavyArrow: 401, // flèche à pointe d'acier
     volley: 1136, // pluie de flèches
+    mines: 764, // bombe à mèche
+    brambles: 241, // branche épineuse
     twinAxes: 1458, // hache double
     executionerAxe: 1539, // grosse hache orange
     thunderstorm: 1031, // nuage d'orage

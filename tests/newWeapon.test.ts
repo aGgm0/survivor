@@ -30,6 +30,7 @@ const FAKES = [
   WEAPONS.sword,
   WEAPONS.chainLightning,
   WEAPONS.throwingAxe,
+  WEAPONS.caltrops,
 ].map(fakeWeapon);
 
 describe('nouvelle arme faite seulement de données', () => {

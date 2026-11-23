@@ -30,6 +30,7 @@ export interface LevelTotals {
   arcDeg: number;
   range: number;
   jumps: number;
+  duration: number;
 }
 
 /**

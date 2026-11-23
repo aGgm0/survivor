@@ -189,6 +189,20 @@ export const THROWING_AXE_SPRITE = {
   spin: 14,
 } as const;
 
+/**
+ * Chausse-trapes : tuiles de pointes du pack (`floor_spikes_anim`, 4 images : rentrées → sorties)
+ * posées en grille dans la zone ; bombe du pack pour les Mines.
+ */
+export const CALTROPS_SPRITE = {
+  spikes: 'floor_spikes_anim',
+  bomb: 'bomb',
+  scale: 2,
+  /** s pour sortir les pointes à la pose (puis les rentrer à la fin) */
+  riseTime: 0.25,
+  /** s par image de la bombe qui clignote */
+  bombFrameTime: 0.15,
+} as const;
+
 /** Orbe runique (gris, teint) : son diamètre (`diameter` px d'art) = celui de la hitbox. */
 export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as const;
 
