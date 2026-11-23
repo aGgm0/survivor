@@ -182,6 +182,13 @@ export const ARROW_SPRITE = {
   rotation: Math.PI / 2,
 } as const;
 
+/** Hache de lancer : sprite `weapon_throwing_axe` du pack 0x72, qui tourne sur elle-même. */
+export const THROWING_AXE_SPRITE = {
+  frame: 'weapon_throwing_axe',
+  /** rad/s de rotation */
+  spin: 14,
+} as const;
+
 /** Orbe runique (gris, teint) : son diamètre (`diameter` px d'art) = celui de la hitbox. */
 export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as const;
 

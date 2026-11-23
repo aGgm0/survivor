@@ -1,5 +1,6 @@
 import { WEAPON_DAMAGE_MULT, type DamageType } from '../data/combat';
 import { weaponMaxLevel, type MutationDef, type WeaponDef } from '../data/weapons';
+import { FLIGHT_STRIDE } from '../weapons/boomerang';
 import { behaviorOf } from '../weapons/registry';
 import type { LevelTotals } from '../weapons/WeaponBehavior';
 
@@ -91,6 +92,13 @@ export class Weapon {
   bolts: Float64Array | null = null;
   /** Prochain emplacement libre de `bolts` (tourne en boucle) */
   boltNext = 0;
+  /**
+   * Boomerang : état des armes en vol, créé une fois par l'arme (null pour les autres types).
+   * Voir src/weapons/boomerang.ts pour le rangement des valeurs.
+   */
+  flights: Float64Array | null = null;
+  /** Boomerang : ids des ennemis déjà touchés par chaque arme en vol, pendant l'aller ou le retour */
+  flightHits: Int32Array | null = null;
   /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */
   strikesLeft = 0;
   nextStrikeAt = 0;
@@ -101,6 +109,21 @@ export class Weapon {
     this.penetration = def.penetration ?? 0;
     // Les stats propres au type (délai, nombre, rayon, portée...) : voir src/weapons/.
     behaviorOf(def).init(this, def);
+  }
+
+  /**
+   * Jeu figé (level up, pause, fin) : la position « précédente » de ce qui bouge rejoint
+   * l'actuelle, sinon l'interpolation ferait trembler les orbes et les haches sur place.
+   */
+  syncPrevious(): void {
+    this.prevAngle = this.angle;
+    const f = this.flights;
+    if (!f) return;
+    // Haches en vol : x, y aux index 1, 2 ; précédents aux index 3, 4 (voir boomerang.ts).
+    for (let o = 0; o + 4 < f.length; o += FLIGHT_STRIDE) {
+      f[o + 3] = f[o + 1] ?? 0;
+      f[o + 4] = f[o + 2] ?? 0;
+    }
   }
 
   /** Nom affiché : celui de la mutation si l'arme a muté. */

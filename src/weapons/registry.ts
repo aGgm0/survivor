@@ -3,6 +3,7 @@
 
 import type { WeaponDef } from '../data/weapons';
 import { AURA_BEHAVIOR } from './aura';
+import { BOOMERANG_BEHAVIOR } from './boomerang';
 import { CHAIN_BEHAVIOR } from './chain';
 import { MELEE_BEHAVIOR } from './melee';
 import { ORBIT_BEHAVIOR } from './orbit';
@@ -15,6 +16,7 @@ const WEAPON_BEHAVIORS: { readonly [K in WeaponKind]: WeaponBehavior<DefOf<K>> }
   orbit: ORBIT_BEHAVIOR,
   melee: MELEE_BEHAVIOR,
   chain: CHAIN_BEHAVIOR,
+  boomerang: BOOMERANG_BEHAVIOR,
 };
 
 /** Le comportement du type de cette arme. Il ne reçoit que des définitions de son type. */

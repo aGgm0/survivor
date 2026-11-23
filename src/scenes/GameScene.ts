@@ -742,7 +742,7 @@ export class GameScene implements Scene, Build {
     this.particles.freeze();
     this.gems.freeze();
     this.pickups.freeze();
-    for (const w of this.weapons) w.prevAngle = w.angle;
+    for (const w of this.weapons) w.syncPrevious();
   }
 
   render(ctx: CanvasRenderingContext2D, alpha: number): void {

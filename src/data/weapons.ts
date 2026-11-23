@@ -82,6 +82,8 @@ export interface MutationDef {
   readonly arcDeg?: number;
   /** Pénétration ajoutée à celle de l'arme (de son type de dégâts). Absent = 0 */
   readonly penetration?: number;
+  /** Boomerang : multiplicateur de la vitesse de vol */
+  readonly speedMult?: number;
   /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
   readonly jumpsAdd?: number;
   /** Chaîne : perte de dégâts à chaque saut, remplace celle de l'arme (0 = aucune perte) */
@@ -224,8 +226,32 @@ export interface ChainWeaponDef extends WeaponDefBase {
   readonly falloff: number;
 }
 
+/**
+ * Lancée vers l'ennemi le plus proche, vole jusqu'à `range` px puis revient au joueur (qui a pu
+ * bouger). Elle touche chaque ennemi une fois à l'aller et une fois au retour. `count` = armes
+ * lancées à la fois, en éventail de `spreadDeg` ; `radius` = taille de la zone qui frappe (px).
+ */
+export interface BoomerangWeaponDef extends WeaponDefBase {
+  readonly kind: 'boomerang';
+  /** s entre deux lancers au niveau 1 (le lancer suivant n'attend pas le retour) */
+  readonly cooldown: number;
+  readonly count: number;
+  readonly spreadDeg: number;
+  /** px/s */
+  readonly speed: number;
+  /** px : distance de l'aller */
+  readonly range: number;
+  /** px : rayon de la zone qui frappe (et taille du sprite) */
+  readonly radius: number;
+}
+
 export type WeaponDef =
-  ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef | MeleeWeaponDef | ChainWeaponDef;
+  | ProjectileWeaponDef
+  | AuraWeaponDef
+  | OrbitWeaponDef
+  | MeleeWeaponDef
+  | ChainWeaponDef
+  | BoomerangWeaponDef;
 
 export const WEAPONS = {
   arcaneBolt: {
@@ -324,6 +350,57 @@ export const WEAPONS = {
         color: '#ffcf6b',
         count: 5,
         damageMult: 0.6,
+      },
+    ],
+  },
+  /**
+   * Hache de lancer (0.3, bloc C) : physique, frappe à l'aller ET au retour ; on peut la faire
+   * repasser dans la horde en se déplaçant pendant qu'elle revient.
+   */
+  throwingAxe: {
+    kind: 'boomerang',
+    damageType: 'physical',
+    id: 'throwingAxe',
+    name: 'Hache de lancer',
+    short: 'Ha',
+    description:
+      'Lancée vers l’ennemi le plus proche, elle revient : touche à l’aller et au retour',
+    damage: 20,
+    knockback: 150,
+    cooldown: 1.6,
+    count: 1,
+    spreadDeg: 25,
+    speed: 420,
+    range: 300,
+    radius: 14,
+    color: '#c9d3da',
+    scope: 'Aller-retour · vise le plus proche',
+    levels: [
+      { description: '+6 dégâts', damage: 6 },
+      { description: '+1 hache', count: 1 },
+      { description: 'Cooldown -15 %', cooldownPct: -0.15 },
+      { description: '+8 dégâts, haches plus grosses', damage: 8, radius: 3 },
+    ],
+    mutations: [
+      {
+        id: 'twinAxes',
+        name: 'Haches jumelles',
+        short: 'Hj',
+        description: '4 haches en éventail à chaque lancer, dégâts ×0,8',
+        color: '#e8e8f0',
+        count: 4,
+        damageMult: 0.8,
+      },
+      {
+        id: 'executionerAxe',
+        name: 'Hache du bourreau',
+        short: 'Hb',
+        description: 'Hache énorme (×1,6) qui frappe ×1,7, mais vole moins vite (×0,7)',
+        color: '#ff7a5c',
+        radiusMult: 1.6,
+        damageMult: 1.7,
+        speedMult: 0.7,
+        knockbackMult: 1.5,
       },
     ],
   },

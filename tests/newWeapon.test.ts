@@ -29,6 +29,7 @@ const FAKES = [
   WEAPONS.runicOrbs,
   WEAPONS.sword,
   WEAPONS.chainLightning,
+  WEAPONS.throwingAxe,
 ].map(fakeWeapon);
 
 describe('nouvelle arme faite seulement de données', () => {

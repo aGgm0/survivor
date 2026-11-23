@@ -55,6 +55,7 @@ export const HIT_SOUNDS = {
   orbit: 'orb-hit',
   aura: 'aura-burn',
   chain: 'enemy-hit',
+  boomerang: 'enemy-hit',
 } as const satisfies Record<WeaponDef['kind'], SfxName>;
 
 /** Dossier des musiques (OGG à −16 LUFS, originaux dans assets-src/). */
