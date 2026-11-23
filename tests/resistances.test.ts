@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MIN_DAMAGE, resistReduction } from '../src/data/combat';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
-import { WEAPONS } from '../src/data/weapons';
+import { WEAPON_LIST, WEAPONS, type MutationDef } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Player } from '../src/entities/Player';
 import { Weapon } from '../src/entities/Weapon';
@@ -38,7 +38,7 @@ describe('résistances et pénétration', () => {
     const sword = new Weapon(WEAPONS.sword); // physique
     expect(hit(ENEMY_TYPES.tank, bolt, 30)).toBe(20); // 30 × (1 − 50/150)
     expect(hit(ENEMY_TYPES.tank, sword, 30)).toBe(30);
-    expect(hit(ENEMY_TYPES.basic, bolt, 30)).toBe(30);
+    expect(hit(ENEMY_TYPES.fast, bolt, 30)).toBe(30); // le rapide ne résiste à rien
   });
 
   it('la pénétration de l’arme compte, et le damage meter compte les dégâts réduits', () => {
@@ -78,5 +78,24 @@ describe('passif Pénétration', () => {
     expect(hit(ENEMY_TYPES.tank, bolt, 30)).toBe(25); // 30 × (1 − 20/120)
     rebuildPassiveStats(player, new Map());
     expect(player.penetration).toBe(0);
+  });
+});
+
+describe('valeurs de la 0.3', () => {
+  it('le basique résiste un peu à tout mais meurt toujours en 2 coups de Trait', () => {
+    const bolt = new Weapon(WEAPONS.arcaneBolt);
+    bolt.recompute(new Player());
+    expect(2 * hit(ENEMY_TYPES.basic, bolt, bolt.damage)).toBeGreaterThanOrEqual(
+      ENEMY_TYPES.basic.hp,
+    );
+    expect(hit(ENEMY_TYPES.basic, bolt, 30)).toBeLessThan(30);
+  });
+
+  it('Estoc, Trait perçant et Fournaise ont de la pénétration ; les armes de base non', () => {
+    const pen = (id: string) =>
+      WEAPON_LIST.flatMap((w): readonly MutationDef[] => w.mutations ?? []).find((m) => m.id === id)
+        ?.penetration;
+    expect([pen('thrust'), pen('piercingBolt'), pen('furnace')]).toEqual([30, 20, 30]);
+    expect(WEAPON_LIST.every((w) => !w.penetration)).toBe(true);
   });
 });

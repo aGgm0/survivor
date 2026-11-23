@@ -57,6 +57,8 @@ export const ENEMY_TYPES = {
     xp: 1,
     radius: 14,
     color: '#d9534f',
+    // 0.3 : −9 % contre tout (léger buff) ; toujours 2 coups de Trait (18 + 18 pour 23 PV).
+    resistances: { physical: 10, magical: 10 },
     // Retour de jeu (2026-11-18) : XP trop lente. Une gemme sur deux vaut double (≈ +20 % d'XP
     // au total), plutôt qu'un +50 % général : ça récompense de tuer les basiques.
     bonusGem: { chance: 0.5, xpMult: 2 },

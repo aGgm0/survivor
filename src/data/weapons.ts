@@ -220,8 +220,9 @@ export const WEAPONS = {
         id: 'piercingBolt',
         name: 'Trait perçant',
         short: 'Tp',
-        description: 'Traverse 5 ennemis avant de disparaître, dégâts ×0,9',
+        description: 'Traverse 5 ennemis avant de disparaître, dégâts ×0,9, pénétration +20',
         color: '#9ad7ff',
+        penetration: 20, // 0.3 : perce aussi les défenses (tank : −33 % → −23 %)
         pierce: 5, // 3 → 5 : retour de jeu, dégâts inchangés
         damageMult: 0.9,
       },
@@ -277,8 +278,9 @@ export const WEAPONS = {
         name: 'Fournaise',
         short: 'Fo',
         description:
-          'Toutes les 1,8 s, une onde de feu part de toi (×1,3 rayon) : dégâts ×5,6 sur les gros, ×0,8 sur les autres',
+          'Toutes les 1,8 s, une onde de feu part de toi (×1,3 rayon) : dégâts ×5,6 sur les gros, ×0,8 sur les autres, pénétration +30',
         color: '#ff5a1f',
+        penetration: 30, // 0.3 : anti-gros, et retour « Fournaise trop faible » (tank : −33 % → −17 %)
         radiusMult: 1.2, // +20 % (retour de jeu)
         damageMult: 4,
         cooldownMult: 3.6, // 0,5 → 1,8 s (1,5 s avant le nerf du 2026-11-21)
@@ -391,8 +393,9 @@ export const WEAPONS = {
         name: 'Estoc',
         short: 'Es',
         description:
-          'Vise l’ennemi le plus proche : coup long et étroit (×2 portée, 30°) qui transperce la ligne, dégâts ×2',
+          'Vise l’ennemi le plus proche : coup long et étroit (×2 portée, 30°) qui transperce la ligne, dégâts ×2, pénétration +30',
         color: '#ffd98a',
+        penetration: 30, // 0.3 : le coup qui perce l'armure (basique élite : −33 % → −17 %)
         arcDeg: 30,
         rangeMult: 2,
         damageMult: 2,
