@@ -84,6 +84,8 @@ export interface MutationDef {
   readonly penetration?: number;
   /** Boomerang : multiplicateur de la vitesse de vol */
   readonly speedMult?: number;
+  /** Sprite du pack à la place de celui de l'arme (Hache du bourreau : la grande hache double) */
+  readonly sprite?: string;
   /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
   readonly jumpsAdd?: number;
   /** Chaîne : perte de dégâts à chaque saut, remplace celle de l'arme (0 = aucune perte) */
@@ -401,6 +403,9 @@ export const WEAPONS = {
         damageMult: 1.7,
         speedMult: 0.7,
         knockbackMult: 1.5,
+        // La petite hache agrandie et teinte en rouge ne plaisait pas (retour de jeu) : la
+        // grande hache double du pack, à ses couleurs.
+        sprite: 'weapon_double_axe',
       },
     ],
   },

@@ -168,12 +168,16 @@ export const BOOMERANG_BEHAVIOR: WeaponBehavior<BoomerangWeaponDef> = {
       weapon.cooldownTimer = 0; // personne à portée : l'arme reste prête
       return;
     }
-    // Éventail centré sur la cible (ex. 3 haches à 25° : −25°, 0°, +25°).
+    // La 1re hache part droit sur la cible, les suivantes de part et d'autre, en alternant
+    // (0°, +25°, −25°, +50°...). Un éventail centré ratait la cible avec un nombre pair de
+    // haches : elles passaient des deux côtés (retour de jeu).
     const base = Math.atan2(target.y - ctx.y, target.x - ctx.x);
     const spread = (def.spreadDeg * Math.PI) / 180;
     let thrown = 0;
     for (let k = 0; k < weapon.count; k++) {
-      if (launch(weapon, ctx.x, ctx.y, base + (k - (weapon.count - 1) / 2) * spread)) thrown++;
+      const side = k % 2 === 1 ? 1 : -1;
+      const offset = side * Math.ceil(k / 2) * spread;
+      if (launch(weapon, ctx.x, ctx.y, base + offset)) thrown++;
     }
     if (thrown === 0) return; // toutes en vol : on retente à l'update suivante
     weapon.cooldownTimer = weapon.cooldown;
@@ -184,10 +188,13 @@ export const BOOMERANG_BEHAVIOR: WeaponBehavior<BoomerangWeaponDef> = {
   renderAbove(ctx, weapon, _def, rc) {
     const f = weapon.flights;
     if (!f) return;
-    const frame = rc.sprites?.animation(THROWING_AXE_SPRITE.frame)[0];
+    // Une mutation peut avoir son propre sprite (Hache du bourreau), dessiné à ses couleurs ;
+    // sinon la hache de lancer, teinte à la couleur de la mutation s'il y en a une.
+    const own = weapon.mutation?.sprite;
+    const frame = rc.sprites?.animation(own ?? THROWING_AXE_SPRITE.frame)[0];
     // La hauteur du sprite couvre le diamètre de la zone qui frappe.
     const scale = frame ? (weapon.radius * 2) / frame.h : 1;
-    const tint = weapon.mutation ? weaponTint(weapon.color) : undefined;
+    const tint = weapon.mutation && !own ? weaponTint(weapon.color) : undefined;
     for (let i = 0; i < MAX_FLIGHTS; i++) {
       const o = i * STRIDE;
       if (f[o + STATE] === FREE) continue;

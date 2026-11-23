@@ -39,6 +39,15 @@ function setup(x: number) {
 }
 
 describe('Hache de lancer', () => {
+  it('avec un nombre pair de haches, l’une part toujours droit sur la cible', () => {
+    const { axe, hits, run } = setup(150);
+    axe.level = 3; // 2 haches
+    axe.recompute(NO_MODS);
+    expect(axe.count).toBe(2);
+    run(0.5); // aller seulement (300 px à 420 px/s ≈ 0,71 s)
+    expect(hits.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('touche une fois à l’aller et une fois au retour, puis revient au joueur', () => {
     const { axe, hits, run } = setup(150);
     // Aller (300 px à 420 px/s ≈ 0,71 s) et retour : ~1,45 s, avant le lancer suivant (1,6 s).
