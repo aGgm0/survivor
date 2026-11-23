@@ -82,7 +82,35 @@ export function formatSummary(results: readonly SimResult[]): string {
       `  ${def.name.padEnd(18)} ${pct(mean).padStart(5)}  (dans ${shares.length} parties)`,
     );
   }
+  lines.push('', ...damageTypeLines(done));
   const wall = results.reduce((a, r) => a + r.wallSeconds, 0);
   lines.push('', `Simulé en ${wall.toFixed(1)} s réelles`);
   return lines.join('\n');
+}
+
+/**
+ * Part des dégâts physiques et magiques sur toutes les parties (après les résistances), et
+ * nombre de parties qui ont fini avec les deux types : le bloc B de la 0.3 vise à ce qu'aucun
+ * type ne domine.
+ */
+function damageTypeLines(done: readonly SimResult[]): string[] {
+  const typeOf = new Map(WEAPON_LIST.map((d) => [d.id, d.damageType]));
+  let physical = 0;
+  let magical = 0;
+  let mixed = 0;
+  for (const r of done) {
+    const types = new Set<string>();
+    for (const w of r.report?.weapons ?? []) {
+      const type = typeOf.get(w.id);
+      if (type === 'physical') physical += w.damage;
+      else if (type === 'magical') magical += w.damage;
+      if (type) types.add(type);
+    }
+    if (types.size > 1) mixed++;
+  }
+  const total = Math.max(1, physical + magical);
+  return [
+    `Dégâts physiques / magiques (après résistances) : ${pct(physical / total)} / ${pct(magical / total)}`,
+    `Parties finies avec les deux types : ${mixed} / ${done.length}`,
+  ];
 }
