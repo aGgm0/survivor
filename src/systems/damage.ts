@@ -25,7 +25,7 @@ export interface HitEvents {
   /** Optionnel : un coup d'épée (pour l'effet visuel). `angle` = direction, `arc` = ouverture (rad). */
   onSlash?(x: number, y: number, angle: number, arc: number, range: number, color: string): void;
   /** Optionnel : un effet du pack à jouer en (x, y), large de `size` px (mine, foudre, coup). */
-  onEffect?(name: OneShotName, x: number, y: number, size: number): void;
+  onEffect?(name: OneShotName, x: number, y: number, size: number, angle?: number): void;
   /** Optionnel : une arme à projectiles vient de tirer (pour le bruitage). */
   onFire?(weapon: Weapon): void;
 }

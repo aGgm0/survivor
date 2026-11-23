@@ -175,6 +175,9 @@ export const BOLT_SPRITE = {
  * Flèche (Arc) : sprite `weapon_arrow` du pack 0x72, vertical (pointe en haut), dessiné à sa
  * couleur (sans teinte ni halo) et tourné dans le sens du tir. `scale` : largeur ≈ la hitbox.
  */
+/** Flèche en vol (effet du pack, en boucle, pointe sur la position du projectile) */
+export const ARROW_FLIGHT_FX = { effect: 'arrowFlight', scale: 1 } as const;
+
 export const ARROW_SPRITE = {
   frame: 'weapon_arrow',
   scale: 1.5,
@@ -225,6 +228,9 @@ export const EFFECT_DIRS = {
   snow: `${PVFX}snowfall/`,
   whip: `${PVFX}lightning-whip/`,
   chainBolt: `${PVFX}chain-lightning/`,
+  // Arc (demandé par l'utilisateur) : la flèche en vol, puis son impact quand elle s'arrête.
+  arrowFlight: `${PVFX}arrow-flight/`,
+  arrowImpact: `${PVFX}arrow-impact/`,
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -239,6 +245,8 @@ export const ONE_SHOT_FX = {
   barrel: { speed: 1.6 },
   /** Foudre de l'Orage, qui tombe sur l'ennemi */
   strike: { speed: 1.4 },
+  /** Flèche qui se fiche (dans un ennemi ou au sol, en bout de course) puis s'efface */
+  arrowImpact: { speed: 1.3 },
 } as const satisfies Partial<Record<EffectName, { speed: number }>>;
 export type OneShotName = keyof typeof ONE_SHOT_FX;
 

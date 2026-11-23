@@ -254,7 +254,7 @@ export class GameScene implements Scene, Build {
       onThrust: (x, y, angle, arc, r, color) => this.feedback.thrust(x, y, angle, arc, r, color),
       onSlash: (x, y, angle, arc, r, color) => this.feedback.slash(x, y, angle, arc, r, color),
       onFire: () => this.feedback.fired(),
-      onEffect: (name, x, y, size) => this.feedback.effect(name, x, y, size),
+      onEffect: (name, x, y, size, angle) => this.feedback.effect(name, x, y, size, angle),
     };
     this.weaponSystem = new WeaponSystem(
       ENEMY_POOL_SIZE,

@@ -6,7 +6,8 @@ import {
   type SpriteAtlas,
   type SpriteFrame,
 } from '../core/SpriteAtlas';
-import { ARROW_SPRITE, BOLT_SPRITE, ENEMY_ANIM_OFFSET } from '../data/sprites';
+import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
+import { ARROW_FLIGHT_FX, ARROW_SPRITE, BOLT_SPRITE, ENEMY_ANIM_OFFSET } from '../data/sprites';
 import type { ProjectileWeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
@@ -45,6 +46,26 @@ function fire(
     fired++;
   }
   return fired > 0;
+}
+
+/** Flèches en vol : effet du pack en boucle, tourné dans le sens du tir, décalé par flèche. */
+function renderFlights(
+  weapon: Weapon,
+  rc: WeaponRenderContext,
+  ctx: CanvasRenderingContext2D,
+  flight: EffectSheet,
+): void {
+  const items = rc.projectiles.items;
+  const reach = flight.clip.width * ARROW_FLIGHT_FX.scale;
+  for (let i = 0; i < items.length; i++) {
+    const p = items[i];
+    if (!p?.active || p.source !== weapon) continue;
+    const x = p.renderX(rc.alpha);
+    const y = p.renderY(rc.alpha);
+    if (!rc.isOnScreen(x, y, reach)) continue;
+    const index = clipFrameIndex(flight.clip, (rc.time + i * 0.07) * 1000);
+    flight.draw(ctx, index, x, y, ARROW_FLIGHT_FX.scale, Math.atan2(p.vy, p.vx));
+  }
 }
 
 /** Flèches : sprite du pack à sa couleur, centré sur le projectile, pointe dans le sens du tir. */
@@ -140,7 +161,13 @@ export const PROJECTILE_BEHAVIOR: WeaponBehavior<ProjectileWeaponDef> = {
 
   /** Un halo rond, puis le cœur (sprite orienté, ou disque sans atlas). Un chemin par passe. */
   renderAbove(ctx, weapon, def, rc) {
-    // Flèches (Arc) : le sprite du pack, sans halo.
+    // Flèches (Arc) : l'effet de vol du pack (en boucle, pointe sur le projectile) ; sans lui,
+    // le sprite de flèche de l'atlas ; jamais de halo.
+    const flight = def.look === 'arrow' ? rc.effects?.[ARROW_FLIGHT_FX.effect] : undefined;
+    if (flight) {
+      renderFlights(weapon, rc, ctx, flight);
+      return;
+    }
     const arrow = def.look === 'arrow' ? rc.sprites?.animation(ARROW_SPRITE.frame)[0] : undefined;
     if (arrow && rc.sprites) {
       renderArrows(ctx, weapon, rc, rc.sprites, arrow);

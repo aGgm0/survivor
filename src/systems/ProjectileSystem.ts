@@ -10,6 +10,9 @@ import { damageEnemy, type HitEvents } from './damage';
  */
 export const GRID_STALENESS_MARGIN = 8;
 
+/** px : largeur visible de l'effet d'impact d'un projectile (flèche fichée et poussière) */
+const IMPACT_SIZE = 44;
+
 /**
  * Déplace les projectiles, gère leurs impacts sur les ennemis et leur fin de vie.
  * Mutations : un projectile perforant traverse plusieurs ennemis ; un projectile
@@ -38,7 +41,10 @@ export class ProjectileSystem {
       p.y += p.vy * dt;
       p.life -= dt;
 
-      if (p.life <= 0 || this.hitEnemy(p)) projectiles.release(p);
+      if (p.life <= 0 || this.hitEnemy(p)) {
+        this.impact(p);
+        projectiles.release(p);
+      }
     }
   }
 
@@ -76,6 +82,16 @@ export class ProjectileSystem {
       return p.pierceLeft <= 0;
     }
     return false;
+  }
+
+  /**
+   * Le projectile s'arrête (dernier ennemi traversé, ou bout de course) : son effet d'impact,
+   * s'il en a un (Arc : la flèche se fiche), tourné dans le sens du tir.
+   */
+  private impact(p: Projectile): void {
+    const def = p.source?.def;
+    if (def?.kind !== 'projectile' || !def.impactEffect) return;
+    this.events.onEffect?.(def.impactEffect, p.x, p.y, IMPACT_SIZE, Math.atan2(p.vy, p.vx));
   }
 
   /** Explosion au point d'impact : blesse tous les ennemis proches, sauf celui déjà touché. */

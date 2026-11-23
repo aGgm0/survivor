@@ -91,6 +91,8 @@ class OneShot implements Poolable {
   age = 0;
   /** s : durée de l'animation à sa vitesse de lecture */
   lifetime = 0;
+  /** radians : sens de l'effet (les effets du pack regardent vers la droite) */
+  angle = 0;
 }
 
 /** Animations du pack utilisées ici (absentes : formes simples). */
@@ -157,7 +159,7 @@ export class EffectsSystem {
    * Joue l'effet `name` du pack en (x, y), sa largeur visible = `size` px. Sans le pack, ou la
    * réserve pleine : rien (purement visuel).
    */
-  play(name: OneShotName, x: number, y: number, size: number): void {
+  play(name: OneShotName, x: number, y: number, size: number, angle = 0): void {
     const sheet = this.sprites?.[name];
     if (!sheet) return;
     const o = this.oneShots.acquire();
@@ -168,6 +170,7 @@ export class EffectsSystem {
     o.size = size;
     o.age = 0;
     o.lifetime = sheet.clip.totalMs / 1000 / ONE_SHOT_FX[name].speed;
+    o.angle = angle;
   }
 
   get activeCount(): number {
@@ -310,7 +313,8 @@ export class EffectsSystem {
       if (o.y + o.size * 2 < camera.top || o.y - o.size * 2 > camera.bottom) continue;
       const sheet = sprites[o.name];
       const [x0, , x1] = sheet.clip.bounds;
-      sheet.draw(ctx, progressFrame(sheet, o.age / o.lifetime), o.x, o.y, o.size / (x1 - x0));
+      const scale = o.size / (x1 - x0);
+      sheet.draw(ctx, progressFrame(sheet, o.age / o.lifetime), o.x, o.y, scale, o.angle);
     }
     const burst = sprites.burst;
     const [bx0, , bx1] = burst.clip.bounds;

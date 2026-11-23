@@ -158,8 +158,8 @@ export class Feedback implements RunEvents {
     this.sound('sword-slash');
   }
 
-  effect(name: OneShotName, x: number, y: number, size: number): void {
-    this.deps.effects.play(name, x, y, size);
+  effect(name: OneShotName, x: number, y: number, size: number, angle = 0): void {
+    this.deps.effects.play(name, x, y, size, angle);
     // Les grosses explosions se sentent et s'entendent ; les étincelles restent discrètes.
     if (name === 'barrel') {
       this.shake('explosion');

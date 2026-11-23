@@ -1,4 +1,5 @@
 import type { DamageType } from './combat';
+import type { OneShotName } from './sprites';
 
 // Armes (voir CLAUDE.md § 5.4). Data-driven : ajouter une arme = ajouter une entrée ici.
 // Trois comportements (`kind`) : projectile, aura, orbite. Chacun a ses propres réglages.
@@ -165,6 +166,8 @@ export interface ProjectileWeaponDef extends WeaponDefBase {
   readonly pierce?: number;
   /** Apparence des projectiles : trait magique teint (défaut) ou flèche du pack */
   readonly look?: 'bolt' | 'arrow';
+  /** Effet joué quand un projectile s'arrête (dernier ennemi traversé ou bout de course) */
+  readonly impactEffect?: OneShotName;
 }
 
 /**
@@ -350,6 +353,7 @@ export const WEAPONS = {
     projectileRadius: 5,
     pierce: 2,
     look: 'arrow',
+    impactEffect: 'arrowImpact',
     color: '#d9a066',
     scope: 'Projectile · vise le plus proche, traverse',
     levels: [
