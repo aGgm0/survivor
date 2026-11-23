@@ -437,7 +437,13 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 **Bloc D — Correctifs de la 0.2** (retours des testeurs sur la 0.2 ; peut sortir à part en 0.2.2 si c'est urgent)
 - [ ] Équilibrage confirmé avec les testeurs : ~1 victoire sur 3, aucune arme sous ~10 % du damage meter, boss de 5:00
 - [ ] Prix de la Boutique revus une fois tout acheté
-- [ ] Bugs et retours signalés sur la 0.2 <!-- TODO: liste à remplir avec les retours des testeurs -->
+- [ ] Bugs et retours signalés sur la 0.2 <!-- TODO: liste à compléter avec les retours des testeurs -->
+  - [ ] Retours de jeu du 2026-11-23 (valeurs exactes à proposer et valider avant d'y toucher) :
+    - [ ] **Fournaise trop faible** : buff
+    - [ ] **Aura de givre un peu trop forte** : petit nerf
+    - [ ] **Élites : 50 % de recul en moins** que leur version normale, pour les deux. Aujourd'hui `knockbackFactor` vaut 0,5 pour le basique élite mais **0,75** pour le rapide élite
+    - [ ] **Élites et boss insensibles au ralentissement**. Aujourd'hui les élites n'ont aucune résistance et le boss a `slowResist` 0,85 (il garde 15 % du ralentissement)
+    - [ ] **Sans fin : +10 % de résistance au ralentissement par minute** pour les ennemis qui apparaissent (plafond à décider), comme la résistance au recul
 - [ ] Limite connue : petits ennemis coincés entre deux tanks, à reprendre seulement si les testeurs le remarquent
 
 **Sortie**
