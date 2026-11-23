@@ -180,6 +180,8 @@ Toutes les armes tirent automatiquement. Chaque arme a des niveaux 1 → 5. **Em
 
 Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts d'armes ci-dessus sont ×1,15** (`WEAPON_DAMAGE_MULT`, data/combat.ts, 2026-11-21) : le Trait fait donc 18,4, arrondi à 19 par coup. Règle de dégâts : **1 dégât minimum** par coup, même avec l'armure, et chaque coup est **arrondi à l'entier supérieur** (un petit bonus en % compte toujours). La Hâte accélère les tirs et les ticks d'aura, pas les orbes.
 
+**Types de dégâts** (0.3) : l'Épée est **physique**, le Trait, l'Aura et les Orbes sont **magiques** (`damageType`). Chaque ennemi a une armure physique et une résistance magique (`resistances`, absent = 0) : réduction = A / (A + 100), avec A = résistance − pénétration, jamais négatif (`resistReduction`, data/combat.ts), puis arrondi au-dessus, 1 dégât minimum. Pénétration = arme + mutation + joueur : **Estoc 30, Fournaise 30, Trait perçant 20**, les autres 0 ; passif **Pénétration** +10 par niveau (5 niveaux). Le damage meter compte les dégâts après réduction.
+
 `[LATER]` : évolutions d'armes (arme niv max + objet passif = arme évoluée).
 
 ### 5.5 Ennemis `[MVP : 3 types + 1 boss]`
@@ -202,6 +204,8 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 - **Charge** (tous les boss) : toutes les 6 s, arrêt de 0,8 s (**0,5 s pour le boss de 9:00** et ceux du sans fin) annoncé par des chevrons rouges en pixels sur la trajectoire (ils s'allument du boss vers le bout et clignotent de plus en plus vite, fissure au point d'arrivée), puis ligne droite à 5× la vitesse pendant 0,7 s (environ 245 px pour le boss de 5:00, 295 px pour celui de 9:00 : sa charge est calculée sur une vitesse ×1,2, pas sur sa marche ×2).
 - **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, anneau de braises violettes qui se resserre pendant 1 s sur le cercle d'apparition, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
+
+**Résistances** (0.3, physique / magique) : basique 10 / 10 (−9 %), rapide 0 / 0, tank 0 / 50 (−33 % contre la magie : l'Épée est l'arme anti-tank), rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30.
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté à plus de 1,35 × ce cercle (≈ 1 080 px) est replacé sur le cercle **à un angle au hasard** (boss et élites : pile en face du joueur).
 
@@ -421,10 +425,10 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 - [x] `npm run sim` (20 seeds) identique avant / après
 
 **Bloc B — Types de dégâts et résistances**
-- [ ] **2 types de dégâts** : `damageType` physique / magique sur chaque arme, affiché sur sa carte et dans le HUD <!-- TODO: type des 4 armes actuelles (proposition : Épée physique, les 3 autres magiques) -->
-- [ ] **Résistances des ennemis** : armure physique et résistance magique sur les types d'ennemis, en pourcentage : réduction = A / (A + 100), avec A = résistance − pénétration (jamais d'immunité, 1 dégât minimum) ; calcul dans `computeDamage` (`data/combat.ts`), testé
-- [ ] Résistances des ennemis actuels <!-- TODO: lesquels en ont en 0.3 (tank, élites, boss ?) et combien ; les vrais ennemis blindés arrivent en 0.4 -->
-- [ ] **Pénétration** : stat du joueur (`data/player.ts`), et un passif <!-- TODO: nom et valeur par niveau --> ; plus tard enchantements (0.4) et persos (0.5)
+- [x] **2 types de dégâts** : `damageType` sur chaque arme (Épée physique, les 3 autres magiques) ; affichage sur la carte et dans le HUD : voir Lisibilité
+- [x] **Résistances des ennemis** : `resistances` (physique / magique) sur chaque type d'ennemi ; réduction = A / (A + 100), A = résistance − pénétration, jamais négatif ; `resistReduction` (`data/combat.ts`) appliqué dans `damageEnemy`, testé (`tests/resistances.test.ts`)
+- [x] Valeurs : basique 10 / 10, tank 0 / 50, rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30 (§ 5.5)
+- [x] **Pénétration** : arme + mutation + joueur (`penetration` dans weapons.ts, `Player.penetration`) ; Estoc 30, Fournaise 30, Trait perçant 20 ; passif **Pénétration** +10 / niveau, 5 niveaux (icône à choisir) ; plus tard enchantements (0.4) et persos (0.5)
 - [ ] Lisibilité : repère visuel sur les ennemis blindés, nombres de dégâts grisés quand ils sont réduits ; damage meter en dégâts après réduction
 - [ ] Garantie au level up : si toutes les armes sont du même type, une carte de l'autre type est proposée en priorité
 - [ ] Bot : part des dégâts physiques / magiques dans le bilan
@@ -792,6 +796,7 @@ Format : date — décision — raison.
 | 2026-11-21 | Enchantements avancés de la 0.6 à la 0.4, à la place de « armes au niveau 12 / emplacements 5 + 5 » ; idée notée : niveaux 7 à 11 en choix après la mutation, niveau 12 = mutation améliorée selon ces choix (à concevoir) | Argument de l'utilisateur : c'est en 30 min qu'on en a besoin, pour que le build ne soit pas complet trop tôt. Des choix valent mieux que des chiffres en plus. Les stats communes dont ils dépendent (pénétration, types de dégâts) arrivent en 0.3 |
 | 2026-11-21 | Tank : l'ogre du pack transformé en démon par un script (couleurs des démons du pack, cornes en croissant choisies parmi 3 essais, yeux blancs) plutôt que dessiné de zéro ; atlas `monsters` collé sous celui du pack au chargement (`SpriteAtlas.stack`), `fallback` vers l'ogre s'il manque | Un premier essai de sprites dessinés de zéro avait été rejeté (« trop bizarre ») ; partir d'un dessin du pack garde le style et les animations. Une seule image au rendu : rien ne change pour les 500 ennemis. Méthode à reprendre pour les élites et les boss (0.4) |
 | 2026-11-22 | Bloc A de la 0.3 : comportements d'armes dans `src/weapons/` (un module par type, registre typé : il manque un module → erreur de compilation) ; champs de `Weapon` gardés à plat ; `HIT_SOUNDS` et `AURA_LOOKS` restent des données ; un seul écouteur des événements (`Feedback`), pas de bus générique ; test d'empreinte plutôt que `npm run sim` à chaque étape | Plan validé (« ok reco »). Ranger les champs par type aurait doublé le chantier pour rien. Un bus d'événements attendra un deuxième écouteur (`RunFlow`, 0.4). L'empreinte (7 s) attrape le moindre écart ; le bot (lent) ne sert qu'à la fin |
+| 2026-11-23 | Types de dégâts : Épée physique, Trait / Aura / Orbes magiques ; résistances basique 10 / 10, tank 0 / 50, rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30 ; pénétration par arme et par mutation (Estoc 30, Fournaise 30, Trait perçant 20, autres 0) + passif Pénétration (+10 / niv, 5 niv) ; une pénétration plus forte que la résistance ne donne pas de bonus | « ok reco » + idée de l'utilisateur (chaque ennemi a les deux stats, chaque arme et mutation sa pénétration). Tank résistant à la magie plutôt que blindé : avec une seule arme physique, une armure physique n'aurait affaibli que l'Épée, déjà la plus faible ; ainsi elle devient l'arme anti-tank. Pénétration sur 3 mutations seulement : l'équilibrage reste gérable. Basique 10 / 10 : léger buff demandé, toujours 2 coups de Trait. Bloc C : viser 3 physiques et 1 magique pour 4 / 4 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 
