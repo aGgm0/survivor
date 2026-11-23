@@ -27,6 +27,7 @@ const TOTALS: LevelTotals = {
   orbitDistance: 0,
   arcDeg: 0,
   range: 0,
+  jumps: 0,
 };
 
 /**
@@ -79,6 +80,17 @@ export class Weapon {
   explosionRadius = 0;
   /** Mêlée : ouverture du coup en radians (2π = tout autour) ; 0 pour les autres armes */
   arc = 0;
+  /** Chaîne : sauts après la première cible, distance max d'un saut (px), perte par saut */
+  jumps = 0;
+  jumpRange = 0;
+  falloff = 0;
+  /**
+   * Chaîne : segments d'éclairs récents, pour le dessin (x1, y1, x2, y2, temps de partie).
+   * Tableau fixe créé une fois par l'arme (null pour les autres types) : pas d'allocation en jeu.
+   */
+  bolts: Float64Array | null = null;
+  /** Prochain emplacement libre de `bolts` (tourne en boucle) */
+  boltNext = 0;
   /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */
   strikesLeft = 0;
   nextStrikeAt = 0;
@@ -128,6 +140,7 @@ export class Weapon {
     t.orbitDistance = 0;
     t.arcDeg = 0;
     t.range = 0;
+    t.jumps = 0;
     behavior.levelBase(def, t);
     // Bonus des niveaux 2 à `level` (index 0 = niveau 2).
     for (let i = 0; i < this.level - 1; i++) {
@@ -140,6 +153,7 @@ export class Weapon {
       t.orbitDistance += bonus.orbitDistance ?? 0;
       t.arcDeg += bonus.arcDeg ?? 0;
       t.range += bonus.range ?? 0;
+      t.jumps += bonus.jumps ?? 0;
     }
     // La mutation transforme les stats du niveau max, avant les passifs du joueur.
     const m = this.mutation;

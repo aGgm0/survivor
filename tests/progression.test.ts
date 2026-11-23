@@ -75,12 +75,9 @@ describe('upgrades — options et tirage', () => {
     const options = availableUpgrades(makeBuild());
     const others = WEAPON_LIST.length - 1;
     expect(options).toHaveLength(1 + others + PASSIVES.length);
-    expect(options.filter((o) => o.kind === 'newWeapon').map((o) => o.title)).toEqual([
-      WEAPONS.bow.name,
-      WEAPONS.burningAura.name,
-      WEAPONS.runicOrbs.name,
-      WEAPONS.sword.name,
-    ]);
+    expect(options.filter((o) => o.kind === 'newWeapon').map((o) => o.title)).toEqual(
+      WEAPON_LIST.filter((w) => w !== BOLT).map((w) => w.name),
+    );
     const bolt = options.find((o) => o.kind === 'weaponLevel');
     expect(bolt?.levelText).toBe('Niv 2');
     expect(bolt?.description).toBe(BOLT.levels[0]?.description);
@@ -173,11 +170,9 @@ describe('upgrades — options et tirage', () => {
     applyUpgrade(aura, build);
     expect(build.weapons.map((w) => w.def.id)).toEqual(['arcaneBolt', 'burningAura']);
     const again = availableUpgrades(build).filter((o) => o.kind === 'newWeapon');
-    expect(again.map((o) => o.title)).toEqual([
-      WEAPONS.bow.name,
-      WEAPONS.runicOrbs.name,
-      WEAPONS.sword.name,
-    ]);
+    expect(again.map((o) => o.title)).toEqual(
+      WEAPON_LIST.filter((w) => w !== BOLT && w !== WEAPONS.burningAura).map((w) => w.name),
+    );
   });
 
   it('4 passifs possédés : plus de nouveau passif, mais les possédés montent encore', () => {

@@ -9,6 +9,7 @@ export const ICON_GROUPS = {
     runicOrbs: 776, // cercle runique violet
     sword: 156, // épée bleue
     bow: 1564, // arc
+    chainLightning: 1019, // éclair bleu (pas l'éclair orange de la Hâte)
   },
   Mutations: {
     piercingBolt: 1010, // lance de glace
@@ -21,6 +22,8 @@ export const ICON_GROUPS = {
     thrust: 728, // épée pointée qui scintille (coup d'estoc)
     heavyArrow: 401, // flèche à pointe d'acier
     volley: 1136, // pluie de flèches
+    thunderstorm: 1031, // nuage d'orage
+    unbrokenArc: 1037, // arcs entrelacés
   },
   Passifs: {
     vitality: 659, // cœur

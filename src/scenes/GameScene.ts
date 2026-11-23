@@ -80,6 +80,8 @@ import type { MusicName, SfxName } from '../data/audio';
 
 /** Constante quelconque pour dériver la seed de l'aléatoire visuel de celle du jeu. */
 const VISUAL_SEED_SALT = 0x9e3779b9;
+/** Idem pour les armes (Orage) : séparé, il ne change pas le reste de la partie */
+const WEAPON_SEED_SALT = 0x6b43a9b5;
 /** Idem pour les particules */
 const PARTICLE_SEED_SALT = 0xc2b2ae35;
 /** Idem pour l'or lâché par les ennemis (séparé : n'influe pas sur le reste de la partie) */
@@ -258,6 +260,7 @@ export class GameScene implements Scene, Build {
       this.collisions,
       this.projectiles,
       hitEvents,
+      new Rng(seed ^ WEAPON_SEED_SALT),
     );
     this.damageNumbers = new DamageNumberSystem(new Rng(seed ^ VISUAL_SEED_SALT));
     this.particles = new ParticleSystem(

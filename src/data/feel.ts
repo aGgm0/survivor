@@ -242,3 +242,16 @@ export const HP_BARS = {
   /** Secours sans le pack (tests, pack absent) */
   fallback: { background: '#1a1a1a', fill: '#e5484d', outline: '#000', height: 5 },
 } as const;
+
+/**
+ * Éclair en chaîne : chaque saut est un trait brisé qui s'efface en `life` s. `jag` : écart
+ * maximal (px) des coudes de part et d'autre de la ligne droite ; `segments` : coudes par saut.
+ */
+export const CHAIN_LOOK = {
+  life: 0.2,
+  jag: 7,
+  segments: 4,
+  outerWidth: 3,
+  innerWidth: 1,
+  innerColor: '#ffffff',
+} as const;

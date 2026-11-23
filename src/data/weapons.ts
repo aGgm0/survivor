@@ -21,6 +21,8 @@ export interface WeaponLevelBonus {
   readonly arcDeg?: number;
   /** px ajoutés à la portée du coup (mêlée) */
   readonly range?: number;
+  /** Sauts en plus (éclair en chaîne) */
+  readonly jumps?: number;
 }
 
 /**
@@ -80,6 +82,15 @@ export interface MutationDef {
   readonly arcDeg?: number;
   /** Pénétration ajoutée à celle de l'arme (de son type de dégâts). Absent = 0 */
   readonly penetration?: number;
+  /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
+  readonly jumpsAdd?: number;
+  /** Chaîne : perte de dégâts à chaque saut, remplace celle de l'arme (0 = aucune perte) */
+  readonly falloff?: number;
+  /**
+   * Chaîne : en plus de la chaîne normale, `count` chaînes partent d'ennemis tirés au hasard à
+   * moins de `range` px du joueur (Orage)
+   */
+  readonly randomStrikes?: { readonly count: number; readonly range: number };
   /** Mêlée : multiplicateur de la portée du coup */
   readonly rangeMult?: number;
   /**
@@ -192,7 +203,29 @@ export interface MeleeWeaponDef extends WeaponDefBase {
   readonly arcDeg: number;
 }
 
-export type WeaponDef = ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef | MeleeWeaponDef;
+/**
+ * Éclair qui frappe l'ennemi le plus proche à portée, puis saute vers le plus proche voisin pas
+ * encore touché, `jumps` fois, en perdant `falloff` de ses dégâts à chaque saut.
+ * `count` = chaînes par décharge (le Duplicateur en ajoute) : chacune part d'une cible différente.
+ */
+export interface ChainWeaponDef extends WeaponDefBase {
+  readonly kind: 'chain';
+  /** s entre deux décharges au niveau 1 */
+  readonly cooldown: number;
+  /** Chaînes par décharge au niveau 1 */
+  readonly count: number;
+  /** px : portée de la première cible */
+  readonly range: number;
+  /** Sauts après la première cible, au niveau 1 */
+  readonly jumps: number;
+  /** px : distance maximale d'un saut */
+  readonly jumpRange: number;
+  /** Part des dégâts perdue à chaque saut (0,15 = −15 %) */
+  readonly falloff: number;
+}
+
+export type WeaponDef =
+  ProjectileWeaponDef | AuraWeaponDef | OrbitWeaponDef | MeleeWeaponDef | ChainWeaponDef;
 
 export const WEAPONS = {
   arcaneBolt: {
@@ -291,6 +324,54 @@ export const WEAPONS = {
         color: '#ffcf6b',
         count: 5,
         damageMult: 0.6,
+      },
+    ],
+  },
+  /**
+   * Éclair en chaîne (0.3, bloc C) : la seule arme magique du bloc. Bon contre les paquets
+   * d'ennemis, faible contre une cible seule (la chaîne n'a nulle part où sauter).
+   */
+  chainLightning: {
+    kind: 'chain',
+    damageType: 'magical',
+    id: 'chainLightning',
+    name: 'Éclair en chaîne',
+    short: 'Éc',
+    description: 'Frappe l’ennemi le plus proche puis saute sur 3 voisins (−15 % par saut)',
+    damage: 14,
+    knockback: 60,
+    cooldown: 1.3,
+    count: 1,
+    range: 350,
+    jumps: 3,
+    jumpRange: 150,
+    falloff: 0.15,
+    color: '#9fe8ff',
+    scope: 'Chaîne · vise le plus proche, saute de proche en proche',
+    levels: [
+      { description: '+4 dégâts', damage: 4 },
+      { description: '+1 saut', jumps: 1 },
+      { description: 'Cooldown -15 %', cooldownPct: -0.15 },
+      { description: '+6 dégâts et +2 sauts', damage: 6, jumps: 2 },
+    ],
+    mutations: [
+      {
+        id: 'thunderstorm',
+        name: 'Orage',
+        short: 'Or',
+        description:
+          'Frappe aussi 2 ennemis au hasard autour de toi, chacun lance sa propre chaîne',
+        color: '#c9a0ff',
+        randomStrikes: { count: 2, range: 600 },
+      },
+      {
+        id: 'unbrokenArc',
+        name: 'Arc continu',
+        short: 'Ac',
+        description: '+4 sauts, et plus aucune perte de dégâts entre deux sauts',
+        color: '#ffffff',
+        jumpsAdd: 4,
+        falloff: 0,
       },
     ],
   },

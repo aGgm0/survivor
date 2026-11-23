@@ -23,9 +23,13 @@ function fakeWeapon(base: WeaponDef): WeaponDef {
   };
 }
 
-const FAKES = [WEAPONS.arcaneBolt, WEAPONS.burningAura, WEAPONS.runicOrbs, WEAPONS.sword].map(
-  fakeWeapon,
-);
+const FAKES = [
+  WEAPONS.arcaneBolt,
+  WEAPONS.burningAura,
+  WEAPONS.runicOrbs,
+  WEAPONS.sword,
+  WEAPONS.chainLightning,
+].map(fakeWeapon);
 
 describe('nouvelle arme faite seulement de données', () => {
   const base = CHARACTERS[0];

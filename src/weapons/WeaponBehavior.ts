@@ -2,6 +2,7 @@
 // TYPE d'arme vit dans son module (src/weapons/<type>.ts) : le moteur appelle ces fonctions sans
 // savoir de quelle arme il s'agit. Ajouter un type = un module + une ligne dans registry.ts.
 
+import type { Rng } from '../core/math';
 import type { Pool } from '../core/Pool';
 import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { WeaponDef } from '../data/weapons';
@@ -28,6 +29,7 @@ export interface LevelTotals {
   orbitDistance: number;
   arcDeg: number;
   range: number;
+  jumps: number;
 }
 
 /**
@@ -47,6 +49,8 @@ export interface WeaponUpdateContext {
   readonly collisions: CollisionSystem;
   readonly projectiles: Pool<Projectile>;
   readonly events: HitEvents;
+  /** Aléatoire des armes (Orage), séparé de celui du jeu */
+  readonly rng: Rng;
   /** Tableau de résultats de requête dans la grille, réutilisé */
   readonly candidates: Enemy[];
   /** Ennemi actif le plus proche dans `range` (mobilier ignoré), ou null */

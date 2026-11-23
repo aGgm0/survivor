@@ -1,3 +1,4 @@
+import { Rng } from '../core/math';
 import type { Pool } from '../core/Pool';
 import type { Enemy } from '../entities/Enemy';
 import type { Projectile } from '../entities/Projectile';
@@ -21,6 +22,7 @@ export class WeaponSystem {
     private readonly collisions: CollisionSystem,
     projectiles: Pool<Projectile>,
     events: HitEvents,
+    rng: Rng = new Rng(0),
   ) {
     this.ctx = {
       dt: 0,
@@ -32,6 +34,7 @@ export class WeaponSystem {
       collisions,
       projectiles,
       events,
+      rng,
       // Résultats de requête réutilisés : pas d'allocation.
       candidates: new Array<Enemy>(capacity),
       findNearest: (x, y, range) => this.findNearest(x, y, range),
