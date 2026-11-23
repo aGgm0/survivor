@@ -51,11 +51,20 @@ describe('ralentissement', () => {
     expect(slowFactor(e, 6)).toBe(1);
   });
 
-  it('le boss ne subit que 15 % du ralentissement (−30 % → −4,5 %)', () => {
-    const boss = new Enemy(0);
-    boss.spawn(ENEMY_TYPES.boss, 0, 0);
-    applySlow(boss, 0.3, 2, 0);
-    expect(slowFactor(boss, 0)).toBeCloseTo(1 - 0.3 * 0.15);
+  it('boss et élites sont insensibles au ralentissement', () => {
+    for (const type of [ENEMY_TYPES.boss, ENEMY_TYPES.fastElite, ENEMY_TYPES.basicElite]) {
+      const e = new Enemy(0);
+      e.spawn(type, 0, 0);
+      applySlow(e, 0.45, 2, 0);
+      expect(slowFactor(e, 0)).toBe(1);
+    }
+  });
+
+  it('sans fin : la résistance de l’ennemi réduit le ralentissement', () => {
+    const e = new Enemy(0);
+    e.spawn(ENEMY_TYPES.basic, 0, 0, 1, 1, 1, 0, 0.5);
+    applySlow(e, 0.4, 2, 0);
+    expect(slowFactor(e, 0)).toBeCloseTo(1 - 0.2);
   });
 
   it('un nouveau ralentissement après la fin du précédent repart de zéro', () => {

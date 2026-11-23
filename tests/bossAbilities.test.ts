@@ -50,15 +50,15 @@ describe('mini-boss (élites)', () => {
     expect(fastElite.radius).toBe(fast.radius * 1.8);
   });
 
-  it('reculent 50 % moins que leur version normale', () => {
+  it('reculent 75 % moins que leur version normale (−50 % le 2026-11-23)', () => {
     const recoil = (type: EnemyType) => {
       const e = new Enemy(0);
       e.spawn(type, 0, 0);
       applyKnockback(e, 100, 1, 0);
       return e.vx;
     };
-    expect(recoil(ENEMY_TYPES.fastElite)).toBeCloseTo(recoil(ENEMY_TYPES.fast) * 0.5);
-    expect(recoil(ENEMY_TYPES.basicElite)).toBeCloseTo(recoil(ENEMY_TYPES.basic) * 0.5);
+    expect(recoil(ENEMY_TYPES.fastElite)).toBeCloseTo(recoil(ENEMY_TYPES.fast) * 0.25);
+    expect(recoil(ENEMY_TYPES.basicElite)).toBeCloseTo(recoil(ENEMY_TYPES.basic) * 0.25);
   });
 });
 

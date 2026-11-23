@@ -238,6 +238,7 @@ describe('mode sans fin', () => {
     perSecond: 0,
     weights: [],
     hpMult: 0,
+    slowResist: 0,
     speedMult: 0,
     damageMult: 1,
     knockbackResist: 0,
@@ -258,12 +259,14 @@ describe('mode sans fin', () => {
     expect(w.perSecond).toBe(last.perSecond + 4);
     expect(w.speedMult).toBeCloseTo(last.speedMult * 1.06);
     expect(w.knockbackResist).toBeCloseTo(0.16);
+    expect(w.slowResist).toBeCloseTo(0.2); // +10 % par minute
   });
 
   it('vitesse plafonnée à ×3, résistance au recul à 80 %', () => {
     const w = endlessWave(last, 200, out());
     expect(w.speedMult).toBe(3);
     expect(w.knockbackResist).toBe(0.8);
+    expect(w.slowResist).toBe(0.8); // plafond, comme le recul
   });
 
   it('un boss toutes les 3 min, 50 % plus résistant à chaque fois', () => {

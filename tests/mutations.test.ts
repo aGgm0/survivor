@@ -64,16 +64,16 @@ describe('mutation — effets sur les stats', () => {
     expect(w.color).toBe(FROST.color);
   });
 
-  it('Fournaise : rayon ×1,2, dégâts ×4, une onde toutes les 1,8 s (la Hâte compte)', () => {
+  it('Fournaise : rayon ×1,2, dégâts ×4, une onde toutes les 1,5 s (la Hâte compte)', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     w.mutation = FURNACE;
     w.recompute(NO_MODS);
     expect(w.radius).toBeCloseTo(radius * 1.2);
     expect(w.damage).toBeCloseTo(damage * 4);
-    expect(w.cooldown).toBeCloseTo(1.8);
+    expect(w.cooldown).toBeCloseTo(1.5);
     w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
-    expect(w.cooldown).toBeCloseTo(0.9);
+    expect(w.cooldown).toBeCloseTo(0.75);
   });
 
   it('le damage meter affiche le nom de la mutation avec une étoile', () => {
@@ -318,15 +318,15 @@ describe('Fournaise : onde de feu', () => {
     expect(hits.has(list[2]!)).toBe(false);
   });
 
-  it('une seule brûlure par onde ; dégâts ×1,4 sur les gros, ×0,2 sur les autres', () => {
+  it('une seule brûlure par onde ; dégâts ×1,4 sur les gros, ×0,5 sur les autres', () => {
     const { w, list, hits, run, pulses } = setup([
       ['tank', 60],
       ['basic', -60],
     ]);
-    run(10, 1); // une onde, puis rien jusqu'à la suivante (1,8 s)
+    run(10, 1); // une onde, puis rien jusqu'à la suivante (1,5 s)
     expect(pulses()).toBe(1);
     expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4));
-    expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.2));
+    expect(hits.get(list[1]!)).toBeCloseTo(Math.ceil(w.damage * 0.5));
     run(11.8, 0.5); // onde suivante
     expect(pulses()).toBe(2);
     expect(hits.get(list[0]!)).toBeCloseTo(Math.ceil(w.damage * 1.4) * 2);

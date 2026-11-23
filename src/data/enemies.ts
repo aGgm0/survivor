@@ -102,7 +102,8 @@ export const ENEMY_TYPES = {
     color: '#8e2de2',
     knockbackImmune: true, // demandé : le boss avance quoi qu'il arrive
     resistances: { physical: 30, magical: 30 }, // −23 % contre tout : la pénétration compte
-    slowResist: 0.85, // retour de jeu : le Brasier (−30 %, remplacé par l'Aura de givre) le ralentissait beaucoup trop
+    // 0,85 → 1 (2026-11-23) : insensible au ralentissement, comme les élites (retour de jeu)
+    slowResist: 1,
   },
   /** Mini-boss de 3:00 : un rapide très boosté (PV ×60, dégâts ×4, taille ×1,8). */
   fastElite: {
@@ -114,8 +115,10 @@ export const ENEMY_TYPES = {
     xp: 20,
     radius: 18,
     color: '#f0ad4e',
-    // 50 % du recul d'un rapide normal (1,5, le plafond des ennemis légers)
-    knockbackFactor: 0.75,
+    // 25 % du recul d'un rapide normal (1,5, le plafond des ennemis légers) : 0,75 → 0,375,
+    // −50 % (retour de jeu du 2026-11-23)
+    knockbackFactor: 0.375,
+    slowResist: 1, // insensible au ralentissement (retour de jeu du 2026-11-23)
     resistances: { magical: 40 }, // −29 % contre la magie
     elite: true,
   },
@@ -129,8 +132,10 @@ export const ENEMY_TYPES = {
     xp: 20,
     radius: 25,
     color: '#d9534f',
-    // 50 % du recul d'un basique normal (1, l'ennemi de référence)
-    knockbackFactor: 0.5,
+    // 25 % du recul d'un basique normal (1, l'ennemi de référence) : 0,5 → 0,25, −50 %
+    // (retour de jeu du 2026-11-23)
+    knockbackFactor: 0.25,
+    slowResist: 1, // insensible au ralentissement (retour de jeu du 2026-11-23)
     resistances: { physical: 50 }, // −33 % contre le physique
     elite: true,
   },

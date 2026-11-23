@@ -187,6 +187,10 @@ export const ENDLESS = {
   knockbackResistPerMinute: 0.08,
   /** ...plafonnée : un ennemi recule toujours un peu */
   maxKnockbackResist: 0.8,
+  /** Résistance au ralentissement +10 % par minute (retour de jeu du 2026-11-23)... */
+  slowResistPerMinute: 0.1,
+  /** ...plafonnée comme le recul : le Givre garde un effet en sans fin */
+  maxSlowResist: 0.8,
   /** s entre deux boss du sans fin (le 1er arrive 3 min après le début) */
   bossInterval: 180,
   /** PV du 1er boss du sans fin = ceux du dernier boss normal × ce facteur, puis × encore à chaque boss */
@@ -203,6 +207,8 @@ export interface MutableWave {
   damageMult: number;
   /** Sans fin seulement : part du recul ignorée (0 à 1) */
   knockbackResist: number;
+  /** Sans fin seulement : part des ralentissements ignorée (0 à 1) */
+  slowResist: number;
 }
 
 /**
@@ -220,6 +226,7 @@ export function endlessWave(base: WaveDef, minutes: number, out: MutableWave): M
   );
   out.damageMult = ENDLESS.damageGrowthPerMinute ** m;
   out.knockbackResist = Math.min(ENDLESS.maxKnockbackResist, ENDLESS.knockbackResistPerMinute * m);
+  out.slowResist = Math.min(ENDLESS.maxSlowResist, ENDLESS.slowResistPerMinute * m);
   return out;
 }
 

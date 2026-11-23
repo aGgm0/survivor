@@ -25,6 +25,8 @@ export class Enemy implements Poolable {
   damageMult = 1;
   /** Sans fin : part du recul ignorée, de 0 à 1 (0 sinon) */
   knockbackResist = 0;
+  /** Sans fin : part des ralentissements ignorée, de 0 à 1 (0 sinon), en plus de celle du type */
+  slowResist = 0;
   /** Boss : s d'annonce de sa charge (0 : valeur par défaut de BOSS_ABILITIES) */
   chargeWindup = 0;
   /** Boss : multiplicateur de vitesse de sa charge (0 : celui de sa marche, `speedMult`) */
@@ -95,10 +97,12 @@ export class Enemy implements Poolable {
     speedMult = 1,
     damageMult = 1,
     knockbackResist = 0,
+    slowResist = 0,
   ): void {
     this.speedMult = speedMult;
     this.damageMult = damageMult;
     this.knockbackResist = knockbackResist;
+    this.slowResist = slowResist;
     this.summoned = false;
     this.chargeWindup = 0;
     this.dashSpeedMult = 0;

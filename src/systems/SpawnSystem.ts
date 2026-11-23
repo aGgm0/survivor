@@ -31,7 +31,7 @@ const FLOAT_EPSILON = 1e-9;
 
 /** Ce qu'il faut pour faire apparaître un ennemi de vague (vague normale ou vague du sans fin). */
 type SpawnParams = Pick<WaveDef, 'weights' | 'hpMult' | 'speedMult'> &
-  Partial<Pick<MutableWave, 'damageMult' | 'knockbackResist'>>;
+  Partial<Pick<MutableWave, 'damageMult' | 'knockbackResist' | 'slowResist'>>;
 
 /** Fait apparaître les ennemis selon la vague en cours, et les boss à leurs instants. */
 export class SpawnSystem {
@@ -56,6 +56,7 @@ export class SpawnSystem {
     speedMult: 1,
     damageMult: 1,
     knockbackResist: 0,
+    slowResist: 0,
   };
 
   constructor(
@@ -216,6 +217,7 @@ export class SpawnSystem {
         wave.speedMult,
         wave.damageMult,
         wave.knockbackResist,
+        wave.slowResist,
       );
       e.summoned = true;
     }
@@ -240,6 +242,7 @@ export class SpawnSystem {
         playerY,
         wave.damageMult,
         wave.knockbackResist,
+        wave.slowResist,
       ) !== null
     );
   }
@@ -253,6 +256,7 @@ export class SpawnSystem {
     playerY: number,
     damageMult = 1,
     knockbackResist = 0,
+    slowResist = 0,
   ): Enemy | null {
     const enemy = this.enemies.acquire();
     if (!enemy) return null;
@@ -265,6 +269,7 @@ export class SpawnSystem {
       speedMult,
       damageMult,
       knockbackResist,
+      slowResist,
     );
     return enemy;
   }
