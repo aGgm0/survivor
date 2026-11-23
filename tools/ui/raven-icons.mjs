@@ -29,7 +29,7 @@ export const ICON_GROUPS = {
     size: 865, // flèche vers le haut
     velocity: 1018, // trait rapide
     duplicator: 969, // éclats en double
-    penetration: 1214, // lance qui transperce
+    penetration: 870, // bouclier fendu orange, flèche rouge
   },
   // Résistances des ennemis, à côté des barres de PV du boss et des élites (0.3). Les malus
   // (flèche rouge) attendent un effet qui baisse l'armure d'un ennemi (enchantements, 0.4).

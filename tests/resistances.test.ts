@@ -67,15 +67,15 @@ describe('résistances et pénétration', () => {
 });
 
 describe('passif Pénétration', () => {
-  it('+10 par niveau, ajoutée à la pénétration de chaque arme ; le recalcul la remet à zéro', () => {
+  it('+5 par niveau, ajoutée à la pénétration de chaque arme ; le recalcul la remet à zéro', () => {
     const player = new Player();
     const levels = new Map([['penetration', 3]]);
     rebuildPassiveStats(player, levels);
-    expect(player.penetration).toBe(30);
+    expect(player.penetration).toBe(15);
     const bolt = new Weapon(WEAPONS.arcaneBolt);
     bolt.recompute(player);
-    expect(bolt.penetration).toBe(30);
-    expect(hit(ENEMY_TYPES.tank, bolt, 30)).toBe(25); // 30 × (1 − 20/120)
+    expect(bolt.penetration).toBe(15);
+    expect(hit(ENEMY_TYPES.tank, bolt, 27)).toBe(20); // 27 × (1 − 35/135) = 20
     rebuildPassiveStats(player, new Map());
     expect(player.penetration).toBe(0);
   });

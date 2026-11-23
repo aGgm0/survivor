@@ -132,13 +132,14 @@ export const PASSIVES: readonly PassiveDef[] = [
     id: 'penetration',
     name: 'Pénétration',
     short: 'Pé',
-    description: '+10 pénétration (toutes armes)',
-    // 0.3 : +50 au niveau 5 annule la résistance d'un tank (50) et du boss (30). Une pénétration
-    // plus forte que la résistance ne fait pas plus de dégâts (voir resistReduction).
+    description: '+5 pénétration (toutes armes)',
+    // 0.3 : +10 → +5 par niveau (retour : « sinon broken »). +25 au niveau 5 : le boss (30) passe
+    // de −23 % à −5 %, le tank (50) de −33 % à −20 %. Une pénétration plus forte que la
+    // résistance ne fait pas plus de dégâts (voir resistReduction).
     maxLevel: 5,
     scope: 'Armure et résistance magique des ennemis',
     stat: 'penetration',
-    amount: 10,
+    amount: 5,
   },
 ];
 
