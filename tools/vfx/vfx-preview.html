@@ -1,0 +1,381 @@
+<!doctype html>
+<!--
+  Planche animée des effets PVFX Foundry. Ouvrir avec le serveur de dev :
+  http://localhost:5173/tools/vfx/vfx-preview.html
+  1) Effets du jeu : EFFECT_DIRS (src/data/sprites.ts), fichiers dans public/assets/sprites/pvfx/.
+  2) Pack complet : export « strict / grid » de chaque effet dans tools/vfx/pvfx-pack/ (ignoré par
+     git, 10 Mo). Pour le refaire : décompresser pvfx-foundry-thirteen-spritesheets.zip, puis
+     copier pack.json et effects/**/strict/grid/ dans ce dossier.
+  Cliquer un effet du pack copie son id (ex. nature/vine-snare). Page d'outil : rien n'est livré
+  avec le jeu.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Effets PVFX</title>
+    <style>
+      @font-face {
+        font-family: 'DungeonMode';
+        src: url('/assets/fonts/dungeon-mode.ttf');
+      }
+      @font-face {
+        font-family: 'Monogram';
+        src: url('/assets/fonts/monogram-extended.ttf');
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+        font-synthesis: none;
+      }
+      body {
+        background: #14121a;
+        color: #ece6d6;
+        padding: 24px;
+        font-family: 'DungeonMode', monospace;
+        -webkit-font-smoothing: none;
+      }
+      h1 {
+        font-size: 24px;
+        color: #e8c25a;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        color: #e8c25a;
+        margin: 24px 0 12px;
+      }
+      p,
+      .hint,
+      .desc {
+        font-family: 'Monogram', monospace;
+        font-size: 24px;
+        color: #a89f8c;
+      }
+      .desc {
+        font-size: 18px;
+        line-height: 16px;
+      }
+      code {
+        color: #ece6d6;
+        font-family: inherit;
+      }
+      canvas {
+        image-rendering: pixelated;
+        display: block;
+        background: var(--stage, #2a2630);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 8px;
+      }
+      .cell {
+        padding: 8px;
+        border: 2px solid #3a3446;
+        background: #1d1a24;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        text-align: center;
+        cursor: pointer;
+      }
+      .cell:hover {
+        border-color: #6b6280;
+      }
+      .cell.in-game {
+        border-color: #e8c25a;
+      }
+      .cell.hidden {
+        display: none;
+      }
+      .use {
+        color: #e8c25a;
+      }
+      .meta {
+        color: #a89f8c;
+        font-size: 10px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .toolbar input,
+      .toolbar select {
+        font: inherit;
+        font-size: 12px;
+        background: #1d1a24;
+        color: #ece6d6;
+        border: 2px solid #3a3446;
+        padding: 6px 8px;
+      }
+      .toolbar label {
+        font-size: 12px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      #toast {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        background: #e8c25a;
+        color: #14121a;
+        padding: 8px 12px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      #toast.show {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Effets PVFX Foundry</h1>
+    <p>
+      Effets du jeu (<code>EFFECT_DIRS</code>, src/data/sprites.ts) et tout le pack, animés. Cliquer
+      un effet du pack copie son id.
+    </p>
+
+    <div class="toolbar">
+      <label
+        >Vitesse
+        <select id="speed">
+          <option value="0.5">×0,5</option>
+          <option value="1" selected>×1</option>
+          <option value="2">×2</option>
+        </select>
+      </label>
+      <label
+        >Fond
+        <select id="stage">
+          <option value="#2a2630" selected>Sol du donjon</option>
+          <option value="#000000">Noir</option>
+          <option value="#d8d0c0">Clair</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="pause" /> Pause</label>
+    </div>
+
+    <h2>Dans le jeu</h2>
+    <div id="used" class="grid"></div>
+
+    <h2>Pack complet</h2>
+    <div class="toolbar">
+      <input id="filter" placeholder="Filtrer (nom, catégorie, mot-clé)" size="32" />
+      <select id="category"></select>
+      <span id="count" class="hint"></span>
+    </div>
+    <div id="pack" class="grid"></div>
+    <div id="toast"></div>
+
+    <script type="module">
+      import { EFFECT_DIRS } from '/src/data/sprites.ts';
+
+      /** Qui utilise chaque effet du jeu (à tenir à jour avec EFFECT_DIRS). */
+      const USES = {
+        burst: 'Trait éclaté (explosion)',
+        slash: 'Épée, Tourbillon',
+        spikes: 'Chausse-trapes (zone)',
+        clang: 'Chausse-trapes (coup)',
+        barrel: 'Mines (explosion)',
+        vines: 'Champ de ronces (zone)',
+        strike: 'Orage (foudre)',
+      };
+      const PACK = '/tools/vfx/pvfx-pack/';
+      /** px : plus grand côté d'un effet à l'écran (agrandi d'un nombre entier de fois) */
+      const BOX = 144;
+
+      const speedInput = document.getElementById('speed');
+      const pauseInput = document.getElementById('pause');
+      document.getElementById('stage').addEventListener('change', (e) => {
+        document.body.style.setProperty('--stage', e.target.value);
+      });
+
+      /** Lit le manifeste PVFX (format pvfx.fx.export-manifest/1) : images, durées, cadre. */
+      function parseManifest(m) {
+        const [width, height] = m.source_size;
+        const frames = m.frames.map((f) => ({
+          x: f.sheet.x,
+          y: f.sheet.y,
+          w: f.sheet.width,
+          h: f.sheet.height,
+          ms: f.duration.numerator_ms / (f.duration.denominator || 1),
+        }));
+        return { width, height, loop: m.loop_mode === 'loop', frames };
+      }
+
+      /** Un effet animé : sa feuille, son manifeste, son canvas. */
+      const players = [];
+      async function makePlayer(dir) {
+        const [image, manifest] = await Promise.all([
+          new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = `${dir}sprite-sheet.png`;
+          }),
+          fetch(`${dir}manifest.json`).then((r) => r.json()),
+        ]);
+        const clip = parseManifest(manifest);
+        const scale = Math.max(1, Math.floor(BOX / Math.max(clip.width, clip.height)));
+        const canvas = document.createElement('canvas');
+        canvas.width = clip.width;
+        canvas.height = clip.height;
+        canvas.style.width = `${clip.width * scale}px`;
+        canvas.style.height = `${clip.height * scale}px`;
+        const total = clip.frames.reduce((s, f) => s + f.ms, 0);
+        const player = { canvas, image, clip, total, visible: false, last: -1 };
+        players.push(player);
+        return player;
+      }
+
+      /** Image à afficher à `t` ms ; les effets joués une fois recommencent après une pause. */
+      function frameAt(p, t) {
+        const span = p.clip.loop ? p.total : p.total + 600;
+        let time = t % span;
+        for (let i = 0; i < p.clip.frames.length; i++) {
+          time -= p.clip.frames[i].ms;
+          if (time < 0) return i;
+        }
+        return -1; // pause entre deux lectures : rien
+      }
+
+      // Une seule boucle pour toutes les planches ; seuls les effets visibles sont redessinés.
+      let clock = 0;
+      let previous = performance.now();
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) entry.target.__player.visible = entry.isIntersecting;
+      });
+      function tick(now) {
+        const dt = now - previous;
+        previous = now;
+        if (!pauseInput.checked) clock += dt * Number(speedInput.value);
+        for (const p of players) {
+          if (!p.visible) continue;
+          const index = frameAt(p, clock);
+          if (index === p.last) continue;
+          p.last = index;
+          const ctx = p.canvas.getContext('2d');
+          ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+          const f = p.clip.frames[index];
+          if (f) ctx.drawImage(p.image, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      function cell(player, title, lines) {
+        const div = document.createElement('div');
+        div.className = 'cell';
+        player.canvas.__player = player;
+        observer.observe(player.canvas);
+        const name = document.createElement('div');
+        name.textContent = title;
+        div.append(player.canvas, name);
+        for (const [cls, text] of lines) {
+          const line = document.createElement('div');
+          line.className = cls;
+          line.textContent = text;
+          div.append(line);
+        }
+        return div;
+      }
+
+      function toast(text) {
+        const el = document.getElementById('toast');
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => el.classList.remove('show'), 1200);
+      }
+
+      // --- Dans le jeu
+      const usedFolders = new Map();
+      const used = document.getElementById('used');
+      for (const [name, dir] of Object.entries(EFFECT_DIRS)) {
+        const folder = dir.split('/').filter(Boolean).pop();
+        usedFolders.set(folder, name);
+        try {
+          const p = await makePlayer(dir);
+          used.append(
+            cell(p, name, [
+              ['use', USES[name] ?? '?'],
+              ['meta', `${folder} · ${p.clip.frames.length} images · ${Math.round(p.total)} ms`],
+            ]),
+          );
+        } catch {
+          used.append(
+            Object.assign(document.createElement('div'), { textContent: `${name} : introuvable` }),
+          );
+        }
+      }
+
+      // --- Pack complet
+      const packEl = document.getElementById('pack');
+      const countEl = document.getElementById('count');
+      const filterInput = document.getElementById('filter');
+      const categorySelect = document.getElementById('category');
+      let effects = [];
+      try {
+        effects = (await fetch(`${PACK}pack.json`).then((r) => r.json())).effects;
+      } catch {
+        packEl.textContent =
+          'Pack absent : voir le commentaire en tête du fichier (tools/vfx/pvfx-pack/).';
+      }
+      const categories = [...new Set(effects.map((e) => e.category))].sort();
+      categorySelect.append(new Option('Toutes les catégories', ''));
+      for (const c of categories) categorySelect.append(new Option(c, c));
+
+      const cells = [];
+      // Chargés en parallèle (334 effets), puis ajoutés dans l'ordre du pack.
+      const loaded = await Promise.all(
+        effects.map((e) => makePlayer(`${PACK}effects/${e.id}/strict/grid/`).catch(() => null)),
+      );
+      effects.forEach((e, i) => {
+        const p = loaded[i];
+        if (!p) return;
+        const folder = e.id.split('/').pop();
+        const inGame = usedFolders.get(folder);
+        const div = cell(p, e.name, [
+          ['meta', e.id],
+          [
+            'meta',
+            `${e.size[0]}×${e.size[1]} · ${e.frames} images · ${e.loop ? 'boucle' : 'une fois'}`,
+          ],
+          ...(inGame ? [['use', `dans le jeu : ${USES[inGame] ?? inGame}`]] : []),
+        ]);
+        if (inGame) div.classList.add('in-game');
+        div.title = e.description;
+        div.addEventListener('click', () => {
+          navigator.clipboard?.writeText(e.id);
+          toast(`${e.id} copié`);
+        });
+        div.__search = `${e.id} ${e.name} ${(e.tags ?? []).join(' ')}`.toLowerCase();
+        div.__category = e.category;
+        cells.push(div);
+        packEl.append(div);
+      });
+
+      function applyFilter() {
+        const q = filterInput.value.trim().toLowerCase();
+        const c = categorySelect.value;
+        let shown = 0;
+        for (const div of cells) {
+          const ok = (!c || div.__category === c) && (!q || div.__search.includes(q));
+          div.classList.toggle('hidden', !ok);
+          if (ok) shown++;
+        }
+        countEl.textContent = `${shown} / ${cells.length} effets`;
+      }
+      filterInput.addEventListener('input', applyFilter);
+      categorySelect.addEventListener('change', applyFilter);
+      applyFilter();
+    </script>
+  </body>
+</html>
