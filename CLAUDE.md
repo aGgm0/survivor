@@ -460,7 +460,7 @@ But : des ennemis qui résistent obligent à varier son build (seul vrai choix d
 
 **Sortie**
 - [x] Version 0.3.0 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.0-itch.zip` (2026-11-23)
-- [ ] Zip testé sur itch, tag `v0.3.0` poussé
+- [x] Zip testé sur itch, tag `v0.3.0` poussé (2026-11-24)
 - Sortie décidée avant l'équilibrage des nouvelles armes et le bloc D : ce sont les testeurs qui donneront les retours (choix de l'utilisateur). Reste pour la **0.3.1** : équilibrage des 4 nouvelles armes au bot et en jeu, bloc D (équilibrage confirmé, prix de la Boutique, retours des testeurs)
 
 **Ce qu'apporte la 0.3 (côté joueur) :** 8 armes au lieu de 4, chaque arme physique ou magique, des ennemis qui résistent à l'un des deux types, la pénétration pour percer leurs défenses, et les correctifs de la 0.2.
