@@ -41,6 +41,14 @@ export const SFX = {
   'boss-death': { volume: 0.7, minGap: 0, maxVoices: 2, pitchJitter: 0 },
   'ui-hover': { volume: 0.3, minGap: 0.03, maxVoices: 1, pitchJitter: 0 },
   'ui-click': { volume: 0.4, minGap: 0.03, maxVoices: 1, pitchJitter: 0 },
+  // Armes du bloc C (0.3.1). Impacts au niveau des autres impacts ; départs au niveau du Trait.
+  'chain-hit': { volume: 0.15, minGap: 0.04, maxVoices: 3, pitchJitter: 0.08 },
+  'metal-hit': { volume: 0.15, minGap: 0.04, maxVoices: 3, pitchJitter: 0.06 },
+  'chain-zap': { volume: 0.3, minGap: 0.06, maxVoices: 2, pitchJitter: 0.06 },
+  'axe-throw': { volume: 0.25, minGap: 0.06, maxVoices: 2, pitchJitter: 0.06 },
+  'bow-shoot': { volume: 0.25, minGap: 0.06, maxVoices: 3, pitchJitter: 0.05 },
+  'spike-place': { volume: 0.25, minGap: 0.06, maxVoices: 2, pitchJitter: 0.08 },
+  thunder: { volume: 0.4, minGap: 0.08, maxVoices: 2, pitchJitter: 0.06 },
 } as const satisfies Record<string, SoundSettings>;
 
 export type SfxName = keyof typeof SFX;
@@ -54,10 +62,27 @@ export const HIT_SOUNDS = {
   melee: 'enemy-hit',
   orbit: 'orb-hit',
   aura: 'aura-burn',
-  chain: 'enemy-hit',
-  boomerang: 'enemy-hit',
-  zone: 'enemy-hit',
+  chain: 'chain-hit',
+  boomerang: 'metal-hit',
+  zone: 'metal-hit',
 } as const satisfies Record<WeaponDef['kind'], SfxName>;
+
+/**
+ * Son du départ d'un tir (événement `fired`), selon le type d'arme. `null` : les armes qui ne
+ * « tirent » pas (l'Épée a déjà son coup, l'aura et les orbes agissent en continu).
+ */
+export const FIRE_SOUNDS = {
+  projectile: 'bolt-shoot',
+  melee: null,
+  orbit: null,
+  aura: null,
+  chain: 'chain-zap',
+  boomerang: 'axe-throw',
+  zone: 'spike-place',
+} as const satisfies Record<WeaponDef['kind'], SfxName | null>;
+
+/** Départ d'une arme à projectiles qui tire des flèches (`look: 'arrow'`) : corde d'arc. */
+export const ARROW_FIRE_SOUND: SfxName = 'bow-shoot';
 
 /** Dossier des musiques (OGG à −16 LUFS, originaux dans assets-src/). */
 export const MUSIC_DIR = `${import.meta.env.BASE_URL}assets/audio/music/`;

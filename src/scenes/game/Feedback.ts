@@ -5,7 +5,7 @@
 import type { SoundPlayer } from '../../core/AudioEngine';
 import type { Camera } from '../../core/Camera';
 import { Rng } from '../../core/math';
-import { HIT_SOUNDS, type SfxName } from '../../data/audio';
+import { ARROW_FIRE_SOUND, FIRE_SOUNDS, HIT_SOUNDS, type SfxName } from '../../data/audio';
 import { AURA_LOOKS, AURA_PULSE, PARTICLES, RESISTED_NUMBERS, SHAKE_EVENTS } from '../../data/feel';
 import type { Settings } from '../../data/settings';
 import { STATUS } from '../../data/status';
@@ -165,12 +165,15 @@ export class Feedback implements RunEvents {
       this.shake('explosion');
       this.sound('bolt-burst');
     } else if (name === 'strike') {
-      this.sound('bolt-burst');
+      this.sound('thunder');
     }
   }
 
-  fired(): void {
-    this.sound('bolt-shoot');
+  fired(source: Weapon): void {
+    const def = source.def;
+    const name =
+      def.kind === 'projectile' && def.look === 'arrow' ? ARROW_FIRE_SOUND : FIRE_SOUNDS[def.kind];
+    if (name) this.sound(name);
   }
 
   uiClick(): void {

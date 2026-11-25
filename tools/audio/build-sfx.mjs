@@ -3,7 +3,7 @@
 // Chaque son est décrit ici par une « recette » (couches d'ondes, glissement de hauteur, enveloppe),
 // puis calculé échantillon par échantillon et écrit en WAV dans public/assets/audio/sfx/.
 // Aucune dépendance : même principe que sfxr / ChipTone, mais les réglages restent dans le code,
-// donc un son se retouche en changeant un chiffre, et les 18 sons gardent le même « synthé ».
+// donc un son se retouche en changeant un chiffre, et tous les sons gardent le même « synthé ».
 // Sons créés par nous : CC0, comme le reste de ce qu'on génère.
 import { Buffer } from 'node:buffer';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -220,6 +220,98 @@ const SOUNDS = {
   'ui-click': [
     { wave: 'square', duty: 0.5, freq: 1250, to: 850, dur: 0.06, curve: 2, vol: 0.55 },
     { wave: 'triangle', freq: 625, to: 425, dur: 0.06, curve: 2, vol: 0.45 },
+  ],
+  // ---- 0.3.1 : sons des armes du bloc C (ajoutés à la fin : les sons d'avant ne changent pas,
+  // l'aléatoire du bruit est tiré dans l'ordre de la liste).
+  // Éclair en chaîne, départ de la décharge : grésillement électrique (souffle très aigu + bourdon
+  // en dents de scie secoué par un vibrato rapide, qui donne le « bzzz » de l'arc électrique).
+  'chain-zap': [
+    { wave: 'noise', freq: 14000, to: 5000, dur: 0.2, curve: 1.6, vol: 0.55 },
+    {
+      wave: 'saw',
+      freq: 520,
+      to: 260,
+      dur: 0.2,
+      curve: 1.4,
+      vol: 0.5,
+      vib: { depth: 0.35, rate: 70 },
+    },
+    {
+      wave: 'square',
+      duty: 0.125,
+      freq: 2600,
+      to: 1400,
+      dur: 0.08,
+      curve: 2,
+      vol: 0.3,
+      vib: { depth: 0.5, rate: 110 },
+    },
+  ],
+  // Éclair en chaîne, ennemi touché : petite étincelle sèche (un coup par saut : doit rester court).
+  'chain-hit': [
+    { wave: 'noise', freq: 12000, to: 7000, dur: 0.045, curve: 2.5, vol: 0.6 },
+    {
+      wave: 'square',
+      duty: 0.25,
+      freq: 1700,
+      to: 900,
+      dur: 0.05,
+      curve: 2.5,
+      vol: 0.4,
+      vib: { depth: 0.4, rate: 120 },
+    },
+  ],
+  // Foudre de l'Orage : craquement puis grondement grave.
+  thunder: [
+    { wave: 'noise', freq: 9000, to: 1500, dur: 0.08, curve: 2, vol: 0.7 },
+    { wave: 'noise', freq: 1200, to: 120, dur: 0.45, delay: 0.02, curve: 1.6, vol: 0.7 },
+    {
+      wave: 'saw',
+      freq: 110,
+      to: 45,
+      dur: 0.4,
+      delay: 0.02,
+      curve: 1.6,
+      vol: 0.3,
+      vib: { depth: 0.12, rate: 11 },
+    },
+  ],
+  // Hache lancée : souffle qui tourne (vibrato lent sur le bruit = « wou-wou » de la rotation).
+  'axe-throw': [
+    {
+      wave: 'noise',
+      freq: 3200,
+      to: 1600,
+      dur: 0.24,
+      attack: 0.02,
+      curve: 1.5,
+      vol: 0.8,
+      vib: { depth: 0.55, rate: 16 },
+    },
+  ],
+  // Lame de métal qui entre (Hache, pointes des Chausse-trapes) : choc grave + tintement.
+  'metal-hit': [
+    { wave: 'square', duty: 0.5, freq: 240, to: 120, dur: 0.05, curve: 2.5, vol: 0.5 },
+    { wave: 'triangle', freq: 1500, to: 1350, dur: 0.07, curve: 2.5, vol: 0.4 },
+    { wave: 'noise', freq: 7000, dur: 0.02, curve: 2, vol: 0.35 },
+  ],
+  // Arc : corde qui claque (grave qui vibre) + flèche qui siffle.
+  'bow-shoot': [
+    {
+      wave: 'triangle',
+      freq: 330,
+      to: 250,
+      dur: 0.12,
+      curve: 2,
+      vol: 0.7,
+      vib: { depth: 0.04, rate: 28 },
+    },
+    { wave: 'noise', freq: 7000, to: 2500, dur: 0.07, delay: 0.01, curve: 1.8, vol: 0.35 },
+  ],
+  // Chausse-trapes posées : pointes qui sortent de terre (coup sourd + raclement).
+  'spike-place': [
+    { wave: 'square', duty: 0.5, freq: 150, to: 80, dur: 0.07, curve: 2.2, vol: 0.5 },
+    { wave: 'noise', freq: 2600, to: 900, dur: 0.11, curve: 1.8, vol: 0.55 },
   ],
 };
 

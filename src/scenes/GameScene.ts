@@ -132,7 +132,7 @@ export interface GameSceneDeps {
   /** Atlas des effets (gemmes, projectiles, orbes). Absent : formes simples. */
   fx?: SpriteAtlas | null;
   /** Effets animés du pack PVFX (explosion, épée, auras, vague). Absents : formes simples. */
-  effects?: Readonly<Record<EffectName, EffectSheet>> | null;
+  effects?: Readonly<Partial<Record<EffectName, EffectSheet>>> | null;
   /** Cadre et remplissage des barres de PV (pack Dark Ages). Absents : rectangles. */
   hpBars?: HpBarSkin | null;
   /** Boucliers des résistances au-dessus des élites (pack Raven). Absents : rien. */
@@ -253,7 +253,7 @@ export class GameScene implements Scene, Build {
       onAuraPulse: (x, y, r) => this.feedback.auraPulse(x, y, r),
       onThrust: (x, y, angle, arc, r, color) => this.feedback.thrust(x, y, angle, arc, r, color),
       onSlash: (x, y, angle, arc, r, color) => this.feedback.slash(x, y, angle, arc, r, color),
-      onFire: () => this.feedback.fired(),
+      onFire: (weapon) => this.feedback.fired(weapon),
       onEffect: (name, x, y, size, angle) => this.feedback.effect(name, x, y, size, angle),
     };
     this.weaponSystem = new WeaponSystem(
