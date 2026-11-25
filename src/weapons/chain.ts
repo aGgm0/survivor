@@ -1,6 +1,6 @@
 // Chaîne (Éclair en chaîne) : frappe l'ennemi le plus proche, puis saute de proche en proche.
 // Mutations : Orage (des chaînes partent aussi d'ennemis au hasard) et Arc continu (plus de
-// sauts, sans perte de dégâts).
+// sauts, presque sans perte de dégâts).
 
 import { clipFrameIndex } from '../core/EffectSheet';
 import { CHAIN_LOOK } from '../data/feel';

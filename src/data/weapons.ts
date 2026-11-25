@@ -528,10 +528,12 @@ export const WEAPONS = {
         id: 'unbrokenArc',
         name: 'Arc continu',
         short: 'Ac',
-        description: '+4 sauts, et plus aucune perte de dégâts entre deux sauts',
+        description: '+3 sauts, et presque plus de perte entre deux sauts (−8 %)',
         color: '#ffffff',
-        jumpsAdd: 4,
-        falloff: 0,
+        // 0.3.1 : +4 sauts sans perte → +3 sauts à −8 %. 1re arme du damage meter dans 3 parties
+        // sur 4 (33 à 48 %). Chaîne complète au niveau 5 : 11 coups pleins → ~7 coups.
+        jumpsAdd: 3,
+        falloff: 0.08,
       },
     ],
   },

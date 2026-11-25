@@ -61,16 +61,18 @@ describe('Éclair en chaîne', () => {
     expect(w.cooldownTimer).toBe(0);
   });
 
-  it('Arc continu : +4 sauts sans perte ; Orage : des chaînes en plus, sans retoucher un ennemi', () => {
+  it('Arc continu : +3 sauts, perte réduite ; Orage : des chaînes en plus, sans retoucher un ennemi', () => {
     const arc = new Weapon(WEAPONS.chainLightning);
     arc.level = 5;
     arc.mutation = WEAPONS.chainLightning.mutations[1];
     arc.recompute(NO_MODS);
-    expect(arc.jumps).toBe(3 + 1 + 2 + 4);
+    expect(arc.jumps).toBe(3 + 1 + 2 + 3);
+    expect(arc.falloff).toBe(0.08);
     const a = setup(20, 60);
     a.system.update(1 / 60, [arc], 0, 0, 0);
     expect(a.hits).toHaveLength(arc.jumps + 1);
-    expect(new Set(a.hits).size).toBe(1);
+    // Chaque saut perd un peu : le dernier coup est plus faible que le premier
+    expect(a.hits.at(-1) ?? 0).toBeLessThan(a.hits[0] ?? 0);
 
     const storm = new Weapon(WEAPONS.chainLightning);
     storm.mutation = WEAPONS.chainLightning.mutations[0];
