@@ -2,6 +2,18 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [Non publié]
+
+### Ajouté
+
+- **Sons des nouvelles armes** : grésillement électrique de l'Éclair en chaîne, tonnerre de l'Orage, sifflement de la Hache qui tourne, corde de l'Arc, pointes qui sortent de terre, impacts métalliques. Avant, elles reprenaient le « piou » du Trait arcanique.
+
+### Modifié
+
+- **Arc continu** moins fort : +3 sauts au lieu de +4, et chaque saut perd 8 % des dégâts (avant : aucune perte).
+- **Fournaise** : l'onde de feu est maintenant un vrai anneau de flammes qui s'élargit jusqu'à sa portée (effet du pack Pixel Spells: Inferno, Odd Jelly Games).
+- **Champ de ronces** plus lisible : un contour net montre la zone qui ralentit, et les lianes ne cachent plus le sol.
+
 ## [0.3.0] — 2026-11-23
 
 Stats avancées et arsenal : les armes sont physiques ou magiques, des ennemis résistent à l'un des deux, et 4 nouvelles armes.
