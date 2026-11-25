@@ -164,6 +164,42 @@ export class EffectSheet {
   }
 
   /**
+   * Dessine l'image `index` son pivot posé en (`x`, `y`), agrandie de `sx` en largeur et `sy` en
+   * hauteur (`sx` négatif : retournée). Pour écraser un effet vers le sol (pivot = pied).
+   */
+  drawAtPivot(
+    ctx: CanvasRenderingContext2D,
+    index: number,
+    x: number,
+    y: number,
+    sx: number,
+    sy: number,
+  ): void {
+    const f = this.clip.frames[index];
+    if (!f?.bounds) return;
+    const { pivotX, pivotY } = this.clip;
+    if (sx >= 0) {
+      ctx.drawImage(
+        this.image,
+        f.x,
+        f.y,
+        f.w,
+        f.h,
+        x - pivotX * sx,
+        y - pivotY * sy,
+        f.w * sx,
+        f.h * sy,
+      );
+      return;
+    }
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(this.image, f.x, f.y, f.w, f.h, -pivotX * -sx, -pivotY * sy, f.w * -sx, f.h * sy);
+    ctx.restore();
+  }
+
+  /**
    * Dessine l'image `index` avec le centre de la zone visible de tout l'effet (toutes images
    * confondues) posé en (`x`, `y`), agrandie de `sx` en largeur et `sy` en hauteur. Pour un effet
    * qui grandit autour d'un point (anneau) : ce centre ne bouge pas d'une image à l'autre.

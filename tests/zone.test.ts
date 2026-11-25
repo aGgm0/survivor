@@ -77,6 +77,33 @@ describe('Chausse-trapes', () => {
     expect(hits.get(list[0]!)).toBeUndefined();
   });
 
+  it('grand pic final : un seul coup fort, 0,83 s avant la fin, aux ennemis dans la zone', () => {
+    const enemies = new Pool(4, (i) => new Enemy(i));
+    const inside = enemies.acquire()!;
+    inside.spawn(ENEMY_TYPES.basic, 20, 0);
+    inside.hp = 10_000;
+    const collisions = new CollisionSystem(4);
+    const damages: [number, number][] = []; // [instant, dégâts]
+    let now = 0;
+    const system = new WeaponSystem(4, collisions, new Pool(1, () => new Projectile()), {
+      onHit: (_e, damage) => damages.push([now, damage]),
+      onKill: () => {},
+    });
+    const w = caltrops();
+    // Pose une seule zone en (0, 0), puis le joueur part loin (ses autres zones aussi).
+    for (now = 0; now < 4.2; now += DT) {
+      inside.x = 20;
+      inside.y = 0;
+      collisions.rebuild(enemies);
+      system.update(DT, [w], now < DT ? 0 : 1000, 0, now);
+    }
+    const spike = WEAPONS.caltrops.finalSpike;
+    const big = damages.filter(([, d]) => d > w.damage * 2);
+    expect(big).toHaveLength(1);
+    expect(big[0]![1]).toBe(Math.ceil(w.damage * spike.damageMult));
+    expect(big[0]![0]).toBeCloseTo(4 - spike.before, 1);
+  });
+
   it('Mines : une seule explosion au premier contact, qui touche tout autour', () => {
     const { list, hits, run, explosions } = setup([
       [10, 0],

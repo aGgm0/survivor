@@ -272,6 +272,12 @@ export interface ZoneWeaponDef extends WeaponDefBase {
   readonly radius: number;
   readonly duration: number;
   readonly tick: number;
+  /**
+   * Grand pic final, sans mutation : `before` s avant la fin de la zone, un coup unique de
+   * dégâts × `damageMult` à chaque ennemi dedans. Calé sur l'animation des pointes (voir
+   * ZONE_FX) : le grand pic sort à ce moment-là.
+   */
+  readonly finalSpike?: { readonly damageMult: number; readonly before: number };
 }
 
 export type WeaponDef =
@@ -394,7 +400,8 @@ export const WEAPONS = {
     id: 'caltrops',
     name: 'Chausse-trapes',
     short: 'Ct',
-    description: 'Pose des pointes au sol : elles blessent ce qui marche dessus pendant 4 s',
+    description:
+      'Pose des pointes au sol : elles blessent ce qui marche dessus pendant 4 s, puis un grand pic frappe fort',
     damage: 8,
     knockback: 30,
     cooldown: 2,
@@ -402,6 +409,9 @@ export const WEAPONS = {
     radius: 40,
     duration: 4,
     tick: 0.5,
+    // Le grand pic de BoneSpikes (image 12, 0,83 s avant la fin) frappe : 30 dégâts au niveau 1
+    // (8 × 3,75), puis il suit les niveaux et la Puissance comme le reste de l'arme.
+    finalSpike: { damageMult: 3.75, before: 0.83 },
     color: '#c9c9d1',
     scope: 'Zone au sol · sous toi',
     levels: [

@@ -30,7 +30,7 @@ const REQUIRED = [
   'index.html',
   'assets/ui/darkages/panel.png',
   'assets/ui/raven/sword.png',
-  'assets/sprites/inferno/flame-nova/sprite-sheet.png', // node tools/vfx/import-inferno.mjs
+  'assets/sprites/pixel-spells/flame-nova/sprite-sheet.png', // node tools/vfx/import-pixel-spells.mjs
 ];
 
 function fail(message) {

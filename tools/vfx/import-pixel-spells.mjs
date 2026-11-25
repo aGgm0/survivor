@@ -1,12 +1,12 @@
 /* global console, process */
-// Importe des effets du pack « Pixel Spells: Inferno » (Odd Jelly Games) dans le jeu :
-// `node tools/vfx/import-inferno.mjs`.
-// Le pack (tools/vfx/pixel-spells-inferno/, ignoré par git) livre chaque effet en bande d'images
+// Importe des effets des packs « Pixel Spells » (Odd Jelly Games : Inferno, Holy, Frost, Storm,
+// Unholy) dans le jeu : `node tools/vfx/import-pixel-spells.mjs`.
+// Chaque pack (tools/vfx/pixel-spells-<pack>/, ignoré par git) livre chaque effet en bande d'images
 // + JSON Aseprite. Le jeu lit déjà le format des effets PVFX (core/EffectSheet : sprite-sheet.png
 // + manifest.json avec la zone visible de chaque image) : plutôt qu'un 2e lecteur dans le jeu, ce
 // script convertit une fois. La zone visible est mesurée ici en lisant les pixels du PNG.
 // Licence du pack : pas de redistribution des fichiers → le résultat (public/assets/sprites/
-// inferno/) est ignoré par git, et ne part que dans le zip itch (le jeu fini, c'est permis).
+// pixel-spells/) est ignoré par git, et ne part que dans le zip itch (le jeu fini, c'est permis).
 import { Buffer } from 'node:buffer';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -14,11 +14,27 @@ import { fileURLToPath } from 'node:url';
 import { inflateSync } from 'node:zlib';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const PACK = join(ROOT, 'tools', 'vfx', 'pixel-spells-inferno', 'PixelSpells', 'InfernoSample');
-const OUT = join(ROOT, 'public', 'assets', 'sprites', 'inferno');
+const OUT = join(ROOT, 'public', 'assets', 'sprites', 'pixel-spells');
 
 /** Effets utilisés par le jeu : dossier du pack (couleur/effet) → dossier dans le jeu. */
-const EFFECTS = [{ from: 'Fire/FlameNova', to: 'flame-nova' }];
+const EFFECTS = [
+  { pack: 'Inferno', from: 'Fire/FlameNova', to: 'flame-nova' }, // onde de la Fournaise
+  { pack: 'Storm', from: 'Azure/ChainLightning', to: 'storm-chain' }, // ricochets de l'Éclair
+  { pack: 'Storm', from: 'Azure/LightningStrike', to: 'storm-strike' }, // foudre de l'Orage
+  { pack: 'Unholy', from: 'Gold/BoneSpikes', to: 'bone-spikes' }, // Chausse-trapes
+];
+
+/** Dossier d'un pack décompressé. */
+function packDir(pack) {
+  return join(
+    ROOT,
+    'tools',
+    'vfx',
+    `pixel-spells-${pack.toLowerCase()}`,
+    'PixelSpells',
+    `${pack}Sample`,
+  );
+}
 
 /** Seuil d'opacité (0-255) au-dessus duquel un pixel compte comme visible. */
 const ALPHA_MIN = 8;
@@ -99,15 +115,14 @@ function visibleBounds(png, fx, fy, fw, fh) {
 
 // ---------------------------------------------------------------- conversion
 
-if (!existsSync(PACK)) {
-  console.error(`✗ Pack absent : décompresser pixel-spells-inferno-free-sprites.zip dans
-  tools/vfx/pixel-spells-inferno/ (on doit trouver ${PACK}).`);
-  process.exit(1);
-}
-
-for (const { from, to } of EFFECTS) {
+for (const { pack, from, to } of EFFECTS) {
   const name = from.split('/').pop();
-  const src = join(PACK, from);
+  const src = join(packDir(pack), from);
+  if (!existsSync(src)) {
+    console.error(`✗ ${pack}/${from} absent : décompresser pixel-spells-${pack.toLowerCase()}-free-sprites.zip
+  dans tools/vfx/pixel-spells-${pack.toLowerCase()}/ (on doit trouver ${src}).`);
+    process.exit(1);
+  }
   const aseprite = JSON.parse(readFileSync(join(src, `${name}.json`), 'utf8'));
   const png = decodePng(join(src, `${name}.png`));
   const frames = Object.values(aseprite.frames).map((f, i) => {
@@ -123,7 +138,7 @@ for (const { from, to } of EFFECTS) {
   // Même format que les exports PVFX (pvfx.fx.export-manifest/1), limité aux champs que lit le jeu.
   const manifest = {
     schema: 'pvfx.fx.export-manifest/1',
-    source: `Pixel Spells: Inferno (Free Sample), Odd Jelly Games : ${from}`,
+    source: `Pixel Spells: ${pack} (Free Sample), Odd Jelly Games : ${from}`,
     loop_mode: aseprite.meta.loop ? 'loop' : 'once',
     source_size: [first.width, first.height],
     pivot: [aseprite.meta.pivot.x, aseprite.meta.pivot.y],
@@ -133,7 +148,7 @@ for (const { from, to } of EFFECTS) {
   mkdirSync(dest, { recursive: true });
   copyFileSync(join(src, `${name}.png`), join(dest, 'sprite-sheet.png'));
   writeFileSync(join(dest, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`${from} → ${to} : ${frames.length} images`);
+  console.log(`${pack}/${from} → ${to} : ${frames.length} images`);
   for (const f of frames) {
     const b = f.visible_bounds;
     console.log(

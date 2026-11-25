@@ -4,7 +4,7 @@
 
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import type { SpriteTint } from '../core/SpriteAtlas';
-import { CALTROPS_SPRITE, ZONE_FX } from '../data/sprites';
+import { BRAMBLE_FX, CALTROPS_SPRITE, ZONE_FX } from '../data/sprites';
 import type { ZoneWeaponDef } from '../data/weapons';
 import type { Weapon } from '../entities/Weapon';
 import { MAX_ENEMY_RADIUS } from '../systems/CollisionSystem';
@@ -32,7 +32,8 @@ const X = 1;
 const Y = 2;
 const BORN = 3;
 const EXPIRES = 4;
-const STRIDE = 5;
+const SPIKED = 5; // 1 : grand pic final déjà frappé
+const STRIDE = 6;
 
 /** Pose une zone en (x, y) ; si tout est pris, remplace celle qui finit le plus tôt. */
 function place(weapon: Weapon, x: number, y: number, now: number): void {
@@ -58,6 +59,39 @@ function place(weapon: Weapon, x: number, y: number, now: number): void {
   z[o + Y] = y;
   z[o + BORN] = now;
   z[o + EXPIRES] = now + weapon.duration;
+  z[o + SPIKED] = 0;
+}
+
+/** Grand pic final (sans mutation) : un coup fort, une fois, à chaque ennemi dans la zone. */
+function finalSpike(
+  weapon: Weapon,
+  spike: NonNullable<ZoneWeaponDef['finalSpike']>,
+  o: number,
+  ctx: WeaponUpdateContext,
+): void {
+  const z = weapon.zones;
+  if (!z) return;
+  z[o + SPIKED] = 1;
+  const x = z[o + X] ?? 0;
+  const y = z[o + Y] ?? 0;
+  const radius = weapon.radius;
+  const candidates = ctx.candidates;
+  const count = ctx.collisions.queryNeighbors(
+    x,
+    y,
+    radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN,
+    candidates,
+  );
+  for (let k = 0; k < count; k++) {
+    const e = candidates[k];
+    if (!e?.active) continue;
+    const dx = e.x - x;
+    const dy = e.y - y;
+    const touch = radius + e.type.radius;
+    if (dx * dx + dy * dy > touch * touch) continue;
+    const d = Math.hypot(dx, dy) || 1;
+    damageEnemy(weapon, e, weapon.damage * spike.damageMult, ctx.events, dx / d, dy / d);
+  }
 }
 
 /** Mine : explose sur place (tous les ennemis à portée), puis disparaît. */
@@ -90,9 +124,14 @@ function updateZone(weapon: Weapon, def: ZoneWeaponDef, i: number, ctx: WeaponUp
   const z = weapon.zones;
   if (!z) return;
   const o = i * STRIDE;
-  if (ctx.now >= (z[o + EXPIRES] ?? 0)) {
+  const expires = z[o + EXPIRES] ?? 0;
+  if (ctx.now >= expires) {
     z[o + ACTIVE] = 0;
     return;
+  }
+  const spike = weapon.mutation ? undefined : def.finalSpike;
+  if (spike && z[o + SPIKED] === 0 && ctx.now >= expires - spike.before) {
+    finalSpike(weapon, spike, o, ctx);
   }
   const x = z[o + X] ?? 0;
   const y = z[o + Y] ?? 0;
@@ -138,18 +177,6 @@ function updateZone(weapon: Weapon, def: ZoneWeaponDef, i: number, ctx: WeaponUp
 const DASH: number[] = [4, 4];
 const RING_COLOR = '#1a1a1a';
 const RING_ALPHA = 0.45;
-/**
- * Champ de ronces : bord net (trait plein, pixels de 2 px) et fond à peine teinté, pour voir
- * d'un coup d'œil où l'on ralentit, même quand plusieurs zones se chevauchent.
- */
-const BRAMBLE_LOOK = {
-  fillAlpha: 0.1,
-  ringAlpha: 0.85,
-  /** Trait sombre sous le contour : il se détache du sol vert-gris comme des ennemis */
-  shadow: '#0d1a08',
-  shadowAlpha: 0.6,
-  lineWidth: 2,
-} as const;
 /** Mine : lumière rouge (clignote), mèche (étincelles), anneau de danger qui pulse */
 const MINE_LOOK = {
   light: '#ff3b30',
@@ -181,30 +208,46 @@ function dashedRing(
   ctx.restore();
 }
 
-/** Ronces : disque à peine teinté + contour plein sur un trait sombre. */
-function brambleArea(
+/**
+ * Champ de ronces (voir BRAMBLE_FX) : rangées de buissons tous de la même taille, assez nombreux
+ * pour couvrir le cercle à la hauteur de chaque rangée. Faux si l'effet n'est pas chargé.
+ */
+function renderBrambles(
   ctx: CanvasRenderingContext2D,
+  rc: WeaponRenderContext,
   x: number,
   y: number,
   r: number,
-  color: string,
-): void {
-  const look = BRAMBLE_LOOK;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.globalAlpha = look.fillAlpha;
-  ctx.fill();
-  ctx.lineWidth = look.lineWidth * 2;
-  ctx.strokeStyle = look.shadow;
-  ctx.globalAlpha = look.shadowAlpha;
-  ctx.stroke();
-  ctx.lineWidth = look.lineWidth;
-  ctx.strokeStyle = color;
-  ctx.globalAlpha = look.ringAlpha;
-  ctx.stroke();
-  ctx.restore();
+  age: number,
+  left: number,
+  zoneIndex: number,
+): boolean {
+  const fx = BRAMBLE_FX;
+  const sheet = rc.effects?.[fx.effect];
+  if (!sheet) return false;
+  const bush = r * fx.bushWidth;
+  const sx = bush / boundsWidth(sheet);
+  const step = bush * fx.spacing;
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = alpha * fx.alpha;
+  for (let k = 0; k < fx.rows.length; k++) {
+    const rowY = fx.rows[k] ?? 0;
+    const delay = k * fx.stagger;
+    if (age < delay) continue;
+    const index = zoneFrame(sheet, fx.hold, age - delay, left);
+    // Largeur du cercle à cette hauteur, moins un demi-buisson de chaque côté : centres des
+    // buissons répartis dessus, au pas `step` au plus.
+    const half = Math.sqrt(Math.max(0, 1 - rowY * rowY)) * r - bush / 2;
+    const count = half <= 0 ? 1 : Math.ceil((half * 2) / step) + 1;
+    const gap = count > 1 ? (half * 2) / (count - 1) : 0;
+    for (let c = 0; c < count; c++) {
+      const bx = count > 1 ? -half + c * gap : 0;
+      const flip = (k + c + zoneIndex) % 2 === 1 ? -1 : 1;
+      sheet.drawAtPivot(ctx, index, x + bx, y + rowY * r, sx * flip, sx * fx.squash);
+    }
+  }
+  ctx.globalAlpha = alpha;
+  return true;
 }
 
 /** Largeur visible (px d'art) d'un effet, toutes images confondues. */
@@ -373,16 +416,17 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
   },
 
   /**
-   * Au sol, sous les ennemis. Chausse-trapes : pointes de terre du pack qui jaillissent, restent
-   * dressées puis s'effritent ; Champ de ronces : lianes qui poussent puis sèchent ; Mines : la
-   * bombe, sa lumière rouge, sa mèche et l'anneau de danger. Rien n'est modifié ici.
+   * Au sol, sous les ennemis. Chausse-trapes : pointes d'os du pack qui jaillissent, restent
+   * dressées, puis le grand pic final (qui frappe, voir `finalSpike`) ; Champ de ronces :
+   * rangées de buissons qui remplissent la zone ; Mines : la bombe, sa lumière rouge, sa mèche et l'anneau de danger.
+   * Rien n'est modifié ici.
    */
   renderGround(ctx, weapon, _def, rc) {
     const z = weapon.zones;
     if (!z) return;
     const mutation = weapon.mutation;
-    const look = mutation?.slow ? ZONE_FX.brambles : ZONE_FX.spikes;
-    const sheet = mutation?.mine ? undefined : rc.effects?.[look.effect];
+    const look = ZONE_FX.spikes;
+    const sheet = mutation?.mine || mutation?.slow ? undefined : rc.effects?.[look.effect];
     for (let i = 0; i < MAX_ZONES; i++) {
       const o = i * STRIDE;
       if (z[o + ACTIVE] !== 1) continue;
@@ -397,8 +441,9 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
         renderMine(ctx, rc, x, y, mineRadius, i, weapon.color);
         continue;
       }
-      if (mutation?.slow) brambleArea(ctx, x, y, r, weapon.color);
-      else dashedRing(ctx, x, y, r, RING_COLOR, RING_ALPHA);
+      if (mutation?.slow) {
+        if (renderBrambles(ctx, rc, x, y, r, age, left, i)) continue;
+      } else dashedRing(ctx, x, y, r, RING_COLOR, RING_ALPHA);
       if (sheet) {
         const index = zoneFrame(sheet, look.holdFrame, age, left);
         const alpha = ctx.globalAlpha;

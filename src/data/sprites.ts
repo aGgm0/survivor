@@ -213,28 +213,28 @@ export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as
 // Style « strict » (pixels nets). Chaque dossier contient sprite-sheet.png + manifest.json.
 
 const PVFX = `${import.meta.env.BASE_URL}assets/sprites/pvfx/`;
-const INFERNO = `${import.meta.env.BASE_URL}assets/sprites/inferno/`;
+// Pixel Spells (Odd Jelly Games) : licence sans redistribution, dossier ignoré par git, créé par
+// tools/vfx/import-pixel-spells.mjs. Un effet absent est simplement sauté (dessin de secours).
+const SPELLS = `${import.meta.env.BASE_URL}assets/sprites/pixel-spells/`;
 
 export const EFFECT_DIRS = {
   burst: `${PVFX}arcane-burst/`,
   slash: `${PVFX}axe-smear/`,
   // 0.3, bloc C (retour de jeu : « visuel trop simple, pas dans le thème de l'arme »)
-  spikes: `${PVFX}earth-spike/`,
+  spikes: `${SPELLS}bone-spikes/`, // Unholy/Gold/BoneSpikes (0.3.1)
   clang: `${PVFX}metal-clang/`,
   barrel: `${PVFX}barrel-explosion/`,
-  vines: `${PVFX}vine-snare/`,
-  strike: `${PVFX}lightning-strike/`,
+  strike: `${SPELLS}storm-strike/`, // Storm/Azure/LightningStrike (0.3.1)
   // Demandés par l'utilisateur (2026-11-23) : neige dans l'Aura de givre, fouet électrique au
   // premier coup de l'Éclair en chaîne, éclair en chaîne à chaque ricochet.
   snow: `${PVFX}snowfall/`,
   whip: `${PVFX}lightning-whip/`,
-  chainBolt: `${PVFX}chain-lightning/`,
+  chainBolt: `${SPELLS}storm-chain/`, // Storm/Azure/ChainLightning (0.3.1)
   // Arc (demandé par l'utilisateur) : la flèche en vol, puis son impact quand elle s'arrête.
   arrowFlight: `${PVFX}arrow-flight/`,
   arrowImpact: `${PVFX}arrow-impact/`,
-  // Pixel Spells: Inferno (Odd Jelly Games) : licence sans redistribution, dossier ignoré par
-  // git, créé par tools/vfx/import-inferno.mjs. Absent : l'onde garde son anneau de braises.
-  nova: `${INFERNO}flame-nova/`,
+  nova: `${SPELLS}flame-nova/`, // Inferno/Fire/FlameNova ; absent : anneau de braises
+  thornWall: `${PVFX}thorn-wall/`, // Champ de ronces
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -286,19 +286,38 @@ export const FROST_SNOW_FX = { effect: 'snow', alpha: 0.85 } as const;
 export const CHAIN_FX = { first: 'whip', jump: 'chainBolt', life: 0.45, thickness: 0.9 } as const;
 
 /**
- * Effets qui vivent avec une zone au sol. `cover` : largeur de l'effet / diamètre de la zone ;
- * `alpha` : opacité. Ronces (0.3.1, retour de jeu « pas lisible ») : avant 1,25 et opaques, les
- * lianes débordaient de la zone et se fondaient en une nappe verte ; maintenant plus petites que
- * la zone et transparentes, c'est le contour (voir `BRAMBLE_LOOK`, weapons/zone.ts) qui montre
- * où elle ralentit.
+ * Pointes des Chausse-trapes : BoneSpikes (Pixel Spells: Unholy) ; image `holdFrame` (pointes
+ * sorties) tenue tant que la zone dure ; `cover` : largeur de l'effet / diamètre de la zone.
  */
 export const ZONE_FX = {
-  spikes: { effect: 'spikes', holdFrame: 6, cover: 1.15, alpha: 1 },
-  brambles: { effect: 'vines', holdFrame: 7, cover: 0.95, alpha: 0.45 },
+  spikes: { effect: 'spikes', holdFrame: 9, cover: 1.15, alpha: 1 },
 } as const satisfies Record<
   string,
   { effect: EffectName; holdFrame: number; cover: number; alpha: number }
 >;
+
+/**
+ * Champ de ronces : des buissons de ronces (`thorn-wall` du pack PVFX) qui remplissent tout le
+ * disque de la zone, sans contour ni fond (retours de jeu : une liane au centre « c'est
+ * bizarre », le rond vert « pas beau », buissons de tailles différentes « faut qu'ils soient tous
+ * pareils »). Tous les buissons ont la même taille (`bushWidth` × le rayon) ; chaque rangée en
+ * aligne autant qu'il en faut pour couvrir le cercle à sa hauteur, espacés de `spacing` × leur
+ * largeur (moins de 1 : ils se chevauchent, pas de trou).
+ * `rows` : y du pied de chaque rangée, en fraction du rayon, du fond vers l'avant (celles de
+ * devant se dessinent par-dessus) ; les buissons poussent depuis le pied, donc la rangée du fond
+ * monte jusqu'au bord du haut. `squash` : hauteur ÷ largeur en plus (ronces basses). Un buisson
+ * sur deux est retourné ; chaque rangée pousse `stagger` s après la précédente.
+ */
+export const BRAMBLE_FX = {
+  effect: 'thornWall',
+  hold: 10,
+  bushWidth: 1,
+  spacing: 0.72,
+  rows: [-0.58, -0.3, -0.02, 0.26, 0.54, 0.82],
+  squash: 0.7,
+  alpha: 0.85,
+  stagger: 0.05,
+} as const satisfies { effect: EffectName; rows: readonly number[]; [key: string]: unknown };
 
 /** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
 export const EXPLOSION_FX = {
