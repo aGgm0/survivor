@@ -96,7 +96,7 @@ class OneShot implements Poolable {
 }
 
 /** Animations du pack utilisées ici (absentes : formes simples). */
-export type EffectSprites = Readonly<Record<EffectName, EffectSheet>>;
+export type EffectSprites = Readonly<Partial<Record<EffectName, EffectSheet>>>;
 
 /** Effets visuels éphémères (explosions, coups d'épée). En pool : aucune allocation en jeu. */
 export class EffectsSystem {
@@ -312,13 +312,15 @@ export class EffectsSystem {
       if (o.x + o.size < camera.left || o.x - o.size > camera.right) continue;
       if (o.y + o.size * 2 < camera.top || o.y - o.size * 2 > camera.bottom) continue;
       const sheet = sprites[o.name];
+      if (!sheet) continue; // effet pas chargé (pack absent) : rien à dessiner
       const [x0, , x1] = sheet.clip.bounds;
       const scale = o.size / (x1 - x0);
       sheet.draw(ctx, progressFrame(sheet, o.age / o.lifetime), o.x, o.y, scale, o.angle);
     }
     const burst = sprites.burst;
-    const [bx0, , bx1] = burst.clip.bounds;
+    const [bx0, , bx1] = burst?.clip.bounds ?? [0, 0, 1, 1];
     for (const ring of this.rings.items) {
+      if (!burst) break;
       if (!ring.active) continue;
       if (ring.x + ring.radius < camera.left || ring.x - ring.radius > camera.right) continue;
       if (ring.y + ring.radius < camera.top || ring.y - ring.radius > camera.bottom) continue;
@@ -327,6 +329,7 @@ export class EffectsSystem {
     }
     const slash = sprites.slash;
     for (const s of this.slashes.items) {
+      if (!slash) break;
       if (!s.active) continue;
       const index = progressFrame(slash, s.age / this.slashLifetime);
       const scale = s.range / SLASH_FX.artRadius;

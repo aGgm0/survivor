@@ -164,6 +164,27 @@ export class EffectSheet {
   }
 
   /**
+   * Dessine l'image `index` avec le centre de la zone visible de tout l'effet (toutes images
+   * confondues) posé en (`x`, `y`), agrandie de `sx` en largeur et `sy` en hauteur. Pour un effet
+   * qui grandit autour d'un point (anneau) : ce centre ne bouge pas d'une image à l'autre.
+   */
+  drawAroundCenter(
+    ctx: CanvasRenderingContext2D,
+    index: number,
+    x: number,
+    y: number,
+    sx: number,
+    sy: number,
+  ): void {
+    const f = this.clip.frames[index];
+    if (!f?.bounds) return;
+    const [x0, y0, x1, y1] = this.clip.bounds;
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    ctx.drawImage(this.image, f.x, f.y, f.w, f.h, x - cx * sx, y - cy * sy, f.w * sx, f.h * sy);
+  }
+
+  /**
    * Dessine l'image `index` agrandie `scale` fois et tournée de `angle` (radians), son ancre posée
    * en (`x`, `y`). Les effets du pack sont tournés vers la droite.
    */

@@ -6,13 +6,16 @@
   2) Pack complet : export « strict / grid » de chaque effet dans tools/vfx/pvfx-pack/ (ignoré par
      git, 10 Mo). Pour le refaire : décompresser pvfx-foundry-thirteen-spritesheets.zip, puis
      copier pack.json et effects/**/strict/grid/ dans ce dossier.
+  3) Pixel Spells: Inferno (Odd Jelly Games, licence sans redistribution) : décompresser
+     pixel-spells-inferno-free-sprites.zip dans tools/vfx/pixel-spells-inferno/ (ignoré par git).
+     Un effet choisi passe dans le jeu par `node tools/vfx/import-inferno.mjs` (liste EFFECTS).
   Cliquer un effet du pack copie son id (ex. nature/vine-snare). Page d'outil : rien n'est livré
   avec le jeu.
 -->
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <title>Effets PVFX</title>
+    <title>Effets du jeu</title>
     <style>
       @font-face {
         font-family: 'DungeonMode';
@@ -172,6 +175,13 @@
       <span id="count" class="hint"></span>
     </div>
     <div id="pack" class="grid"></div>
+
+    <h2>Pixel Spells: Inferno (échantillon gratuit)</h2>
+    <div class="toolbar">
+      <select id="infernoColor"></select>
+      <span class="hint">8 effets × 6 couleurs · clic = copie du dossier (ex. Fire/FlameNova)</span>
+    </div>
+    <div id="inferno" class="grid"></div>
     <div id="toast"></div>
 
     <script type="module">
@@ -191,6 +201,7 @@
         chainBolt: 'Éclair en chaîne (ricochets)',
         arrowFlight: 'Arc (flèche en vol)',
         arrowImpact: 'Arc (flèche qui se fiche)',
+        nova: 'Fournaise (onde de feu)',
       };
       const PACK = '/tools/vfx/pvfx-pack/';
       /** px : plus grand côté d'un effet à l'écran (agrandi d'un nombre entier de fois) */
@@ -215,19 +226,39 @@
         return { width, height, loop: m.loop_mode === 'loop', frames };
       }
 
+      /** Lit le JSON Aseprite du pack Inferno (frames + meta.loop). */
+      function parseAseprite(json) {
+        const frames = Object.values(json.frames).map((f) => ({
+          x: f.frame.x,
+          y: f.frame.y,
+          w: f.frame.w,
+          h: f.frame.h,
+          ms: f.duration,
+        }));
+        return { width: frames[0].w, height: frames[0].h, loop: !!json.meta.loop, frames };
+      }
+
       /** Un effet animé : sa feuille, son manifeste, son canvas. */
       const players = [];
-      async function makePlayer(dir) {
+      async function makePlayer(
+        dir,
+        sheetFile = 'sprite-sheet.png',
+        jsonFile = 'manifest.json',
+        parse = parseManifest,
+      ) {
         const [image, manifest] = await Promise.all([
           new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve(img);
             img.onerror = reject;
-            img.src = `${dir}sprite-sheet.png`;
+            img.src = `${dir}${sheetFile}`;
           }),
-          fetch(`${dir}manifest.json`).then((r) => r.json()),
+          fetch(`${dir}${jsonFile}`).then((r) => {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+          }),
         ]);
-        const clip = parseManifest(manifest);
+        const clip = parse(manifest);
         const scale = Math.max(1, Math.floor(BOX / Math.max(clip.width, clip.height)));
         const canvas = document.createElement('canvas');
         canvas.width = clip.width;
@@ -381,6 +412,67 @@
       filterInput.addEventListener('input', applyFilter);
       categorySelect.addEventListener('change', applyFilter);
       applyFilter();
+
+      // --- Pixel Spells: Inferno
+      const INFERNO = '/tools/vfx/pixel-spells-inferno/PixelSpells/InfernoSample/';
+      const INFERNO_COLORS = ['Fire', 'Gold', 'Violet', 'Ice', 'Toxic', 'Azure'];
+      const INFERNO_EFFECTS = {
+        FlameNova: 'anneau de flammes qui s’élargit',
+        Combust: 'embrasement sur place',
+        Immolate: 'brûlure sur un corps (boucle)',
+        FireballBlast: 'explosion de boule de feu',
+        Fireball: 'boule de feu en vol (boucle)',
+        FireHitMedium: 'impact de feu',
+        FlameSlash: 'coup de lame enflammé',
+        ChainFire: 'chaîne de feu',
+      };
+      /** Effets déjà dans le jeu (voir EFFECTS de tools/vfx/import-inferno.mjs). */
+      const INFERNO_IN_GAME = { 'Fire/FlameNova': 'Fournaise (onde de feu)' };
+      const infernoEl = document.getElementById('inferno');
+      const colorSelect = document.getElementById('infernoColor');
+      colorSelect.append(new Option('Toutes les couleurs', ''));
+      for (const c of INFERNO_COLORS) colorSelect.append(new Option(c, c));
+      const infernoCells = [];
+      const infernoJobs = [];
+      for (const color of INFERNO_COLORS) {
+        for (const [name, what] of Object.entries(INFERNO_EFFECTS)) {
+          const id = `${color}/${name}`;
+          infernoJobs.push(
+            makePlayer(`${INFERNO}${id}/`, `${name}.png`, `${name}.json`, parseAseprite)
+              .then((p) => ({ p, id, color, name, what }))
+              .catch(() => null),
+          );
+        }
+      }
+      const infernoLoaded = (await Promise.all(infernoJobs)).filter(Boolean);
+      if (infernoLoaded.length === 0) {
+        infernoEl.textContent =
+          'Pack absent : voir le commentaire en tête du fichier (tools/vfx/pixel-spells-inferno/).';
+      }
+      for (const { p, id, color, name, what } of infernoLoaded) {
+        const inGame = INFERNO_IN_GAME[id];
+        const div = cell(p, `${name} · ${color}`, [
+          ['meta', what],
+          [
+            'meta',
+            `${p.clip.width}×${p.clip.height} · ${p.clip.frames.length} images · ${Math.round(p.total)} ms · ${p.clip.loop ? 'boucle' : 'une fois'}`,
+          ],
+          ...(inGame ? [['use', `dans le jeu : ${inGame}`]] : []),
+        ]);
+        if (inGame) div.classList.add('in-game');
+        div.__color = color;
+        div.addEventListener('click', () => {
+          navigator.clipboard?.writeText(id);
+          toast(`${id} copié`);
+        });
+        infernoCells.push(div);
+        infernoEl.append(div);
+      }
+      colorSelect.addEventListener('change', () => {
+        for (const div of infernoCells) {
+          div.classList.toggle('hidden', !!colorSelect.value && div.__color !== colorSelect.value);
+        }
+      });
     </script>
   </body>
 </html>

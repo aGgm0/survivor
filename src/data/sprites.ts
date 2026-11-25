@@ -213,6 +213,7 @@ export const ORB_SPRITE = { anim: 'orb_anim', diameter: 14, frameTime: 0.25 } as
 // Style « strict » (pixels nets). Chaque dossier contient sprite-sheet.png + manifest.json.
 
 const PVFX = `${import.meta.env.BASE_URL}assets/sprites/pvfx/`;
+const INFERNO = `${import.meta.env.BASE_URL}assets/sprites/inferno/`;
 
 export const EFFECT_DIRS = {
   burst: `${PVFX}arcane-burst/`,
@@ -231,8 +232,27 @@ export const EFFECT_DIRS = {
   // Arc (demandé par l'utilisateur) : la flèche en vol, puis son impact quand elle s'arrête.
   arrowFlight: `${PVFX}arrow-flight/`,
   arrowImpact: `${PVFX}arrow-impact/`,
+  // Pixel Spells: Inferno (Odd Jelly Games) : licence sans redistribution, dossier ignoré par
+  // git, créé par tools/vfx/import-inferno.mjs. Absent : l'onde garde son anneau de braises.
+  nova: `${INFERNO}flame-nova/`,
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
+
+/**
+ * Onde de la Fournaise : la Flame Nova du pack Inferno, calée sur l'onde du gameplay. Images
+ * `start` à `peak` pendant que l'onde avance (`pulse.travel`), l'image `peak` à la taille exacte
+ * de sa portée ; puis les images suivantes en `fade` s (l'anneau s'éteint). Les images avant
+ * `start` (préparation du sort) sont sautées : l'onde part dès qu'elle touche.
+ * `roundness` : le pack dessine un anneau en perspective (ellipse ~2 fois plus large que haute) ;
+ * 0 = tel quel, 1 = étiré en cercle (la vraie zone de dégâts est un cercle).
+ */
+export const FURNACE_NOVA_FX = {
+  effect: 'nova',
+  start: 4,
+  peak: 8,
+  fade: 0.3,
+  roundness: 0.5,
+} as const satisfies { effect: EffectName; [key: string]: unknown };
 
 /**
  * Effets joués une fois là où il se passe quelque chose (coup, explosion, foudre) : `speed` =
@@ -265,10 +285,20 @@ export const FROST_SNOW_FX = { effect: 'snow', alpha: 0.85 } as const;
  */
 export const CHAIN_FX = { first: 'whip', jump: 'chainBolt', life: 0.45, thickness: 0.9 } as const;
 
+/**
+ * Effets qui vivent avec une zone au sol. `cover` : largeur de l'effet / diamètre de la zone ;
+ * `alpha` : opacité. Ronces (0.3.1, retour de jeu « pas lisible ») : avant 1,25 et opaques, les
+ * lianes débordaient de la zone et se fondaient en une nappe verte ; maintenant plus petites que
+ * la zone et transparentes, c'est le contour (voir `BRAMBLE_LOOK`, weapons/zone.ts) qui montre
+ * où elle ralentit.
+ */
 export const ZONE_FX = {
-  spikes: { effect: 'spikes', holdFrame: 6, cover: 1.15 },
-  brambles: { effect: 'vines', holdFrame: 7, cover: 1.25 },
-} as const satisfies Record<string, { effect: EffectName; holdFrame: number; cover: number }>;
+  spikes: { effect: 'spikes', holdFrame: 6, cover: 1.15, alpha: 1 },
+  brambles: { effect: 'vines', holdFrame: 7, cover: 0.95, alpha: 0.45 },
+} as const satisfies Record<
+  string,
+  { effect: EffectName; holdFrame: number; cover: number; alpha: number }
+>;
 
 /** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
 export const EXPLOSION_FX = {

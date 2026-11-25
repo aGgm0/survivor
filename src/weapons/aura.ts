@@ -3,7 +3,7 @@
 
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import { AURA_LOOKS, AURA_PULSE, AURA_PULSE_RING } from '../data/feel';
-import { FROST_SNOW_FX } from '../data/sprites';
+import { FROST_SNOW_FX, FURNACE_NOVA_FX } from '../data/sprites';
 import type { AuraWeaponDef, MutationDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
@@ -18,6 +18,40 @@ import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
 
 /** Opacité du disque de l'aura (le contour est plus marqué) */
 const AURA_FILL_ALPHA = 0.12;
+
+/**
+ * Flame Nova (Fournaise) à `age` s du départ de l'onde : l'anneau grandit avec le front de
+ * l'onde, atteint sa portée `reach` à `travel` s, puis s'éteint (voir FURNACE_NOVA_FX).
+ */
+function drawNova(
+  ctx: CanvasRenderingContext2D,
+  nova: EffectSheet,
+  x: number,
+  y: number,
+  reach: number,
+  age: number,
+  travel: number,
+): void {
+  const fx = FURNACE_NOVA_FX;
+  const last = nova.clip.frames.length - 1;
+  let index: number;
+  if (age < 0) return;
+  if (age < travel) {
+    index = fx.start + Math.floor((age / travel) * (fx.peak - fx.start + 1));
+  } else {
+    const after = (age - travel) / fx.fade;
+    if (after >= 1) return;
+    index = fx.peak + 1 + Math.floor(after * (last - fx.peak));
+  }
+  const peak = nova.clip.frames[fx.peak]?.bounds;
+  if (!peak) return;
+  // L'image la plus grande fait la largeur du cercle touché ; la hauteur se rapproche d'un cercle
+  // selon `roundness` (le pack dessine une ellipse en perspective).
+  const sx = (reach * 2) / (peak[2] - peak[0]);
+  const circle = (reach * 2) / (peak[3] - peak[1]);
+  const sy = sx + (circle - sx) * fx.roundness;
+  nova.drawAroundCenter(ctx, Math.min(index, last), x, y, sx, sy);
+}
 const AURA_STROKE_ALPHA = 0.5;
 
 /** Neige qui tombe dans le cercle de l'aura : l'effet en boucle, étiré au diamètre, découpé. */
@@ -176,8 +210,14 @@ export const AURA_BEHAVIOR: WeaponBehavior<AuraWeaponDef> = {
         ctx.globalAlpha = 1;
       }
     }
-    // Le front de l'onde : un anneau de braises vives qui part du joueur jusqu'à la portée
-    // de l'onde (là où elle touche vraiment), puis s'éteint.
+    // Le front de l'onde : la Flame Nova du pack si elle est chargée, sinon un anneau de
+    // braises vives ; dans les deux cas il part du joueur jusqu'à la portée de l'onde (là où
+    // elle touche vraiment), puis s'éteint.
+    const nova = pulse ? rc.effects?.[FURNACE_NOVA_FX.effect] : undefined;
+    if (pulse && nova) {
+      drawNova(ctx, nova, px, py, w.radius * pulse.reachMult, sincePulse, pulse.travel);
+      return;
+    }
     if (pulse && sincePulse >= 0 && sincePulse < pulse.travel + AURA_PULSE.fade) {
       const reach = w.radius * pulse.reachMult;
       const r = Math.max(8, reach * Math.min(1, sincePulse / pulse.travel));

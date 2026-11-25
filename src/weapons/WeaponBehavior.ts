@@ -74,7 +74,7 @@ export interface WeaponRenderContext {
   /** Atlas du pack (persos, ennemis, objets, armes) ; null : formes simples */
   readonly sprites: SpriteAtlas | null;
   /** Effets PVFX (zones au sol qui vivent avec leur effet) ; null : formes simples */
-  readonly effects: Readonly<Record<EffectName, EffectSheet>> | null;
+  readonly effects: Readonly<Partial<Record<EffectName, EffectSheet>>> | null;
   readonly projectiles: Pool<Projectile>;
   isOnScreen(x: number, y: number, r: number): boolean;
 }

@@ -84,7 +84,7 @@ export type ResistIcons = Readonly<Record<DamageType, CanvasImageSource>>;
 export interface WorldRendererDeps {
   readonly sprites: SpriteAtlas | null;
   readonly fx: SpriteAtlas | null;
-  readonly effects: Readonly<Record<EffectName, EffectSheet>> | null;
+  readonly effects: Readonly<Partial<Record<EffectName, EffectSheet>>> | null;
   /** Cadre et remplissage des barres de PV (pack Dark Ages) ; null : rectangles */
   readonly hpBars: HpBarSkin | null;
   /** Boucliers des résistances au-dessus des élites ; null : rien */

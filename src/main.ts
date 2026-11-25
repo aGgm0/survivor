@@ -218,18 +218,22 @@ const fxLoading = SpriteAtlas.load(FX_ATLAS_URLS.image, FX_ATLAS_URLS.list)
   .catch((error: unknown) => {
     console.warn('Effets non chargés, formes simples à la place :', error);
   });
-let effects: Record<EffectName, EffectSheet> | null = null;
+let effects: Partial<Record<EffectName, EffectSheet>> | null = null;
 const effectNames = Object.keys(EFFECT_DIRS) as EffectName[];
-const effectsLoading = Promise.all(effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])))
-  .then((sheets) => {
-    effects = Object.fromEntries(effectNames.map((name, i) => [name, sheets[i]])) as Record<
-      EffectName,
-      EffectSheet
-    >;
-  })
-  .catch((error: unknown) => {
-    console.warn('Effets PVFX non chargés, formes simples à la place :', error);
+// Chaque effet à part : un pack absent (Inferno, ignoré par git) ne prive pas le jeu des autres.
+const effectsLoading = Promise.allSettled(
+  effectNames.map((name) => EffectSheet.load(EFFECT_DIRS[name])),
+).then((results) => {
+  const loaded: Partial<Record<EffectName, EffectSheet>> = {};
+  results.forEach((result, i) => {
+    const name = effectNames[i];
+    if (!name) return;
+    if (result.status === 'fulfilled') loaded[name] = result.value;
+    else
+      console.warn(`Effet « ${name} » non chargé, dessin de secours à la place :`, result.reason);
   });
+  effects = loaded;
+});
 // Barres de PV : pack Dark Ages (ignoré par git). Absent : rectangles, sans bloquer « Jouer ».
 let hpBars: HpBarSkin | null = null;
 const hpBarsLoading = Promise.all([loadImage(HP_BAR_URLS.frame), loadImage(HP_BAR_URLS.fill)])

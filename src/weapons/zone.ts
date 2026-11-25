@@ -138,6 +138,18 @@ function updateZone(weapon: Weapon, def: ZoneWeaponDef, i: number, ctx: WeaponUp
 const DASH: number[] = [4, 4];
 const RING_COLOR = '#1a1a1a';
 const RING_ALPHA = 0.45;
+/**
+ * Champ de ronces : bord net (trait plein, pixels de 2 px) et fond à peine teinté, pour voir
+ * d'un coup d'œil où l'on ralentit, même quand plusieurs zones se chevauchent.
+ */
+const BRAMBLE_LOOK = {
+  fillAlpha: 0.1,
+  ringAlpha: 0.85,
+  /** Trait sombre sous le contour : il se détache du sol vert-gris comme des ennemis */
+  shadow: '#0d1a08',
+  shadowAlpha: 0.6,
+  lineWidth: 2,
+} as const;
 /** Mine : lumière rouge (clignote), mèche (étincelles), anneau de danger qui pulse */
 const MINE_LOOK = {
   light: '#ff3b30',
@@ -165,6 +177,32 @@ function dashedRing(
   ctx.strokeStyle = color;
   ctx.globalAlpha = alpha;
   ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+/** Ronces : disque à peine teinté + contour plein sur un trait sombre. */
+function brambleArea(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  r: number,
+  color: string,
+): void {
+  const look = BRAMBLE_LOOK;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = look.fillAlpha;
+  ctx.fill();
+  ctx.lineWidth = look.lineWidth * 2;
+  ctx.strokeStyle = look.shadow;
+  ctx.globalAlpha = look.shadowAlpha;
+  ctx.stroke();
+  ctx.lineWidth = look.lineWidth;
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = look.ringAlpha;
   ctx.stroke();
   ctx.restore();
 }
@@ -359,10 +397,14 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
         renderMine(ctx, rc, x, y, mineRadius, i, weapon.color);
         continue;
       }
-      dashedRing(ctx, x, y, r, mutation?.slow ? weapon.color : RING_COLOR, RING_ALPHA);
+      if (mutation?.slow) brambleArea(ctx, x, y, r, weapon.color);
+      else dashedRing(ctx, x, y, r, RING_COLOR, RING_ALPHA);
       if (sheet) {
         const index = zoneFrame(sheet, look.holdFrame, age, left);
+        const alpha = ctx.globalAlpha;
+        ctx.globalAlpha = alpha * look.alpha;
         drawCentered(ctx, sheet, index, x, y, (r * 2 * look.cover) / boundsWidth(sheet));
+        ctx.globalAlpha = alpha;
         continue;
       }
       renderTiles(ctx, rc, x, y, r, age, left, mutation ? weaponTint(weapon.color) : undefined);

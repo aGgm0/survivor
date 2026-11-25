@@ -26,7 +26,12 @@ const EXCLUDED = [
  * Sans ces fichiers, le jeu s'afficherait en formes de secours : on refuse de faire un zip
  * incomplet (pack pas copié sur cette machine, voir public/assets/LICENSES.md).
  */
-const REQUIRED = ['index.html', 'assets/ui/darkages/panel.png', 'assets/ui/raven/sword.png'];
+const REQUIRED = [
+  'index.html',
+  'assets/ui/darkages/panel.png',
+  'assets/ui/raven/sword.png',
+  'assets/sprites/inferno/flame-nova/sprite-sheet.png', // node tools/vfx/import-inferno.mjs
+];
 
 function fail(message) {
   console.error(`✗ ${message}`);
