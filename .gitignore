@@ -24,8 +24,11 @@ assets-src/
 # Pack Raven complet pour la planche tools/ui/icons-preview.html (licence : pas de redistribution).
 /tools/ui/raven-pack/
 /tools/vfx/pvfx-pack/
-# Pixel Spells: Inferno (Odd Jelly Games) : licence qui interdit de redistribuer les fichiers
+# Pixel Spells: Inferno, Holy, Frost, Storm, Unholy (Odd Jelly Games) : licence qui interdit de redistribuer les fichiers
 # (le jeu fini peut les contenir). Pack dans tools/, effets convertis dans public/ par
-# tools/vfx/import-inferno.mjs ; seul le zip itch les emporte.
-/tools/vfx/pixel-spells-inferno/
-public/assets/sprites/inferno/
+# tools/vfx/import-pixel-spells.mjs ; seul le zip itch les emporte.
+/tools/vfx/pixel-spells-*/
+# Golems (pack de sprites candidat ; licence : usage permis, ni redistribution ni modification) :
+# page tools/assets-preview.html.
+/tools/sprites/golems-pack/
+public/assets/sprites/pixel-spells/

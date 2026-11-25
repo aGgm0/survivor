@@ -1,0 +1,306 @@
+<!doctype html>
+<!--
+  Page des assets : accès à toutes les planches d'outils, et packs de sprites candidats animés.
+  Ouvrir avec le serveur de dev : http://localhost:5173/tools/assets-preview.html
+  Packs candidats : décompressés dans tools/sprites/<pack>/ (ignorés par git tant que leur licence
+  n'est pas vérifiée ou qu'elle interdit de redistribuer les fichiers). Pour en ajouter un :
+  une entrée dans SPRITE_PACKS (bandes d'images de même largeur, une bande par animation).
+  Page d'outil : rien n'est livré avec le jeu.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Assets du jeu</title>
+    <style>
+      @font-face {
+        font-family: 'DungeonMode';
+        src: url('/assets/fonts/dungeon-mode.ttf');
+      }
+      @font-face {
+        font-family: 'Monogram';
+        src: url('/assets/fonts/monogram-extended.ttf');
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+        font-synthesis: none;
+      }
+      body {
+        background: #14121a;
+        color: #ece6d6;
+        padding: 24px;
+        font-family: 'DungeonMode', monospace;
+        -webkit-font-smoothing: none;
+      }
+      h1 {
+        font-size: 24px;
+        color: #e8c25a;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        color: #e8c25a;
+        margin: 28px 0 12px;
+      }
+      h3 {
+        font-size: 12px;
+        color: #ece6d6;
+        margin: 16px 0 8px;
+      }
+      p,
+      .hint {
+        font-family: 'Monogram', monospace;
+        font-size: 24px;
+        color: #a89f8c;
+      }
+      .warn {
+        font-family: 'Monogram', monospace;
+        font-size: 24px;
+        color: #ff9f43;
+        margin: 4px 0 8px;
+      }
+      code {
+        color: #ece6d6;
+        font-family: inherit;
+      }
+      .links {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 8px;
+      }
+      .links a {
+        display: block;
+        padding: 12px;
+        border: 2px solid #3a3446;
+        background: #1d1a24;
+        color: #ece6d6;
+        text-decoration: none;
+        font-size: 12px;
+      }
+      .links a:hover {
+        border-color: #e8c25a;
+      }
+      .links span {
+        display: block;
+        font-family: 'Monogram', monospace;
+        font-size: 20px;
+        color: #a89f8c;
+        margin-top: 6px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .toolbar select {
+        font: inherit;
+        font-size: 12px;
+        background: #1d1a24;
+        color: #ece6d6;
+        border: 2px solid #3a3446;
+        padding: 6px 8px;
+      }
+      .toolbar label {
+        font-size: 12px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .cell {
+        padding: 8px;
+        border: 2px solid #3a3446;
+        background: #1d1a24;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+      }
+      .meta {
+        color: #a89f8c;
+        font-size: 10px;
+      }
+      canvas {
+        image-rendering: pixelated;
+        display: block;
+        background: var(--stage, #2a2630);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Assets du jeu</h1>
+    <p>Toutes les planches d'outils, et les packs de sprites candidats (pas encore en jeu).</p>
+
+    <h2>Planches</h2>
+    <div class="links">
+      <a href="/tools/vfx/vfx-preview.html"
+        >Effets visuels<span>effets du jeu, pack PVFX Foundry, 5 packs Pixel Spells</span></a
+      >
+      <a href="/tools/ui/icons-preview.html"
+        >Icônes<span>icônes du jeu et pack Raven Fantasy Icons</span></a
+      >
+      <a href="/tools/sprites/variants-preview.html"
+        >Variantes de sprites<span>tank démon et essais de couleurs</span></a
+      >
+      <a href="/tools/ui/fonts-preview.html">Polices<span>comparaison des polices pixel</span></a>
+      <a href="/tools/audio/preview.html">Bruitages<span>écoute et rafale des sons du jeu</span></a>
+    </div>
+
+    <h2>Sprites candidats</h2>
+    <div class="toolbar">
+      <label
+        >Agrandi
+        <select id="zoom">
+          <option value="2" selected>×2 (comme en jeu)</option>
+          <option value="3">×3</option>
+          <option value="4">×4</option>
+        </select>
+      </label>
+      <label
+        >Fond
+        <select id="stage">
+          <option value="#2a2630">sombre</option>
+          <option value="#4a4458">sol du jeu (gris)</option>
+          <option value="#000">noir</option>
+          <option value="#fff">blanc</option>
+        </select>
+      </label>
+    </div>
+    <div id="packs"></div>
+
+    <script type="module">
+      /**
+       * Packs de sprites candidats. `frameWidth` : largeur d'une image dans les bandes ;
+       * `frameMs` : durée d'une image (pas donnée par le pack : à régler à l'œil).
+       */
+      const SPRITE_PACKS = [
+        {
+          name: 'Golems (version gratuite)',
+          root: '/tools/sprites/golems-pack/Golems_Free_Version/Golem_1/',
+          // Licence (page du pack, 2026-11-25) : usage permis dans tout projet, commercial ou non ;
+          // interdit de revendre, redistribuer ou MODIFIER le pack.
+          warning:
+            'Licence : usage permis (même commercial), mais ni revente, ni redistribution, ni modification : pas de teinte ni de retouche (nos élites teintés et le tank démon repeint ne seraient pas permis avec ce pack).',
+          frameWidth: 90,
+          frameMs: 100,
+          variants: [
+            'Blue/No_Swoosh_VFX',
+            'Blue/White_Swoosh_VFX',
+            'Orange/No_Swoosh_VFX',
+            'Orange/White_Swoosh_VFX',
+          ],
+          animations: {
+            idle: 'Golem_1_idle.png',
+            walk: 'Golem_1_walk.png',
+            attack: 'Golem_1_attack.png',
+            hurt: 'Golem_1_hurt.png',
+            die: 'Golem_1_die.png',
+          },
+        },
+      ];
+
+      const zoomSelect = document.getElementById('zoom');
+      document.getElementById('stage').addEventListener('change', (e) => {
+        document.body.style.setProperty('--stage', e.target.value);
+      });
+
+      const players = [];
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
+      function resize(p) {
+        const z = Number(zoomSelect.value);
+        p.canvas.style.width = `${p.w * z}px`;
+        p.canvas.style.height = `${p.h * z}px`;
+      }
+      zoomSelect.addEventListener('change', () => players.forEach(resize));
+
+      const packsEl = document.getElementById('packs');
+      for (const pack of SPRITE_PACKS) {
+        const h = document.createElement('h3');
+        h.textContent = pack.name;
+        packsEl.append(h);
+        if (pack.warning) {
+          packsEl.append(
+            Object.assign(document.createElement('div'), {
+              className: 'warn',
+              textContent: pack.warning,
+            }),
+          );
+        }
+        let found = 0;
+        for (const variant of pack.variants) {
+          const row = document.createElement('div');
+          row.className = 'grid';
+          row.style.marginBottom = '8px';
+          const label = document.createElement('div');
+          label.className = 'meta';
+          label.style.margin = '8px 0 4px';
+          label.textContent = variant.replace('/', ' · ').replaceAll('_', ' ');
+          packsEl.append(label);
+          for (const [anim, file] of Object.entries(pack.animations)) {
+            let img;
+            try {
+              img = await loadImage(`${pack.root}${variant}/${file}`);
+            } catch {
+              continue;
+            }
+            found++;
+            const frames = Math.round(img.width / pack.frameWidth);
+            const canvas = document.createElement('canvas');
+            canvas.width = pack.frameWidth;
+            canvas.height = img.height;
+            const p = { canvas, img, w: pack.frameWidth, h: img.height, frames, ms: pack.frameMs };
+            resize(p);
+            players.push(p);
+            const div = document.createElement('div');
+            div.className = 'cell';
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.textContent = `${frames} images · ${p.w}×${p.h}`;
+            div.append(
+              canvas,
+              Object.assign(document.createElement('div'), { textContent: anim }),
+              meta,
+            );
+            row.append(div);
+          }
+          packsEl.append(row);
+        }
+        if (found === 0) {
+          packsEl.append(
+            Object.assign(document.createElement('p'), {
+              textContent: `Pack absent : décompresser le zip dans ${pack.root.split('/').slice(0, 4).join('/')}/`,
+            }),
+          );
+        }
+      }
+
+      function tick(now) {
+        for (const p of players) {
+          const index = Math.floor(now / p.ms) % p.frames;
+          if (index === p.last) continue;
+          p.last = index;
+          const ctx = p.canvas.getContext('2d');
+          ctx.clearRect(0, 0, p.w, p.h);
+          ctx.drawImage(p.img, index * p.w, 0, p.w, p.h, 0, 0, p.w, p.h);
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    </script>
+  </body>
+</html>

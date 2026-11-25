@@ -6,9 +6,10 @@
   2) Pack complet : export « strict / grid » de chaque effet dans tools/vfx/pvfx-pack/ (ignoré par
      git, 10 Mo). Pour le refaire : décompresser pvfx-foundry-thirteen-spritesheets.zip, puis
      copier pack.json et effects/**/strict/grid/ dans ce dossier.
-  3) Pixel Spells: Inferno (Odd Jelly Games, licence sans redistribution) : décompresser
-     pixel-spells-inferno-free-sprites.zip dans tools/vfx/pixel-spells-inferno/ (ignoré par git).
-     Un effet choisi passe dans le jeu par `node tools/vfx/import-inferno.mjs` (liste EFFECTS).
+  3) Pixel Spells (Odd Jelly Games, échantillons gratuits : Inferno, Holy, Frost, Storm, Unholy ;
+     licence sans redistribution) : décompresser pixel-spells-<pack>-free-sprites.zip dans
+     tools/vfx/pixel-spells-<pack>/ (ignoré par git). Un effet choisi passe dans le jeu par
+     `node tools/vfx/import-pixel-spells.mjs` (liste EFFECTS).
   Cliquer un effet du pack copie son id (ex. nature/vine-snare). Page d'outil : rien n'est livré
   avec le jeu.
 -->
@@ -139,10 +140,11 @@
     </style>
   </head>
   <body>
-    <h1>Effets PVFX Foundry</h1>
+    <h1>Effets visuels</h1>
     <p>
-      Effets du jeu (<code>EFFECT_DIRS</code>, src/data/sprites.ts) et tout le pack, animés. Cliquer
-      un effet du pack copie son id.
+      Effets du jeu (<code>EFFECT_DIRS</code>, src/data/sprites.ts), pack PVFX Foundry et packs
+      Pixel Spells, animés. Cliquer un effet copie son id.
+      <a href="/tools/assets-preview.html" style="color: #e8c25a">← tous les assets</a>
     </p>
 
     <div class="toolbar">
@@ -176,12 +178,14 @@
     </div>
     <div id="pack" class="grid"></div>
 
-    <h2>Pixel Spells: Inferno (échantillon gratuit)</h2>
+    <h2>Pixel Spells (Odd Jelly Games)</h2>
     <div class="toolbar">
-      <select id="infernoColor"></select>
-      <span class="hint">8 effets × 6 couleurs · clic = copie du dossier (ex. Fire/FlameNova)</span>
+      <select id="spellsPack"></select>
+      <select id="spellsColor"></select>
+      <span id="spellsCount" class="hint"></span>
+      <span class="hint">clic = copie du dossier (ex. Inferno/Fire/FlameNova)</span>
     </div>
-    <div id="inferno" class="grid"></div>
+    <div id="spells" class="grid"></div>
     <div id="toast"></div>
 
     <script type="module">
@@ -191,10 +195,10 @@
       const USES = {
         burst: 'Trait éclaté (explosion)',
         slash: 'Épée, Tourbillon',
-        spikes: 'Chausse-trapes (zone)',
+        spikes: 'Chausse-trapes (pointes d’os)',
         clang: 'Chausse-trapes (coup)',
         barrel: 'Mines (explosion)',
-        vines: 'Champ de ronces (zone)',
+        thornWall: 'Champ de ronces (buissons)',
         strike: 'Orage (foudre)',
         snow: 'Aura de givre (neige)',
         whip: 'Éclair en chaîne (1er coup)',
@@ -413,46 +417,100 @@
       categorySelect.addEventListener('change', applyFilter);
       applyFilter();
 
-      // --- Pixel Spells: Inferno
-      const INFERNO = '/tools/vfx/pixel-spells-inferno/PixelSpells/InfernoSample/';
-      const INFERNO_COLORS = ['Fire', 'Gold', 'Violet', 'Ice', 'Toxic', 'Azure'];
-      const INFERNO_EFFECTS = {
-        FlameNova: 'anneau de flammes qui s’élargit',
-        Combust: 'embrasement sur place',
-        Immolate: 'brûlure sur un corps (boucle)',
-        FireballBlast: 'explosion de boule de feu',
-        Fireball: 'boule de feu en vol (boucle)',
-        FireHitMedium: 'impact de feu',
-        FlameSlash: 'coup de lame enflammé',
-        ChainFire: 'chaîne de feu',
+      // --- Pixel Spells : un dossier par pack, 8 effets × 6 couleurs chacun
+      const SPELL_COLORS = ['Fire', 'Gold', 'Violet', 'Ice', 'Toxic', 'Azure'];
+      /** Effets de chaque pack (le navigateur ne peut pas lister un dossier : liste écrite ici). */
+      const SPELL_PACKS = {
+        Inferno: {
+          FlameNova: 'anneau de flammes qui s’élargit',
+          Combust: 'embrasement sur place',
+          Immolate: 'brûlure sur un corps (boucle)',
+          FireballBlast: 'explosion de boule de feu',
+          Fireball: 'boule de feu en vol (boucle)',
+          FireHitMedium: 'impact de feu',
+          FlameSlash: 'coup de lame enflammé',
+          ChainFire: 'chaîne de feu',
+        },
+        Holy: {
+          Nova: 'anneau de lumière',
+          Halo: 'halo sacré',
+          Smite: 'châtiment qui tombe du ciel',
+          Bolt: 'trait de lumière en vol',
+          BoltHit: 'impact du trait',
+          HitMedium: 'impact de lumière',
+          LightSlash: 'coup de lame lumineux',
+          ChainLight: 'chaîne de lumière',
+        },
+        Frost: {
+          Frostburst: 'explosion de givre',
+          FrostArmor: 'armure de glace',
+          IceSpike: 'pic de glace qui sort du sol',
+          IceShard: 'éclat de glace en vol',
+          IceShardHit: 'impact de l’éclat',
+          FrostHitMedium: 'impact de givre',
+          FrostBlade: 'coup de lame glacé',
+          ChainFrost: 'chaîne de givre',
+        },
+        Storm: {
+          StaticNova: 'anneau électrique',
+          Overcharge: 'surcharge électrique',
+          LightningStrike: 'foudre qui tombe',
+          Zap: 'décharge en vol',
+          ZapHit: 'impact de la décharge',
+          ShockHitMedium: 'impact électrique',
+          VoltSlash: 'coup de lame électrique',
+          ChainLightning: 'chaîne d’éclairs',
+        },
+        Unholy: {
+          ShadowNova: 'anneau d’ombre',
+          DarkAura: 'aura sombre',
+          Curse: 'malédiction',
+          BoneSpikes: 'pointes d’os qui sortent du sol',
+          ShadowBolt: 'trait d’ombre en vol',
+          ShadowBoltHit: 'impact du trait d’ombre',
+          ShadowHitMedium: 'impact d’ombre',
+          SoulChain: 'chaîne d’âmes',
+        },
       };
-      /** Effets déjà dans le jeu (voir EFFECTS de tools/vfx/import-inferno.mjs). */
-      const INFERNO_IN_GAME = { 'Fire/FlameNova': 'Fournaise (onde de feu)' };
-      const infernoEl = document.getElementById('inferno');
-      const colorSelect = document.getElementById('infernoColor');
+      /** Effets déjà dans le jeu (voir EFFECTS de tools/vfx/import-pixel-spells.mjs). */
+      const SPELLS_IN_GAME = {
+        'Inferno/Fire/FlameNova': 'Fournaise (onde de feu)',
+        'Storm/Azure/ChainLightning': 'Éclair en chaîne (ricochets)',
+        'Storm/Azure/LightningStrike': 'Orage (foudre)',
+        'Unholy/Gold/BoneSpikes': 'Chausse-trapes (pointes)',
+      };
+      const spellsEl = document.getElementById('spells');
+      const spellsCount = document.getElementById('spellsCount');
+      const packSelect = document.getElementById('spellsPack');
+      const colorSelect = document.getElementById('spellsColor');
+      packSelect.append(new Option('Tous les packs', ''));
+      for (const pack of Object.keys(SPELL_PACKS)) packSelect.append(new Option(pack, pack));
       colorSelect.append(new Option('Toutes les couleurs', ''));
-      for (const c of INFERNO_COLORS) colorSelect.append(new Option(c, c));
-      const infernoCells = [];
-      const infernoJobs = [];
-      for (const color of INFERNO_COLORS) {
-        for (const [name, what] of Object.entries(INFERNO_EFFECTS)) {
-          const id = `${color}/${name}`;
-          infernoJobs.push(
-            makePlayer(`${INFERNO}${id}/`, `${name}.png`, `${name}.json`, parseAseprite)
-              .then((p) => ({ p, id, color, name, what }))
-              .catch(() => null),
-          );
+      for (const c of SPELL_COLORS) colorSelect.append(new Option(c, c));
+      const spellJobs = [];
+      for (const [pack, list] of Object.entries(SPELL_PACKS)) {
+        const root = `/tools/vfx/pixel-spells-${pack.toLowerCase()}/PixelSpells/${pack}Sample/`;
+        for (const color of SPELL_COLORS) {
+          for (const [name, what] of Object.entries(list)) {
+            const id = `${pack}/${color}/${name}`;
+            spellJobs.push(
+              makePlayer(`${root}${color}/${name}/`, `${name}.png`, `${name}.json`, parseAseprite)
+                .then((p) => ({ p, id, pack, color, name, what }))
+                .catch(() => null),
+            );
+          }
         }
       }
-      const infernoLoaded = (await Promise.all(infernoJobs)).filter(Boolean);
-      if (infernoLoaded.length === 0) {
-        infernoEl.textContent =
-          'Pack absent : voir le commentaire en tête du fichier (tools/vfx/pixel-spells-inferno/).';
+      const spellsLoaded = (await Promise.all(spellJobs)).filter(Boolean);
+      if (spellsLoaded.length === 0) {
+        spellsEl.textContent =
+          'Packs absents : voir le commentaire en tête du fichier (tools/vfx/pixel-spells-<pack>/).';
       }
-      for (const { p, id, color, name, what } of infernoLoaded) {
-        const inGame = INFERNO_IN_GAME[id];
+      const spellCells = [];
+      for (const { p, id, pack, color, name, what } of spellsLoaded) {
+        const inGame = SPELLS_IN_GAME[id];
         const div = cell(p, `${name} · ${color}`, [
-          ['meta', what],
+          ['meta', `${pack} · ${what}`],
           [
             'meta',
             `${p.clip.width}×${p.clip.height} · ${p.clip.frames.length} images · ${Math.round(p.total)} ms · ${p.clip.loop ? 'boucle' : 'une fois'}`,
@@ -460,19 +518,29 @@
           ...(inGame ? [['use', `dans le jeu : ${inGame}`]] : []),
         ]);
         if (inGame) div.classList.add('in-game');
+        div.__pack = pack;
         div.__color = color;
         div.addEventListener('click', () => {
           navigator.clipboard?.writeText(id);
           toast(`${id} copié`);
         });
-        infernoCells.push(div);
-        infernoEl.append(div);
+        spellCells.push(div);
+        spellsEl.append(div);
       }
-      colorSelect.addEventListener('change', () => {
-        for (const div of infernoCells) {
-          div.classList.toggle('hidden', !!colorSelect.value && div.__color !== colorSelect.value);
+      function applySpellFilter() {
+        let shown = 0;
+        for (const div of spellCells) {
+          const ok =
+            (!packSelect.value || div.__pack === packSelect.value) &&
+            (!colorSelect.value || div.__color === colorSelect.value);
+          div.classList.toggle('hidden', !ok);
+          if (ok) shown++;
         }
-      });
+        spellsCount.textContent = `${shown} / ${spellCells.length} effets`;
+      }
+      packSelect.addEventListener('change', applySpellFilter);
+      colorSelect.addEventListener('change', applySpellFilter);
+      applySpellFilter();
     </script>
   </body>
 </html>
