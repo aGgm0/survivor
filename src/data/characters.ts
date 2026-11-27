@@ -46,7 +46,7 @@ export const CHARACTERS: readonly CharacterDef[] = [
     name: 'Pyromancien',
     weapon: WEAPONS.burningAura,
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.burningAura.id, count: 5000 },
-    challengeText: '5 000 kills avec l’Aura ardente (toutes parties confondues)',
+    challengeText: '5\u00a0000 kills avec l’Aura ardente (toutes parties confondues)',
   },
   {
     id: 'runist',
@@ -66,7 +66,7 @@ export const CHARACTERS: readonly CharacterDef[] = [
     name: 'Lame-mage',
     weapon: WEAPONS.sword,
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.sword.id, count: 3000 },
-    challengeText: '3 000 kills avec l’Épée (toutes parties confondues)',
+    challengeText: '3\u00a0000 kills avec l’Épée (toutes parties confondues)',
   },
   // 0.3.5 : un perso par arme du bloc C (validé le 2026-11-25, chiffres à ajuster en jouant).
   {
@@ -74,7 +74,7 @@ export const CHARACTERS: readonly CharacterDef[] = [
     name: 'Archère',
     weapon: WEAPONS.bow,
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.bow.id, count: 3000 },
-    challengeText: '3 000 kills avec l’Arc (toutes parties confondues)',
+    challengeText: '3\u00a0000 kills avec l’Arc (toutes parties confondues)',
   },
   {
     id: 'berserker',
@@ -94,14 +94,14 @@ export const CHARACTERS: readonly CharacterDef[] = [
     name: 'Piégeuse',
     weapon: WEAPONS.caltrops,
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.caltrops.id, count: 4000 },
-    challengeText: '4 000 kills avec les Chausse-trapes (toutes parties confondues)',
+    challengeText: '4\u00a0000 kills avec les Chausse-trapes (toutes parties confondues)',
   },
   {
     id: 'stormcaller',
     name: 'Tempêtiste',
     weapon: WEAPONS.chainLightning,
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.chainLightning.id, count: 5000 },
-    challengeText: '5 000 kills avec l’Éclair en chaîne (toutes parties confondues)',
+    challengeText: '5\u00a0000 kills avec l’Éclair en chaîne (toutes parties confondues)',
   },
 ];
 

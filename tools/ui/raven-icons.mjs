@@ -51,6 +51,14 @@ export const ICON_GROUPS = {
     'armor-physical-down': 621, // bouclier gris, flèche rouge
     'armor-magical-down': 622, // bouclier bleu, flèche rouge
   },
+  // Boutique (2026-11-27) : les bonus de départ reprennent l'icône de leur passif.
+  Boutique: {
+    startVitality: 659, // cœur (Vitalité)
+    startPower: 657, // bras musclé (Puissance)
+    startSwiftness: 667, // botte ailée (Célérité)
+    startAttraction: 118, // aimant (Attraction)
+    wisdom: 101, // livre bleu fermé (la Hâte a le grimoire rouge ouvert)
+  },
   // Cartes de fin de build (tout est au maximum)
   'Fin de build': {
     heal: 281, // potion rouge (comme la nourriture au sol)

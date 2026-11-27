@@ -30,7 +30,17 @@ export interface MenuSceneDeps {
   input: Pick<Input, 'wasPressed'>;
   menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction' | 'setPlayReady'>;
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
-  profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack' | 'takeTab' | 'showTab'>;
+  profileOverlay: Pick<
+    ProfileOverlay,
+    | 'show'
+    | 'hide'
+    | 'takeBack'
+    | 'takeTab'
+    | 'showTab'
+    | 'takeWeaponClick'
+    | 'showWeapon'
+    | 'weaponOpen'
+  >;
   characterOverlay: Pick<CharacterOverlay, 'show' | 'hide' | 'takeChoice' | 'takeBack'>;
   shopOverlay: Pick<ShopOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   hud: Pick<Hud, 'setVisible'>;
@@ -219,10 +229,18 @@ export class MenuScene implements Scene {
   private updateProfile(): void {
     const { profileOverlay, input } = this.deps;
     const back = profileOverlay.takeBack();
-    if (back || input.wasPressed(CONTROLS.back)) {
+    const escape = input.wasPressed(CONTROLS.back);
+    // Échap ferme d'abord le détail d'une arme, puis quitte l'écran.
+    if (escape && !back && profileOverlay.weaponOpen) {
+      profileOverlay.showWeapon(null);
+      return;
+    }
+    if (back || escape) {
       this.open('main');
       return;
     }
+    const click = profileOverlay.takeWeaponClick();
+    if (click) profileOverlay.showWeapon(click.weapon);
     // Onglets : clic, ou flèches gauche / droite (Q / D, A / D aussi : ce sont les touches de marche).
     const tab =
       profileOverlay.takeTab() ??

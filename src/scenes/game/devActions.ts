@@ -30,7 +30,7 @@ export function devSetWeaponLevel(weapons: readonly Weapon[], id: string, delta:
   const w = weapons.find((x) => x.def.id === id);
   if (!w) return false;
   // La mutation (niveau 6) a ses propres boutons.
-  w.mutation = null;
+  w.setMutation(null);
   w.level = Math.max(1, Math.min(weaponMaxLevel(w.def), w.level + delta));
   return true;
 }
@@ -39,7 +39,7 @@ export function devSetWeaponLevel(weapons: readonly Weapon[], id: string, delta:
 export function devSetMutation(weapons: readonly Weapon[], id: string, index: number): boolean {
   const w = weapons.find((x) => x.def.id === id);
   if (!w) return false;
-  w.mutation = w.def.mutations?.[index] ?? null;
+  w.setMutation(w.def.mutations?.[index] ?? null);
   w.level = weaponMaxLevel(w.def) + (w.mutation ? 1 : 0);
   return true;
 }

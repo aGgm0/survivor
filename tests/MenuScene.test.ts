@@ -17,6 +17,8 @@ function newMenu(profile: Profile = emptyProfile()) {
     profileVisible: false,
     profileBack: false,
     profileTab: '',
+    profileWeapon: null as string | null,
+    profileWeaponClick: null as { weapon: string | null } | null,
     hudVisible: true,
     plays: 0,
     /** Perso de la dernière partie lancée */
@@ -67,6 +69,15 @@ function newMenu(profile: Profile = emptyProfile()) {
       show: () => (ui.profileVisible = true),
       hide: () => (ui.profileVisible = false),
       takeTab: () => null,
+      takeWeaponClick: () => {
+        const c = ui.profileWeaponClick;
+        ui.profileWeaponClick = null;
+        return c;
+      },
+      showWeapon: (id: string | null) => (ui.profileWeapon = id),
+      get weaponOpen() {
+        return ui.profileWeapon !== null;
+      },
       showTab: (tab: string) => (ui.profileTab = tab),
       takeBack: () => {
         const b = ui.profileBack;
@@ -300,6 +311,20 @@ describe('MenuScene — Profil', () => {
     press('ArrowLeft');
     expect(ui.profileTab).toBe('stats');
     expect(scene.currentScreen).toBe('profile');
+  });
+
+  it('clic sur une arme : son détail ; Échap le ferme, puis quitte le Profil', () => {
+    const { scene, ui, press } = newMenu();
+    ui.menuClick = 'profile';
+    scene.update();
+    ui.profileWeaponClick = { weapon: 'burningAura' };
+    scene.update();
+    expect(ui.profileWeapon).toBe('burningAura');
+    press('Escape');
+    expect(ui.profileWeapon).toBe(null);
+    expect(scene.currentScreen).toBe('profile');
+    press('Escape');
+    expect(scene.currentScreen).toBe('main');
   });
 });
 

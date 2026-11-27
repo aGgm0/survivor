@@ -4,6 +4,7 @@ import { PASSIVES } from '../data/upgrades';
 import type { Weapon } from '../entities/Weapon';
 import { formatTime } from './formatTime';
 import { iconElement } from './icons';
+import { formatNumber } from './formatNumber';
 
 /** Éléments du HUD (HTML par-dessus le canvas). */
 export interface HudElements {
@@ -69,7 +70,7 @@ export class Hud {
   setGold(gold: number): void {
     if (gold === this.shownGold) return;
     this.shownGold = gold;
-    this.el.gold.textContent = `${gold} or`;
+    this.el.gold.textContent = `${formatNumber(gold)} or`;
   }
 
   setTest(test: boolean): void {
@@ -210,7 +211,7 @@ export class Hud {
   setKills(kills: number): void {
     if (kills === this.shownKills) return;
     this.shownKills = kills;
-    this.el.kills.textContent = `${kills} kills`;
+    this.el.kills.textContent = `${formatNumber(kills)} kills`;
   }
 }
 

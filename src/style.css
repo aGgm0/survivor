@@ -1932,3 +1932,135 @@ body {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------- Boutique refaite (2026-11-27) */
+
+/* Une ligne par bonus : icône dans sa case, nom et effet, crans des rangs, prix */
+.shop-list {
+  width: 900px;
+  gap: 6px;
+}
+
+/* Sans cadre sombre par ligne (comme le Profil) : 5 lignes de 96 px dépassaient des 720 px */
+.shop-row {
+  grid-template-columns: 52px 1fr 110px 150px;
+  gap: 16px;
+  padding: 6px 12px;
+  border: none;
+  border-image: none;
+  border-left: 4px solid var(--ui-tan);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.shop-row.is-max {
+  border-left-color: var(--ui-gold);
+}
+
+.shop-row.is-max .shop-name,
+#shop-list .shop-row.is-max .shop-name {
+  color: var(--ui-gold);
+}
+
+.shop-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.shop-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shop-pips {
+  justify-content: flex-end;
+  --kind: var(--ui-gold);
+}
+
+/* ------------------------------------------- Profil : détail des mutations d'une arme (2026-11-27) */
+
+/* Cartes d'armes cliquables : contour doré au survol, comme les cartes de level up */
+button.profile-weapon {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-top: 2px solid transparent;
+  border-right: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+}
+
+button.profile-weapon:hover,
+button.profile-weapon:focus-visible {
+  border-top-color: var(--ui-gold);
+  border-right-color: var(--ui-gold);
+  border-bottom-color: var(--ui-gold);
+  outline: none;
+}
+
+/* Détail : prend la place de la grille (2 × 330 px + 8) */
+.profile-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 668px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 4px solid var(--ui-tan);
+}
+
+.profile-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-detail-head .profile-weapon-name {
+  font-size: 16px;
+}
+
+.profile-detail-back {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.profile-detail-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.profile-variant {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+}
+
+.profile-variant.is-empty {
+  opacity: 0.45;
+}
+
+.profile-variant-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-variant-title .profile-weapon-name {
+  white-space: normal;
+}
+
+.profile-variant-desc {
+  white-space: normal;
+  min-height: 3.2em;
+}
+
+.profile-variant .profile-row {
+  font-family: var(--ui-font-text);
+  font-size: var(--ui-text-small);
+  line-height: var(--ui-text-small-line);
+}

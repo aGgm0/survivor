@@ -1,13 +1,21 @@
 import { CHARACTERS } from '../data/characters';
-import { favoriteWeapon, type HistoryEntry, type Profile } from '../data/profile';
+import {
+  NO_MUTATION,
+  favoriteWeapon,
+  type HistoryEntry,
+  type Profile,
+  type VariantStats,
+} from '../data/profile';
 import { CHARACTER_SPRITES } from '../data/sprites';
 import { PASSIVES } from '../data/upgrades';
-import { WEAPON_LIST } from '../data/weapons';
+import { WEAPON_LIST, type WeaponDef } from '../data/weapons';
 import { formatNumber } from './formatNumber';
 import { formatTime } from './formatTime';
 import { iconElement } from './icons';
 
 export type ProfileTab = 'stats' | 'history';
+/** Clic dans la grille des armes : une arme (son détail), ou retour à toutes les armes */
+export type WeaponClick = { readonly weapon: string } | { readonly weapon: null };
 
 /**
  * Écran Profil, en 2 onglets : Statistiques (cumuls + une carte par arme jouée) et Dernières
@@ -17,6 +25,11 @@ export type ProfileTab = 'stats' | 'history';
 export class ProfileOverlay {
   private backClicked = false;
   private tabClicked: ProfileTab | null = null;
+  private weaponClicked: WeaponClick | null = null;
+  /** Profil affiché (pour reconstruire la grille ou le détail d'une arme) */
+  private profile: Readonly<Profile> | null = null;
+  /** Arme dont le détail est ouvert, ou null : grille de toutes les armes */
+  private openWeapon: string | null = null;
 
   constructor(
     private readonly el: HTMLElement,
@@ -36,6 +49,9 @@ export class ProfileOverlay {
   show(profile: Readonly<Profile>, tab: ProfileTab = 'stats'): void {
     this.backClicked = false;
     this.tabClicked = null;
+    this.weaponClicked = null;
+    this.profile = profile;
+    this.openWeapon = null;
     this.renderSummary(profile);
     this.renderWeapons(profile);
     this.renderHistory(profile.history);
@@ -60,6 +76,27 @@ export class ProfileOverlay {
     const clicked = this.backClicked;
     this.backClicked = false;
     return clicked;
+  }
+
+  /** Clic sur une carte d'arme ou sur « Toutes les armes » depuis le dernier appel, ou null. */
+  takeWeaponClick(): WeaponClick | null {
+    const click = this.weaponClicked;
+    this.weaponClicked = null;
+    return click;
+  }
+
+  /** Vrai quand le détail d'une arme est ouvert (Échap le referme avant de quitter l'écran). */
+  get weaponOpen(): boolean {
+    return this.openWeapon !== null;
+  }
+
+  /** Ouvre le détail d'une arme, ou revient à la grille (null). */
+  showWeapon(id: string | null): void {
+    if (!this.profile) return;
+    this.openWeapon = id;
+    const def = id ? WEAPON_LIST.find((w) => w.id === id) : undefined;
+    if (def) this.renderWeaponDetail(def, this.profile);
+    else this.renderWeapons(this.profile);
   }
 
   /** Onglet cliqué depuis le dernier appel, ou null. */
@@ -104,8 +141,11 @@ export class ProfileOverlay {
     }
     this.weaponsEl.replaceChildren(
       ...rows.map(({ def, stats }) => {
-        const card = document.createElement('div');
+        const card = document.createElement('button');
+        card.type = 'button';
         card.className = 'profile-weapon';
+        card.title = 'Voir le détail des mutations';
+        card.addEventListener('click', () => (this.weaponClicked = { weapon: def.id }));
         card.style.borderLeftColor = def.color;
         const runs = stats?.runs ?? 0;
         const body = document.createElement('div');
@@ -127,6 +167,46 @@ export class ProfileOverlay {
         return card;
       }),
     );
+  }
+
+  /**
+   * Détail d'une arme : une colonne par variante (sans mutation, puis chaque mutation) avec son
+   * icône, sa description et ses cumuls. Une variante jamais jouée est grisée.
+   */
+  private renderWeaponDetail(def: WeaponDef, profile: Readonly<Profile>): void {
+    const variants = profile.weapons[def.id]?.variants ?? {};
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'menu-button profile-detail-back';
+    back.textContent = '← Toutes les armes';
+    back.addEventListener('click', () => (this.weaponClicked = { weapon: null }));
+
+    const head = document.createElement('div');
+    head.className = 'profile-detail-head';
+    head.append(
+      iconElement(def.id, def.short),
+      text('span', def.name, 'profile-weapon-name'),
+      back,
+    );
+
+    const columns = document.createElement('div');
+    columns.className = 'profile-detail-columns';
+    columns.append(
+      variantColumn(def.id, def.short, 'Sans mutation', def.description, variants[NO_MUTATION]),
+      ...(def.mutations ?? []).map((m) =>
+        variantColumn(m.id, m.short, `★ ${m.name}`, m.description, variants[m.id]),
+      ),
+    );
+    const note = text(
+      'p',
+      'Détail compté depuis la 0.3.7 : les parties plus anciennes ne sont que dans le total.',
+      'overlay-hint',
+    );
+    const detail = document.createElement('div');
+    detail.className = 'profile-detail';
+    detail.style.borderLeftColor = def.color;
+    detail.append(head, columns, note);
+    this.weaponsEl.replaceChildren(detail);
   }
 
   /** Une ligne par partie, la plus récente en haut. */
@@ -151,6 +231,38 @@ function text(tag: string, content: string, className?: string): HTMLElement {
   el.textContent = content;
   if (className) el.className = className;
   return el;
+}
+
+function variantColumn(
+  icon: string,
+  short: string,
+  name: string,
+  description: string,
+  stats: VariantStats | undefined,
+): HTMLElement {
+  const col = document.createElement('div');
+  col.className = stats && stats.runs > 0 ? 'profile-variant' : 'profile-variant is-empty';
+  const title = document.createElement('div');
+  title.className = 'profile-variant-title';
+  title.append(iconElement(icon, short), text('span', name, 'profile-weapon-name'));
+  col.append(title, text('span', description, 'profile-weapon-detail profile-variant-desc'));
+  if (!stats || stats.runs === 0) {
+    col.append(text('span', 'Pas encore jouée', 'profile-weapon-detail'));
+    return col;
+  }
+  const lines: [string, string][] = [
+    ['Parties', formatNumber(stats.runs)],
+    ['Kills', formatNumber(stats.kills)],
+    ['Dégâts', formatNumber(Math.round(stats.damage))],
+    ['Dégâts / partie', formatNumber(Math.round(stats.damage / stats.runs))],
+  ];
+  for (const [label, value] of lines) {
+    const row = document.createElement('div');
+    row.className = 'profile-row';
+    row.append(text('span', label), text('span', value, 'profile-value'));
+    col.append(row);
+  }
+  return col;
 }
 
 function historyRow(entry: HistoryEntry, now: number): HTMLElement {

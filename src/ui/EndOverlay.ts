@@ -1,6 +1,7 @@
 import type { RunReport } from '../types/RunReport';
 import { formatTime } from './formatTime';
 import { iconElement } from './icons';
+import { formatNumber } from './formatNumber';
 
 /** Une tuile du bilan : la valeur en gros, son libellé dessous. */
 function stat(value: string, label: string): HTMLElement {
@@ -62,8 +63,8 @@ export class EndOverlay {
     // Bilan en tuiles (valeur en gros, libellé dessous) plutôt qu'en une longue phrase.
     this.infoEl.replaceChildren(
       stat(formatTime(report.time), report.endless ? 'survécu (sans fin)' : 'survécu'),
-      stat(String(report.kills), 'kills'),
-      stat(`+${report.gold}`, 'or'),
+      stat(formatNumber(report.kills), 'kills'),
+      stat(`+${formatNumber(report.gold)}`, 'or'),
       stat(String(report.level), 'niveau'),
       stat(
         report.maxedAt === null ? '—' : formatTime(report.maxedAt),
@@ -93,7 +94,7 @@ export class EndOverlay {
 
         const value = document.createElement('span');
         value.className = 'meter-value';
-        value.textContent = `${w.damage} dégâts · ${Math.round(w.share * 100)} % · ${w.kills} kills`;
+        value.textContent = `${formatNumber(w.damage)} dégâts · ${Math.round(w.share * 100)} % · ${formatNumber(w.kills)} kills`;
 
         row.append(label, bar, value);
         return row;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   HISTORY_SIZE,
+  NO_MUTATION,
   PROFILE_VERSION,
   emptyProfile,
   favoriteWeapon,
@@ -8,6 +9,9 @@ import {
   recordRun,
   serializeProfile,
 } from '../src/data/profile';
+import { WEAPONS } from '../src/data/weapons';
+import { Weapon } from '../src/entities/Weapon';
+import { buildDamageReport } from '../src/systems/runReport';
 import type { RunReport } from '../src/types/RunReport';
 
 function report(overrides: Partial<RunReport> = {}): RunReport {
@@ -27,6 +31,9 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
         id: 'burningAura',
         name: 'Aura de givre',
         icon: 'frostAura',
+        mutation: 'frostAura',
+        damageBeforeMutation: 0,
+        killsBeforeMutation: 0,
         short: 'Gv',
         color: '',
         level: 5,
@@ -38,6 +45,9 @@ function report(overrides: Partial<RunReport> = {}): RunReport {
         id: 'arcaneBolt',
         name: 'Trait',
         icon: 'arcaneBolt',
+        mutation: null,
+        damageBeforeMutation: 0,
+        killsBeforeMutation: 0,
         short: 'Ta',
         color: '',
         level: 3,
@@ -67,8 +77,49 @@ describe('recordRun', () => {
     const profile = emptyProfile();
     recordRun(profile, report());
     recordRun(profile, report());
-    expect(profile.weapons.burningAura).toEqual({ runs: 2, damage: 10000, kills: 1400 });
+    expect(profile.weapons.burningAura).toEqual({
+      runs: 2,
+      damage: 10000,
+      kills: 1400,
+      variants: { frostAura: { runs: 2, damage: 10000, kills: 1400 } },
+    });
     expect(profile.weapons.arcaneBolt?.runs).toBe(2);
+  });
+
+  it('détail par variante : avant la mutation = sans mutation, après = la mutation', () => {
+    const profile = emptyProfile();
+    const aura = (mutation: string | null, damage: number, before = 0): RunReport =>
+      report({
+        weapons: [
+          {
+            id: 'burningAura',
+            name: '',
+            icon: mutation ?? 'burningAura',
+            mutation,
+            damageBeforeMutation: before,
+            killsBeforeMutation: before / 100,
+            short: '',
+            color: '',
+            level: 5,
+            damage,
+            kills: damage / 100,
+            share: 1,
+          },
+        ],
+      });
+    // Partie sans mutation, puis l'exemple : 10 000 avant la Fournaise, 30 000 après.
+    recordRun(profile, aura(null, 5000));
+    recordRun(profile, aura('furnace', 40000, 10000));
+    const stats = profile.weapons.burningAura;
+    const v = stats?.variants;
+    expect(v?.[NO_MUTATION]).toEqual({ runs: 2, damage: 15000, kills: 150 });
+    expect(v?.furnace).toEqual({ runs: 1, damage: 30000, kills: 300 });
+    expect(v?.frostAura).toBeUndefined();
+    // Les totaux de l'arme ne changent pas
+    expect(stats?.damage).toBe(45000);
+    // Mutation donnée d'entrée (rien avant) : la partie ne compte pas « sans mutation »
+    recordRun(profile, aura('furnace', 1000, 0));
+    expect(v?.[NO_MUTATION]?.runs).toBe(2);
   });
 });
 
@@ -122,7 +173,27 @@ describe('parseProfile', () => {
       weapons: { epeeInventee: { runs: 99 }, runicOrbs: { runs: 2 } },
     });
     expect(Object.keys(profile.weapons)).toEqual(['runicOrbs']);
-    expect(profile.weapons.runicOrbs).toEqual({ runs: 2, damage: 0, kills: 0 });
+    expect(profile.weapons.runicOrbs).toEqual({ runs: 2, damage: 0, kills: 0, variants: {} });
+  });
+
+  it('détail par variante relu sans confiance : mutation d’une autre arme ou inventée ignorée', () => {
+    const profile = parseProfile({
+      weapons: {
+        runicOrbs: {
+          runs: 3,
+          variants: {
+            base: { runs: 1, kills: 5 },
+            giantOrbs: { runs: 2, damage: -4 },
+            furnace: { runs: 9 },
+            inventee: { runs: 9 },
+          },
+        },
+      },
+    });
+    expect(profile.weapons.runicOrbs?.variants).toEqual({
+      base: { runs: 1, damage: 0, kills: 5 },
+      giantOrbs: { runs: 2, damage: 0, kills: 0 },
+    });
   });
 
   it('défis : garde les textes, ignore le reste et les doublons', () => {
@@ -193,5 +264,28 @@ describe('historique des parties', () => {
 
   it('ancienne sauvegarde sans historique : historique vide', () => {
     expect(parseProfile({ version: 1, runs: 3 }).history).toEqual([]);
+  });
+});
+
+describe('bilan : dégâts avant la mutation', () => {
+  it('l’arme note dégâts et kills au moment où elle prend sa mutation', () => {
+    const w = new Weapon(WEAPONS.burningAura);
+    w.totalDamage = 10000;
+    w.kills = 100;
+    w.setMutation(WEAPONS.burningAura.mutations?.[1] ?? null);
+    w.totalDamage += 30000;
+    w.kills += 300;
+    const [line] = buildDamageReport([w]);
+    expect(line?.damage).toBe(40000);
+    expect(line?.damageBeforeMutation).toBe(10000);
+    expect(line?.killsBeforeMutation).toBe(100);
+  });
+
+  it('sans mutation : rien « avant »', () => {
+    const w = new Weapon(WEAPONS.burningAura);
+    w.totalDamage = 500;
+    const [line] = buildDamageReport([w]);
+    expect(line?.mutation).toBeNull();
+    expect(line?.damageBeforeMutation).toBe(0);
   });
 });

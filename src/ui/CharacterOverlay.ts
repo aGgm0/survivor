@@ -1,6 +1,7 @@
 import { challengeProgress, isUnlocked, type CharacterDef } from '../data/characters';
 import type { Profile } from '../data/profile';
 import { CHARACTER_SPRITES } from '../data/sprites';
+import { formatNumber } from './formatNumber';
 
 /**
  * Écran de choix du perso : une carte par perso. Un perso verrouillé est grisé et affiche son
@@ -53,7 +54,7 @@ export class CharacterOverlay {
         } else {
           const progress = challengeProgress(character, profile);
           desc.textContent = progress
-            ? `${character.challengeText} — ${Math.min(progress.current, progress.target)} / ${progress.target}`
+            ? `${character.challengeText} — ${formatNumber(Math.min(progress.current, progress.target))} / ${formatNumber(progress.target)}`
             : character.challengeText;
         }
         card.append(key, portrait, name, weapon, desc);

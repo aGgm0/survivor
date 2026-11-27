@@ -295,7 +295,7 @@ export function applyUpgrade(choice: UpgradeChoice, build: Build): void {
       build.weapons.push(new Weapon(choice.def));
       return;
     case 'mutation':
-      choice.weapon.mutation = choice.mutation;
+      choice.weapon.setMutation(choice.mutation);
       choice.weapon.level++; // la mutation est le niveau 6
       return;
     case 'passive': {

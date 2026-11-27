@@ -8,6 +8,11 @@ export interface WeaponReport {
   readonly name: string;
   /** Icône à afficher : celle de la mutation si l'arme est mutée (comme dans le HUD) */
   readonly icon: string;
+  /** id de la mutation de l'arme, null si elle n'est pas mutée (détail du Profil) */
+  readonly mutation: string | null;
+  /** Part de `damage` et `kills` faite avant la mutation (0 sans mutation) */
+  readonly damageBeforeMutation: number;
+  readonly killsBeforeMutation: number;
   /** 2 lettres affichées à la place de l'icône si elle manque (pack Raven absent) */
   readonly short: string;
   readonly color: string;

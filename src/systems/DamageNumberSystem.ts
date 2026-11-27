@@ -2,6 +2,7 @@ import type { Camera } from '../core/Camera';
 import { lerp, type Rng } from '../core/math';
 import { Pool } from '../core/Pool';
 import { DamageNumber } from '../entities/DamageNumber';
+import { formatNumber } from '../ui/formatNumber';
 
 // Réglages purement visuels (aucun effet sur le jeu).
 const POOL_SIZE = 300;
@@ -23,7 +24,7 @@ const OUTLINE = '#000000';
 const textCache: string[] = [];
 function damageText(value: number): string {
   const n = Math.round(value);
-  return (textCache[n] ??= String(n));
+  return (textCache[n] ??= formatNumber(n));
 }
 
 /** Nombres de dégâts flottants : apparition, montée, fondu, rendu. */

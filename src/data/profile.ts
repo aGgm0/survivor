@@ -12,12 +12,27 @@ export const PROFILE_VERSION = 1;
 /** Parties gardées dans l'historique du Profil (les plus récentes) */
 export const HISTORY_SIZE = 5;
 
+/** Clé de la variante « sans mutation » dans `WeaponStats.variants` */
+export const NO_MUTATION = 'base';
+
+/** Cumul d'une variante d'arme (sans mutation, ou avec une de ses mutations). */
+export interface VariantStats {
+  runs: number;
+  damage: number;
+  kills: number;
+}
+
 /** Cumul pour une arme (mutée ou non, comptée sous l'arme de base). */
 export interface WeaponStats {
   /** Parties terminées avec cette arme dans l'inventaire */
   runs: number;
   damage: number;
   kills: number;
+  /**
+   * Détail par variante (`NO_MUTATION` ou id de mutation), pour le Profil. Vide pour les parties
+   * jouées avant la 0.3.7 : elles ne comptent que dans les totaux ci-dessus.
+   */
+  variants: Record<string, VariantStats>;
 }
 
 /** Une arme dans l'historique : de quoi afficher son icône, son niveau et sa part des dégâts. */
@@ -105,10 +120,21 @@ export function recordRun(profile: Profile, report: RunReport, now = Date.now())
     if (!profile.challenges.includes(id)) profile.challenges.push(id);
   }
   for (const w of report.weapons) {
-    const stats = (profile.weapons[w.id] ??= { runs: 0, damage: 0, kills: 0 });
+    const stats = (profile.weapons[w.id] ??= { runs: 0, damage: 0, kills: 0, variants: {} });
     stats.runs++;
     stats.damage += w.damage;
     stats.kills += w.kills;
+    // Ce qui a été fait avant la mutation compte « sans mutation », le reste pour la mutation ;
+    // une partie compte dans chaque variante où l'arme a servi.
+    if (w.mutation) {
+      const before = { damage: w.damageBeforeMutation, kills: w.killsBeforeMutation };
+      if (before.damage > 0 || before.kills > 0) {
+        addVariant(stats, NO_MUTATION, before.damage, before.kills);
+      }
+      addVariant(stats, w.mutation, w.damage - before.damage, w.kills - before.kills);
+    } else {
+      addVariant(stats, NO_MUTATION, w.damage, w.kills);
+    }
   }
   profile.history.unshift({
     character: report.character,
@@ -131,6 +157,13 @@ export function recordRun(profile: Profile, report: RunReport, now = Date.now())
   });
   profile.history.length = Math.min(profile.history.length, HISTORY_SIZE);
   return profile;
+}
+
+function addVariant(stats: WeaponStats, key: string, damage: number, kills: number): void {
+  const variant = (stats.variants[key] ??= { runs: 0, damage: 0, kills: 0 });
+  variant.runs++;
+  variant.damage += Math.max(0, damage);
+  variant.kills += Math.max(0, kills);
 }
 
 /** L'arme la plus jouée (le plus de parties, puis le plus de dégâts), ou null si aucune. */
@@ -165,6 +198,11 @@ const KNOWN_ICON_IDS = new Set(
   WEAPON_LIST.flatMap((w) => [w.id, ...(w.mutations ?? []).map((m) => m.id)]),
 );
 const KNOWN_PASSIVE_IDS = new Set(PASSIVES.map((p) => p.id));
+
+/** ids des mutations d'une arme */
+function mutationIds(weaponId: string): string[] {
+  return (WEAPON_LIST.find((w) => w.id === weaponId)?.mutations ?? []).map((m) => m.id);
+}
 
 /**
  * Une partie de l'historique relue sans confiance : null si elle est abîmée ; une arme ou un
@@ -232,10 +270,20 @@ export function parseProfile(raw: unknown): Profile {
     for (const [id, stats] of Object.entries(raw.weapons)) {
       // Une arme retirée du jeu (ou un id inventé) est ignorée.
       if (!KNOWN_WEAPON_IDS.has(id) || !isRecord(stats)) continue;
+      const variants: Record<string, VariantStats> = {};
+      if (isRecord(stats.variants)) {
+        // Seulement « sans mutation » et les mutations de cette arme (une mutation retirée est ignorée).
+        const known = new Set([NO_MUTATION, ...mutationIds(id)]);
+        for (const [key, v] of Object.entries(stats.variants)) {
+          if (!known.has(key) || !isRecord(v)) continue;
+          variants[key] = { runs: count(v.runs), damage: count(v.damage), kills: count(v.kills) };
+        }
+      }
       profile.weapons[id] = {
         runs: count(stats.runs),
         damage: count(stats.damage),
         kills: count(stats.kills),
+        variants,
       };
     }
   }

@@ -2,6 +2,17 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [Non publié]
+
+### Ajouté
+
+- **Détail des mutations** dans le Profil : un clic sur une arme montre ses stats sans mutation et avec chacune de ses 2 mutations (parties, kills, dégâts, dégâts par partie). Ce qui est fait avant la mutation compte « sans mutation », le reste pour la mutation. Compté à partir de cette version.
+
+### Modifié
+
+- **Boutique** refaite : une icône par bonus, des crans pour les rangs achetés, et l'écran tient en entier.
+- Les grands nombres sont espacés partout (1 000 au lieu de 1000) : Profil, écran de fin, HUD, Boutique, défis des persos, nombres de dégâts.
+
 ## [0.3.6] — 2026-11-27
 
 Première version publiée depuis la 0.3.0 : elle contient aussi la 0.3.5 (4 nouveaux persos), ainsi que des armes refaites (Mines, Orage, Arc continu, Fournaise), la mort du perso, les coffres, l'historique des parties et de nouvelles icônes.

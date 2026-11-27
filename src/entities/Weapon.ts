@@ -53,6 +53,21 @@ export class Weapon {
   /** Dégâts réellement infligés (sans l'excédent sur un ennemi déjà presque mort) */
   totalDamage = 0;
   kills = 0;
+  /**
+   * Dégâts et kills au moment où l'arme a pris sa mutation : le Profil range ce qui est fait
+   * avant dans « sans mutation », et le reste dans la mutation.
+   */
+  damageAtMutation = 0;
+  killsAtMutation = 0;
+
+  /** Donne (ou retire, null) la mutation, en notant où en étaient les dégâts et les kills. */
+  setMutation(mutation: MutationDef | null): void {
+    if (mutation && !this.mutation) {
+      this.damageAtMutation = this.totalDamage;
+      this.killsAtMutation = this.kills;
+    }
+    this.mutation = mutation;
+  }
 
   // Stats actuelles = base + bonus des niveaux + mutation + passifs du joueur. Recalculées par
   // `recompute()` seulement quand elles changent (level up), pas à chaque tir.
