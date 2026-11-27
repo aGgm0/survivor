@@ -8,8 +8,9 @@ import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { EffectSheet } from '../core/EffectSheet';
 import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { LOW_HP, PARTICLES, PLAYER_DEATH, SHAKE } from '../data/feel';
+import { LOW_HP, PARTICLES, SHAKE } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
+import { RunFlow, type RunStats } from './game/RunFlow';
 import { WorldRenderer } from './game/WorldRenderer';
 import {
   buildDevView,
@@ -22,7 +23,7 @@ import type { HpBarSkin } from './game/hpBar';
 import type { ResistIcons } from './game/WorldRenderer';
 import { updateHpTrail } from '../systems/hpTrail';
 import { applyOptionsAction } from './options';
-import { CONTROLS, END_SCREEN_CLICK_DELAY } from '../data/controls';
+import { CONTROLS } from '../data/controls';
 import {
   MAXED_XP_MULT,
   EARLY_PASSIVES,
@@ -198,18 +199,14 @@ export class GameScene implements Scene, Build {
   /** Tout le dessin du monde (la scène ne garde que le HUD) */
   private readonly renderer: WorldRenderer;
   /** Bilan de la partie une fois terminée (victoire ou défaite) ; null = partie en cours */
-  private report: RunReport | null = null;
   /** secondes de survie (n'avance pas pendant la pause) */
   private elapsed = 0;
   private killCount = 0;
   /** s passées sur l'écran de fin (temps réel : `elapsed` y est figé) */
-  private endScreenTime = 0;
   /** s depuis la mort du joueur, pendant l'animation (null : vivant ou partie finie) */
-  private dyingFor: number | null = null;
   /** s : moment où plus rien n'était améliorable ; null = build pas encore complet */
   private maxedAt: number | null = null;
   /** Mode sans fin lancé depuis l'écran de victoire */
-  private endless = false;
   /** Défis réussis pendant cette partie (ids) */
   private readonly challenges: string[] = [];
   /** Menu de test ouvert (F2) */
@@ -217,10 +214,9 @@ export class GameScene implements Scene, Build {
   /** Menu de test : le joueur ne prend plus de dégâts */
   private god = false;
   /** Le menu de test a servi : la partie ne compte pas au profil */
-  private testRun = false;
   /** La partie a déjà été ajoutée au profil */
-  private recorded = false;
-  private readonly runDuration: number;
+  /** Déroulement de la partie : mort, victoire, prolongations, sans fin, inscription au profil */
+  private readonly flow: RunFlow;
   /** Niveau joué (vagues, boss, sol, musiques) */
   private readonly stage: StageDef;
 
@@ -254,9 +250,16 @@ export class GameScene implements Scene, Build {
     // L'arme de départ dépend du perso choisi (Trait arcanique par défaut).
     this.weapons = [new Weapon(options.startWeapon ?? WEAPONS.arcaneBolt)];
     this.stage = options.stage ?? DEFAULT_STAGE;
-    this.runDuration = options.runDuration ?? this.stage.duration;
     this.rng = new Rng(seed);
     this.spawner = new SpawnSystem(this.enemies, this.rng, this.stage);
+    this.flow = new RunFlow(
+      deps,
+      {
+        stats: () => this.runStats(),
+        startEndless: () => this.spawner.startEndless(this.elapsed),
+      },
+      options.runDuration ?? this.stage.duration,
+    );
     // Systèmes → scène : les coups et les kills (règles), le reste va droit au ressenti.
     const hitEvents: HitEvents = {
       onHit: (e, damage, kind, source, reduction) =>
@@ -341,10 +344,7 @@ export class GameScene implements Scene, Build {
   }
 
   exit(): void {
-    // Victoire sans avoir continué en sans fin : la partie se termine vraiment ici (R ou M).
-    // Sans fin quitté par le menu pause : la victoire était acquise, elle compte quand même.
-    if (this.endless && !this.report) this.report = this.buildReport(true);
-    this.recordRunOnce();
+    this.flow.exit();
     this.setPaused(false);
     this.deps.optionsOverlay.hide();
     this.deps.endOverlay.hide();
@@ -357,7 +357,8 @@ export class GameScene implements Scene, Build {
     // Réglage désactivé : la partie reprend telle quelle au retour (la boucle s'arrête quand même).
     // Déjà en pause dans les options : ne pas réafficher le menu pause par-dessus.
     if (this.optionsOpen) return;
-    if (!this.report && !this.choices && this.deps.settings.pauseOnHidden) this.setPaused(true);
+    if (!this.flow.isOver && !this.choices && this.deps.settings.pauseOnHidden)
+      this.setPaused(true);
   }
 
   /**
@@ -365,19 +366,19 @@ export class GameScene implements Scene, Build {
    * reçoit pas). On met en pause pour ne pas reprendre la main en pleine horde.
    */
   onFullscreenExit(): boolean {
-    if (this.report || this.choices || this.paused || this.devOpen) return false;
+    if (this.flow.isOver || this.choices || this.paused || this.devOpen) return false;
     this.setPaused(true);
     return true;
   }
 
   /** Vrai quand la partie est terminée (mort ou victoire). */
   get isOver(): boolean {
-    return this.report !== null;
+    return this.flow.isOver;
   }
 
   /** Bilan de fin de partie, ou null si elle est en cours. */
   get result(): RunReport | null {
-    return this.report;
+    return this.flow.result;
   }
 
   /** Temps de partie écoulé, en secondes (figé pendant la pause et les choix). */
@@ -392,29 +393,17 @@ export class GameScene implements Scene, Build {
   update(dt: number): void {
     const { input } = this.deps;
 
-    if (this.report) {
+    if (this.flow.isOver) {
       this.freeze();
-      this.endScreenTime += dt;
-      // Lu à chaque update même pendant le délai : un clic trop tôt est jeté, pas gardé pour plus tard.
-      const action = this.deps.endOverlay.takeAction();
-      const clicked = this.endScreenTime >= END_SCREEN_CLICK_DELAY ? action : null;
-      if (
-        this.canContinueEndless &&
-        (clicked === 'continue' || input.wasPressed(CONTROLS.continue))
-      )
-        this.startEndless();
-      else if (clicked === 'restart' || input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
-      else if (clicked === 'menu' || input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
+      this.flow.updateEndScreen(dt);
       return;
     }
 
-    if (this.dyingFor !== null) {
+    if (this.flow.isDying) {
       // Mort : tout est figé, seul le perso rétrécit, puis l'écran de fin.
       this.freeze();
-      this.dyingFor += dt;
-      const t = (this.dyingFor - PLAYER_DEATH.hold) / PLAYER_DEATH.shrink;
-      this.player.deathScale = 1 - Math.min(1, Math.max(0, t));
-      if (this.dyingFor >= PLAYER_DEATH.duration) this.endRun(false);
+      this.player.deathScale = this.flow.updateDying(dt);
+      if (this.flow.isOver) this.setPaused(false);
       return;
     }
 
@@ -448,13 +437,12 @@ export class GameScene implements Scene, Build {
     // Tremblement de l'écran (option) : purement visuel, il ne touche qu'au dessin.
     if (this.deps.settings.screenShake) this.camera.updateShake(dt, this.elapsed, SHAKE);
     else this.camera.resetShake();
-    // Survécu jusqu'au bout ET plus de boss en vie : tout se fige, écran de victoire.
-    // Boss encore là à 10:00 → prolongations : la partie continue jusqu'à sa mort (ou la tienne).
-    // En sans fin, plus de victoire : seule la mort termine la partie.
-    if (!this.endless && this.elapsed >= this.runDuration && !this.isBossAlive()) {
+    // Victoire (timer atteint, plus de boss) : tout se fige, écran de victoire.
+    if (this.flow.reachedVictory(this.elapsed, this.isBossAlive())) {
       // Victoire pile au timer : on affiche 10:00, pas l'arrondi du dernier pas fixe.
-      if (this.elapsed - dt < this.runDuration) this.elapsed = this.runDuration;
-      this.endRun(true);
+      if (this.elapsed - dt < this.flow.duration) this.elapsed = this.flow.duration;
+      this.setPaused(false);
+      this.flow.end(true);
       return;
     }
 
@@ -483,7 +471,7 @@ export class GameScene implements Scene, Build {
     this.movement.update(this.enemies, this.player.x, this.player.y, dt, this.elapsed);
     this.touchingCount = this.collisions.pushOutOfPlayer(this.enemies, this.player, this.touching);
     this.applyContactDamage();
-    if (this.report) return;
+    if (this.flow.isDying) return;
 
     this.weaponSystem.update(
       dt,
@@ -624,7 +612,7 @@ export class GameScene implements Scene, Build {
 
   /** Vrai pendant les prolongations : temps écoulé mais boss encore en vie. */
   get isOvertime(): boolean {
-    return !this.report && !this.endless && this.elapsed >= this.runDuration;
+    return this.flow.isOvertime(this.elapsed);
   }
 
   /** Un ennemi tombe à 0 PV : il lâche sa gemme d'XP et retourne au pool. */
@@ -645,7 +633,7 @@ export class GameScene implements Scene, Build {
     const sy = Math.sin(spreadAngle) * PICKUPS.dropSpread;
     // Nourriture des élites : pas pour ceux invoqués par un boss (un toutes les 10 s) ni en sans
     // fin, sinon le sol se couvre de soins en fin de partie.
-    if (e.type.elite && FURNITURE.eliteFood && !e.summoned && !this.endless)
+    if (e.type.elite && FURNITURE.eliteFood && !e.summoned && !this.flow.isEndless)
       this.pickups.drop('food', FURNITURE.foodHeal, e.x - sx, e.y - sy);
     this.feedback.enemyKilled(e);
     // Gemme verte (basique) : tirée avec l'aléatoire de la partie, donc reproductible avec la seed.
@@ -693,35 +681,13 @@ export class GameScene implements Scene, Build {
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
-    if (this.player.isDead) {
-      // Musique de défaite tout de suite : elle accompagne l'animation de mort.
-      this.dyingFor = 0;
-      this.deps.music?.play('defeat');
-    }
+    // Musique de défaite tout de suite : elle accompagne l'animation de mort.
+    if (this.player.isDead) this.flow.playerDied();
   }
 
-  /** Fin de partie (mort ou victoire) : on fige tout et on affiche le bilan. */
-  private endRun(victory: boolean): void {
-    this.setPaused(false);
-    this.dyingFor = null;
-    if (victory) this.deps.music?.play('victory');
-    this.report = this.buildReport(victory);
-    this.endScreenTime = 0;
-    this.deps.endOverlay.show(
-      this.report,
-      this.canContinueEndless,
-      this.testRun ? [] : this.deps.unlocksFor(this.report),
-    );
-    // Victoire "normale" : le joueur peut encore continuer en sans fin, on attend pour
-    // l'enregistrer (sinon la même partie compterait deux fois). Sinon, c'est fini.
-    if (!this.canContinueEndless) this.recordRunOnce();
-  }
-
-  private buildReport(victory: boolean): RunReport {
+  /** Chiffres de la partie pour le bilan (la victoire et le sans fin sont ajoutés par RunFlow). */
+  private runStats(): RunStats {
     return {
-      // Mourir en sans fin reste une victoire : le boss avait été tué avant.
-      victory: victory || this.endless,
-      endless: this.endless,
       time: this.elapsed,
       kills: this.killCount,
       gold: this.gold,
@@ -738,31 +704,9 @@ export class GameScene implements Scene, Build {
     };
   }
 
-  /** Vrai sur l'écran de victoire, tant que le sans fin n'a pas été lancé. */
-  private get canContinueEndless(): boolean {
-    return this.report !== null && this.report.victory && !this.endless;
-  }
-
-  /** C sur l'écran de victoire : la partie reprend, de plus en plus dure, jusqu'à la mort. */
-  private startEndless(): void {
-    this.endless = true;
-    this.report = null;
-    this.deps.endOverlay.hide();
-    this.deps.hud.setEndless(true);
-    this.spawner.startEndless(this.elapsed);
-  }
-
-  /** Une partie ne compte qu'une fois dans le profil, quelle que soit la façon dont elle finit. */
-  private recordRunOnce(): void {
-    if (!this.report || this.recorded) return;
-    this.recorded = true;
-    // Partie de test (menu F2) : rien n'est enregistré (stats, défis, déblocages).
-    if (!this.testRun) this.deps.onRunEnd(this.report);
-  }
-
   /** Vrai en mode sans fin (après avoir continué depuis l'écran de victoire). */
   get isEndless(): boolean {
-    return this.endless;
+    return this.flow.isEndless;
   }
 
   /** Plus rien ne bouge : sans ça, l'interpolation ferait osciller les entités sur place. */
@@ -792,7 +736,7 @@ export class GameScene implements Scene, Build {
     this.renderBossHud();
     const hpRatio = this.player.hp / this.player.maxHp;
     this.deps.hud.setLowHp(
-      this.report || hpRatio > LOW_HP.warn
+      this.flow.isOver || hpRatio > LOW_HP.warn
         ? 'none'
         : hpRatio > LOW_HP.critical
           ? 'warn'
@@ -848,7 +792,7 @@ export class GameScene implements Scene, Build {
   }
 
   applyDevAction(action: DevAction): void {
-    this.testRun = true;
+    this.flow.markTestRun();
     this.deps.hud.setTest(true);
     const player = this.player;
     switch (action.kind) {
@@ -881,9 +825,9 @@ export class GameScene implements Scene, Build {
         this.spawner.jumpTo(action.seconds);
         return;
       case 'endless':
-        if (this.endless) return;
-        this.elapsed = Math.max(this.elapsed, this.runDuration);
-        this.startEndless();
+        if (this.flow.isEndless) return;
+        this.elapsed = Math.max(this.elapsed, this.flow.duration);
+        this.flow.startEndless();
         return;
       case 'spawn':
         this.spawner.spawnBatch(action.count, this.elapsed, player.x, player.y);
@@ -912,7 +856,7 @@ export class GameScene implements Scene, Build {
 
   /** Vrai si le menu de test a servi pendant cette partie. */
   get isTestRun(): boolean {
-    return this.testRun;
+    return this.flow.isTestRun;
   }
 
   /** Menu pause : clic sur un bouton, ou raccourci clavier (Échap/P, O, R, M). */

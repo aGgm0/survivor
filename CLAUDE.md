@@ -102,7 +102,7 @@ Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && np
 │   │   ├── SpatialGrid.ts # partition spatiale pour les collisions
 │   │   └── math.ts        # Vec2, clamp, lerp, random seedé
 │   ├── scenes/            # MenuScene, GameScene (règles de la partie)
-│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin), Feedback (sons, tremblement, particules), devActions (menu F2)
+│   │   └── game/          # morceaux de GameScene : WorldRenderer (dessin), Feedback (sons, tremblement, particules), RunFlow (mort, victoire, sans fin, profil), devActions (menu F2)
 │   ├── entities/          # Player, Enemy, Projectile, XpGem, Pickup
 │   ├── systems/           # logique qui agit sur des groupes d'entités
 │   │   ├── MovementSystem.ts
@@ -524,7 +524,7 @@ But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début
 
 **Bloc A — Refactors** (le bot donne les mêmes chiffres avant et après)
 - [x] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi ; chaque boss prévu a son `type` et dit s'il invoque (`summons`) ; `RUN_DURATION` → `stage.duration` (2026-11-27, empreinte inchangée)
-- [ ] `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
+- [x] `RunFlow` (`scenes/game/RunFlow.ts` : mort, victoire, prolongations, sans fin, écran de fin, inscription unique au profil) sorti de `GameScene` (962 → 912 lignes), testé seul (`tests/RunFlow.test.ts`) ; essayé en jeu (victoire à 10:00 par F2, sans fin, mort) (2026-11-27)
 
 **Bloc B — Bestiaire**
 - [ ] 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
@@ -885,6 +885,7 @@ Format : date — décision — raison.
 | 2026-11-25 | 4 nouveaux persos (un par arme du bloc C) en 0.3.5, avant la refonte des effets visuels (qui devient la 0.3.6) et la 0.4 ; stats et ultis restent en 0.5 | Demandé. Même principe que les 4 premiers (arme de départ + défi) : la 0.5 n'a plus qu'à leur donner leurs stats |
 | 2026-11-25 | 0.3.5 : Archère (`elf_f`, 3 000 kills d'Arc), Berserker (`dwarf_m`, boss de 5:00 avec la Hache niv 5), Piégeuse (`lizard_f`, 4 000 kills de Chausse-trapes), Tempêtiste (`lizard_m`, 5 000 kills d'Éclair) ; écran de choix en 2 rangées de 4 cartes en largeur | « ok reco ». Défis des 2 sortes existantes (rien de nouveau à coder) ; chiffres selon la facilité à tuer de l'arme (l'Éclair tue en masse, comme l'Aura). Héros 0x72 pas encore utilisés, même découpage d'atlas que les autres (portrait CSS sans retouche). Cartes en largeur : en colonne, 2 rangées faisaient ~800 px pour un écran de 720 |
 | 2026-11-27 | `StageDef` (`data/stages.ts`) : le contenu du niveau (vagues, rushs, élites, boss, durée, sol, musiques) sort de `waves.ts`, qui garde les formes et les règles communes (sans fin, capacités des boss) ; le niveau est passé à `GameScene` puis à `SpawnSystem` (le donjon par défaut) ; boss reconnu par `type.boss` ; « invoque » devient un champ du boss prévu (`summons`) au lieu de « à partir du boss n° 1 » | Bloc A de la 0.4 (« ok reco »). 3 boss différents et 30 min = un autre contenu, pas un autre code. Sol et musiques dans le niveau dès maintenant : le 2e niveau (après la 1.0) n'aura qu'à les remplir. Le fond du menu garde le sol du donjon |
+| 2026-11-27 | `RunFlow` : la scène lui demande « est-ce fini ? » (`reachedVictory`, `playerDied`, `updateDying`) et lui confie l'écran de fin ; il ne connaît la partie que par 2 fonctions (`stats()` pour le bilan, `startEndless()`) | Bloc A de la 0.4. Les règles de fin de partie (une seule inscription, sans fin = victoire, partie de test jamais enregistrée) se testent sans faire tourner une partie. Pas de bus d'événements : un seul écouteur, comme décidé le 2026-11-22 |
 | 2026-11-27 | pixelfx (patch-gg, MIT) cloné dans `tools/vfx/pixelfx/`, ignoré par git et par ESLint ; rendu en sprite sheets par son propre outil (sans dépendance, format Aseprite comme Pixel Spells) | Demandé, pour les prochains effets. MIT : les effets rendus pourront aller dans `public/` (à créditer dans `LICENSES.md`), contrairement à Pixel Spells. Effets dessinés en vue de côté : ceux au sol seront à aplatir |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
