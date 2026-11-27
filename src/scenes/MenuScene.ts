@@ -56,6 +56,18 @@ export interface MenuSceneDeps {
 }
 
 /** Les écrans du menu. Un seul visible à la fois. */
+/** Touches 1 à 8 de l'écran de choix du perso, dans l'ordre de CHARACTERS. */
+const CHARACTER_KEYS = [
+  CONTROLS.choice1,
+  CONTROLS.choice2,
+  CONTROLS.choice3,
+  CONTROLS.choice4,
+  CONTROLS.choice5,
+  CONTROLS.choice6,
+  CONTROLS.choice7,
+  CONTROLS.choice8,
+] as const;
+
 export type MenuScreen = 'main' | 'characters' | 'options' | 'profile' | 'shop';
 
 /** Écran d'accueil, choix du perso, Options et Profil. Tout est en HTML : la scène lit les clics et les touches. */
@@ -165,15 +177,13 @@ export class MenuScene implements Scene {
       this.open('characters');
   }
 
-  /** Choix du perso : clic ou 1-2-3-4 ; un perso verrouillé ne se lance pas. Échap = retour. */
+  /** Choix du perso : clic ou 1 à 8 ; un perso verrouillé ne se lance pas. Échap = retour. */
   private updateCharacters(): void {
     const { input, characterOverlay, profile } = this.deps;
     let index = characterOverlay.takeChoice();
-    if (index === null) {
-      if (input.wasPressed(CONTROLS.choice1)) index = 0;
-      else if (input.wasPressed(CONTROLS.choice2)) index = 1;
-      else if (input.wasPressed(CONTROLS.choice3)) index = 2;
-      else if (input.wasPressed(CONTROLS.choice4)) index = 3;
+    for (let k = 0; index === null && k < CHARACTER_KEYS.length; k++) {
+      const keys = CHARACTER_KEYS[k];
+      if (keys && input.wasPressed(keys)) index = k;
     }
     const character = index === null ? undefined : CHARACTERS[index];
     if (character && isUnlocked(character, profile)) {

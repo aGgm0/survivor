@@ -68,6 +68,41 @@ export const CHARACTERS: readonly CharacterDef[] = [
     challenge: { kind: 'weaponKills', weaponId: WEAPONS.sword.id, count: 3000 },
     challengeText: '3 000 kills avec l’Épée (toutes parties confondues)',
   },
+  // 0.3.5 : un perso par arme du bloc C (validé le 2026-11-25, chiffres à ajuster en jouant).
+  {
+    id: 'archer',
+    name: 'Archère',
+    weapon: WEAPONS.bow,
+    challenge: { kind: 'weaponKills', weaponId: WEAPONS.bow.id, count: 3000 },
+    challengeText: '3 000 kills avec l’Arc (toutes parties confondues)',
+  },
+  {
+    id: 'berserker',
+    name: 'Berserker',
+    weapon: WEAPONS.throwingAxe,
+    challenge: {
+      kind: 'bossWithWeapon',
+      id: 'berserkerBoss',
+      bossIndex: 0, // boss de 5:00
+      weaponId: WEAPONS.throwingAxe.id,
+      minLevel: 5,
+    },
+    challengeText: 'Tuer le boss de 5:00 avec la Hache de lancer au niveau 5',
+  },
+  {
+    id: 'trapper',
+    name: 'Piégeuse',
+    weapon: WEAPONS.caltrops,
+    challenge: { kind: 'weaponKills', weaponId: WEAPONS.caltrops.id, count: 4000 },
+    challengeText: '4 000 kills avec les Chausse-trapes (toutes parties confondues)',
+  },
+  {
+    id: 'stormcaller',
+    name: 'Tempêtiste',
+    weapon: WEAPONS.chainLightning,
+    challenge: { kind: 'weaponKills', weaponId: WEAPONS.chainLightning.id, count: 5000 },
+    challengeText: '5 000 kills avec l’Éclair en chaîne (toutes parties confondues)',
+  },
 ];
 
 /** Perso par défaut (toujours débloqué). */

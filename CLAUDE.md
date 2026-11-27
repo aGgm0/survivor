@@ -243,6 +243,10 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 | Pyromancien | Aura ardente | 5 000 kills avec l'Aura ardente, cumulés sur toutes les parties |
 | Runiste | Orbes runiques | Tuer le boss de 9:00 en ayant les Orbes runiques au niveau 5 |
 | Lame-mage | Épée | 3 000 kills avec l'Épée, cumulés sur toutes les parties |
+| Archère (0.3.5) | Arc | 3 000 kills avec l'Arc, cumulés |
+| Berserker (0.3.5) | Hache de lancer | Tuer le boss de 5:00 en ayant la Hache de lancer au niveau 5 |
+| Piégeuse (0.3.5) | Chausse-trapes | 4 000 kills avec les Chausse-trapes, cumulés |
+| Tempêtiste (0.3.5) | Éclair en chaîne | 5 000 kills avec l'Éclair en chaîne, cumulés |
 
 `[LATER]` Stats propres à chaque perso : armure physique et magique, bonus de dégâts physiques et magiques, vitesse... (suppose de classer les armes et les ennemis en physique / magique).
 
@@ -327,7 +331,7 @@ Roadmap versionnée validée le 2026-11-18 (bilan d'architecture fait le même j
 | Niveaux | 1 (10 min) | 1 (30 min) |
 | Armes | 4 | 12 (au moins 8 comportements différents, autant de physiques que de magiques) |
 | Passifs | 9 | ~12 (dont la pénétration) |
-| Persos | 4 | 8, chacun avec ses stats et son ulti |
+| Persos | 4 (8 depuis la 0.3.5) | 8, chacun avec ses stats et son ulti |
 | Ennemis | 3 + 2 élites + 1 boss | 8 à 10 types (dont des blindés), plus d'élites, 3 boss (10:00, 20:00, 30:00) |
 | Méta | 4 persos, boutique, profil | + bestiaire, relances, ~30 déblocages |
 
@@ -477,11 +481,11 @@ Retours de jeu sur la 0.3.0 (2026-11-24 : 4 parties gagnées, en sans fin vers 1
 
 ### 0.3.5 — 4 nouveaux persos `[petite]`
 Demandé le 2026-11-25 : un perso par arme du bloc C, avant la refonte des effets visuels et la 0.4. Comme les 4 premiers (§ 5.9) : pour l'instant un perso = son arme de départ, débloqué par un défi ; leurs stats propres et leur ulti viennent en 0.5.
-- [ ] **Archer** (Arc), **perso de la Hache de lancer**, **perso des Chausse-trapes**, **perso de l'Éclair en chaîne** <!-- TODO: noms des 4 persos -->
-- [ ] Défi de déblocage de chacun, fait avec son arme ramassée en partie <!-- TODO: les 4 défis (pistes : kills cumulés avec l'arme, comme le Pyromancien et la Lame-mage) -->
-- [ ] Apparence : un héros du pack 0x72 chacun (`CHARACTER_SPRITES`), portrait sur sa carte <!-- TODO: quel sprite pour chacun -->
-- [ ] Écran de choix du perso à 8 cartes : aujourd'hui 4 cartes de 290 px côte à côte en 1280×720, il faudra 2 rangées ou des cartes plus petites
-- [ ] Profil, défis et sauvegarde : 4 persos de plus à lire et enregistrer (anciennes sauvegardes : verrouillés)
+- [x] 4 persos (validés le 2026-11-25, « ok reco », noms provisoires) : **Archère** (Arc, `elf_f`, 3 000 kills avec l'Arc), **Berserker** (Hache de lancer, `dwarf_m`, tuer le boss de 5:00 avec la Hache au niveau 5), **Piégeuse** (Chausse-trapes, `lizard_f`, 4 000 kills), **Tempêtiste** (Éclair en chaîne, `lizard_m`, 5 000 kills) ; défis faits des 2 sortes existantes (`data/characters.ts`), apparence dans `CHARACTER_SPRITES`
+- [x] Écran de choix à 8 cartes : 2 rangées de 4, carte en largeur (portrait à gauche, textes à droite, ~220 px de haut au lieu de ~390) ; touches 1 à 8 (`choice5` à `choice8`)
+- [x] Sauvegarde : rien à migrer (kills par arme et défis déjà dans le profil) ; une ancienne sauvegarde voit les 4 persos verrouillés
+- [x] Tests : défis et déblocages des 4 persos, une apparence différente par perso
+- [ ] Version 0.3.5 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.3.5`
 - **Finie quand :** 8 persos jouables, chacun débloqué par son défi ; l'écran de choix tient en 1280×720.
 
 ### 0.3.6 — Refonte des effets visuels `[moyenne]`
@@ -845,6 +849,7 @@ Format : date — décision — raison.
 | 2026-11-25 | Effets Pixel Spells pour l'Éclair (ricochets), l'Orage et les Chausse-trapes ; ronces en touffes basses réparties (thorn-wall + vine-snare) ; Golems : licence lue (ni redistribution ni modification) | Comparaison côte à côte sur la planche, « oui pour tout sauf le givre ». Ronces : un seul effet au centre restait « bizarre » ; des touffes sur tout le disque montrent la zone qui ralentit. Golems : sans modification permise, pas de version teintée (élites) ni repeinte |
 | 2026-11-25 | Chausse-trapes : grand pic final ×3,75 les dégâts de la zone (30 au niveau 1), une fois, 0,83 s avant la fin ; pas avec les mutations. Ronces : buissons seulement, sans le rond vert | Demandé : « le gros pic fait 30 de dégâts aux ennemis dedans, l'animation est plus cohérente ». En multiplicateur plutôt qu'en 30 fixes : il suit les niveaux et la Puissance comme le reste de l'arme (à repasser en fixe si ce n'était pas l'idée). Pas sur Mines ni Ronces : elles n'ont pas ce visuel |
 | 2026-11-25 | 4 nouveaux persos (un par arme du bloc C) en 0.3.5, avant la refonte des effets visuels (qui devient la 0.3.6) et la 0.4 ; stats et ultis restent en 0.5 | Demandé. Même principe que les 4 premiers (arme de départ + défi) : la 0.5 n'a plus qu'à leur donner leurs stats |
+| 2026-11-25 | 0.3.5 : Archère (`elf_f`, 3 000 kills d'Arc), Berserker (`dwarf_m`, boss de 5:00 avec la Hache niv 5), Piégeuse (`lizard_f`, 4 000 kills de Chausse-trapes), Tempêtiste (`lizard_m`, 5 000 kills d'Éclair) ; écran de choix en 2 rangées de 4 cartes en largeur | « ok reco ». Défis des 2 sortes existantes (rien de nouveau à coder) ; chiffres selon la facilité à tuer de l'arme (l'Éclair tue en masse, comme l'Aura). Héros 0x72 pas encore utilisés, même découpage d'atlas que les autres (portrait CSS sans retouche). Cartes en largeur : en colonne, 2 rangées faisaient ~800 px pour un écran de 720 |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

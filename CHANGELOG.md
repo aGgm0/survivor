@@ -6,6 +6,8 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 
 ### Ajouté
 
+- **4 nouveaux persos**, chacun avec une des nouvelles armes de départ : **Archère** (Arc), **Berserker** (Hache de lancer), **Piégeuse** (Chausse-trapes) et **Tempêtiste** (Éclair en chaîne). Ils se débloquent par un défi fait avec leur arme, affiché sur leur carte.
+- L'écran de choix du perso passe à 8 cartes, sur 2 rangées (touches 1 à 8).
 - **Sons des nouvelles armes** : grésillement électrique de l'Éclair en chaîne, tonnerre de l'Orage, sifflement de la Hache qui tourne, corde de l'Arc, pointes qui sortent de terre, impacts métalliques. Avant, elles reprenaient le « piou » du Trait arcanique.
 
 ### Modifié

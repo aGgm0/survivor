@@ -883,17 +883,53 @@ body {
 }
 
 /*
- * Cartes de perso : 4 côte à côte (le level up n'en a que 3). À 340 px elles faisaient 1 408 px
- * pour un écran de 1 280 : 4 × 290 + 3 × 16 = 1 208 px.
+ * Cartes de perso : 8 persos (0.3.5) en 2 rangées de 4 (4 × 290 + 3 × 16 = 1 208 px de large).
+ * En colonne, une carte faisait ~390 px de haut : 2 rangées ne tenaient pas en 720 px. Portrait à
+ * gauche, textes à droite : ~170 px de haut.
  */
-.character-card {
-  width: 290px;
+#character-cards {
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 1208px;
 }
 
-/* Nom sur une ligne : à 24 px, « 🔒 Pyromancien » ne tenait plus dans 290 px */
+.character-card {
+  width: 290px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  grid-template-rows: auto auto auto 1fr;
+  column-gap: 12px;
+  row-gap: 4px;
+  align-content: start;
+}
+
+.character-card .character-portrait {
+  grid-column: 1;
+  grid-row: 1 / 5;
+  margin: 0;
+}
+
+.character-card .choice-key,
+.character-card .choice-title,
+.character-card .choice-level,
+.character-card .choice-desc {
+  grid-column: 2;
+}
+
+/* Nom sur une ligne : « 🔒 Pyromancien » doit tenir à côté du portrait */
 .character-card .choice-title {
-  font-size: 20px;
+  font-size: 16px;
   white-space: nowrap;
+}
+
+.character-card .choice-level {
+  font-size: 12px;
+}
+
+.character-card .choice-desc {
+  font-size: 24px;
+  line-height: 0.85;
 }
 
 /* Carte de perso verrouillé : grisée, pas cliquable */

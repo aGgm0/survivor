@@ -35,8 +35,12 @@ export const CONTROLS = {
   choice1: ['Digit1', 'Numpad1'],
   choice2: ['Digit2', 'Numpad2'],
   choice3: ['Digit3', 'Numpad3'],
-  /** Écran de choix du perso seulement (le level up n'a que 3 cartes) */
+  /** Écran de choix du perso seulement (le level up n'a que 3 cartes) : 8 persos */
   choice4: ['Digit4', 'Numpad4'],
+  choice5: ['Digit5', 'Numpad5'],
+  choice6: ['Digit6', 'Numpad6'],
+  choice7: ['Digit7', 'Numpad7'],
+  choice8: ['Digit8', 'Numpad8'],
   /** debug : ajoute un paquet d'ennemis (test de perf) */
   debugSpawn: ['F4'],
   /** dev : menu de test */

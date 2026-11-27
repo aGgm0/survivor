@@ -83,6 +83,35 @@ export const CHARACTER_SPRITES: Readonly<
     frameTime: 0.1,
     portraitY: 100,
   },
+  // 0.3.5 : un perso par arme du bloc C, héros du pack pas encore utilisés.
+  archer: {
+    idle: 'elf_f_idle_anim',
+    run: 'elf_f_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 4,
+  },
+  berserker: {
+    idle: 'dwarf_m_idle_anim',
+    run: 'dwarf_m_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 292,
+  },
+  trapper: {
+    idle: 'lizard_f_idle_anim',
+    run: 'lizard_f_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 196,
+  },
+  stormcaller: {
+    idle: 'lizard_m_idle_anim',
+    run: 'lizard_m_run_anim',
+    scale: 2,
+    frameTime: 0.1,
+    portraitY: 228,
+  },
 };
 
 /** Silhouette blanche quand on prend un coup (joueur et ennemis) */
