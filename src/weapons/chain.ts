@@ -1,17 +1,19 @@
 // Chaîne (Éclair en chaîne) : frappe l'ennemi le plus proche, puis saute de proche en proche.
-// Mutations : Orage (des chaînes partent aussi d'ennemis au hasard) et Arc continu (plus de
-// sauts, presque sans perte de dégâts).
+// Mutations : Orage (la foudre tombe aussi au hasard et laisse des zones électriques) et Arc
+// continu (plus de sauts, très longs, la perte de dégâts dépend de la longueur du saut).
 
 import { clipFrameIndex } from '../core/EffectSheet';
 import { CHAIN_LOOK } from '../data/feel';
-import { CHAIN_FX } from '../data/sprites';
+import { CHAIN_FX, STORM_FIELD_FX } from '../data/sprites';
 import type { ChainWeaponDef } from '../data/weapons';
 import type { Enemy } from '../entities/Enemy';
 import type { Weapon } from '../entities/Weapon';
+import { MAX_ENEMY_RADIUS } from '../systems/CollisionSystem';
 import { damageEnemy } from '../systems/damage';
+import { GRID_STALENESS_MARGIN } from '../systems/ProjectileSystem';
 import { formatNumber } from '../ui/formatNumber';
 import { cooldownStat, scaledCooldown } from './shared';
-import type { WeaponBehavior, WeaponUpdateContext } from './WeaponBehavior';
+import type { WeaponBehavior, WeaponRenderContext, WeaponUpdateContext } from './WeaponBehavior';
 
 /** px : largeur de la foudre de l'Orage */
 const STRIKE_SIZE = 70;
@@ -21,6 +23,10 @@ const MAX_BOLTS = 64;
 const BOLT_STRIDE = 6;
 const FIRST = 0;
 const JUMP = 1;
+/** Zones électriques de l'Orage en même temps (au-delà, celle qui finit le plus tôt est remplacée) */
+const MAX_FIELDS = 24;
+/** Valeurs par zone dans `Weapon.fields` : x, y, début, fin (0 : place libre) */
+const FIELD_STRIDE = 4;
 
 /**
  * Ennemis déjà touchés par la décharge en cours (toutes ses chaînes) : une chaîne ne revient
@@ -128,9 +134,101 @@ function runChain(
     damageEnemy(weapon, target, damage, ctx.events, (tx - px) / d, (ty - py) / d);
     px = tx;
     py = ty;
-    damage *= 1 - weapon.falloff;
     target = nearestFree(ctx, px, py, weapon.jumpRange);
+    // Perte de dégâts du saut : fixe, plus une part qui grandit avec sa longueur (Arc continu).
+    if (target) {
+      const jump = Math.hypot(target.x - px, target.y - py);
+      damage *= Math.max(0, 1 - weapon.falloff - weapon.falloffPerPx * jump);
+    }
   }
+}
+
+/** Pose une zone électrique en (x, y) ; si tout est pris, remplace celle qui finit le plus tôt. */
+function placeField(weapon: Weapon, x: number, y: number, now: number, duration: number): void {
+  const f = weapon.fields;
+  if (!f) return;
+  let slot = 0;
+  let soonest = Infinity;
+  for (let i = 0; i < MAX_FIELDS; i++) {
+    const end = f[i * FIELD_STRIDE + 3] ?? 0;
+    if (end <= now) {
+      slot = i;
+      break;
+    }
+    if (end < soonest) {
+      soonest = end;
+      slot = i;
+    }
+  }
+  const o = slot * FIELD_STRIDE;
+  f[o] = x;
+  f[o + 1] = y;
+  f[o + 2] = now;
+  f[o + 3] = now + duration;
+}
+
+/**
+ * Zones électriques de l'Orage : frappent ce qui est dedans toutes les `field.tick` s. Horloge
+ * par ennemi à part (`nextFieldHitAt`) : des zones l'une sur l'autre ne frappent pas plus vite.
+ */
+function updateFields(weapon: Weapon, ctx: WeaponUpdateContext): void {
+  const f = weapon.fields;
+  const field = weapon.mutation?.randomStrikes?.field;
+  if (!f || !field) return;
+  const radius = field.radius * weapon.explosionRadius; // explosionRadius = Taille du joueur
+  const candidates = ctx.candidates;
+  for (let i = 0; i < MAX_FIELDS; i++) {
+    const o = i * FIELD_STRIDE;
+    if (ctx.now >= (f[o + 3] ?? 0)) continue;
+    const x = f[o] ?? 0;
+    const y = f[o + 1] ?? 0;
+    const count = ctx.collisions.queryNeighbors(
+      x,
+      y,
+      radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN,
+      candidates,
+    );
+    for (let k = 0; k < count; k++) {
+      const e = candidates[k];
+      if (!e?.active || ctx.now < e.nextFieldHitAt) continue;
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const touch = radius + e.type.radius;
+      if (dx * dx + dy * dy > touch * touch) continue;
+      e.nextFieldHitAt = ctx.now + field.tick;
+      const d = Math.hypot(dx, dy) || 1;
+      damageEnemy(weapon, e, weapon.damage * field.damageMult, ctx.events, dx / d, dy / d);
+    }
+  }
+}
+
+/** Une zone électrique : `storm-field` du pack en boucle ; secours : disque à la couleur de l'arme. */
+function renderField(
+  ctx: CanvasRenderingContext2D,
+  rc: WeaponRenderContext,
+  x: number,
+  y: number,
+  radius: number,
+  age: number,
+  left: number,
+  color: string,
+): void {
+  const fx = STORM_FIELD_FX;
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = alpha * fx.alpha * Math.min(1, left / fx.fadeOut);
+  const sheet = rc.effects?.[fx.effect];
+  if (sheet) {
+    const [x0, , x1] = sheet.clip.bounds;
+    const scale = (radius * 2 * fx.cover) / (x1 - x0 || 1);
+    sheet.drawAroundCenter(ctx, clipFrameIndex(sheet.clip, age * 1000), x, y, scale, scale);
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.globalAlpha *= 0.25;
+    ctx.fill();
+  }
+  ctx.globalAlpha = alpha;
 }
 
 export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
@@ -141,7 +239,10 @@ export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
     weapon.jumps = def.jumps;
     weapon.jumpRange = def.jumpRange;
     weapon.falloff = def.falloff;
+    weapon.falloffPerPx = 0;
+    weapon.explosionRadius = 1;
     weapon.bolts = new Float64Array(MAX_BOLTS * BOLT_STRIDE).fill(-Infinity);
+    weapon.fields = new Float64Array(MAX_FIELDS * FIELD_STRIDE);
   },
 
   levelBase(def, t) {
@@ -155,13 +256,16 @@ export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
     weapon.count = (m?.count ?? t.count) + (mods.extraCount ?? 0);
     weapon.range = def.range;
     weapon.jumps = t.jumps + (m?.jumpsAdd ?? 0);
-    // La Taille allonge les sauts.
-    weapon.jumpRange = def.jumpRange * (mods.sizeMult ?? 1);
+    // La Taille allonge les sauts (et agrandit les zones de l'Orage).
+    weapon.jumpRange = (m?.jumpRange ?? def.jumpRange) * (mods.sizeMult ?? 1);
     weapon.falloff = m?.falloff ?? def.falloff;
+    weapon.falloffPerPx = m?.falloffPerPx ?? 0;
+    weapon.explosionRadius = mods.sizeMult ?? 1;
     weapon.cooldown = scaledCooldown(def.cooldown, t.cooldownPct, m, mods);
   },
 
   update(weapon, _def, ctx) {
+    updateFields(weapon, ctx);
     weapon.cooldownTimer -= ctx.dt;
     if (weapon.cooldownTimer > 0) return;
     const { x, y } = ctx;
@@ -179,17 +283,36 @@ export const CHAIN_BEHAVIOR: WeaponBehavior<ChainWeaponDef> = {
       if (!start) break;
       runChain(weapon, ctx, start, x, y);
     }
-    // Orage : des chaînes partent aussi d'ennemis tirés au hasard autour du joueur.
+    // Orage : la foudre tombe aussi sur des ennemis tirés au hasard autour du joueur (pleins
+    // dégâts, sans chaîne), et laisse une zone électrique là où elle frappe.
     const storm = weapon.mutation?.randomStrikes;
     for (let s = 0; storm && s < storm.count; s++) {
-      const start = randomFree(ctx, x, y, storm.range);
-      if (!start) break;
-      // La foudre tombe du ciel sur la cible (effet du pack), puis la chaîne repart de là.
-      ctx.events.onEffect?.('strike', start.x, start.y, STRIKE_SIZE);
-      runChain(weapon, ctx, start, start.x, start.y);
+      const target = randomFree(ctx, x, y, storm.range);
+      if (!target) break;
+      if (hitCount < MAX_HITS) hit[hitCount++] = target;
+      ctx.events.onEffect?.('strike', target.x, target.y, STRIKE_SIZE);
+      placeField(weapon, target.x, target.y, ctx.now, storm.field.duration);
+      damageEnemy(weapon, target, weapon.damage, ctx.events, 0, 0);
     }
     weapon.cooldownTimer = weapon.cooldown;
     ctx.events.onFire?.(weapon);
+  },
+
+  /** Orage : zones électriques au sol (sous les ennemis), qui s'éteignent en fondu. */
+  renderGround(ctx, weapon, _def, rc) {
+    const f = weapon.fields;
+    const field = weapon.mutation?.randomStrikes?.field;
+    if (!f || !field) return;
+    const radius = field.radius * weapon.explosionRadius;
+    for (let i = 0; i < MAX_FIELDS; i++) {
+      const o = i * FIELD_STRIDE;
+      const left = (f[o + 3] ?? 0) - rc.time;
+      if (left <= 0) continue;
+      const x = f[o] ?? 0;
+      const y = f[o + 1] ?? 0;
+      if (!rc.isOnScreen(x, y, radius)) continue;
+      renderField(ctx, rc, x, y, radius, rc.time - (f[o + 2] ?? 0), left, weapon.color);
+    }
   },
 
   /**

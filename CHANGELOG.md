@@ -7,6 +7,8 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 ### Modifié
 
 - **Mines refaites** : une mine met 0,5 s à s'armer (elle saute derrière toi, dans la horde qui te suit), puis explose plus large (90 px) et plus fort (×5), avec une vraie boule de feu (pack Pixel Spells: Inferno) et un gros « boum », et **laisse des flammes au sol pendant 3 s** qui brûlent tout ce qui passe dedans. Les mines durent aussi 2 fois plus longtemps.
+- **Arc continu** : les sauts vont beaucoup plus loin (450 px), mais un long saut fait perdre plus de dégâts ; +2 sauts au lieu de +3.
+- **Orage** plus fort : 5 foudres par décharge au lieu de 2, et chacune laisse une zone électrique au sol pendant 1,5 s. Les foudres ne lancent plus de chaîne.
 - **Mort du perso** : à 0 PV, tout se fige un instant et ton perso rétrécit jusqu'à disparaître avant l'écran de fin.
 - Le mobilier cassable devient un **coffre**, qui s'ouvre quand tu le casses.
 - **Duplicateur** : il ajoute maintenant une zone de plus à chaque pose des Chausse-trapes, des Mines et du Champ de ronces.

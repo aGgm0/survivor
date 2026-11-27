@@ -112,11 +112,25 @@ export interface MutationDef {
   readonly jumpsAdd?: number;
   /** Chaîne : perte de dégâts à chaque saut, remplace celle de l'arme (0 = aucune perte) */
   readonly falloff?: number;
+  /** Chaîne : perte en plus par px de saut (Arc continu : un long saut coûte plus cher) */
+  readonly falloffPerPx?: number;
+  /** Chaîne : distance maximale d'un saut (px), remplace celle de l'arme */
+  readonly jumpRange?: number;
   /**
-   * Chaîne : en plus de la chaîne normale, `count` chaînes partent d'ennemis tirés au hasard à
-   * moins de `range` px du joueur (Orage)
+   * Chaîne : en plus de la chaîne normale, `count` foudres tombent sur des ennemis tirés au
+   * hasard à moins de `range` px du joueur (pleins dégâts, sans chaîne), et laissent chacune une
+   * zone électrique (`field` : rayon px, durée s, dégâts × `damageMult` toutes les `tick` s).
    */
-  readonly randomStrikes?: { readonly count: number; readonly range: number };
+  readonly randomStrikes?: {
+    readonly count: number;
+    readonly range: number;
+    readonly field: {
+      readonly radius: number;
+      readonly duration: number;
+      readonly damageMult: number;
+      readonly tick: number;
+    };
+  };
   /** Mêlée : multiplicateur de la portée du coup */
   readonly rangeMult?: number;
   /**
@@ -552,20 +566,31 @@ export const WEAPONS = {
         name: 'Orage',
         short: 'Or',
         description:
-          'Frappe aussi 2 ennemis au hasard autour de toi, chacun lance sa propre chaîne',
+          'La foudre frappe aussi 5 ennemis au hasard autour de toi et laisse une zone électrique au sol (1,5 s)',
         color: '#c9a0ff',
-        randomStrikes: { count: 2, range: 600 },
+        // 2026-11-27 (« pas assez bien ») : 2 → 5 foudres, qui ne lancent plus de chaîne (5 chaînes
+        // complètes auraient fait ~42 coups par décharge) mais laissent un champ électrique.
+        randomStrikes: {
+          count: 5,
+          range: 600,
+          field: { radius: 50, duration: 1.5, damageMult: 0.3, tick: 0.5 },
+        },
       },
       {
         id: 'unbrokenArc',
         name: 'Arc continu',
         short: 'Ac',
-        description: '+3 sauts, et presque plus de perte entre deux sauts (−8 %)',
+        description:
+          '+2 sauts qui vont jusqu’à 450 px ; perte de 6 % par saut, +1 % tous les 20 px de saut',
         color: '#ffffff',
         // 0.3.1 : +4 sauts sans perte → +3 sauts à −8 %. 1re arme du damage meter dans 3 parties
-        // sur 4 (33 à 48 %). Chaîne complète au niveau 5 : 11 coups pleins → ~7 coups.
-        jumpsAdd: 3,
-        falloff: 0.08,
+        // sur 4 (33 à 48 %). 2026-11-27 (toujours trop fort) : idée de l'utilisateur, plus de
+        // limite de saut mais une perte qui dépend de la distance ; +3 → +2 sauts. Horde serrée
+        // (30 px) : −7,5 % ; 150 px : −13,5 % ; 400 px : −26 %.
+        jumpsAdd: 2,
+        jumpRange: 450,
+        falloff: 0.06,
+        falloffPerPx: 0.01 / 20,
       },
     ],
   },

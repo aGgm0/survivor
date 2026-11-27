@@ -61,27 +61,48 @@ describe('Éclair en chaîne', () => {
     expect(w.cooldownTimer).toBe(0);
   });
 
-  it('Arc continu : +3 sauts, perte réduite ; Orage : des chaînes en plus, sans retoucher un ennemi', () => {
+  it('Arc continu : +2 sauts jusqu’à 450 px, perte de 6 % + 1 % tous les 20 px de saut', () => {
     const arc = new Weapon(WEAPONS.chainLightning);
     arc.level = 5;
     arc.mutation = WEAPONS.chainLightning.mutations[1];
     arc.recompute(NO_MODS);
-    expect(arc.jumps).toBe(3 + 1 + 2 + 3);
-    expect(arc.falloff).toBe(0.08);
-    const a = setup(20, 60);
-    a.system.update(1 / 60, [arc], 0, 0, 0);
-    expect(a.hits).toHaveLength(arc.jumps + 1);
-    // Chaque saut perd un peu : le dernier coup est plus faible que le premier
-    expect(a.hits.at(-1) ?? 0).toBeLessThan(a.hits[0] ?? 0);
+    expect(arc.jumps).toBe(3 + 1 + 2 + 2);
+    // Ennemis espacés de 200 px : hors de portée sans mutation (150), atteints par l'Arc continu
+    const far = setup(4, 200);
+    far.system.update(1 / 60, [arc], 0, 0, 0);
+    expect(far.hits).toHaveLength(4);
+    // Perte d'un saut de 200 px : 6 % + 10 % = 16 %
+    const d = arc.damage;
+    expect(far.hits).toEqual([d, d * 0.84, d * 0.84 ** 2, d * 0.84 ** 3].map((x) => Math.ceil(x)));
+    // Horde serrée (40 px) : perte de 8 % seulement par saut
+    arc.cooldownTimer = 0;
+    const near = setup(20, 40);
+    near.system.update(1 / 60, [arc], 0, 0, 0);
+    expect(near.hits).toHaveLength(arc.jumps + 1);
+    expect(near.hits[1]).toBe(Math.ceil(d * 0.92));
+  });
 
+  it('Orage : 5 foudres sans chaîne en plus de la chaîne, jamais deux fois le même ennemi', () => {
     const storm = new Weapon(WEAPONS.chainLightning);
     storm.mutation = WEAPONS.chainLightning.mutations[0];
     storm.recompute(NO_MODS);
     const s = setup(30, 60);
     s.system.update(1 / 60, [storm], 0, 0, 0);
-    // 3 chaînes de 4 coups au plus, jamais deux fois le même ennemi
-    expect(s.hits.length).toBeGreaterThan(4);
-    expect(s.hits.length).toBeLessThanOrEqual(12);
+    // chaîne normale (1 + 3 sauts) + 5 foudres à pleins dégâts
+    expect(s.hits).toHaveLength(4 + 5);
+    expect(s.hits.slice(4)).toEqual(Array(5).fill(Math.ceil(storm.damage)));
     expect(s.list.filter((e) => e.hp < 1000).length).toBe(s.hits.length);
+  });
+
+  it('Orage : chaque foudre laisse une zone qui frappe toutes les 0,5 s pendant 1,5 s', () => {
+    const storm = new Weapon(WEAPONS.chainLightning);
+    storm.mutation = WEAPONS.chainLightning.mutations[0];
+    storm.recompute(NO_MODS);
+    // Un ennemi pour la chaîne (100 px), un autre loin d'elle (450 px) : la foudre tombe sur lui.
+    const s = setup(2, 350);
+    for (let t = 0; t < 1.25; t += 1 / 60) s.system.update(1 / 60, [storm], 0, 0, t);
+    // chaîne, foudre, puis 3 coups de zone (≈ 0, 0,5 et 1 s) avant la décharge suivante (1,3 s)
+    const d = storm.damage;
+    expect(s.hits).toEqual([d, d, d * 0.3, d * 0.3, d * 0.3].map((x) => Math.ceil(x)));
   });
 });

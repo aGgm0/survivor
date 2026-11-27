@@ -68,6 +68,8 @@ export class Enemy implements Poolable {
   nextAuraHitAt = 0;
   /** Zones au sol (Chausse-trapes) : temps de partie du prochain coup possible (horloge à part) */
   nextZoneHitAt = 0;
+  /** Zones électriques de l'Orage : temps de partie du prochain coup possible (horloge à part) */
+  nextFieldHitAt = 0;
 
   // Effets d'état (voir systems/status.ts). Chacun a une date de fin en temps de partie.
   /** Fraction de vitesse retirée (0,3 = 30 % plus lent) tant que `now < slowUntil` */
@@ -128,6 +130,7 @@ export class Enemy implements Poolable {
     this.orbitHitAt.fill(0);
     this.nextAuraHitAt = 0;
     this.nextZoneHitAt = 0;
+    this.nextFieldHitAt = 0;
     this.slowAmount = 0;
     this.slowUntil = 0;
     this.poisonDps = 0;

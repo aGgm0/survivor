@@ -86,6 +86,8 @@ export class Weapon {
   jumps = 0;
   jumpRange = 0;
   falloff = 0;
+  /** Chaîne : perte en plus par px de saut (Arc continu) */
+  falloffPerPx = 0;
   /**
    * Chaîne : segments d'éclairs récents, pour le dessin (x1, y1, x2, y2, temps de partie).
    * Tableau fixe créé une fois par l'arme (null pour les autres types) : pas d'allocation en jeu.
@@ -102,6 +104,8 @@ export class Weapon {
   duration = 0;
   /** Zone : zones posées (voir src/weapons/zone.ts), créé une fois par l'arme ; null sinon */
   zones: Float64Array | null = null;
+  /** Chaîne (Orage) : zones électriques au sol (voir src/weapons/chain.ts) ; null sinon */
+  fields: Float64Array | null = null;
   /** Boomerang : ids des ennemis déjà touchés par chaque arme en vol, pendant l'aller ou le retour */
   flightHits: Int32Array | null = null;
   /** Mêlée : coups du combo en cours qui restent à porter, et quand porter le prochain */

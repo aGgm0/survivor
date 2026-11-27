@@ -267,6 +267,7 @@ export const EFFECT_DIRS = {
   nova: `${SPELLS}flame-nova/`, // Inferno/Fire/FlameNova ; absent : anneau de braises
   thornWall: `${PVFX}thorn-wall/`, // Champ de ronces
   groundFlames: `${PVFX}ground-flames/`, // flammes laissées par une mine (2026-11-27)
+  stormField: `${PVFX}storm-field/`, // zone électrique de l'Orage (2026-11-27)
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -377,6 +378,17 @@ export const CHEST_OPEN = {
   linger: 0.5,
   fadeOut: 0.25,
 } as const;
+
+/**
+ * Zone électrique laissée par une foudre de l'Orage : `storm-field` en boucle, sa largeur
+ * visible = `cover` × le diamètre de la zone ; s'éteint en fondu pendant `fadeOut` s.
+ */
+export const STORM_FIELD_FX = {
+  effect: 'stormField',
+  cover: 1.1,
+  alpha: 0.85,
+  fadeOut: 0.3,
+} as const satisfies { effect: EffectName; [key: string]: unknown };
 
 /** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
 export const EXPLOSION_FX = {
