@@ -177,7 +177,7 @@ export class WorldRenderer {
     barMidY: number,
   ): void {
     const icons = this.deps.resistIcons;
-    const resistances = e.type.resistances;
+    const resistances = e.resistances;
     if (!icons || !resistances) return;
     const { size, gap } = HP_BARS.resistIcon;
     let x = barLeft - gap - size;

@@ -115,6 +115,11 @@ describe('SpawnSystem — vagues', () => {
     // Boss de 9:00 : annonce de charge plus courte, charge calculée sur une vitesse à part.
     expect(bosses.map((b) => b.chargeWindup)).toEqual([0, 0.5]);
     expect(bosses.map((b) => b.dashSpeedMult)).toEqual([0, 1.2]);
+    // Boss de 9:00 : armure 60 / 60 ; celui de 5:00 garde celle du type (30 / 30).
+    expect(bosses.map((b) => b.resistances)).toEqual([
+      { physical: 30, magical: 30 },
+      { physical: 60, magical: 60 },
+    ]);
   });
 
   it('la fin de partie envoie surtout des petits, de plus en plus vite', () => {

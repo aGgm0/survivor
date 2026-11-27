@@ -153,3 +153,19 @@ describe('Chausse-trapes', () => {
     expect(slowFactor(elite.list[0]!, 0.05)).toBe(1);
   });
 });
+
+describe('Mines : les flammes ne sont pas effacées par les nouvelles mines', () => {
+  it('avec beaucoup de mines (Duplicateur), une flamme brûle ses 3 s en entier', () => {
+    // Un ennemi sur la 1re mine (posée en 0, 0) : elle explose et laisse des flammes ; le joueur
+    // reste loin ensuite et pose sans arrêt des mines là où il n'y a personne.
+    const { list, hits, run } = setup([[0, 0]]);
+    const w = new Weapon(WEAPONS.caltrops);
+    w.mutation = WEAPONS.caltrops.mutations[0];
+    w.recompute({ ...NO_MODS, extraCount: 3, cooldownMult: 0.1 });
+    run(w, 0, 0.6, 0); // 1re pose sous l'ennemi : explosion à 0,5 s
+    const afterBlast = hits.get(list[0]!) ?? 0;
+    run(w, 0.6, 2.8, 5000); // des dizaines de mines posées loin : toutes les places se remplissent
+    // Flammes de 3 s, une brûlure / 0,5 s : ~5 brûlures de plus pendant ces 2,8 s
+    expect((hits.get(list[0]!) ?? 0) - afterBlast).toBeGreaterThanOrEqual(5);
+  });
+});

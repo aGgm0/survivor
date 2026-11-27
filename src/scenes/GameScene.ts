@@ -826,7 +826,7 @@ export class GameScene implements Scene, Build {
   private renderBossHud(): void {
     for (const e of this.enemies.items) {
       if (e.active && e.type === BOSS_TYPE) {
-        this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp, e.type.resistances);
+        this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp, e.resistances);
         return;
       }
     }

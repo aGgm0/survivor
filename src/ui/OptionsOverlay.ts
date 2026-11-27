@@ -45,7 +45,7 @@ export class OptionsOverlay {
         fullscreen.toggle();
       });
       const text = document.createElement('span');
-      text.textContent = 'Plein écran (F)';
+      text.textContent = 'Plein écran';
       row.append(box, text);
       listEl.append(row);
       this.fullscreenBox = box;

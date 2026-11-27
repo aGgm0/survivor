@@ -11,7 +11,7 @@ import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
 import { choiceKey } from '../src/systems/upgrades';
 import { PASSIVES } from '../src/data/upgrades';
-import { BOSS_ABILITIES, BOSS_TYPE } from '../src/data/waves';
+import { BOSS_ABILITIES, BOSS_SPAWNS, BOSS_TYPE } from '../src/data/waves';
 import { Weapon } from '../src/entities/Weapon';
 import { fakeCanvasContext } from '../sim/fakeCanvas';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
@@ -1095,7 +1095,8 @@ describe('GameScene — rendu', () => {
     scene.render(ctx, 1);
     expect(drawn).toContain(physical);
     expect(drawn).not.toContain(magical);
-    expect(bossResist).toEqual(BOSS_TYPE.resistances);
+    // Boss du menu de test = le dernier boss prévu (9:00), avec ses propres résistances.
+    expect(bossResist).toEqual(BOSS_SPAWNS[BOSS_SPAWNS.length - 1]?.resistances);
   });
 
   it('dessine une partie chargée sans erreur (mutations n° 2)', () => {

@@ -91,7 +91,8 @@ export class ProjectileSystem {
   private impact(p: Projectile): void {
     const def = p.source?.def;
     if (def?.kind !== 'projectile' || !def.impactEffect) return;
-    this.events.onEffect?.(def.impactEffect, p.x, p.y, IMPACT_SIZE, Math.atan2(p.vy, p.vx));
+    const size = IMPACT_SIZE * (p.source?.mutation?.lookScale ?? 1);
+    this.events.onEffect?.(def.impactEffect, p.x, p.y, size, Math.atan2(p.vy, p.vx));
   }
 
   /** Explosion au point d'impact : blesse tous les ennemis proches, sauf celui déjà touché. */

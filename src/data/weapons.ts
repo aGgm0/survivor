@@ -108,6 +108,8 @@ export interface MutationDef {
   };
   /** Sprite du pack à la place de celui de l'arme (Hache du bourreau : la grande hache double) */
   readonly sprite?: string;
+  /** Projectile : agrandissement du dessin seulement (flèche, impact), la hitbox ne change pas */
+  readonly lookScale?: number;
   /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
   readonly jumpsAdd?: number;
   /** Chaîne : perte de dégâts à chaque saut, remplace celle de l'arme (0 = aucune perte) */
@@ -404,6 +406,8 @@ export const WEAPONS = {
         damageMult: 1.6,
         knockbackMult: 2,
         penetration: 40,
+        // Retour de jeu (2026-11-27) : « vraiment trop petite ». Dessin seulement.
+        lookScale: 2,
       },
       {
         id: 'volley',

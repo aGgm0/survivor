@@ -325,4 +325,5 @@ export function armBoss(boss: Enemy, now: number, canSummon: boolean, rate: numb
 function applyBossSpawn(enemy: Enemy, def: BossSpawn): void {
   enemy.chargeWindup = def.chargeWindup ?? 0;
   enemy.dashSpeedMult = def.dashSpeedMult ?? 0;
+  enemy.resistancesOverride = def.resistances;
 }

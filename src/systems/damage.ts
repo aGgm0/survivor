@@ -50,7 +50,7 @@ export function damageEnemy(
   kind: HitKind = 'direct',
 ): void {
   // Résistance de l'ennemi au type de l'arme, moins la pénétration de l'arme.
-  const resistance = enemy.type.resistances?.[source.damageType] ?? 0;
+  const resistance = enemy.resistances?.[source.damageType] ?? 0;
   const reduction = resistance > 0 ? resistReduction(resistance, source.penetration) : 0;
   amount *= 1 - reduction;
   // Arrondi à l'entier supérieur : un petit bonus en % (Puissance, boutique) compte toujours.

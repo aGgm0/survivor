@@ -1,4 +1,4 @@
-import { ENEMY_TYPES, type EnemyType } from './enemies';
+import { ENEMY_TYPES, type EnemyType, type Resistances } from './enemies';
 
 // Vagues (voir CLAUDE.md § 5.7) : par tranche de temps, quels ennemis, à quel rythme, quels PV.
 // Remplacent le spawn temporaire des phases 2 et 3.
@@ -142,6 +142,8 @@ export interface BossSpawn {
    * marche vite sans que sa charge traverse tout l'écran (charge = 5 × cette vitesse).
    */
   readonly dashSpeedMult?: number;
+  /** Résistances à la place de celles du type (absent : celles du boss, 30 / 30) */
+  readonly resistances?: Resistances;
 }
 
 /**
@@ -154,7 +156,15 @@ export const BOSS_SPAWNS: readonly BossSpawn[] = [
   { time: 300, hpMult: 3, speedMult: 1 },
   // 9:00 (2026-11-21, « il faut de la pression ») : marche ×1,2 → ×2 (140 px/s, toi 200),
   // annonce de la charge 0,8 → 0,5 s, charge gardée à ~295 px (calculée sur l'ancienne vitesse).
-  { time: 540, hpMult: 9, speedMult: 2, chargeWindup: 0.5, dashSpeedMult: 1.2 },
+  // Armure 30 / 30 → 60 / 60 (2026-11-27, demandé) : −38 % au lieu de −23 % sans pénétration.
+  {
+    time: 540,
+    hpMult: 9,
+    speedMult: 2,
+    chargeWindup: 0.5,
+    dashSpeedMult: 1.2,
+    resistances: { physical: 60, magical: 60 },
+  },
 ];
 export const BOSS_TYPE = ENEMY_TYPES.boss;
 

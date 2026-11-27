@@ -56,7 +56,8 @@ function renderFlights(
   flight: EffectSheet,
 ): void {
   const items = rc.projectiles.items;
-  const reach = flight.clip.width * ARROW_FLIGHT_FX.scale;
+  const scale = ARROW_FLIGHT_FX.scale * (weapon.mutation?.lookScale ?? 1);
+  const reach = flight.clip.width * scale;
   for (let i = 0; i < items.length; i++) {
     const p = items[i];
     if (!p?.active || p.source !== weapon) continue;
@@ -64,7 +65,7 @@ function renderFlights(
     const y = p.renderY(rc.alpha);
     if (!rc.isOnScreen(x, y, reach)) continue;
     const index = clipFrameIndex(flight.clip, (rc.time + i * 0.07) * 1000);
-    flight.draw(ctx, index, x, y, ARROW_FLIGHT_FX.scale, Math.atan2(p.vy, p.vx));
+    flight.draw(ctx, index, x, y, scale, Math.atan2(p.vy, p.vx));
   }
 }
 
@@ -77,7 +78,8 @@ function renderArrows(
   frame: SpriteFrame,
 ): void {
   const items = rc.projectiles.items;
-  const { scale, rotation } = ARROW_SPRITE;
+  const { rotation } = ARROW_SPRITE;
+  const scale = ARROW_SPRITE.scale * (weapon.mutation?.lookScale ?? 1);
   const pivot = frame.w / 2;
   for (let i = 0; i < items.length; i++) {
     const p = items[i];

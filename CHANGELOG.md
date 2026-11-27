@@ -2,7 +2,9 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
-## [Non publié]
+## [0.3.7] — 2026-11-27
+
+Retours de jeu sur la 0.3.6 : Profil plus complet (détail des mutations), Boutique avec icônes, nombres lisibles, boss de 9:00 plus résistant et correction des flammes des Mines.
 
 ### Ajouté
 
@@ -10,8 +12,15 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 
 ### Modifié
 
+- Plus aucune touche écrite à l'écran (« Retour (Échap) », « Rejouer (R) », touches 1-2-3 des cartes…) : les raccourcis marchent toujours.
+- **Boss de 9:00** plus résistant : 60 d'armure physique et de résistance magique (30 avant). Les boss du sans fin et du menu de test le suivent.
+- **Flèche lourde** dessinée 2 fois plus grande (la zone touchée ne change pas).
 - **Boutique** refaite : une icône par bonus, des crans pour les rangs achetés, et l'écran tient en entier.
 - Les grands nombres sont espacés partout (1 000 au lieu de 1000) : Profil, écran de fin, HUD, Boutique, défis des persos, nombres de dégâts.
+
+### Corrigé
+
+- Les flammes des Mines disparaissaient d'un coup quand beaucoup de mines étaient posées (avec le Duplicateur) : une nouvelle mine prenait leur place.
 
 ## [0.3.6] — 2026-11-27
 

@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.6 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.7 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -191,7 +191,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 | Basique | 23 | 88 | 5 | 1 | Fonce sur le joueur (2 coups de Trait arcanique). 50 % de chances de lâcher une **gemme verte** qui vaut ×2 (`bonusGem`). 4 % de lâcher 1 pièce d'or |
 | Rapide | 5 | 135 | 3 | 1 | Fonce, fragile. 4 % de lâcher 1 pièce d'or |
 | Tank | 90 | 72 | 10 | 5 | Résistant, presque aussi rapide qu'un basique. 15 % de lâcher 1 pièce d'or |
-| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×2 = 140 px/s**) ; rayon 48 px, barre de PV, aucun recul, **insensible au ralentissement** (`BOSS_SPAWNS` dans waves.ts) |
+| Boss | 1000 | 70 | 20 | 50 | Apparaît à 5:00 (**×3 PV = 3000**) et 9:00 (**×9 PV = 9000, vitesse ×2 = 140 px/s, armure 60 / 60**) ; rayon 48 px, barre de PV, aucun recul, **insensible au ralentissement** (`BOSS_SPAWNS` dans waves.ts) |
 
 **Mini-boss (élites)** : anneau doré pulsant, barre de PV, recul 75 % plus faible que leur version normale (`knockbackFactor` 0,375 et 0,25), **insensibles au ralentissement**, +10 or, XP ×20 (`ELITE_SPAWNS` dans waves.ts) :
 
@@ -205,7 +205,7 @@ Détail des niveaux de chaque arme : `src/data/weapons.ts`. **Tous les dégâts 
 - **Invocation** (boss de 9:00 et du sans fin) : toutes les 10 s, anneau de braises violettes qui se resserre pendant 1 s sur le cercle d'apparition, puis 5 basiques et 1 basique élite autour du boss.
 - Boss du sans fin : délais ×0,9 à chaque nouveau boss.
 
-**Résistances** (0.3, physique / magique) : basique 10 / 10 (−9 %), rapide 0 / 0, tank 0 / 50 (−33 % contre la magie : l'Épée est l'arme anti-tank), rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30.
+**Résistances** (0.3, physique / magique) : basique 10 / 10 (−9 %), rapide 0 / 0, tank 0 / 50 (−33 % contre la magie : l'Épée est l'arme anti-tank), rapide élite 0 / 40, basique élite 50 / 0, boss 30 / 30 (**60 / 60 pour le boss de 9:00** et ceux du sans fin, `resistances` de `BOSS_SPAWNS`).
 
 Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté à plus de 1,35 × ce cercle (≈ 1 080 px) est replacé sur le cercle **à un angle au hasard** (boss et élites : pile en face du joueur).
 
@@ -511,6 +511,12 @@ Demandée le 2026-11-24 : revoir les effets qui en ont besoin, pour qu'on lise l
 - [x] **Page des sprites** (2026-11-27) : `tools/assets-preview.html` montre les 185 sprites du jeu (pack 0x72, tank démon, atlas fx), par catégorie, animés, avec ceux utilisés en jeu marqués
 - [x] Version 0.3.6 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.6-itch.zip` testé sur itch, tag `v0.3.6` poussé (2026-11-27)
 - **Finie quand :** chaque effet refait montre sa zone d'action d'un coup d'œil, sans cacher les ennemis.
+
+### 0.3.7 — Retours de la 0.3.6 `[petite]`
+- [x] Nombres espacés partout (1 000), Boutique avec icônes et crans, détail des mutations dans le Profil (avant / après la mutation)
+- [x] Boss de 9:00 : armure 60 / 60 ; Flèche lourde dessinée ×2 ; bug des flammes des Mines effacées par les nouvelles mines
+- [x] **Plus aucune touche écrite à l'écran** (demandé le 2026-11-27) : boutons, cartes de level up et de perso, aides ; les raccourcis clavier marchent toujours
+- [ ] Version 0.3.7 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.7-itch.zip` (2026-11-27) ; reste : zip testé sur itch, tag `v0.3.7`
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
 But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début de la version (comme pour la 0.3).
@@ -863,6 +869,8 @@ Format : date — décision — raison.
 | 2026-11-25 | Fournaise : Flame Nova du pack Pixel Spells: Inferno à la place de l'anneau de braises (gardé en secours) ; pack converti une fois par script vers le format PVFX plutôt qu'un 2e lecteur dans le jeu ; image 8 (et pas 9, la plus grande) à la portée de l'onde ; ellipse à moitié arrondie | Choix de l'utilisateur (pack téléchargé). L'image 9 n'est plus qu'une couronne de petites flammes, perdue dans les gemmes et la horde. Ellipse : le pack dessine en perspective, la zone touchée est un cercle ; tout arrondir étirerait trop les flammes (réglable : `roundness`) |
 | 2026-11-25 | Effets Pixel Spells pour l'Éclair (ricochets), l'Orage et les Chausse-trapes ; ronces en touffes basses réparties (thorn-wall + vine-snare) ; Golems : licence lue (ni redistribution ni modification) | Comparaison côte à côte sur la planche, « oui pour tout sauf le givre ». Ronces : un seul effet au centre restait « bizarre » ; des touffes sur tout le disque montrent la zone qui ralentit. Golems : sans modification permise, pas de version teintée (élites) ni repeinte |
 | 2026-11-25 | Chausse-trapes : grand pic final ×3,75 les dégâts de la zone (30 au niveau 1), une fois, 0,83 s avant la fin ; pas avec les mutations. Ronces : buissons seulement, sans le rond vert | Demandé : « le gros pic fait 30 de dégâts aux ennemis dedans, l'animation est plus cohérente ». En multiplicateur plutôt qu'en 30 fixes : il suit les niveaux et la Puissance comme le reste de l'arme (à repasser en fixe si ce n'était pas l'idée). Pas sur Mines ni Ronces : elles n'ont pas ce visuel |
+| 2026-11-27 | Aucun raccourci clavier écrit à l'écran (« (Échap) », « (R) », touches 1-2-3 des cartes, aides « Clic ou touches… ») ; les raccourcis restent actifs | Demandé avant la sortie de la 0.3.7. À revoir dans la passe UX de la 0.7 (prévue : « mêmes boutons et raccourcis affichés partout ») : peut-être une page des touches dans les Options |
+| 2026-11-27 | Boss de 9:00 : armure 30 / 30 → 60 / 60 (`resistances` par boss dans `BOSS_SPAWNS`, `Enemy.resistancesOverride`) ; zones des Chausse-trapes 24 → 48 places, une nouvelle mine remplace une mine posée avant des flammes ; Flèche lourde dessinée ×2 (`lookScale`, hitbox inchangée) | Demandé. Résistances par boss plutôt qu'un 2e type de boss : tout le code reconnaît le boss à son type. Bug des flammes : avec le Duplicateur (5 mines / 2 s pendant 12 s), les 24 places étaient pleines et la place qui finissait le plus tôt, souvent des flammes, était reprise |
 | 2026-11-27 | Profil : clic sur une arme = détail par variante (sans mutation, chaque mutation : parties, kills, dégâts, dégâts / partie) ; `variants` dans les stats d'arme du profil, `mutation` dans le bilan | « ok reco ». Les parties déjà jouées n'avaient pas leur mutation enregistrée : le détail commence vide (les totaux ne changent pas), plutôt que de deviner. Échap ferme d'abord le détail, puis l'écran. Ce qui est fait avant la mutation compte « sans mutation » et seulement le reste pour la mutation (l'arme note dégâts et kills au moment où elle mute : `setMutation`) ; une partie compte dans chaque variante où l'arme a servi |
 | 2026-11-27 | Boutique : icône par bonus (celle du passif correspondant ; Sagesse = livre bleu 101), crans des rangs, lignes sans cadre sombre ; nombres espacés partout (espace insécable entre les milliers) | Demandé. Icônes reprises des passifs : on comprend d'un coup d'œil que la Vitalité de départ fait la même chose que la Vitalité. Le cadre par ligne faisait 96 px de haut : l'écran dépassait de 720 px. Espace insécable : un nombre n'est jamais coupé en fin de ligne |
 | 2026-11-27 | Icônes : 7 changées (hache de lancer 1464, ronces 251, givre 788, haches jumelles 1467, bourreau 1547, orbes géants 830, tempête d'orbes 826) | Choix de l'utilisateur parmi les propositions. Règle suivie : une mutation se reconnaît à sa forme, pas seulement à sa couleur (les deux mutations des Orbes, l'Aura de givre et la Fournaise avaient la même forme) |

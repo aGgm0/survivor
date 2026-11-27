@@ -18,7 +18,9 @@ import type { WeaponBehavior, WeaponRenderContext, WeaponUpdateContext } from '.
 /** px : largeur des étincelles d'acier sur un ennemi touché */
 const CLANG_SIZE = 26;
 /** Zones posées au plus pour une arme (au-delà, la plus ancienne est remplacée) */
-const MAX_ZONES = 24;
+// 24 → 48 (2026-11-27) : avec le Duplicateur, 5 mines toutes les 2 s qui durent 12 s, plus leurs
+// flammes, ne tenaient pas dans 24 places : les nouvelles mines effaçaient les flammes.
+const MAX_ZONES = 48;
 /** px : distance au joueur des zones en plus d'une même pose (× leur rayon) */
 const EXTRA_ZONE_DISTANCE = 1.6;
 /** Écart entre deux tuiles de pointes (× leur taille) : un peu serrées, elles se chevauchent */
@@ -37,24 +39,37 @@ const STRIDE = 6;
 const POSED = 1;
 const BURNING = 2;
 
-/** Pose une zone en (x, y) ; si tout est pris, remplace celle qui finit le plus tôt. */
+/**
+ * Pose une zone en (x, y). Si tout est pris, remplace la zone posée qui finit le plus tôt, et
+ * seulement s'il n'y en a aucune, des flammes : sinon une nouvelle mine effaçait des flammes
+ * encore en train de brûler (bug « les flammes disparaissent d'un coup »).
+ */
 function place(weapon: Weapon, x: number, y: number, now: number): void {
   const z = weapon.zones;
   if (!z) return;
-  let slot = 0;
+  let slot = -1;
   let soonest = Infinity;
+  let soonestFire = -1;
+  let soonestFireEnd = Infinity;
   for (let i = 0; i < MAX_ZONES; i++) {
     const o = i * STRIDE;
-    if (z[o + ACTIVE] === 0) {
+    const state = z[o + ACTIVE];
+    if (state === 0) {
       slot = i;
       break;
     }
     const end = z[o + EXPIRES] ?? 0;
-    if (end < soonest) {
+    if (state === BURNING) {
+      if (end < soonestFireEnd) {
+        soonestFireEnd = end;
+        soonestFire = i;
+      }
+    } else if (end < soonest) {
       soonest = end;
       slot = i;
     }
   }
+  if (slot < 0) slot = Math.max(0, soonestFire);
   const o = slot * STRIDE;
   z[o + ACTIVE] = POSED;
   z[o + X] = x;

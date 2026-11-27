@@ -1,6 +1,6 @@
 import { lerp } from '../core/math';
 import type { Poolable } from '../core/Pool';
-import { ENEMY_TYPES, type EnemyType } from '../data/enemies';
+import { ENEMY_TYPES, type EnemyType, type Resistances } from '../data/enemies';
 import { MAX_ORBS } from '../data/weapons';
 import type { Weapon } from './Weapon';
 
@@ -70,6 +70,13 @@ export class Enemy implements Poolable {
   nextZoneHitAt = 0;
   /** Zones électriques de l'Orage : temps de partie du prochain coup possible (horloge à part) */
   nextFieldHitAt = 0;
+  /** Résistances propres à ce boss (BossSpawn), à la place de celles du type ; undefined sinon */
+  resistancesOverride: Resistances | undefined = undefined;
+
+  /** Résistances de cet ennemi : celles de son type, sauf un boss qui a les siennes */
+  get resistances(): Resistances | undefined {
+    return this.resistancesOverride ?? this.type.resistances;
+  }
 
   // Effets d'état (voir systems/status.ts). Chacun a une date de fin en temps de partie.
   /** Fraction de vitesse retirée (0,3 = 30 % plus lent) tant que `now < slowUntil` */
@@ -112,6 +119,7 @@ export class Enemy implements Poolable {
     this.dashSpeedMult = 0;
     this.waveHit = -1;
     this.type = type;
+    this.resistancesOverride = undefined;
     this.bossIndex = -1;
     this.chargeState = 'none';
     this.chargeUntil = 0;

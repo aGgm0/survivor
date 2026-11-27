@@ -1,6 +1,6 @@
-const RESUME_LABEL = 'Reprendre (Échap ou P)';
+const RESUME_LABEL = 'Reprendre';
 // Pas d'Échap ici : le navigateur ne laisse pas Échap remettre le plein écran.
-const RESUME_FULLSCREEN_LABEL = 'Reprendre en plein écran (P)';
+const RESUME_FULLSCREEN_LABEL = 'Reprendre en plein écran';
 
 /** Ce que le joueur peut demander depuis le menu pause. */
 export type PauseAction = 'resume' | 'options' | 'restart' | 'menu';

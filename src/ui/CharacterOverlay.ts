@@ -38,9 +38,6 @@ export class CharacterOverlay {
         if (look) portrait.style.setProperty('--portrait-y', String(look.portraitY));
         card.addEventListener('click', () => (this.clicked = index));
 
-        const key = document.createElement('span');
-        key.className = 'choice-key';
-        key.textContent = String(index + 1);
         const name = document.createElement('span');
         name.className = 'choice-title';
         name.textContent = unlocked ? character.name : `🔒 ${character.name}`;
@@ -57,7 +54,7 @@ export class CharacterOverlay {
             ? `${character.challengeText} — ${formatNumber(Math.min(progress.current, progress.target))} / ${formatNumber(progress.target)}`
             : character.challengeText;
         }
-        card.append(key, portrait, name, weapon, desc);
+        card.append(portrait, name, weapon, desc);
         return card;
       }),
     );

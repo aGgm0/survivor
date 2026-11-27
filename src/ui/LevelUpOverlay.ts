@@ -63,9 +63,6 @@ export class LevelUpOverlay {
     this.rerollClicked = false;
     this.titleEl.textContent = title ?? `NIVEAU ${level}`;
     this.el.classList.toggle('overlay-mutation', title !== undefined);
-    // L'aide liste les touches réellement utilisables (2 choix pour une mutation).
-    const hint = this.el.querySelector('.overlay-hint');
-    if (hint) hint.textContent = `Clic ou touches ${choices.map((_, i) => i + 1).join(' · ')}`;
     // Créer des éléments ici est sans risque : ça n'arrive qu'au level up, pas à chaque frame.
     this.choicesEl.replaceChildren(
       ...choices.map((choice, index) => {
@@ -77,10 +74,10 @@ export class LevelUpOverlay {
         button.style.setProperty('--card-index', String(index));
         if (choice.accent) button.style.setProperty('--accent', choice.accent);
 
-        // Haut : badge de la sorte, et la touche à presser dans une touche de clavier.
+        // Haut : badge de la sorte. Les touches 1-2-3 marchent toujours, mais ne sont plus écrites
+        // (2026-11-27 : aucun raccourci clavier affiché à l'écran).
         const top = el('span', 'choice-top');
         if (style) top.append(el('span', 'choice-badge', style.tag));
-        top.append(el('span', 'choice-keycap', String(index + 1)));
 
         // Icône dans sa case, nom, puis crans de niveau ou tampon de mutation.
         const head = el('span', 'choice-head');
@@ -145,8 +142,7 @@ export class LevelUpOverlay {
 
   /** Bouton de relance : relances restantes, grisé quand on ne peut pas relancer. */
   setRerolls(left: number, enabled: boolean): void {
-    // Retour à la ligne voulu (white-space: pre-line) : sinon le compteur tombe seul en dessous.
-    this.rerollButton.textContent = `Relancer\n(R) · ${left}`;
+    this.rerollButton.textContent = `Relancer · ${left}`;
     this.rerollButton.disabled = !enabled;
   }
 
