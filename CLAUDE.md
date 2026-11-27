@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.0 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.5 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -485,7 +485,7 @@ Demandé le 2026-11-25 : un perso par arme du bloc C, avant la refonte des effet
 - [x] Écran de choix à 8 cartes : 2 rangées de 4, carte en largeur (portrait à gauche, textes à droite, ~220 px de haut au lieu de ~390) ; touches 1 à 8 (`choice5` à `choice8`)
 - [x] Sauvegarde : rien à migrer (kills par arme et défis déjà dans le profil) ; une ancienne sauvegarde voit les 4 persos verrouillés
 - [x] Tests : défis et déblocages des 4 persos, une apparence différente par perso
-- [ ] Version 0.3.5 (`package.json`, `CHANGELOG.md`), zip testé sur itch, tag `v0.3.5`
+- [ ] Version 0.3.5 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.5-itch.zip` (2026-11-27) ; reste : zip testé sur itch, tag `v0.3.5`
 - **Finie quand :** 8 persos jouables, chacun débloqué par son défi ; l'écran de choix tient en 1280×720.
 
 ### 0.3.6 — Refonte des effets visuels `[moyenne]`
