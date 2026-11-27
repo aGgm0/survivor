@@ -16,7 +16,7 @@ import type { ProfileOverlay } from '../ui/ProfileOverlay';
 import { Rng } from '../core/math';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import { frameAt, type SpriteAtlas } from '../core/SpriteAtlas';
-import { MENU_BACKDROP } from '../data/sprites';
+import { FLOOR, MENU_BACKDROP } from '../data/sprites';
 import { buildFloor } from './floor';
 import { applyOptionsAction } from './options';
 
@@ -116,7 +116,7 @@ export class MenuScene implements Scene {
     this.elapsed += dt;
     const sprites = this.deps.sprites?.();
     if (!this.floor && sprites)
-      this.floor = buildFloor(sprites, new Rng(MENU_FLOOR_SEED), MENU_BACKDROP.floorDarken);
+      this.floor = buildFloor(sprites, new Rng(MENU_FLOOR_SEED), FLOOR, MENU_BACKDROP.floorDarken);
     switch (this.screen) {
       case 'main':
         return this.updateMain();

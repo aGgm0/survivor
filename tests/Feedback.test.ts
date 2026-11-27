@@ -5,7 +5,6 @@ import type { SfxName } from '../src/data/audio';
 import { ENEMY_TYPES } from '../src/data/enemies';
 import { PARTICLES, RESISTED_NUMBERS } from '../src/data/feel';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
-import { BOSS_TYPE } from '../src/data/waves';
 import { WEAPONS } from '../src/data/weapons';
 import { Enemy } from '../src/entities/Enemy';
 import { Weapon } from '../src/entities/Weapon';
@@ -70,7 +69,7 @@ describe('Feedback (son, tremblement, particules)', () => {
   it('la mort du boss : son du boss, gros tremblement, gerbe d’éclats', () => {
     const { feedback, played, camera, particles } = setup();
     const boss = new Enemy();
-    boss.type = BOSS_TYPE;
+    boss.type = ENEMY_TYPES.boss;
     feedback.enemyKilled(boss);
     expect(played).toEqual(['boss-death']);
     expect(camera.trauma).toBeGreaterThan(0.5);

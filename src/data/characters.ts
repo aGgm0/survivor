@@ -12,7 +12,7 @@ export type Challenge =
   /** `count` kills avec cette arme, cumulés sur toutes les parties terminées (profil) */
   | { readonly kind: 'weaponKills'; readonly weaponId: string; readonly count: number }
   /**
-   * Tuer le boss n° `bossIndex` de BOSS_SPAWNS en ayant cette arme au niveau `minLevel` ou plus.
+   * Tuer le boss n° `bossIndex` du niveau (`stage.bosses`, data/stages.ts) en ayant cette arme au niveau `minLevel` ou plus.
    * Réussi pendant une partie, puis gardé dans le profil (`challenges`).
    */
   | {

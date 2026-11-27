@@ -1,7 +1,8 @@
-import { ENEMY_TYPES, type EnemyType, type Resistances } from './enemies';
+import type { EnemyType, Resistances } from './enemies';
 
-// Vagues (voir CLAUDE.md § 5.7) : par tranche de temps, quels ennemis, à quel rythme, quels PV.
-// Remplacent le spawn temporaire des phases 2 et 3.
+// Vagues (voir CLAUDE.md § 5.7) : les FORMES des vagues, rushs, élites et boss, et les règles
+// communes à tous les niveaux (sans fin, capacités des boss). Le contenu de chaque niveau (quand,
+// combien, quels PV) est dans data/stages.ts.
 
 export interface WaveDef {
   /** s : début de la tranche (la tranche dure jusqu'au début de la suivante) */
@@ -15,84 +16,6 @@ export interface WaveDef {
   /** multiplicateur de vitesse (paliers : les ennemis de fin de partie sont plus rapides) */
   readonly speedMult: number;
 }
-
-const { basic, fast, tank } = ENEMY_TYPES;
-
-/** Les 2 premières minutes : basiques et rapides, sans tanks */
-const OPENING_WEIGHTS: WaveDef['weights'] = [
-  [basic, 4],
-  [fast, 6],
-];
-
-/** Triées par `start` croissant. La dernière vague dure jusqu'à la fin de la partie. */
-export const WAVES: readonly WaveDef[] = [
-  // 0:00 – 0:30 : ouverture calme (retour de jeu 2026-11-18 : trop de monde d'entrée)
-  {
-    start: 0,
-    perSecond: 0.8,
-    weights: OPENING_WEIGHTS,
-    hpMult: 1,
-    speedMult: 1,
-  },
-  // 0:30 – 2:00 : pas de tanks, le temps d'obtenir une 2e arme
-  {
-    start: 30,
-    perSecond: 1.5,
-    weights: OPENING_WEIGHTS,
-    hpMult: 1,
-    speedMult: 1,
-  },
-  // 2:00 – 4:00 : les tanks arrivent
-  {
-    start: 120,
-    perSecond: 2.5,
-    weights: [
-      [basic, 5],
-      [fast, 4],
-      [tank, 1],
-    ],
-    hpMult: 1.2,
-    speedMult: 1,
-  },
-  // 4:00 – 6:00
-  {
-    start: 240,
-    perSecond: 3.5,
-    weights: [
-      [basic, 5],
-      [fast, 3],
-      [tank, 2],
-    ],
-    hpMult: 1.5,
-    speedMult: 1,
-  },
-  // 6:00 – 8:00 : 1er palier de vitesse, la horde grossit
-  {
-    start: 360,
-    perSecond: 7, // 9 → 7 (0.1.1) : marche moins brutale après 3,5/s (avec le rush : 16 → 11/s)
-    weights: [
-      [basic, 4],
-      [fast, 4],
-      [tank, 2],
-    ],
-    hpMult: 2.5, // était 2 : trop facile avec des armes mutées
-    speedMult: 1.25, // était 1,15
-  },
-  // 8:00 – 10:00 : le rush final, une horde de petits rapides à faucher
-  {
-    start: 480,
-    // 16/s : un build au max tue ~11/s quand la horde arrive et 30-40/s quand elle est dense ;
-    // à 11/s il ne restait que ~70 ennemis à l'écran, pas une "horde de fou".
-    perSecond: 16,
-    weights: [
-      [basic, 4],
-      [fast, 5],
-      [tank, 1],
-    ],
-    hpMult: 3.5, // était 2,5
-    speedMult: 1.45, // était 1,3
-  },
-];
 
 /**
  * Rushs : pendant [start, end[, un seul type d'ennemi apparaît EN PLUS de la vague normale.
@@ -108,31 +31,20 @@ export interface BonusWaveDef {
   readonly perSecond: number;
 }
 
-/** Demandé : des déferlantes courtes de petits ennemis, pour casser le rythme. */
-export const BONUS_WAVES: readonly BonusWaveDef[] = [
-  // 2:00 – 2:30 : nuée de rapides (≈ 150), juste quand les tanks arrivent (8/s → 5/s : trop dense)
-  { start: 120, end: 150, type: fast, perSecond: 5 },
-  // 6:00 – 6:30 : marée de basiques (≈ 120), avec le 1er palier de vitesse (12/s → 7/s → 4/s).
-  // 0.1.1 : avec la vague de 6:00, on passait de 3,5 à 16 ennemis/s d'un coup (retour de testeur :
-  // « violent vers 6:30 »). Pas décalé à 6:30 : il tomberait sur le basique élite de 7:00.
-  { start: 360, end: 390, type: basic, perSecond: 4 },
-];
-
 /** Mini-boss : un ennemi élite à une heure précise, avec les PV et la vitesse de la vague en cours. */
 export interface EliteSpawn {
   readonly time: number;
   readonly type: EnemyType;
 }
 
-export const ELITE_SPAWNS: readonly EliteSpawn[] = [
-  { time: 180, type: ENEMY_TYPES.fastElite }, // 3:00
-  { time: 420, type: ENEMY_TYPES.basicElite }, // 7:00
-];
-
 export interface BossSpawn {
   /** s : instant d'apparition */
   readonly time: number;
-  /** multiplicateur des PV de base du boss (1000) ; l'XP suit, comme pour les vagues */
+  /** Type d'ennemi du boss (un niveau de 30 min aura 3 boss différents) */
+  readonly type: EnemyType;
+  /** Invoque des sbires (en plus de la charge, que tous les boss ont) */
+  readonly summons: boolean;
+  /** multiplicateur des PV de base du boss ; l'XP suit, comme pour les vagues */
   readonly hpMult: number;
   readonly speedMult: number;
   /** s d'annonce de la charge (absent : BOSS_ABILITIES.charge.windup) */
@@ -146,33 +58,11 @@ export interface BossSpawn {
   readonly resistances?: Resistances;
 }
 
-/**
- * Boss de la partie, triés par instant. Retour de jeu : à 1000 PV ils mouraient trop vite face
- * à des armes mutées → 3000 PV à 5:00, 8000 PV (et +20 % de vitesse) à 9:00. Puis −20 % sur
- * les deux (2400 et 6400 PV) avec 4 passifs max. Enfin 3000 et 9000 PV : depuis que chaque orbe
- * frappe (délai par orbe), le boss fondait.
- */
-export const BOSS_SPAWNS: readonly BossSpawn[] = [
-  { time: 300, hpMult: 3, speedMult: 1 },
-  // 9:00 (2026-11-21, « il faut de la pression ») : marche ×1,2 → ×2 (140 px/s, toi 200),
-  // annonce de la charge 0,8 → 0,5 s, charge gardée à ~295 px (calculée sur l'ancienne vitesse).
-  // Armure 30 / 30 → 60 / 60 (2026-11-27, demandé) : −38 % au lieu de −23 % sans pénétration.
-  {
-    time: 540,
-    hpMult: 9,
-    speedMult: 2,
-    chargeWindup: 0.5,
-    dashSpeedMult: 1.2,
-    resistances: { physical: 60, magical: 60 },
-  },
-];
-export const BOSS_TYPE = ENEMY_TYPES.boss;
-
-/** Vague active à l'instant `time` (s). */
-export function waveAt(time: number): WaveDef {
-  let current = WAVES[0];
-  for (const wave of WAVES) if (time >= wave.start) current = wave;
-  if (!current) throw new Error('WAVES vide');
+/** Vague active à l'instant `time` (s), parmi `waves` triées par `start`. */
+export function waveAt(waves: readonly WaveDef[], time: number): WaveDef {
+  let current = waves[0];
+  for (const wave of waves) if (time >= wave.start) current = wave;
+  if (!current) throw new Error('niveau sans vague');
   return current;
 }
 
@@ -240,9 +130,11 @@ export function endlessWave(base: WaveDef, minutes: number, out: MutableWave): M
   return out;
 }
 
-/** Multiplicateur de PV du n-ième boss du sans fin (n = 1, 2, 3...). */
-export function endlessBossHpMult(n: number): number {
-  const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
+/**
+ * Multiplicateur de PV du n-ième boss du sans fin (n = 1, 2, 3...), à partir du dernier boss
+ * du niveau (`last`).
+ */
+export function endlessBossHpMult(last: BossSpawn | undefined, n: number): number {
   return (last?.hpMult ?? 1) * ENDLESS.bossHpGrowth ** n;
 }
 
@@ -275,8 +167,6 @@ export const BOSS_ABILITIES = {
     radius: 80,
     firstDelay: 5,
   },
-  /** Le boss n° (index dans BOSS_SPAWNS) à partir duquel il invoque (0 = 5:00, 1 = 9:00) */
-  summonFromBossIndex: 1,
   /** Boss du sans fin : les délais × ce facteur à chaque nouveau boss (10 % plus rapide) */
   endlessIntervalFactor: 0.9,
   /** Or donné à la mort d'un mini-boss */

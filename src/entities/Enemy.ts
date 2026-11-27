@@ -36,7 +36,7 @@ export class Enemy implements Poolable {
   /** N° de la dernière onde de Fournaise qui l'a touché : une seule brûlure par onde */
   waveHit = -1;
   type: EnemyType = ENEMY_TYPES.basic;
-  /** Index dans BOSS_SPAWNS pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
+  /** Index dans `stage.bosses` pour un boss prévu (0 = 5:00, 1 = 9:00) ; -1 sinon (défis des persos) */
   bossIndex = -1;
   // Capacités de boss (voir BossAbilitySystem). Dates en temps de partie, comme les autres délais.
   /** Traînée claire de la barre de PV (boss, élites : voir systems/hpTrail.ts) */

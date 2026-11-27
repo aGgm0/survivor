@@ -1,8 +1,5 @@
 // Niveaux et level up (voir CLAUDE.md § 5.6).
 
-/** s : survivre jusque-là = victoire (10 min pour le MVP) */
-export const RUN_DURATION = 600;
-
 /**
  * Courbe d'XP : `base + niveau × perLevel`, plus un terme qui grandit au carré après `steepFrom`.
  * Historique : × 10 → × 7 ("l'XP monte trop lentement" au début), puis terme au carré

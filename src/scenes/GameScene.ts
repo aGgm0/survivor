@@ -28,11 +28,11 @@ import {
   EARLY_PASSIVES,
   NEW_WEAPON_GUARANTEE_BELOW,
   REROLLS_PER_RUN,
-  RUN_DURATION,
   UPGRADE_CHOICE_COUNT,
 } from '../data/progression';
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
-import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
+import { DEFAULT_STAGE, type StageDef } from '../data/stages';
+import { BOSS_ABILITIES } from '../data/waves';
 import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
 import { PASSIVES } from '../data/upgrades';
 import { BOSS_CHALLENGES } from '../data/characters';
@@ -221,16 +221,20 @@ export class GameScene implements Scene, Build {
   /** La partie a déjà été ajoutée au profil */
   private recorded = false;
   private readonly runDuration: number;
+  /** Niveau joué (vagues, boss, sol, musiques) */
+  private readonly stage: StageDef;
 
   /**
    * @param options.runDuration durée de la partie avant la victoire (s). Les tests la raccourcissent
-   * pour ne pas simuler 10 minutes.
+   * pour ne pas simuler 10 minutes (sinon : celle du niveau).
+   * @param options.stage niveau joué (le donjon par défaut)
    */
   constructor(
     private readonly deps: GameSceneDeps,
     seed: number,
     options: {
       runDuration?: number;
+      stage?: StageDef;
       startWeapon?: WeaponDef;
       /** Apparence du perso choisi (purement visuel) */
       sprite?: SpriteDef;
@@ -249,9 +253,10 @@ export class GameScene implements Scene, Build {
     this.player.hp = this.player.maxHp;
     // L'arme de départ dépend du perso choisi (Trait arcanique par défaut).
     this.weapons = [new Weapon(options.startWeapon ?? WEAPONS.arcaneBolt)];
-    this.runDuration = options.runDuration ?? RUN_DURATION;
+    this.stage = options.stage ?? DEFAULT_STAGE;
+    this.runDuration = options.runDuration ?? this.stage.duration;
     this.rng = new Rng(seed);
-    this.spawner = new SpawnSystem(this.enemies, this.rng);
+    this.spawner = new SpawnSystem(this.enemies, this.rng, this.stage);
     // Systèmes → scène : les coups et les kills (règles), le reste va droit au ressenti.
     const hitEvents: HitEvents = {
       onHit: (e, damage, kind, source, reduction) =>
@@ -299,6 +304,7 @@ export class GameScene implements Scene, Build {
         hpBars: deps.hpBars ?? null,
         resistIcons: deps.resistIcons ?? null,
         showHitboxes: () => deps.debug.showHitboxes,
+        floor: this.stage.floor,
       },
       seed,
     );
@@ -329,7 +335,7 @@ export class GameScene implements Scene, Build {
     this.setPaused(false);
     this.deps.endOverlay.hide();
     this.deps.levelUpOverlay.hide();
-    this.deps.music?.play('run');
+    this.deps.music?.play(this.stage.music.run);
     // Afficher la seed permet de rejouer exactement la même partie pour reproduire un bug.
     this.deps.debug.setStat('seed', this.rng.seed);
   }
@@ -462,7 +468,7 @@ export class GameScene implements Scene, Build {
     this.spawner.update(dt, this.elapsed, this.player.x, this.player.y);
     // Musique du boss tant qu'un boss est en vie (le lecteur ne fait rien si elle joue déjà).
     // Parcourir le pool à chaque update est bon marché : ~900 cases, aucune allocation.
-    this.deps.music?.play(this.isBossAlive() ? 'boss' : 'run');
+    this.deps.music?.play(this.isBossAlive() ? this.stage.music.boss : this.stage.music.run);
     const charges = this.bossAbilities.update(
       this.enemies,
       this.elapsed,
@@ -612,7 +618,7 @@ export class GameScene implements Scene, Build {
 
   /** Vrai si un boss est encore actif (victoire, musique du boss). Parcours du pool. */
   private isBossAlive(): boolean {
-    for (const e of this.enemies.items) if (e.active && e.type === BOSS_TYPE) return true;
+    for (const e of this.enemies.items) if (e.active && e.type.boss) return true;
     return false;
   }
 
@@ -631,7 +637,7 @@ export class GameScene implements Scene, Build {
       return;
     }
     if (e.bossIndex >= 0) this.checkBossChallenges(e.bossIndex);
-    if (e.type === BOSS_TYPE) this.gold += FURNITURE.bossGold;
+    if (e.type.boss) this.gold += FURNITURE.bossGold;
     if (e.type.elite) this.gold += BOSS_ABILITIES.eliteGold;
     // Objets lâchés en plus de la gemme : écartés de part et d'autre (sinon ils se superposent).
     const spreadAngle = this.goldRng.range(0, Math.PI * 2);
@@ -825,7 +831,7 @@ export class GameScene implements Scene, Build {
   /** Grande barre du HUD : le premier boss en vie (il n'y en a qu'un à la fois, sauf en test). */
   private renderBossHud(): void {
     for (const e of this.enemies.items) {
-      if (e.active && e.type === BOSS_TYPE) {
+      if (e.active && e.type.boss) {
         this.deps.hud.setBoss(e.hp / e.maxHp, e.hpTrail / e.maxHp, e.resistances);
         return;
       }
@@ -837,7 +843,7 @@ export class GameScene implements Scene, Build {
   private updateHpTrails(dt: number): void {
     updateHpTrail(this.player, dt);
     for (const e of this.enemies.items) {
-      if (e.active && (e.type === BOSS_TYPE || e.type.elite)) updateHpTrail(e, dt);
+      if (e.active && (e.type.boss || e.type.elite)) updateHpTrail(e, dt);
     }
   }
 
@@ -884,7 +890,7 @@ export class GameScene implements Scene, Build {
         return;
       case 'killAll':
         for (const e of this.enemies.items) {
-          if (e.active && e.type !== BOSS_TYPE) this.killEnemy(e);
+          if (e.active && !e.type.boss) this.killEnemy(e);
         }
         return;
       case 'boss':

@@ -1,5 +1,5 @@
 import type { Pool } from '../core/Pool';
-import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
+import { BOSS_ABILITIES } from '../data/waves';
 import type { Enemy } from '../entities/Enemy';
 import type { SpawnSystem } from './SpawnSystem';
 
@@ -39,7 +39,7 @@ export class BossAbilitySystem {
     this.chargeWarnings = 0;
     this.summonWarnings = 0;
     for (const e of enemies.items) {
-      if (!e.active || e.type !== BOSS_TYPE) continue;
+      if (!e.active || !e.type.boss) continue;
       if (this.updateCharge(e, now, playerX, playerY)) charges++;
       this.updateSummon(e, now, spawner);
     }

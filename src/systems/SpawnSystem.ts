@@ -4,14 +4,10 @@ import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../core/Renderer';
 import { ENEMY_TYPES, type EnemyType } from '../data/enemies';
 import { FURNITURE } from '../data/furniture';
 import { SPAWN } from '../data/spawn';
+import { DEFAULT_STAGE, type StageDef } from '../data/stages';
 import {
-  BONUS_WAVES,
-  BOSS_SPAWNS,
-  BOSS_TYPE,
   BOSS_ABILITIES,
-  ELITE_SPAWNS,
   ENDLESS,
-  WAVES,
   endlessBossHpMult,
   endlessWave,
   waveAt,
@@ -36,22 +32,22 @@ type SpawnParams = Pick<WaveDef, 'weights' | 'hpMult' | 'speedMult'> &
 /** Fait apparaître les ennemis selon la vague en cours, et les boss à leurs instants. */
 export class SpawnSystem {
   private timer = 0;
-  /** Prochain boss de BOSS_SPAWNS à faire apparaître */
+  /** Prochain boss du niveau (`stage.bosses`) à faire apparaître */
   private nextBoss = 0;
-  /** Un compteur par rush de BONUS_WAVES (tableau typé créé une fois : pas d'allocation) */
-  private readonly bonusTimers = new Float64Array(BONUS_WAVES.length);
+  /** Un compteur par rush du niveau (tableau typé créé une fois : pas d'allocation) */
+  private readonly bonusTimers: Float64Array;
   /** s : début du mode sans fin ; null = partie normale */
   private endlessStart: number | null = null;
   /** Boss du sans fin déjà envoyés */
   private endlessBosses = 0;
-  /** Prochain mini-boss de ELITE_SPAWNS */
+  /** Prochain mini-boss du niveau (`stage.elites`) */
   private nextElite = 0;
   /** s accumulées depuis la dernière apparition de mobilier */
   private furnitureTimer = 0;
   /** Vague du sans fin, recalculée sur place à chaque update (pas d'allocation) */
   private readonly endlessCurrent: MutableWave = {
     perSecond: 0,
-    weights: WAVES[0]?.weights ?? [],
+    weights: [],
     hpMult: 1,
     speedMult: 1,
     damageMult: 1,
@@ -62,7 +58,11 @@ export class SpawnSystem {
   constructor(
     private readonly enemies: Pool<Enemy>,
     private readonly rng: Rng,
-  ) {}
+    /** Niveau joué : vagues, rushs, élites et boss */
+    private readonly stage: StageDef = DEFAULT_STAGE,
+  ) {
+    this.bonusTimers = new Float64Array(stage.bonusWaves.length);
+  }
 
   /** Le joueur continue après la victoire : la difficulté monte à partir de `now`. */
   startEndless(now: number): void {
@@ -72,7 +72,7 @@ export class SpawnSystem {
 
   /** Vague en cours : la normale, ou celle du sans fin (stats qui montent chaque minute). */
   private currentWave(now: number): SpawnParams & { readonly perSecond: number } {
-    const base = waveAt(now);
+    const base = waveAt(this.stage.waves, now);
     return this.endlessStart === null
       ? base
       : endlessWave(base, (now - this.endlessStart) / 60, this.endlessCurrent);
@@ -92,19 +92,19 @@ export class SpawnSystem {
 
     this.updateBonusWaves(dt, now, wave, playerX, playerY);
 
-    const boss = BOSS_SPAWNS[this.nextBoss];
+    const boss = this.stage.bosses[this.nextBoss];
     if (boss && now >= boss.time) {
       this.nextBoss++;
       // Chaque boss a ses propres multiplicateurs (pas ceux de la vague en cours).
-      const spawned = this.spawnAt(BOSS_TYPE, boss.hpMult, boss.speedMult, playerX, playerY);
+      const spawned = this.spawnAt(boss.type, boss.hpMult, boss.speedMult, playerX, playerY);
       if (spawned) {
         spawned.bossIndex = this.nextBoss - 1;
         applyBossSpawn(spawned, boss);
-        armBoss(spawned, now, spawned.bossIndex >= BOSS_ABILITIES.summonFromBossIndex, 1);
+        armBoss(spawned, now, boss.summons, 1);
       }
     }
     // Mini-boss : PV et vitesse de la vague en cours (l'XP suit, comme pour les autres).
-    const elite = ELITE_SPAWNS[this.nextElite];
+    const elite = this.stage.elites[this.nextElite];
     if (elite && now >= elite.time) {
       this.nextElite++;
       this.spawnAt(elite.type, wave.hpMult, wave.speedMult, playerX, playerY);
@@ -121,15 +121,17 @@ export class SpawnSystem {
     const next = this.endlessStart + ENDLESS.bossInterval * (this.endlessBosses + 1);
     if (now < next) return;
     this.endlessBosses++;
-    const lastBoss = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
+    // Les boss du sans fin reprennent le dernier boss du niveau.
+    const lastBoss = this.lastBoss();
+    if (!lastBoss) return;
     const boss = this.spawnAt(
-      BOSS_TYPE,
-      endlessBossHpMult(this.endlessBosses),
-      lastBoss?.speedMult ?? 1,
+      lastBoss.type,
+      endlessBossHpMult(lastBoss, this.endlessBosses),
+      lastBoss.speedMult,
       playerX,
       playerY,
     );
-    if (boss && lastBoss) applyBossSpawn(boss, lastBoss);
+    if (boss) applyBossSpawn(boss, lastBoss);
     // Les deux capacités, de plus en plus fréquentes à chaque boss.
     if (boss) armBoss(boss, now, true, BOSS_ABILITIES.endlessIntervalFactor ** this.endlessBosses);
   }
@@ -153,8 +155,9 @@ export class SpawnSystem {
     playerX: number,
     playerY: number,
   ): void {
-    for (let i = 0; i < BONUS_WAVES.length; i++) {
-      const bonus = BONUS_WAVES[i];
+    const bonusWaves = this.stage.bonusWaves;
+    for (let i = 0; i < bonusWaves.length; i++) {
+      const bonus = bonusWaves[i];
       if (!bonus || now < bonus.start || now >= bonus.end) continue;
       const interval = 1 / bonus.perSecond;
       let timer = (this.bonusTimers[i] ?? 0) + dt;
@@ -174,24 +177,30 @@ export class SpawnSystem {
    */
   jumpTo(now: number): void {
     this.nextBoss = 0;
-    while ((BOSS_SPAWNS[this.nextBoss]?.time ?? Infinity) < now) this.nextBoss++;
+    while ((this.stage.bosses[this.nextBoss]?.time ?? Infinity) < now) this.nextBoss++;
     this.nextElite = 0;
-    while ((ELITE_SPAWNS[this.nextElite]?.time ?? Infinity) < now) this.nextElite++;
+    while ((this.stage.elites[this.nextElite]?.time ?? Infinity) < now) this.nextElite++;
   }
 
   /** Menu de test : un boss tout de suite, comme le dernier boss prévu (charge + invocation). */
   spawnBoss(playerX: number, playerY: number, now: number): void {
-    const last = BOSS_SPAWNS[BOSS_SPAWNS.length - 1];
-    const boss = this.spawnAt(BOSS_TYPE, last?.hpMult ?? 1, last?.speedMult ?? 1, playerX, playerY);
-    if (boss && last) applyBossSpawn(boss, last);
+    const last = this.lastBoss();
+    if (!last) return;
+    const boss = this.spawnAt(last.type, last.hpMult, last.speedMult, playerX, playerY);
+    if (boss) applyBossSpawn(boss, last);
     if (boss) armBoss(boss, now, true, 1);
   }
 
-  /** Menu de test : un mini-boss tout de suite (index dans ELITE_SPAWNS). */
+  /** Dernier boss prévu par le niveau (modèle des boss du sans fin et du menu de test). */
+  private lastBoss(): BossSpawn | undefined {
+    return this.stage.bosses[this.stage.bosses.length - 1];
+  }
+
+  /** Menu de test : un mini-boss tout de suite (index dans `stage.elites`). */
   spawnElite(index: number, playerX: number, playerY: number, now: number): void {
-    const elite = ELITE_SPAWNS[index];
+    const elite = this.stage.elites[index];
     if (!elite) return;
-    const wave = waveAt(now);
+    const wave = waveAt(this.stage.waves, now);
     this.spawnAt(elite.type, wave.hpMult, wave.speedMult, playerX, playerY);
   }
 
@@ -225,7 +234,7 @@ export class SpawnSystem {
 
   /** Debug (F4) : fait apparaître `count` ennemis d'un coup, tirés selon la vague en cours. */
   spawnBatch(count: number, now: number, playerX: number, playerY: number): void {
-    const wave = waveAt(now);
+    const wave = waveAt(this.stage.waves, now);
     for (let i = 0; i < count; i++) {
       if (!this.spawnFromWave(wave, playerX, playerY)) return;
     }
@@ -295,7 +304,7 @@ export class SpawnSystem {
         this.enemies.release(e);
         continue;
       }
-      if (e.type === BOSS_TYPE || e.type.elite) {
+      if (e.type.boss || e.type.elite) {
         // Direction opposée (-dx, -dy), ramenée à la longueur SPAWN_RADIUS.
         const k = SPAWN_RADIUS / dist;
         e.teleport(playerX - dx * k, playerY - dy * k);

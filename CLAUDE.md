@@ -114,7 +114,8 @@ Avant de dire qu'une tâche est finie : `npm run typecheck && npm run lint && np
 │   │   ├── weapons.ts
 │   │   ├── enemies.ts
 │   │   ├── upgrades.ts
-│   │   └── waves.ts
+│   │   ├── waves.ts       # formes des vagues + règles communes (sans fin, capacités des boss)
+│   │   └── stages.ts      # niveaux (StageDef) : vagues, rushs, élites, boss, durée, sol, musiques
 │   ├── weapons/           # un comportement par type d'arme (projectile, aura, orbit, melee) + registry.ts
 │   ├── ui/                # HUD et menus en HTML/CSS
 │   └── types/             # types partagés (RunReport : bilan de partie, RunEvents : événements de partie)
@@ -221,10 +222,10 @@ Les ennemis spawn **hors écran**, en cercle autour du joueur. Un ennemi resté 
 
 ### 5.7 Vagues & difficulté
 
-- Défini dans `src/data/waves.ts` : par tranche de temps → types d'ennemis, taux de spawn, multiplicateur de PV.
+- Défini par niveau dans `src/data/stages.ts` (`StageDef`, niveau actuel : `DUNGEON`) : par tranche de temps → types d'ennemis, taux de spawn, multiplicateur de PV.
 - Ouverture calme : 0,8 ennemi/s de 0:00 à 0:30, puis 1,5/s.
 - Courbe : nombre d'ennemis à l'écran qui monte progressivement (objectif perf : **500+ ennemis à 60 FPS**).
-- **Rushs** (`BONUS_WAVES`) : en plus de la vague normale, 2:00-2:30 = +5 rapides/s (≈ 150), 6:00-6:30 = +4 basiques/s (≈ 120). PV et vitesse de la vague en cours.
+- **Rushs** (`bonusWaves` du niveau) : en plus de la vague normale, 2:00-2:30 = +5 rapides/s (≈ 150), 6:00-6:30 = +4 basiques/s (≈ 120). PV et vitesse de la vague en cours.
 
 ### 5.8 Fin de run
 
@@ -522,11 +523,12 @@ Demandée le 2026-11-24 : revoir les effets qui en ont besoin, pour qu'on lise l
 But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début de la version (comme pour la 0.3).
 
 **Bloc A — Refactors** (le bot donne les mêmes chiffres avant et après)
-- [ ] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi
+- [x] `StageDef` (`data/stages.ts`) : vagues, boss, élites, rushs, durée, sol, musiques ; `BOSS_TYPE` remplacé par un champ `boss` sur le type d'ennemi ; chaque boss prévu a son `type` et dit s'il invoque (`summons`) ; `RUN_DURATION` → `stage.duration` (2026-11-27, empreinte inchangée)
 - [ ] `RunFlow` (fin de partie, sans fin, bilan, enregistrement) sorti de `GameScene`
 
 **Bloc B — Bestiaire**
 - [ ] 8 à 10 types d'ennemis (dont des blindés), apparences par palier de temps <!-- TODO: quels paliers ? -->
+- [ ] **Design de tous les nouveaux ennemis** (demandé le 2026-11-27), fait pendant le développement des 30 min et pas après : apparence de chacun (sprite, couleurs, animations), lisible d'un coup d'œil dans la horde et distincte des autres ; une planche de comparaison pour choisir, comme pour le tank démon
 - [x] **Tank redessiné en démon rouge** (avancé en 0.2.2) : l'orc `ogre` du pack repeint aux couleurs des démons, cornes en croissant, yeux blancs (`tools/sprites/tank-demon.mjs`, atlas `sprites/monsters/` collé sous celui du pack, l'ogre en secours). Comparaison : `tools/sprites/variants-preview.html`
 - [ ] Plus d'élites, avec leurs propres capacités
 
@@ -882,6 +884,8 @@ Format : date — décision — raison.
 | 2026-11-27 | Fournaise : dégâts +40 % (×5,6), rayon +20 % (×1,44), une onde toutes les 1,2 s au lieu de 1,5 s, sorti avec la 0.3.5 | Retour de jeu : encore trop faible. Les 3 réglages en même temps ≈ ×2,1 de dégâts par seconde sur une zone 44 % plus grande en surface : gros buff, à revoir avec les testeurs |
 | 2026-11-25 | 4 nouveaux persos (un par arme du bloc C) en 0.3.5, avant la refonte des effets visuels (qui devient la 0.3.6) et la 0.4 ; stats et ultis restent en 0.5 | Demandé. Même principe que les 4 premiers (arme de départ + défi) : la 0.5 n'a plus qu'à leur donner leurs stats |
 | 2026-11-25 | 0.3.5 : Archère (`elf_f`, 3 000 kills d'Arc), Berserker (`dwarf_m`, boss de 5:00 avec la Hache niv 5), Piégeuse (`lizard_f`, 4 000 kills de Chausse-trapes), Tempêtiste (`lizard_m`, 5 000 kills d'Éclair) ; écran de choix en 2 rangées de 4 cartes en largeur | « ok reco ». Défis des 2 sortes existantes (rien de nouveau à coder) ; chiffres selon la facilité à tuer de l'arme (l'Éclair tue en masse, comme l'Aura). Héros 0x72 pas encore utilisés, même découpage d'atlas que les autres (portrait CSS sans retouche). Cartes en largeur : en colonne, 2 rangées faisaient ~800 px pour un écran de 720 |
+| 2026-11-27 | `StageDef` (`data/stages.ts`) : le contenu du niveau (vagues, rushs, élites, boss, durée, sol, musiques) sort de `waves.ts`, qui garde les formes et les règles communes (sans fin, capacités des boss) ; le niveau est passé à `GameScene` puis à `SpawnSystem` (le donjon par défaut) ; boss reconnu par `type.boss` ; « invoque » devient un champ du boss prévu (`summons`) au lieu de « à partir du boss n° 1 » | Bloc A de la 0.4 (« ok reco »). 3 boss différents et 30 min = un autre contenu, pas un autre code. Sol et musiques dans le niveau dès maintenant : le 2e niveau (après la 1.0) n'aura qu'à les remplir. Le fond du menu garde le sol du donjon |
+| 2026-11-27 | pixelfx (patch-gg, MIT) cloné dans `tools/vfx/pixelfx/`, ignoré par git et par ESLint ; rendu en sprite sheets par son propre outil (sans dépendance, format Aseprite comme Pixel Spells) | Demandé, pour les prochains effets. MIT : les effets rendus pourront aller dans `public/` (à créditer dans `LICENSES.md`), contrairement à Pixel Spells. Effets dessinés en vue de côté : ceux au sol seront à aplatir |
 | 2026-11-09 | Limite connue acceptée : quelques petits restent coincés au contact, entre deux tanks | Essai de "recul des petits écrasés" non concluant (ils sont à côté des tanks, pas devant), annulé. À revoir si gênant une fois les ennemis tuables |
 | 2026-11-09 | F3 : éteint → stats → stats + hitboxes | Dessiner 1000 hitboxes fait tomber à ~48 FPS et fausse la mesure |
 

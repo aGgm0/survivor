@@ -17,7 +17,7 @@ export type DevAction =
   | { readonly kind: 'killAll' }
   | { readonly kind: 'boss' }
   | { readonly kind: 'gold'; readonly amount: number }
-  /** index dans ELITE_SPAWNS (0 = 3:00, 1 = 7:00) */
+  /** index dans `stage.elites` du donjon (0 = 3:00, 1 = 7:00) */
   | { readonly kind: 'elite'; readonly index: number }
   | { readonly kind: 'close' };
 

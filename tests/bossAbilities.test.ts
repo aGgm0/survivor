@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Rng } from '../src/core/math';
 import { Pool } from '../src/core/Pool';
 import { ENEMY_TYPES, type EnemyType } from '../src/data/enemies';
-import { BOSS_ABILITIES, BOSS_SPAWNS, BOSS_TYPE, ELITE_SPAWNS, waveAt } from '../src/data/waves';
+import { BOSS_ABILITIES, waveAt } from '../src/data/waves';
+import { DUNGEON } from '../src/data/stages';
 import { Enemy } from '../src/entities/Enemy';
 import { BossAbilitySystem, chargeDistance } from '../src/systems/BossAbilitySystem';
 import { CollisionSystem } from '../src/systems/CollisionSystem';
@@ -19,13 +20,13 @@ function setup() {
   const abilities = new BossAbilitySystem();
   const boss = pool.acquire();
   if (!boss) throw new Error();
-  boss.spawn(BOSS_TYPE, 400, 0);
+  boss.spawn(ENEMY_TYPES.boss, 400, 0);
   return { pool, spawner, abilities, boss };
 }
 
 describe('mini-boss (élites)', () => {
   it('orange à 3:00, rouge à 7:00, avec les PV de la vague en cours', () => {
-    expect(ELITE_SPAWNS.map((e) => [e.time, e.type.id])).toEqual([
+    expect(DUNGEON.elites.map((e) => [e.time, e.type.id])).toEqual([
       [180, 'fastElite'],
       [420, 'basicElite'],
     ]);
@@ -34,11 +35,11 @@ describe('mini-boss (élites)', () => {
     spawner.jumpTo(180);
     spawner.update(1 / 60, 180, 0, 0);
     const fast = pool.items.find((e) => e.active && e.type === ENEMY_TYPES.fastElite);
-    expect(fast?.maxHp).toBeCloseTo(300 * waveAt(180).hpMult);
+    expect(fast?.maxHp).toBeCloseTo(300 * waveAt(DUNGEON.waves, 180).hpMult);
     spawner.jumpTo(420);
     spawner.update(1 / 60, 420, 0, 0);
     const red = pool.items.find((e) => e.active && e.type === ENEMY_TYPES.basicElite);
-    expect(red?.maxHp).toBeCloseTo(1150 * waveAt(420).hpMult);
+    expect(red?.maxHp).toBeCloseTo(1150 * waveAt(DUNGEON.waves, 420).hpMult);
   });
 
   it('plus forts que leur version normale', () => {
@@ -94,7 +95,7 @@ describe('capacité : charge', () => {
     boss.chargeState = 'dash';
     collisions.rebuild(pool);
     movement.update(pool, 0, 0, 1 / 60);
-    expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * CHARGE.speedMult);
+    expect(boss.vx).toBeCloseTo(-ENEMY_TYPES.boss.speed * CHARGE.speedMult);
   });
 
   it('boss réglé à part : annonce plus courte, charge sur sa propre vitesse (pas celle de sa marche)', () => {
@@ -110,10 +111,10 @@ describe('capacité : charge', () => {
     const movement = new MovementSystem(500, collisions);
     collisions.rebuild(pool);
     movement.update(pool, 0, 0, 1 / 60);
-    expect(boss.vx).toBeCloseTo(-BOSS_TYPE.speed * 1.2 * CHARGE.speedMult);
+    expect(boss.vx).toBeCloseTo(-ENEMY_TYPES.boss.speed * 1.2 * CHARGE.speedMult);
     // L'annonce montre la vraie trajectoire (bug : elle prenait la marche ×2, ~490 px au lieu de ~295).
     expect(chargeDistance(boss)).toBeCloseTo(
-      BOSS_TYPE.speed * 1.2 * CHARGE.speedMult * CHARGE.duration,
+      ENEMY_TYPES.boss.speed * 1.2 * CHARGE.speedMult * CHARGE.duration,
     );
   });
 });
@@ -138,8 +139,8 @@ describe('capacité : invocation', () => {
   it('le boss de 5:00 n’invoque pas ; celui de 9:00 si', () => {
     const pool = new Pool(3000, (i) => new Enemy(i));
     const spawner = new SpawnSystem(pool, new Rng(3));
-    for (const b of BOSS_SPAWNS) spawner.update(1 / 60, b.time, 0, 0);
-    const bosses = pool.items.filter((e) => e.active && e.type === BOSS_TYPE);
+    for (const b of DUNGEON.bosses) spawner.update(1 / 60, b.time, 0, 0);
+    const bosses = pool.items.filter((e) => e.active && e.type === ENEMY_TYPES.boss);
     const first = bosses.find((b) => b.bossIndex === 0);
     const second = bosses.find((b) => b.bossIndex === 1);
     expect(first?.nextSummonAt).toBe(Infinity);

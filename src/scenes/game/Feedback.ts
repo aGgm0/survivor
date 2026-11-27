@@ -9,7 +9,6 @@ import { ARROW_FIRE_SOUND, FIRE_SOUNDS, HIT_SOUNDS, type SfxName } from '../../d
 import { AURA_LOOKS, AURA_PULSE, PARTICLES, RESISTED_NUMBERS, SHAKE_EVENTS } from '../../data/feel';
 import type { Settings } from '../../data/settings';
 import { STATUS } from '../../data/status';
-import { BOSS_TYPE } from '../../data/waves';
 import type { Enemy } from '../../entities/Enemy';
 import type { Weapon } from '../../entities/Weapon';
 import type { HitKind } from '../../systems/damage';
@@ -83,7 +82,7 @@ export class Feedback implements RunEvents {
 
   enemyKilled(e: Enemy): void {
     this.deathBurst(e);
-    const boss = e.type === BOSS_TYPE;
+    const boss = e.type.boss;
     this.sound(boss ? 'boss-death' : 'enemy-death');
     if (boss) this.shake('bossKill');
     else if (e.type.elite) this.shake('eliteKill');
@@ -195,7 +194,7 @@ export class Feedback implements RunEvents {
   /** Éclats à la couleur du monstre : plus il est gros, plus il y en a ; une gerbe pour le boss. */
   private deathBurst(e: Enemy): void {
     const particles = this.deps.particles;
-    if (e.type === BOSS_TYPE) {
+    if (e.type.boss) {
       particles.burst(e.x, e.y, PARTICLES.bossDeath, e.type.color);
       return;
     }

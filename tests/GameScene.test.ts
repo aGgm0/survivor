@@ -11,7 +11,8 @@ import { WEAPONS, weaponMaxLevel } from '../src/data/weapons';
 import { MAX_PASSIVES, MAXED_XP_MULT, REROLLS_PER_RUN } from '../src/data/progression';
 import { choiceKey } from '../src/systems/upgrades';
 import { PASSIVES } from '../src/data/upgrades';
-import { BOSS_ABILITIES, BOSS_SPAWNS, BOSS_TYPE } from '../src/data/waves';
+import { BOSS_ABILITIES } from '../src/data/waves';
+import { DUNGEON } from '../src/data/stages';
 import { Weapon } from '../src/entities/Weapon';
 import { fakeCanvasContext } from '../sim/fakeCanvas';
 import type { DevAction, DevView } from '../src/ui/DevPanel';
@@ -445,7 +446,7 @@ describe('GameScene — victoire et bilan', () => {
     const { scene, ui } = newScene({ runDuration: 1, armed: false });
     const boss = scene.enemies.acquire();
     if (!boss) throw new Error();
-    boss.spawn(BOSS_TYPE, scene.player.x + 600, scene.player.y);
+    boss.spawn(ENEMY_TYPES.boss, scene.player.x + 600, scene.player.y);
     for (let i = 0; i < 90; i++) scene.update(DT); // 1,5 s : timer dépassé
     expect(scene.isOver).toBe(false);
     expect(scene.isOvertime).toBe(true);
@@ -784,7 +785,7 @@ describe('GameScene — persos et défis', () => {
     scene.weapons.push(orbs);
     const boss = scene.enemies.acquire();
     if (!boss) throw new Error();
-    boss.spawn(BOSS_TYPE, scene.player.x + 400, scene.player.y);
+    boss.spawn(ENEMY_TYPES.boss, scene.player.x + 400, scene.player.y);
     boss.bossIndex = bossIndex;
     boss.hp = 0.01;
     // Le premier coup d'orbe qui le touche le tue : on le place sur l'orbite.
@@ -877,7 +878,7 @@ describe('GameScene — menu de test (F2)', () => {
     click({ kind: 'time', seconds: 540 });
     press('F2', scene);
     for (let i = 0; i < 5; i++) scene.update(DT);
-    const bosses = scene.enemies.items.filter((e) => e.active && e.type === BOSS_TYPE);
+    const bosses = scene.enemies.items.filter((e) => e.active && e.type === ENEMY_TYPES.boss);
     expect(bosses).toHaveLength(1);
     expect(bosses[0]?.bossIndex).toBe(1);
   });
@@ -927,7 +928,7 @@ describe('GameScene — mobilier et or', () => {
     const { scene, ui } = newScene({ armed: false });
     const boss = scene.enemies.acquire();
     if (!boss) throw new Error();
-    boss.spawn(BOSS_TYPE, scene.player.x + 300, scene.player.y);
+    boss.spawn(ENEMY_TYPES.boss, scene.player.x + 300, scene.player.y);
     boss.hp = 0.01;
     const orbs = new Weapon(WEAPONS.runicOrbs);
     scene.weapons.push(orbs);
@@ -1053,7 +1054,7 @@ describe('GameScene — rendu', () => {
     for (let i = 0; i < 15 * 60; i++) {
       scene.update(DT);
       scene.render(ctx, 0.5);
-      const boss = scene.enemies.items.find((e) => e.active && e.type === BOSS_TYPE);
+      const boss = scene.enemies.items.find((e) => e.active && e.type === ENEMY_TYPES.boss);
       if (boss?.chargeState === 'windup') windups++;
       if (boss && boss.summonAt > 0) summons++;
     }
@@ -1096,7 +1097,7 @@ describe('GameScene — rendu', () => {
     expect(drawn).toContain(physical);
     expect(drawn).not.toContain(magical);
     // Boss du menu de test = le dernier boss prévu (9:00), avec ses propres résistances.
-    expect(bossResist).toEqual(BOSS_SPAWNS[BOSS_SPAWNS.length - 1]?.resistances);
+    expect(bossResist).toEqual(DUNGEON.bosses[DUNGEON.bosses.length - 1]?.resistances);
   });
 
   it('dessine une partie chargée sans erreur (mutations n° 2)', () => {

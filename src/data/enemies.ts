@@ -32,6 +32,11 @@ export interface EnemyType {
   readonly prop?: boolean;
   /** Mini-boss (élite) : anneau doré, barre de PV, +or à sa mort */
   readonly elite?: boolean;
+  /**
+   * Boss : capacités, grande barre de PV, musique du boss, victoire seulement une fois mort.
+   * Un champ plutôt qu'un seul type « le boss » : la 0.4 en aura 3 différents.
+   */
+  readonly boss?: boolean;
   /** Gros ennemi (tank, élites, boss) : certaines armes leur font plus de dégâts (Fournaise) */
   readonly big?: boolean;
   /**
@@ -90,9 +95,10 @@ export const ENEMY_TYPES = {
     // 0.3 : −33 % contre la magie. L'Épée (physique) devient l'arme anti-tank.
     resistances: { magical: 50 },
   },
-  /** N'apparaît qu'aux instants de BOSS_SPAWNS (waves.ts), jamais dans le tirage aléatoire. */
+  /** N'apparaît qu'aux instants prévus par le niveau (`bosses`, data/stages.ts), jamais dans le tirage. */
   boss: {
     id: 'boss',
+    boss: true,
     big: true,
     hp: 1000,
     speed: 70,

@@ -17,7 +17,7 @@ import {
   type EffectName,
   type SpriteDef,
 } from '../../data/sprites';
-import { BOSS_ABILITIES, BOSS_TYPE } from '../../data/waves';
+import { BOSS_ABILITIES } from '../../data/waves';
 import type { Enemy } from '../../entities/Enemy';
 import type { Player } from '../../entities/Player';
 import type { Projectile } from '../../entities/Projectile';
@@ -32,6 +32,7 @@ import type { PickupSystem } from '../../systems/PickupSystem';
 import { behaviorOf } from '../../weapons/registry';
 import type { WeaponRenderContext } from '../../weapons/WeaponBehavior';
 import { drawEmberRing } from './embers';
+import type { FloorDef } from '../../data/stages';
 import { buildFloor } from '../floor';
 
 /** px entre deux lignes de la grille de fond */
@@ -91,6 +92,8 @@ export interface WorldRendererDeps {
   readonly resistIcons: ResistIcons | null;
   /** Lu à chaque frame : l'overlay F3 peut l'allumer en cours de partie */
   readonly showHitboxes: () => boolean;
+  /** Sol du niveau joué */
+  readonly floor: FloorDef;
 }
 
 export class WorldRenderer {
@@ -107,7 +110,7 @@ export class WorldRenderer {
     seed: number,
   ) {
     this.floorTiles = deps.sprites
-      ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT))
+      ? buildFloor(deps.sprites, new Rng(seed ^ FLOOR_SEED_SALT), deps.floor)
       : null;
     this.weaponContext = {
       alpha: 0,
@@ -238,7 +241,7 @@ export class WorldRenderer {
     const summon = BOSS_ABILITIES.summon;
     const now = this.world.runTime;
     for (const e of this.world.enemies.items) {
-      if (!e.active || e.type !== BOSS_TYPE) continue;
+      if (!e.active || !e.type.boss) continue;
       const x = e.renderX(alpha);
       const y = e.renderY(alpha);
       if (e.chargeState === 'windup') {

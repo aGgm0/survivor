@@ -28,6 +28,10 @@ assets-src/
 # (le jeu fini peut les contenir). Pack dans tools/, effets convertis dans public/ par
 # tools/vfx/import-pixel-spells.mjs ; seul le zip itch les emporte.
 /tools/vfx/pixel-spells-*/
+# pixelfx (patch-gg, MIT) : 244 effets écrits en code, rendus en sprite sheets par son outil
+# (`node tools/render.mjs <id> --sheet`, sans dépendance). Clone de 27 Mo gardé hors du dépôt :
+# git clone --depth 1 https://github.com/patch-gg/pixelfx tools/vfx/pixelfx
+/tools/vfx/pixelfx/
 # Golems (pack de sprites candidat ; licence : usage permis, ni redistribution ni modification) :
 # page tools/assets-preview.html.
 /tools/sprites/golems-pack/
