@@ -8,7 +8,7 @@ import type { SpriteAtlas } from '../core/SpriteAtlas';
 import type { EffectSheet } from '../core/EffectSheet';
 import type { EffectName, SpriteDef } from '../data/sprites';
 import { CONTACT_HIT_COOLDOWN } from '../data/combat';
-import { LOW_HP, PARTICLES, SHAKE } from '../data/feel';
+import { LOW_HP, PARTICLES, PLAYER_DEATH, SHAKE } from '../data/feel';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { WorldRenderer } from './game/WorldRenderer';
 import {
@@ -201,6 +201,8 @@ export class GameScene implements Scene, Build {
   private killCount = 0;
   /** s passées sur l'écran de fin (temps réel : `elapsed` y est figé) */
   private endScreenTime = 0;
+  /** s depuis la mort du joueur, pendant l'animation (null : vivant ou partie finie) */
+  private dyingFor: number | null = null;
   /** s : moment où plus rien n'était améliorable ; null = build pas encore complet */
   private maxedAt: number | null = null;
   /** Mode sans fin lancé depuis l'écran de victoire */
@@ -391,6 +393,16 @@ export class GameScene implements Scene, Build {
         this.startEndless();
       else if (clicked === 'restart' || input.wasPressed(CONTROLS.restart)) this.deps.onRestart();
       else if (clicked === 'menu' || input.wasPressed(CONTROLS.menu)) this.deps.onMenu();
+      return;
+    }
+
+    if (this.dyingFor !== null) {
+      // Mort : tout est figé, seul le perso rétrécit, puis l'écran de fin.
+      this.freeze();
+      this.dyingFor += dt;
+      const t = (this.dyingFor - PLAYER_DEATH.hold) / PLAYER_DEATH.shrink;
+      this.player.deathScale = 1 - Math.min(1, Math.max(0, t));
+      if (this.dyingFor >= PLAYER_DEATH.duration) this.endRun(false);
       return;
     }
 
@@ -607,7 +619,7 @@ export class GameScene implements Scene, Build {
   private killEnemy(e: Enemy): void {
     // Mobilier cassé : de l'or ou de la nourriture, pas d'XP ni de kill.
     if (e.type.prop) {
-      this.feedback.crateBroken(e.x, e.y);
+      this.feedback.crateBroken(e.x, e.y, e.type.radius);
       this.dropLoot(e.x, e.y);
       this.enemies.release(e);
       return;
@@ -669,13 +681,18 @@ export class GameScene implements Scene, Build {
       e.nextContactHitAt = this.elapsed + CONTACT_HIT_COOLDOWN;
       if (this.player.isDead) break;
     }
-    if (this.player.isDead) this.endRun(false);
+    if (this.player.isDead) {
+      // Musique de défaite tout de suite : elle accompagne l'animation de mort.
+      this.dyingFor = 0;
+      this.deps.music?.play('defeat');
+    }
   }
 
   /** Fin de partie (mort ou victoire) : on fige tout et on affiche le bilan. */
   private endRun(victory: boolean): void {
     this.setPaused(false);
-    this.deps.music?.play(victory ? 'victory' : 'defeat');
+    this.dyingFor = null;
+    if (victory) this.deps.music?.play('victory');
     this.report = this.buildReport(victory);
     this.endScreenTime = 0;
     this.deps.endOverlay.show(

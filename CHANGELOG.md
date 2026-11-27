@@ -2,6 +2,15 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
+## [Non publié]
+
+### Modifié
+
+- **Mines refaites** : une mine met 0,5 s à s'armer (elle saute derrière toi, dans la horde qui te suit), puis explose plus large (90 px) et plus fort (×5), avec une vraie boule de feu (pack Pixel Spells: Inferno) et un gros « boum », et **laisse des flammes au sol pendant 3 s** qui brûlent tout ce qui passe dedans. Les mines durent aussi 2 fois plus longtemps.
+- **Mort du perso** : à 0 PV, tout se fige un instant et ton perso rétrécit jusqu'à disparaître avant l'écran de fin.
+- Le mobilier cassable devient un **coffre**, qui s'ouvre quand tu le casses.
+- **Duplicateur** : il ajoute maintenant une zone de plus à chaque pose des Chausse-trapes, des Mines et du Champ de ronces.
+
 ## [0.3.5] — 2026-11-27
 
 4 nouveaux persos, un par nouvelle arme, et les retours de jeu de la 0.3 (sons des nouvelles armes, Arc continu, ronces, nouveaux effets). La 0.3.1 n'a pas été publiée à part : son contenu est ici.

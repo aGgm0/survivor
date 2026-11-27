@@ -121,10 +121,10 @@ export const PASSIVES: readonly PassiveDef[] = [
     id: 'duplicator',
     name: 'Duplicateur',
     short: 'Du',
-    description: "+1 projectile et +1 orbe (pas l'Épée)",
+    description: "+1 projectile, orbe, hache, chaîne ou zone (pas l'Épée ni l'Aura)",
     // Le plus fort des passifs : seulement 3 niveaux (Tempête : 9 + 3 = 12 orbes, le maximum).
     maxLevel: 3,
-    scope: 'Projectiles et orbes',
+    scope: 'Toutes les armes sauf Épée et Aura',
     stat: 'extraCount',
     amount: 1,
   },

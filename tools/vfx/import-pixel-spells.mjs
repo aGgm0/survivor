@@ -22,6 +22,7 @@ const EFFECTS = [
   { pack: 'Storm', from: 'Azure/ChainLightning', to: 'storm-chain' }, // ricochets de l'Éclair
   { pack: 'Storm', from: 'Azure/LightningStrike', to: 'storm-strike' }, // foudre de l'Orage
   { pack: 'Unholy', from: 'Gold/BoneSpikes', to: 'bone-spikes' }, // Chausse-trapes
+  { pack: 'Inferno', from: 'Fire/FireballBlast', to: 'fireball-blast' }, // explosion des Mines
 ];
 
 /** Dossier d'un pack décompressé. */

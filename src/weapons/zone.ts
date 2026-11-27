@@ -4,7 +4,7 @@
 
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import type { SpriteTint } from '../core/SpriteAtlas';
-import { BRAMBLE_FX, CALTROPS_SPRITE, ZONE_FX } from '../data/sprites';
+import { BRAMBLE_FX, CALTROPS_SPRITE, MINE_FIRE_FX, ZONE_FX } from '../data/sprites';
 import type { ZoneWeaponDef } from '../data/weapons';
 import type { Weapon } from '../entities/Weapon';
 import { MAX_ENEMY_RADIUS } from '../systems/CollisionSystem';
@@ -27,13 +27,15 @@ const TILE_SPACING = 0.8;
 const TILE_INSET = 0.3;
 
 // Rangement d'une zone dans `Weapon.zones`.
-const ACTIVE = 0; // 1 : posée, 0 : libre
+const ACTIVE = 0; // 0 : libre, POSED : posée, BURNING : flammes laissées par une mine
 const X = 1;
 const Y = 2;
 const BORN = 3;
 const EXPIRES = 4;
 const SPIKED = 5; // 1 : grand pic final déjà frappé
 const STRIDE = 6;
+const POSED = 1;
+const BURNING = 2;
 
 /** Pose une zone en (x, y) ; si tout est pris, remplace celle qui finit le plus tôt. */
 function place(weapon: Weapon, x: number, y: number, now: number): void {
@@ -54,7 +56,7 @@ function place(weapon: Weapon, x: number, y: number, now: number): void {
     }
   }
   const o = slot * STRIDE;
-  z[o + ACTIVE] = 1;
+  z[o + ACTIVE] = POSED;
   z[o + X] = x;
   z[o + Y] = y;
   z[o + BORN] = now;
@@ -94,7 +96,10 @@ function finalSpike(
   }
 }
 
-/** Mine : explose sur place (tous les ennemis à portée), puis disparaît. */
+/**
+ * Mine : explose sur place (tous les ennemis à portée), puis laisse des flammes au sol : la même
+ * place du tableau devient une zone qui brûle (`BURNING`) jusqu'à la fin de `fire.duration`.
+ */
 function explode(weapon: Weapon, o: number, ctx: WeaponUpdateContext): void {
   const z = weapon.zones;
   const mine = weapon.mutation?.mine;
@@ -102,9 +107,11 @@ function explode(weapon: Weapon, o: number, ctx: WeaponUpdateContext): void {
   const x = z[o + X] ?? 0;
   const y = z[o + Y] ?? 0;
   const radius = mine.radius * weapon.explosionRadius; // explosionRadius = Taille du joueur
-  z[o + ACTIVE] = 0;
-  // Explosion de baril du pack (feu puis fumée), large comme la zone qui frappe.
-  ctx.events.onEffect?.('barrel', x, y, radius * 2);
+  z[o + ACTIVE] = BURNING;
+  z[o + BORN] = ctx.now;
+  z[o + EXPIRES] = ctx.now + mine.fire.duration;
+  // Boule de feu du pack Inferno, large comme la zone qui frappe.
+  ctx.events.onEffect?.('blast', x, y, radius * 2);
   const candidates = ctx.candidates;
   const count = ctx.collisions.queryNeighbors(x, y, radius + MAX_ENEMY_RADIUS, candidates);
   for (let k = 0; k < count; k++) {
@@ -116,6 +123,41 @@ function explode(weapon: Weapon, o: number, ctx: WeaponUpdateContext): void {
     if (dx * dx + dy * dy > touch * touch) continue;
     const d = Math.hypot(dx, dy) || 1;
     damageEnemy(weapon, e, weapon.damage * mine.damageMult, ctx.events, dx / d, dy / d);
+  }
+}
+
+/**
+ * Flammes d'une mine : brûlent ce qui est dedans toutes les `fire.tick` s. Même horloge par
+ * ennemi que les pointes : des flammes posées l'une sur l'autre ne brûlent pas plus vite.
+ */
+function updateFire(weapon: Weapon, o: number, ctx: WeaponUpdateContext): void {
+  const z = weapon.zones;
+  const fire = weapon.mutation?.mine?.fire;
+  if (!z || !fire) return;
+  if (ctx.now >= (z[o + EXPIRES] ?? 0)) {
+    z[o + ACTIVE] = 0;
+    return;
+  }
+  const x = z[o + X] ?? 0;
+  const y = z[o + Y] ?? 0;
+  const radius = fire.radius * weapon.explosionRadius; // explosionRadius = Taille du joueur
+  const candidates = ctx.candidates;
+  const count = ctx.collisions.queryNeighbors(
+    x,
+    y,
+    radius + MAX_ENEMY_RADIUS + GRID_STALENESS_MARGIN,
+    candidates,
+  );
+  for (let k = 0; k < count; k++) {
+    const e = candidates[k];
+    if (!e?.active || ctx.now < e.nextZoneHitAt) continue;
+    const dx = e.x - x;
+    const dy = e.y - y;
+    const touch = radius + e.type.radius;
+    if (dx * dx + dy * dy > touch * touch) continue;
+    e.nextZoneHitAt = ctx.now + fire.tick;
+    const d = Math.hypot(dx, dy) || 1;
+    damageEnemy(weapon, e, weapon.damage * fire.damageMult, ctx.events, dx / d, dy / d);
   }
 }
 
@@ -137,6 +179,8 @@ function updateZone(weapon: Weapon, def: ZoneWeaponDef, i: number, ctx: WeaponUp
   const y = z[o + Y] ?? 0;
   const radius = weapon.radius;
   const mine = weapon.mutation?.mine;
+  // Pas encore armée : aucun ennemi ne peut la déclencher.
+  if (mine && ctx.now < (z[o + BORN] ?? 0) + mine.armTime) return;
   const slow = weapon.mutation?.slow;
   const candidates = ctx.candidates;
   const count = ctx.collisions.queryNeighbors(
@@ -186,6 +230,8 @@ const MINE_LOOK = {
   ringColor: '#ff9f43',
   ringAlpha: [0.25, 0.6],
   ringPulseHz: 1.5,
+  /** Hz du clignotement pendant l'armement (bien plus vite qu'une fois armée) */
+  armingBlinkHz: 10,
 } as const;
 
 /** Anneau en pointillés (le bord d'une zone ou le rayon d'une explosion). */
@@ -250,6 +296,52 @@ function renderBrambles(
   return true;
 }
 
+/**
+ * Flammes laissées par une mine : rangées de `ground-flames` (en boucle, décalées d'une flamme
+ * à l'autre) qui remplissent le disque, puis s'éteignent en fondu. Secours sans l'effet : disque
+ * orangé transparent.
+ */
+function renderFire(
+  ctx: CanvasRenderingContext2D,
+  rc: WeaponRenderContext,
+  x: number,
+  y: number,
+  r: number,
+  age: number,
+  left: number,
+  zoneIndex: number,
+): void {
+  const fx = MINE_FIRE_FX;
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = alpha * fx.alpha * Math.min(1, Math.max(0, left / fx.fadeOut));
+  const sheet = rc.effects?.[fx.effect];
+  if (!sheet) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 120, 40, 0.3)';
+    ctx.fill();
+    ctx.globalAlpha = alpha;
+    return;
+  }
+  const flame = r * fx.width;
+  const sx = flame / boundsWidth(sheet);
+  const step = flame * fx.spacing;
+  for (let k = 0; k < fx.rows.length; k++) {
+    const rowY = fx.rows[k] ?? 0;
+    const half = Math.sqrt(Math.max(0, 1 - rowY * rowY)) * r - flame / 2;
+    const count = half <= 0 ? 1 : Math.ceil((half * 2) / step) + 1;
+    const gap = count > 1 ? (half * 2) / (count - 1) : 0;
+    for (let c = 0; c < count; c++) {
+      const bx = count > 1 ? -half + c * gap : 0;
+      // Chaque flamme part d'une image différente, sinon elles dansent toutes ensemble.
+      const index = clipFrameIndex(sheet.clip, age * 1000 + (k * 5 + c * 3 + zoneIndex) * 97);
+      const flip = (k + c) % 2 === 1 ? -1 : 1;
+      sheet.drawAtPivot(ctx, index, x + bx, y + rowY * r, sx * flip, sx * fx.squash);
+    }
+  }
+  ctx.globalAlpha = alpha;
+}
+
 /** Largeur visible (px d'art) d'un effet, toutes images confondues. */
 function boundsWidth(sheet: EffectSheet): number {
   const [x0, , x1] = sheet.clip.bounds;
@@ -294,7 +386,11 @@ function zoneFrame(sheet: EffectSheet, hold: number, age: number, left: number):
   return frames.length - 1;
 }
 
-/** Mine : anneau de danger qui pulse, bombe du pack, lumière rouge qui clignote, mèche. */
+/**
+ * Mine : anneau de danger qui pulse, bombe du pack, lumière rouge qui clignote, mèche.
+ * `armed` : 0 à la pose → 1 une fois armée ; l'anneau grandit pendant l'armement et la lumière
+ * clignote vite, pour qu'on voie qu'elle n'est pas encore dangereuse.
+ */
 function renderMine(
   ctx: CanvasRenderingContext2D,
   rc: WeaponRenderContext,
@@ -303,10 +399,12 @@ function renderMine(
   dangerRadius: number,
   i: number,
   color: string,
+  armed: number,
 ): void {
   const pulse = 0.5 + 0.5 * Math.sin(rc.time * Math.PI * 2 * MINE_LOOK.ringPulseHz);
   const [low, high] = MINE_LOOK.ringAlpha;
-  dashedRing(ctx, x, y, dangerRadius, MINE_LOOK.ringColor, low + (high - low) * pulse);
+  const ringAlpha = armed < 1 ? low : low + (high - low) * pulse;
+  dashedRing(ctx, x, y, dangerRadius * armed, MINE_LOOK.ringColor, ringAlpha);
   const bomb = rc.sprites?.animation(CALTROPS_SPRITE.bomb)[0];
   const scale = CALTROPS_SPRITE.scale;
   if (bomb && rc.sprites) {
@@ -319,7 +417,8 @@ function renderMine(
   }
   const top = y - ((bomb?.h ?? 10) * scale) / 2;
   // Lumière rouge : allumée la moitié du temps, décalée d'une mine à l'autre.
-  if (Math.sin((rc.time + i * 0.37) * Math.PI * 2 * MINE_LOOK.blinkHz) > 0) {
+  const blinkHz = armed < 1 ? MINE_LOOK.armingBlinkHz : MINE_LOOK.blinkHz;
+  if (Math.sin((rc.time + i * 0.37) * Math.PI * 2 * blinkHz) > 0) {
     const s = MINE_LOOK.lightSize;
     ctx.fillStyle = MINE_LOOK.light;
     ctx.fillRect(Math.round(x - s / 2), Math.round(y - s / 2), s, s);
@@ -384,8 +483,8 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
   applyStats(weapon, def, t, mods) {
     const m = weapon.mutation;
     const size = mods.sizeMult ?? 1;
-    // Le Duplicateur ne compte pas (comme pour l'Aura : rien à dupliquer).
-    weapon.count = m?.count ?? t.count;
+    // Duplicateur : une zone (ou une mine) de plus par pose, mutations comprises.
+    weapon.count = (m?.count ?? t.count) + (mods.extraCount ?? 0);
     weapon.radius = t.radius * (m?.radiusMult ?? 1) * size;
     weapon.duration = t.duration * (m?.durationMult ?? 1);
     // Taille du joueur, gardée pour le rayon des Mines.
@@ -411,7 +510,9 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
       ctx.events.onFire?.(weapon);
     }
     for (let i = 0; i < MAX_ZONES; i++) {
-      if (z[i * STRIDE + ACTIVE] === 1) updateZone(weapon, def, i, ctx);
+      const state = z[i * STRIDE + ACTIVE];
+      if (state === POSED) updateZone(weapon, def, i, ctx);
+      else if (state === BURNING) updateFire(weapon, i * STRIDE, ctx);
     }
   },
 
@@ -429,16 +530,35 @@ export const ZONE_BEHAVIOR: WeaponBehavior<ZoneWeaponDef> = {
     const sheet = mutation?.mine || mutation?.slow ? undefined : rc.effects?.[look.effect];
     for (let i = 0; i < MAX_ZONES; i++) {
       const o = i * STRIDE;
-      if (z[o + ACTIVE] !== 1) continue;
+      const state = z[o + ACTIVE];
+      if (state === 0) continue;
       const x = z[o + X] ?? 0;
       const y = z[o + Y] ?? 0;
+      if (state === BURNING) {
+        const fire = mutation?.mine?.fire;
+        const fireRadius = (fire?.radius ?? 0) * weapon.explosionRadius;
+        if (fire && rc.isOnScreen(x, y, fireRadius)) {
+          renderFire(
+            ctx,
+            rc,
+            x,
+            y,
+            fireRadius,
+            rc.time - (z[o + BORN] ?? 0),
+            (z[o + EXPIRES] ?? 0) - rc.time,
+            i,
+          );
+        }
+        continue;
+      }
       const r = weapon.radius;
       const mineRadius = mutation?.mine ? mutation.mine.radius * weapon.explosionRadius : 0;
       if (!rc.isOnScreen(x, y, Math.max(r, mineRadius))) continue;
       const age = rc.time - (z[o + BORN] ?? 0);
       const left = (z[o + EXPIRES] ?? 0) - rc.time;
       if (mutation?.mine) {
-        renderMine(ctx, rc, x, y, mineRadius, i, weapon.color);
+        const armed = Math.min(1, age / mutation.mine.armTime);
+        renderMine(ctx, rc, x, y, mineRadius, i, weapon.color, armed);
         continue;
       }
       if (mutation?.slow) {

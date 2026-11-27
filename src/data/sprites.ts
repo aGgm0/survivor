@@ -142,7 +142,9 @@ export const ENEMY_SPRITES: Partial<Record<keyof typeof ENEMY_TYPES, SpriteDef>>
     frameTime: 0.08,
     tint: ELITE_TINT,
   },
-  crate: { idle: 'crate', run: 'crate', scale: 2, frameTime: 1 },
+  // Coffre du pack (2026-11-27, à la place de la caisse) : fermé = 1re image de son ouverture ;
+  // image figée (durée énorme), l'ouverture est jouée à part quand on le casse (CHEST_OPEN).
+  crate: { idle: 'chest_full_open_anim', run: 'chest_full_open_anim', scale: 2, frameTime: 1e6 },
   basicElite: {
     idle: 'chort_idle_anim',
     run: 'chort_run_anim',
@@ -252,7 +254,7 @@ export const EFFECT_DIRS = {
   // 0.3, bloc C (retour de jeu : « visuel trop simple, pas dans le thème de l'arme »)
   spikes: `${SPELLS}bone-spikes/`, // Unholy/Gold/BoneSpikes (0.3.1)
   clang: `${PVFX}metal-clang/`,
-  barrel: `${PVFX}barrel-explosion/`,
+  blast: `${SPELLS}fireball-blast/`, // Inferno/Fire/FireballBlast : explosion des Mines (2026-11-27)
   strike: `${SPELLS}storm-strike/`, // Storm/Azure/LightningStrike (0.3.1)
   // Demandés par l'utilisateur (2026-11-23) : neige dans l'Aura de givre, fouet électrique au
   // premier coup de l'Éclair en chaîne, éclair en chaîne à chaque ricochet.
@@ -264,6 +266,7 @@ export const EFFECT_DIRS = {
   arrowImpact: `${PVFX}arrow-impact/`,
   nova: `${SPELLS}flame-nova/`, // Inferno/Fire/FlameNova ; absent : anneau de braises
   thornWall: `${PVFX}thorn-wall/`, // Champ de ronces
+  groundFlames: `${PVFX}ground-flames/`, // flammes laissées par une mine (2026-11-27)
 } as const;
 export type EffectName = keyof typeof EFFECT_DIRS;
 
@@ -290,8 +293,8 @@ export const FURNACE_NOVA_FX = {
 export const ONE_SHOT_FX = {
   /** Étincelles d'acier sur un ennemi touché par les chausse-trapes */
   clang: { speed: 1.5 },
-  /** Explosion d'une mine : feu puis colonne de fumée (2 s dans le pack, accélérée) */
-  barrel: { speed: 1.6 },
+  /** Explosion d'une mine : boule de feu qui éclate puis retombe en braises */
+  blast: { speed: 1.2 },
   /** Foudre de l'Orage, qui tombe sur l'ennemi */
   strike: { speed: 1.4 },
   /** Flèche qui se fiche (dans un ennemi ou au sol, en bout de course) puis s'efface */
@@ -347,6 +350,33 @@ export const BRAMBLE_FX = {
   alpha: 0.85,
   stagger: 0.05,
 } as const satisfies { effect: EffectName; rows: readonly number[]; [key: string]: unknown };
+
+/**
+ * Flammes au sol laissées par une mine : copies de `ground-flames` (boucle) qui remplissent le
+ * disque, comme les buissons des ronces. `width` : largeur d'une flamme (× rayon) ; `rows` :
+ * hauteur de chaque rangée (× rayon) ; `fadeOut` : s pour s'éteindre à la fin.
+ */
+export const MINE_FIRE_FX = {
+  effect: 'groundFlames',
+  width: 0.9,
+  spacing: 0.7,
+  rows: [-0.5, -0.1, 0.3, 0.7],
+  squash: 0.8,
+  alpha: 0.9,
+  fadeOut: 0.5,
+} as const satisfies { effect: EffectName; rows: readonly number[]; [key: string]: unknown };
+
+/**
+ * Coffre cassé : il s'ouvre (`open` s pour ses images), reste ouvert `linger` s puis s'efface ;
+ * dessiné comme le coffre au sol (pieds en bas de sa hitbox, même agrandissement).
+ */
+export const CHEST_OPEN = {
+  anim: 'chest_full_open_anim',
+  scale: 2,
+  open: 0.25,
+  linger: 0.5,
+  fadeOut: 0.25,
+} as const;
 
 /** Explosion du Trait éclaté : la zone visible de l'effet = le diamètre de l'explosion. */
 export const EXPLOSION_FX = {

@@ -3,6 +3,7 @@ import { FURNITURE } from '../src/data/furniture';
 import { makeHeadlessDeps } from '../sim/headlessDeps';
 import { CONTACT_HIT_COOLDOWN } from '../src/data/combat';
 import { ENEMY_TYPES } from '../src/data/enemies';
+import { PLAYER_DEATH } from '../src/data/feel';
 import { PLAYER_BASE } from '../src/data/player';
 import { GameScene } from '../src/scenes/GameScene';
 import { DEFAULT_SETTINGS } from '../src/data/settings';
@@ -47,6 +48,17 @@ function enemyOnPlayer(scene: GameScene) {
   e.spawn(ENEMY_TYPES.basic, scene.player.x + 5, scene.player.y);
 }
 
+/** Pas d'updates de l'animation de mort (le perso rétrécit, puis l'écran de fin). */
+const DEATH_STEPS = Math.ceil(PLAYER_DEATH.duration / DT) + 1;
+
+/** Tue le joueur (un ennemi au contact à 1 PV) et joue l'animation de mort jusqu'à l'écran de fin. */
+function killPlayer(scene: GameScene) {
+  scene.player.hp = 1;
+  enemyOnPlayer(scene);
+  scene.update(DT);
+  for (let i = 0; i < DEATH_STEPS && !scene.isOver; i++) scene.update(DT);
+}
+
 describe('GameScene — dégâts et mort', () => {
   it('un ennemi au contact blesse le joueur', () => {
     const { scene } = newScene({ armed: false });
@@ -85,18 +97,31 @@ describe('GameScene — dégâts et mort', () => {
     expect(scene.player.hp).toBe(afterFirstHit - ENEMY_TYPES.basic.contactDamage);
   });
 
-  it('à 0 PV : mort, écran de mort avec le temps survécu, plus rien ne bouge', () => {
+  it('à 0 PV : tout se fige, le perso rétrécit, puis écran de mort avec le temps survécu', () => {
     const { scene, ui } = newScene();
     for (let i = 0; i < 30; i++) scene.update(DT); // un peu de temps de survie
     scene.player.hp = 1;
     enemyOnPlayer(scene);
     scene.update(DT);
+    // Animation de mort : pas encore d'écran de fin, rien ne bouge, le perso rétrécit.
+    expect(scene.isOver).toBe(false);
+    const x = scene.player.x;
+    const count = scene.enemies.activeCount;
+    const enemy = scene.enemies.items.find((e) => e.active);
+    const ex = enemy?.x;
+    for (let i = 0; i < Math.round((PLAYER_DEATH.hold + PLAYER_DEATH.shrink / 2) / DT); i++) {
+      scene.update(DT);
+    }
+    expect(scene.isOver).toBe(false);
+    expect(scene.player.deathScale).toBeGreaterThan(0);
+    expect(scene.player.deathScale).toBeLessThan(1);
+    expect(enemy?.x).toBe(ex);
+    for (let i = 0; i < DEATH_STEPS && !scene.isOver; i++) scene.update(DT);
     expect(scene.isOver).toBe(true);
+    expect(scene.player.deathScale).toBe(0);
     expect(ui.end?.victory).toBe(false);
     expect(ui.end?.time).toBeGreaterThan(0);
 
-    const x = scene.player.x;
-    const count = scene.enemies.activeCount;
     for (let i = 0; i < 120; i++) scene.update(DT);
     expect(scene.player.x).toBe(x);
     expect(scene.enemies.activeCount).toBe(count); // plus de spawn
@@ -107,9 +132,7 @@ describe('GameScene — dégâts et mort', () => {
     press('KeyR', scene);
     expect(ui.restarts).toBe(0);
 
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     press('KeyR', scene);
     expect(ui.restarts).toBe(1);
   });
@@ -120,18 +143,14 @@ describe('GameScene — dégâts et mort', () => {
     press('KeyM', scene);
     expect(ui.menus).toBe(0);
 
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     press('Semicolon', scene);
     expect(ui.menus).toBe(1);
   });
 
   it('la pause est désactivée après la mort', () => {
     const { scene, ui, press } = newScene();
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     press('Escape', scene);
     expect(ui.paused).toBe(false);
   });
@@ -237,9 +256,7 @@ describe('GameScene — combat', () => {
     const { scene, ui } = newScene();
     scene.enemies.acquire()?.spawn(ENEMY_TYPES.basic, 200, 0);
     for (let i = 0; i < 60; i++) scene.update(DT);
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     expect(scene.isOver).toBe(true);
     expect(ui.end?.kills).toBe(scene.kills);
   });
@@ -383,9 +400,7 @@ describe('GameScene — level up', () => {
     const maxedAt = scene.runTime;
 
     // Le bilan de fin note quand le build a été complet (pour l'équilibrage).
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     expect(scene.result?.maxedAt).toBe(maxedAt);
     expect(scene.runTime).toBeGreaterThan(maxedAt);
   });
@@ -446,7 +461,7 @@ describe('GameScene — victoire et bilan', () => {
     const { scene, ui } = newScene();
     scene.player.hp = 1;
     enemyOnPlayer(scene);
-    for (let i = 0; i < 60; i++) scene.update(DT);
+    for (let i = 0; i < 60 + DEATH_STEPS; i++) scene.update(DT);
     expect(ui.runEnds).toBe(1);
     scene.exit();
     expect(ui.runEnds).toBe(1);
@@ -512,9 +527,7 @@ describe('GameScene — rejouer sans fuite d’état', () => {
   it('une nouvelle scène repart de zéro, même après une partie chargée', () => {
     const first = newScene();
     for (let i = 0; i < 600; i++) first.scene.update(DT); // 10 s de jeu
-    first.scene.player.hp = 1;
-    enemyOnPlayer(first.scene);
-    first.scene.update(DT);
+    killPlayer(first.scene);
     expect(first.scene.isOver).toBe(true);
 
     // "Rejouer" = nouvelle scène, mêmes objets d'UI partagés que la précédente.
@@ -686,9 +699,7 @@ describe('GameScene — onglet caché', () => {
 
   it('ne met pas en pause un joueur mort (l’écran de mort reste)', () => {
     const { scene, ui } = newScene();
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     scene.onHidden();
     expect(ui.paused).toBe(false);
   });
@@ -728,9 +739,7 @@ describe('GameScene — mode sans fin', () => {
     const { scene, ui, press } = won();
     press('KeyC', scene);
     for (let i = 0; i < 60; i++) scene.update(DT);
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     expect(ui.end?.victory).toBe(true);
     expect(ui.end?.endless).toBe(true);
     expect(ui.end?.time).toBeGreaterThan(1.5);
@@ -753,9 +762,7 @@ describe('GameScene — mode sans fin', () => {
 
   it('C ne fait rien sur l’écran de défaite', () => {
     const { scene, press } = newScene();
-    scene.player.hp = 1;
-    enemyOnPlayer(scene);
-    scene.update(DT);
+    killPlayer(scene);
     press('KeyC', scene);
     expect(scene.isEndless).toBe(false);
     expect(scene.isOver).toBe(true);
@@ -786,7 +793,7 @@ describe('GameScene — persos et défis', () => {
     expect(boss.active).toBe(false);
     scene.player.hp = 1;
     enemyOnPlayer(scene);
-    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    for (let i = 0; i < 60 + DEATH_STEPS && !scene.isOver; i++) scene.update(DT);
     return ui.end?.challenges ?? [];
   }
 
@@ -888,7 +895,7 @@ describe('GameScene — menu de test (F2)', () => {
 
     scene.applyDevAction({ kind: 'god' }); // plus invincible
     scene.player.hp = 1;
-    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    for (let i = 0; i < 60 + DEATH_STEPS && !scene.isOver; i++) scene.update(DT);
     expect(scene.isOver).toBe(true);
     expect(ui.runEnds).toBe(0);
     scene.exit();
@@ -929,7 +936,7 @@ describe('GameScene — mobilier et or', () => {
     expect(scene.gold).toBe(FURNITURE.bossGold);
     scene.player.hp = 1;
     enemyOnPlayer(scene);
-    for (let i = 0; i < 60 && !scene.isOver; i++) scene.update(DT);
+    for (let i = 0; i < 60 + DEATH_STEPS && !scene.isOver; i++) scene.update(DT);
     expect(ui.end?.gold).toBe(FURNITURE.bossGold);
   });
 });

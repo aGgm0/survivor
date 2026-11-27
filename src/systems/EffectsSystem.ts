@@ -2,6 +2,7 @@ import type { Camera } from '../core/Camera';
 import { Pool, type Poolable } from '../core/Pool';
 import { clipFrameIndex, type EffectSheet } from '../core/EffectSheet';
 import {
+  CHEST_OPEN,
   EXPLOSION_FX,
   ONE_SHOT_FX,
   SLASH_FX,
@@ -95,6 +96,15 @@ class OneShot implements Poolable {
   angle = 0;
 }
 
+/** Coffre cassé qui s'ouvre (images de l'atlas) */
+class Chest implements Poolable {
+  active = false;
+  x = 0;
+  /** px : bas du coffre (là où il était posé) */
+  bottom = 0;
+  age = 0;
+}
+
 /** Animations du pack utilisées ici (absentes : formes simples). */
 export type EffectSprites = Readonly<Partial<Record<EffectName, EffectSheet>>>;
 
@@ -104,6 +114,9 @@ export class EffectsSystem {
   private readonly slashes = new Pool(POOL_SIZE, () => new Slash());
   private readonly thrusts = new Pool(POOL_SIZE, () => new Thrust());
   private readonly oneShots = new Pool(POOL_SIZE, () => new OneShot());
+  private readonly chests = new Pool(POOL_SIZE, () => new Chest());
+  /** Images de l'ouverture du coffre ; absentes : rien (le coffre disparaît d'un coup) */
+  private readonly chestFrames: readonly SpriteFrame[];
   private readonly ringLifetime: number;
   private readonly slashLifetime: number;
 
@@ -116,6 +129,7 @@ export class EffectsSystem {
     private readonly atlas: SpriteAtlas | null = null,
   ) {
     this.thrustSword = atlas?.animation(THRUST.sprite)[0] ?? null;
+    this.chestFrames = atlas?.animation(CHEST_OPEN.anim) ?? [];
     this.ringLifetime = sprites ? EXPLOSION_FX.duration : RING_LIFETIME;
     this.slashLifetime = sprites ? SLASH_FX.duration : SLASH_LIFETIME;
   }
@@ -173,8 +187,19 @@ export class EffectsSystem {
     o.angle = angle;
   }
 
+  /** Coffre cassé en (x, y) (centre de sa hitbox, de rayon `radius`) : il s'ouvre puis s'efface. */
+  chestOpen(x: number, y: number, radius: number): void {
+    if (this.chestFrames.length === 0) return;
+    const c = this.chests.acquire();
+    if (!c) return;
+    c.x = x;
+    c.bottom = y + radius;
+    c.age = 0;
+  }
+
   get activeCount(): number {
     return (
+      this.chests.activeCount +
       this.rings.activeCount +
       this.slashes.activeCount +
       this.thrusts.activeCount +
@@ -203,12 +228,19 @@ export class EffectsSystem {
       o.age += dt;
       if (o.age >= o.lifetime) this.oneShots.release(o);
     }
+    const chestLife = CHEST_OPEN.open + CHEST_OPEN.linger;
+    for (const c of this.chests.items) {
+      if (!c.active) continue;
+      c.age += dt;
+      if (c.age >= chestLife) this.chests.release(c);
+    }
   }
 
   /** À appeler entre `camera.begin` et `camera.end` (coordonnées monde). */
   render(ctx: CanvasRenderingContext2D, camera: Camera): void {
     // Estoc : épée de l'atlas + trait d'énergie dessiné par le code (pas d'effet d'estoc dans PVFX).
     this.renderThrusts(ctx, camera);
+    this.renderChests(ctx, camera);
     if (this.sprites) {
       this.renderSprites(ctx, camera, this.sprites);
       return;
@@ -234,6 +266,28 @@ export class EffectsSystem {
       ctx.arc(s.x, s.y, s.range, s.angle - s.arc / 2, s.angle + s.arc / 2);
       ctx.closePath();
       ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /** Coffres cassés : images de l'ouverture, puis le coffre ouvert qui s'efface. */
+  private renderChests(ctx: CanvasRenderingContext2D, camera: Camera): void {
+    const atlas = this.atlas;
+    const frames = this.chestFrames;
+    if (!atlas || frames.length === 0) return;
+    const life = CHEST_OPEN.open + CHEST_OPEN.linger;
+    for (const c of this.chests.items) {
+      if (!c.active) continue;
+      if (c.x < camera.left - 32 || c.x > camera.right + 32) continue;
+      if (c.bottom < camera.top || c.bottom - 32 > camera.bottom) continue;
+      const index = Math.min(
+        frames.length - 1,
+        Math.floor((c.age / CHEST_OPEN.open) * frames.length),
+      );
+      const frame = frames[index];
+      if (!frame) continue;
+      ctx.globalAlpha = Math.min(1, (life - c.age) / CHEST_OPEN.fadeOut);
+      atlas.draw(ctx, frame, c.x, c.bottom, CHEST_OPEN.scale, false);
     }
     ctx.globalAlpha = 1;
   }

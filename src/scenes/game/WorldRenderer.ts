@@ -193,6 +193,7 @@ export class WorldRenderer {
   /** Petite barre sous le joueur, seulement s'il a perdu des PV (le HUD donne le chiffre exact). */
   private renderPlayerBar(ctx: CanvasRenderingContext2D, alpha: number): void {
     const p = this.world.player;
+    if (p.deathScale < 1) return; // mort : la barre vide sous un perso qui disparaît
     if (p.hpTrail >= p.maxHp && p.hp >= p.maxHp) return;
     const look = HP_BARS.player;
     const y = p.renderY(alpha) + p.radius + look.offset;

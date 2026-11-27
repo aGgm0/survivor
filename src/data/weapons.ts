@@ -92,8 +92,20 @@ export interface MutationDef {
   /**
    * Zone : chaque zone devient une mine, qui explose au premier ennemi qui la touche (rayon
    * `radius` px, dégâts × `damageMult`) puis disparaît ; elle ne blesse plus en continu.
+   * `armTime` : s avant qu'un ennemi puisse la déclencher. `fire` : zone de flammes laissée
+   * par l'explosion (rayon px, durée s, dégâts × `damageMult` toutes les `tick` s).
    */
-  readonly mine?: { readonly radius: number; readonly damageMult: number };
+  readonly mine?: {
+    readonly radius: number;
+    readonly damageMult: number;
+    readonly armTime: number;
+    readonly fire: {
+      readonly radius: number;
+      readonly duration: number;
+      readonly damageMult: number;
+      readonly tick: number;
+    };
+  };
   /** Sprite du pack à la place de celui de l'arme (Hache du bourreau : la grande hache double) */
   readonly sprite?: string;
   /** Chaîne : sauts en plus (s'ajoutent à ceux des niveaux) */
@@ -426,9 +438,19 @@ export const WEAPONS = {
         name: 'Mines',
         short: 'Mi',
         description:
-          'Chaque zone devient une mine : elle explose au premier contact (80 px, dégâts ×4)',
+          'Chaque zone devient une mine qui s’arme en 0,5 s et explose au contact (90 px, dégâts ×5), puis laisse des flammes au sol pendant 3 s',
         color: '#ff9f43',
-        mine: { radius: 80, damageMult: 4 },
+        // Rework du 2026-11-27 (« pas ouf ») : 80 → 90 px, ×4 → ×5, armement (elle saute derrière
+        // le joueur, dans la horde qui le suit), 2× plus durables pour qu'un champ de mines se
+        // forme, et des flammes au sol après l'explosion (idée de l'utilisateur, à la place
+        // d'une réaction en chaîne qui ne servait à rien : chaque mine est touchée de toute façon).
+        mine: {
+          radius: 90,
+          damageMult: 5,
+          armTime: 0.5,
+          fire: { radius: 60, duration: 3, damageMult: 0.6, tick: 0.5 },
+        },
+        durationMult: 2,
       },
       {
         id: 'brambles',

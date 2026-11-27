@@ -89,7 +89,8 @@ export class Feedback implements RunEvents {
     else if (e.type.elite) this.shake('eliteKill');
   }
 
-  crateBroken(x: number, y: number): void {
+  crateBroken(x: number, y: number, radius: number): void {
+    this.deps.effects.chestOpen(x, y, radius);
     this.deps.particles.burst(x, y, PARTICLES.crate, PARTICLES.crateColor);
     this.sound('crate-break');
   }
@@ -161,9 +162,9 @@ export class Feedback implements RunEvents {
   effect(name: OneShotName, x: number, y: number, size: number, angle = 0): void {
     this.deps.effects.play(name, x, y, size, angle);
     // Les grosses explosions se sentent et s'entendent ; les étincelles restent discrètes.
-    if (name === 'barrel') {
-      this.shake('explosion');
-      this.sound('bolt-burst');
+    if (name === 'blast') {
+      this.shake('mineBlast');
+      this.sound('mine-boom');
     } else if (name === 'strike') {
       this.sound('thunder');
     }

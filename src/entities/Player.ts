@@ -46,6 +46,8 @@ export class Player {
   hitFlashTimer = 0;
   /** Temps (s) qui fait avancer l'animation du sprite (aucun effet de jeu). */
   animTime = 0;
+  /** Taille d'affichage (1 : normale, 0 : disparu), mise par la scène pendant la mort */
+  deathScale = 1;
   /** Apparence (celle du perso choisi) : purement visuel */
   sprite: SpriteDef = PLAYER_SPRITE;
 
@@ -125,10 +127,20 @@ export class Player {
     const look = this.sprite;
     const anim = sprites?.animation(moving ? look.run : look.idle);
     const frame = anim && frameAt(anim, this.animTime, look.frameTime);
+    if (this.deathScale <= 0) return;
     if (sprites && frame) {
       // Pieds posés sur le bas de la hitbox : le sprite dépasse vers le haut, comme un perso debout.
       const tint = flashing ? HIT_FLASH_TINT : undefined;
-      sprites.draw(ctx, frame, x, y + this.radius, look.scale, this.facingX < 0, tint);
+      const feet = y + this.radius;
+      if (this.deathScale < 1) {
+        // Mort : s'écrase d'abord (la hauteur baisse plus vite que la largeur), pieds au sol.
+        const s = this.deathScale;
+        ctx.save();
+        ctx.translate(x, feet);
+        ctx.scale(Math.sqrt(s), s);
+        sprites.draw(ctx, frame, 0, 0, look.scale, this.facingX < 0, tint);
+        ctx.restore();
+      } else sprites.draw(ctx, frame, x, feet, look.scale, this.facingX < 0, tint);
     } else {
       ctx.fillStyle = flashing ? HIT_FLASH_COLOR : PLAYER_COLOR;
       ctx.beginPath();

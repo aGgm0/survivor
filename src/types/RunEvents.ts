@@ -17,7 +17,7 @@ export interface RunEvents {
   /** Un ennemi tombe (pas le mobilier : voir `crateBroken`) */
   enemyKilled(enemy: Enemy): void;
   /** Une caisse ou un tonneau est cassé */
-  crateBroken(x: number, y: number): void;
+  crateBroken(x: number, y: number, radius: number): void;
   /** Le joueur prend un coup d'un ennemi au contact */
   playerHit(): void;
   /** Un ou plusieurs niveaux gagnés d'un coup, le joueur en (x, y) */

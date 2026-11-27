@@ -29,7 +29,7 @@ function setup(positions: [number, number][], type: EnemyType = ENEMY_TYPES.basi
     onHit: (e) => hits.set(e, (hits.get(e) ?? 0) + 1),
     onKill: () => {},
     onEffect: (name) => {
-      if (name === 'barrel') explosions++;
+      if (name === 'blast') explosions++;
     },
   });
   const run = (w: Weapon, from: number, seconds: number, playerX = 0) => {
@@ -104,16 +104,44 @@ describe('Chausse-trapes', () => {
     expect(big[0]![0]).toBeCloseTo(4 - spike.before, 1);
   });
 
-  it('Mines : une seule explosion au premier contact, qui touche tout autour', () => {
+  it('Mines : s’arment en 0,5 s, puis une seule explosion au contact, qui touche tout autour', () => {
     const { list, hits, run, explosions } = setup([
       [10, 0],
-      [60, 0], // hors de la mine (40) mais dans l'explosion (80)
+      [80, 0], // hors de la mine (40) et des flammes (60), mais dans l'explosion (90)
     ]);
     const w = caltrops(0);
-    run(w, 0, 0.5);
+    run(w, 0, 0.45);
+    expect(explosions()).toBe(0); // pas encore armée
+    run(w, 0.45, 0.2);
     expect(explosions()).toBe(1);
-    expect(hits.get(list[0]!)).toBe(1);
+    expect(hits.get(list[0]!)).toBeGreaterThanOrEqual(1); // explosion, puis les flammes
     expect(hits.get(list[1]!)).toBe(1);
+  });
+
+  it('Mines : l’explosion laisse des flammes qui brûlent toutes les 0,5 s pendant 3 s', () => {
+    const { list, hits, run } = setup([
+      [0, 0], // déclenche la mine
+      [50, 0], // dans les flammes (60 px)
+      [150, 0], // hors de tout
+    ]);
+    const w = caltrops(0);
+    run(w, 0, 0.6); // mine posée en (0, 0), armée à 0,5 s : explosion puis 1re brûlure
+    expect(hits.get(list[1]!)).toBe(2);
+    run(w, 0.6, 3.5, 1000); // le joueur s'éloigne : la mine suivante tombe loin
+    // explosion + 6 brûlures (3 s de flammes, une toutes les 0,5 s), puis plus rien
+    expect(hits.get(list[1]!)).toBe(7);
+    expect(hits.get(list[2]!)).toBeUndefined();
+  });
+
+  it('Duplicateur : une zone de plus par pose, avec ou sans mutation', () => {
+    for (const mutation of [undefined, 0, 1] as const) {
+      const w = new Weapon(WEAPONS.caltrops);
+      if (mutation !== undefined) w.mutation = WEAPONS.caltrops.mutations[mutation];
+      w.recompute(NO_MODS);
+      const base = w.count;
+      w.recompute({ ...NO_MODS, extraCount: 2 });
+      expect(w.count).toBe(base + 2);
+    }
   });
 
   it('Champ de ronces : ralentit les ennemis, pas les élites', () => {

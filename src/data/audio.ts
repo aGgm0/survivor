@@ -48,6 +48,8 @@ export const SFX = {
   'axe-throw': { volume: 0.25, minGap: 0.06, maxVoices: 2, pitchJitter: 0.06 },
   'bow-shoot': { volume: 0.25, minGap: 0.06, maxVoices: 3, pitchJitter: 0.05 },
   'spike-place': { volume: 0.25, minGap: 0.06, maxVoices: 2, pitchJitter: 0.08 },
+  // Réaction en chaîne : jusqu'à 3 boums à la fois, espacés, sinon ça sature.
+  'mine-boom': { volume: 0.45, minGap: 0.07, maxVoices: 3, pitchJitter: 0.1 },
   thunder: { volume: 0.4, minGap: 0.08, maxVoices: 2, pitchJitter: 0.06 },
 } as const satisfies Record<string, SoundSettings>;
 

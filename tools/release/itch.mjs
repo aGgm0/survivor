@@ -31,6 +31,7 @@ const REQUIRED = [
   'assets/ui/darkages/panel.png',
   'assets/ui/raven/sword.png',
   'assets/sprites/pixel-spells/flame-nova/sprite-sheet.png', // node tools/vfx/import-pixel-spells.mjs
+  'assets/sprites/pixel-spells/fireball-blast/sprite-sheet.png',
 ];
 
 function fail(message) {

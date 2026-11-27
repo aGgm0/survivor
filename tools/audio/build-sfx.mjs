@@ -313,6 +313,12 @@ const SOUNDS = {
     { wave: 'square', duty: 0.5, freq: 150, to: 80, dur: 0.07, curve: 2.2, vol: 0.5 },
     { wave: 'noise', freq: 2600, to: 900, dur: 0.11, curve: 1.8, vol: 0.55 },
   ],
+  // Mine qui saute : gros « boum » grave + souffle qui retombe (plus lourd que bolt-burst).
+  'mine-boom': [
+    { wave: 'square', duty: 0.5, freq: 120, to: 32, dur: 0.38, curve: 1.8, vol: 0.7 },
+    { wave: 'noise', freq: 3000, to: 160, dur: 0.55, curve: 1.6, vol: 0.9 },
+    { wave: 'noise', freq: 9000, to: 2000, dur: 0.06, curve: 2.5, vol: 0.4 },
+  ],
 };
 
 // ---------------------------------------------------------------- synthé

@@ -154,6 +154,13 @@ export const AURA_PULSE_RING: AuraLook = {
 export const LOW_HP = { warn: 0.2, critical: 0.1 } as const;
 
 /**
+ * Mort du joueur (demandé le 2026-11-27, « comme dans Vampire Survivors ») : tout se fige, le perso
+ * reste un instant (`hold` s), puis rétrécit jusqu'à disparaître (`shrink` s), posé sur ses pieds ;
+ * l'écran de fin arrive après `duration` s. Volontairement court : « le reste c'est long ».
+ */
+export const PLAYER_DEATH = { hold: 0.15, shrink: 0.6, duration: 0.9 } as const;
+
+/**
  * Nombres de dégâts d'un coup réduit par la résistance de l'ennemi : gris au lieu de blanc, à
  * partir de `minReduction` seulement (le basique résiste de 9 % à tout : sans seuil, presque
  * tous les nombres seraient gris et le repère ne voudrait plus rien dire).
@@ -171,6 +178,8 @@ export const SHAKE_EVENTS = {
   auraPulse: { amount: 0.08, cap: 0.25 },
   /** À peine : il y en a beaucoup avec le Trait éclaté */
   explosion: { amount: 0.04, cap: 0.2 },
+  /** Mine : plus fort qu'une explosion du Trait, plafonné pour une réaction en chaîne */
+  mineBlast: { amount: 0.12, cap: 0.35 },
 } as const;
 
 /**
