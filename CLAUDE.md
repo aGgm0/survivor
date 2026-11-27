@@ -516,7 +516,7 @@ Demandée le 2026-11-24 : revoir les effets qui en ont besoin, pour qu'on lise l
 - [x] Nombres espacés partout (1 000), Boutique avec icônes et crans, détail des mutations dans le Profil (avant / après la mutation)
 - [x] Boss de 9:00 : armure 60 / 60 ; Flèche lourde dessinée ×2 ; bug des flammes des Mines effacées par les nouvelles mines
 - [x] **Plus aucune touche écrite à l'écran** (demandé le 2026-11-27) : boutons, cartes de level up et de perso, aides ; les raccourcis clavier marchent toujours
-- [ ] Version 0.3.7 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.7-itch.zip` (2026-11-27) ; reste : zip testé sur itch, tag `v0.3.7`
+- [x] Version 0.3.7 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.7-itch.zip` testé sur itch, tag `v0.3.7` poussé (2026-11-27)
 
 ### 0.4 — Le niveau en 30 min `[grosse]`
 But : passer de 10 à 30 min sans temps mort. Plan détaillé à faire au début de la version (comme pour la 0.3).
