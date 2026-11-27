@@ -9,7 +9,7 @@ export const ICON_GROUPS = {
     runicOrbs: 776, // cercle runique violet
     sword: 156, // épée bleue
     bow: 1564, // arc
-    throwingAxe: 1457, // hache
+    throwingAxe: 1464, // petite hache (1457 jusqu'au 2026-11-27)
     caltrops: 1016, // pointes qui sortent du sol
     chainLightning: 1025, // éclair (celui de la Hâte jusqu'au 2026-11-23)
   },
@@ -17,17 +17,17 @@ export const ICON_GROUPS = {
     piercingBolt: 1010, // lance de glace
     burstBolt: 774, // éclat violet
     furnace: 767, // explosion de feu (ex-Brasier)
-    frostAura: 787, // flocon de glace qui rayonne
-    giantOrbs: 773, // anneau violet
-    orbStorm: 786, // tourbillon bleu
+    frostAura: 788, // comète de glace (787 jusqu'au 2026-11-27 : même étoile que la Fournaise)
+    giantOrbs: 830, // amas de grosses bulles violettes (773 jusqu'au 2026-11-27 : même spirale que la Tempête)
+    orbStorm: 826, // croissant violet qui tourne (786 jusqu'au 2026-11-27)
     whirlwind: 725, // coup en tourbillon
     thrust: 728, // épée pointée qui scintille (coup d'estoc)
     heavyArrow: 401, // flèche à pointe d'acier
     volley: 1136, // pluie de flèches
     mines: 764, // bombe à mèche
-    brambles: 241, // branche épineuse
-    twinAxes: 1458, // hache double
-    executionerAxe: 1539, // grosse hache orange
+    brambles: 251, // rameau épineux (241 jusqu'au 2026-11-27 : on aurait dit des ciseaux)
+    twinAxes: 1467, // grande hache à double tranchant (1458 jusqu'au 2026-11-27 : comme la Hache de lancer)
+    executionerAxe: 1547, // grosse hache double orange (1539 jusqu'au 2026-11-27)
     thunderstorm: 1031, // nuage d'orage
     unbrokenArc: 1037, // arcs entrelacés
   },

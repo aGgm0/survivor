@@ -10,6 +10,8 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 
 ### Modifié
 
+- **Haches jumelles** un peu plus fortes (dégâts ×0,9 au lieu de ×0,8), et lancées sous forme de petites haches doubles.
+- **Icônes** plus faciles à distinguer : Hache de lancer, Champ de ronces, Aura de givre, Haches jumelles, Hache du bourreau, Orbes géants et Tempête d'orbes.
 - **Profil** refait en 2 onglets, avec l'icône de chaque arme : il tient enfin à l'écran avec les 8 armes.
 - **Mines refaites** : une mine met 0,5 s à s'armer (elle saute derrière toi, dans la horde qui te suit), puis explose plus large (90 px) et plus fort (×5), avec une vraie boule de feu (pack Pixel Spells: Inferno) et un gros « boum », et **laisse des flammes au sol pendant 3 s** qui brûlent tout ce qui passe dedans. Les mines durent aussi 2 fois plus longtemps.
 - **Arc continu** : les sauts vont beaucoup plus loin (450 px), mais un long saut fait perdre plus de dégâts ; +2 sauts au lieu de +3.

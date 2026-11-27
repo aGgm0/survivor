@@ -512,10 +512,13 @@ export const WEAPONS = {
         id: 'twinAxes',
         name: 'Haches jumelles',
         short: 'Hj',
-        description: '4 haches en éventail à chaque lancer, dégâts ×0,8',
+        description: '4 haches doubles en éventail à chaque lancer, dégâts ×0,9',
         color: '#e8e8f0',
         count: 4,
-        damageMult: 0.8,
+        // ×0,8 → ×0,9 (2026-11-27, petit buff : un peu moins forte que le Bourreau)
+        damageMult: 0.9,
+        // La hache double du Bourreau, à la taille normale (le Bourreau est ×1,6) : demandé.
+        sprite: 'weapon_double_axe',
       },
       {
         id: 'executionerAxe',
