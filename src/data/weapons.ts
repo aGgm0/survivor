@@ -691,7 +691,7 @@ export const WEAPONS = {
         name: 'Orbes géants',
         short: 'Og',
         description:
-          '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×1,8, rotation ×0,85',
+          '3 orbes énormes (×2,2) sur une orbite plus large : dégâts ×2,5, rotation ×0,85, perce la résistance magique (60)',
         color: '#e040fb',
         count: 3,
         orbRadiusMult: 2.2,
@@ -699,9 +699,12 @@ export const WEAPONS = {
         orbitDistanceMult: 1.25,
         // Retour de jeu : un peu trop forts. Rotation ralentie
         angularSpeedMult: 0.85,
-        damageMult: 1.8, // 2 → 1,8 : micro nerf (retour de jeu)
-        // 1,6 → 1 : « littéralement personne ne rentre ». Le recul de base des orbes reste
-        knockbackMult: 1,
+        // 2 → 1,8 : micro nerf (retour de jeu) ; ×1,4 (2026-11-27, retours de la 0.3.7) : ≈ ×2,52
+        damageMult: 2.52,
+        // 1,6 → 1 : « littéralement personne ne rentre ». +25 % (retours de la 0.3.7)
+        knockbackMult: 1.25,
+        // Retours de la 0.3.7 : perce les défenses magiques (tank −33 % → 0, boss de 9:00 −38 % → 0)
+        penetration: 60,
       },
       {
         id: 'orbStorm',

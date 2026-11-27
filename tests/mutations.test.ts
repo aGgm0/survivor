@@ -179,12 +179,13 @@ describe('mutations des Orbes runiques', () => {
     return { base: make(), w };
   }
 
-  it('Orbes géants : 3 orbes 2,2× plus gros, dégâts ×1,8, rotation ×0,85, recul ×1', () => {
+  it('Orbes géants : 3 orbes 2,2× plus gros, dégâts ×2,52, rotation ×0,85, recul ×1,25, pénétration 60', () => {
     const { base, w } = mutated(GIANT);
     expect(w.count).toBe(3);
     expect(w.orbRadius).toBeCloseTo(ORBS.orbRadius * 2.2);
-    expect(w.damage).toBeCloseTo(base.damage * 1.8);
-    expect(w.knockback).toBeCloseTo(base.knockback);
+    expect(w.damage).toBeCloseTo(base.damage * 2.52);
+    expect(w.knockback).toBeCloseTo(base.knockback * 1.25);
+    expect(w.penetration).toBe(base.penetration + 60);
     expect(w.angularSpeed).toBeCloseTo(ORBS.angularSpeed * 0.85);
   });
 
