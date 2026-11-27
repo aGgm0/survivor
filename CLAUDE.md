@@ -37,7 +37,7 @@ Légende : `TODO` = à décider / compléter · `[MVP]` = indispensable pour la 
 | Style graphique | Formes géométriques simples au début (placeholder), améliorables ensuite (sprites) |
 | Résolution logique | 1280×720, mise à l'échelle au viewport (letterbox) |
 | Objectif perso | Projet portfolio + apprendre l'archi d'un jeu (game loop, ECS-light, perf) |
-| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.5 (`package.json`, voir `CHANGELOG.md`) |
+| Sortie | **Gratuite** sur itch.io (pas de vente). Version actuelle : 0.3.6 (`package.json`, voir `CHANGELOG.md`) |
 
 **Pitch en une phrase :** <!-- TODO: ex. "Un nécromancien survit 10 minutes dans un cimetière maudit en invoquant des armes spectrales." -->
 
@@ -487,7 +487,7 @@ Demandé le 2026-11-25 : un perso par arme du bloc C, avant la refonte des effet
 - [x] Écran de choix à 8 cartes : 2 rangées de 4, carte en largeur (portrait à gauche, textes à droite, ~220 px de haut au lieu de ~390) ; touches 1 à 8 (`choice5` à `choice8`)
 - [x] Sauvegarde : rien à migrer (kills par arme et défis déjà dans le profil) ; une ancienne sauvegarde voit les 4 persos verrouillés
 - [x] Tests : défis et déblocages des 4 persos, une apparence différente par perso
-- [ ] Version 0.3.5 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.5-itch.zip` (2026-11-27) ; reste : zip testé sur itch, tag `v0.3.5`
+- [x] Version 0.3.5 (`package.json`, `CHANGELOG.md`, 2026-11-27) : **pas publiée seule**, sortie avec la 0.3.6 (même zip, choix de l'utilisateur)
 - **Finie quand :** 8 persos jouables, chacun débloqué par son défi ; l'écran de choix tient en 1280×720.
 
 ### 0.3.6 — Refonte des effets visuels `[moyenne]`
@@ -495,9 +495,9 @@ Demandé le 2026-11-25 : un perso par arme du bloc C, avant la refonte des effet
 Demandée le 2026-11-24 : revoir les effets qui en ont besoin, pour qu'on lise la partie même à 500 ennemis.
 - [x] **Onde de la Fournaise** (avancée en 0.3.1) : Flame Nova du pack **Pixel Spells: Inferno** (Odd Jelly Games, échantillon gratuit ; licence sans redistribution : pack dans `tools/vfx/pixel-spells-inferno/` et effets convertis dans `public/assets/sprites/pixel-spells/`, tous deux ignorés par git, seul le zip itch les emporte). Script `tools/vfx/import-pixel-spells.mjs` : JSON Aseprite → manifeste PVFX (zone visible mesurée dans le PNG). Images 4 à 8 pendant les 0,4 s de l'onde, l'image 8 à la taille exacte de sa portée, puis 9 à 13 en 0,3 s ; ellipse du pack à moitié arrondie (`FURNACE_NOVA_FX`). Anneau de braises en secours sans le pack ; chaque effet se charge à part (un pack absent ne prive plus le jeu des autres). Les 48 effets du pack sont sur la planche `tools/vfx/vfx-preview.html`
 - [x] **Éclairs, pointes, ronces** (2026-11-25, choisis sur la planche) : ricochets de l'Éclair = Storm/Azure/ChainLightning, foudre de l'Orage = Storm/Azure/LightningStrike, pointes des Chausse-trapes = Unholy/Gold/BoneSpikes (image 9 tenue). Givre gardé (Frostburst / IceSpike refusés). **Champ de ronces** : buissons `thorn-wall` (PVFX, ajouté ; `vine-snare` retiré) **tous de la même taille**, alignés en 6 rangées qui couvrent le disque (assez de buissons par rangée pour la largeur du cercle, qui se chevauchent), basses, opacité 85 %, qui poussent l'une après l'autre (`BRAMBLE_FX`), **sans contour ni fond vert** (« pas beau ») ; retours : « une seule liane c'est bizarre », « que des wall, mais qui remplissent bien le rond ». **Grand pic final des Chausse-trapes** (sans mutation) : 0,83 s avant la fin de la zone, quand le grand pic de BoneSpikes sort, un coup de dégâts ×3,75 (30 au niveau 1, suit les niveaux et la Puissance) à chaque ennemi dedans (`finalSpike`, weapons.ts) ; demandé pour que l'animation corresponde au jeu. Importeur renommé `tools/vfx/import-pixel-spells.mjs` (tous les packs), effets dans `public/assets/sprites/pixel-spells/` ; earth-spike, lightning-strike et chain-lightning (PVFX) retirés
-- [ ] Liste des autres effets à refaire <!-- TODO: à choisir. Candidats : éclairs de l'Orage et de l'Arc continu (lisibilité en masse), explosion du Trait éclaté ; les ronces ont déjà une retouche en 0.3.1 -->
+- [x] Autres effets : aucun de plus pour la 0.3.6 (2026-11-27, « c'est good ») ; Trait éclaté et lisibilité des éclairs en masse à revoir si les testeurs le demandent
 - [x] Planches (2026-11-25) : `tools/assets-preview.html` (accueil de toutes les planches + sprites candidats animés : **Golems** ; licence lue sur la page du pack : usage permis même commercial, mais **ni redistribution ni modification**, donc pas de teinte ni de retouche) ; `tools/vfx/vfx-preview.html` montre les 5 échantillons **Pixel Spells** (Inferno, Holy, Frost, Storm, Unholy : 240 effets, filtres pack / couleur). Packs dans `tools/vfx/pixel-spells-*/` et `tools/sprites/golems-pack/`, ignorés par git
-- [ ] Un effet à la fois, essayé en jeu ; planche `tools/vfx/vfx-preview.html` pour choisir dans le packs
+- [x] Un effet à la fois, essayé en jeu ; planche `tools/vfx/vfx-preview.html` pour choisir dans les packs
 - [x] **Haches jumelles** (2026-11-27) : petit buff, dégâts ×0,8 → ×0,9 ; sprite `weapon_double_axe` du Bourreau à taille normale (le Bourreau reste ×1,6)
 - [x] **Icônes revues** (2026-11-27, choix de l'utilisateur sur une planche de comparaison) : Champ de ronces 241 → 251, Aura de givre 787 → 788 (même étoile que la Fournaise), Hache de lancer 1457 → 1464, Haches jumelles 1458 → 1467, Hache du bourreau 1539 → 1547, Orbes géants 773 → 830 et Tempête d'orbes 786 → 826 (même spirale l'une que l'autre). Vélocité, Chausse-trapes et Arc continu gardés (`tools/ui/raven-icons.mjs`)
 - [x] **Coffres** (2026-11-27) : le mobilier cassable devient le coffre `chest_full_open_anim` du pack 0x72 (à la place de la caisse) ; cassé, il s'ouvre en 0,25 s, reste ouvert 0,5 s et s'efface (`CHEST_OPEN`, `EffectsSystem.chestOpen`). Règles inchangées
@@ -509,6 +509,7 @@ Demandée le 2026-11-24 : revoir les effets qui en ont besoin, pour qu'on lise l
 - [x] **Arc continu revu** (2026-11-27, « très fort » ; idée de l'utilisateur) : sauts jusqu'à 450 px au lieu de 150, perte de **6 % + 1 % tous les 20 px** de saut (horde serrée 30 px : −7,5 % ; 150 px : −13,5 % ; 400 px : −26 %), +3 → **+2 sauts** (`jumpRange`, `falloffPerPx` de mutation)
 - [x] **Orage revu** (2026-11-27, « pas assez bien ») : **5 foudres** par décharge au lieu de 2, à pleins dégâts mais **sans chaîne** (5 chaînes complètes ≈ 42 coups par décharge), chacune laisse une **zone électrique** `storm-field` (PVFX) : 50 px, 1,5 s, ×0,3 des dégâts toutes les 0,5 s, horloge par ennemi à part (`nextFieldHitAt`)
 - [x] **Page des sprites** (2026-11-27) : `tools/assets-preview.html` montre les 185 sprites du jeu (pack 0x72, tank démon, atlas fx), par catégorie, animés, avec ceux utilisés en jeu marqués
+- [ ] Version 0.3.6 (`package.json`, `CHANGELOG.md`), zip `release/survivor-0.3.6-itch.zip` (2026-11-27) ; reste : zip testé sur itch, tag `v0.3.6`
 - **Finie quand :** chaque effet refait montre sa zone d'action d'un coup d'œil, sans cacher les ennemis.
 
 ### 0.4 — Le niveau en 30 min `[grosse]`

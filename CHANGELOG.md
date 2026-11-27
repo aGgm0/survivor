@@ -2,7 +2,9 @@
 
 Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), numérotation `MAJEUR.MINEUR.CORRECTIF` (voir CLAUDE.md § 9). Tant que la version commence par `0.`, le contenu, l'équilibrage et la sauvegarde peuvent encore changer.
 
-## [Non publié]
+## [0.3.6] — 2026-11-27
+
+Première version publiée depuis la 0.3.0 : elle contient aussi la 0.3.5 (4 nouveaux persos), ainsi que des armes refaites (Mines, Orage, Arc continu, Fournaise), la mort du perso, les coffres, l'historique des parties et de nouvelles icônes.
 
 ### Ajouté
 
@@ -20,7 +22,7 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 - Le mobilier cassable devient un **coffre**, qui s'ouvre quand tu le casses.
 - **Duplicateur** : il ajoute maintenant une zone de plus à chaque pose des Chausse-trapes, des Mines et du Champ de ronces.
 
-## [0.3.5] — 2026-11-27
+## [0.3.5] — 2026-11-27 (pas publiée seule : sortie avec la 0.3.6)
 
 4 nouveaux persos, un par nouvelle arme, et les retours de jeu de la 0.3 (sons des nouvelles armes, Arc continu, ronces, nouveaux effets). La 0.3.1 n'a pas été publiée à part : son contenu est ici.
 
