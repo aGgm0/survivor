@@ -30,7 +30,7 @@ export interface MenuSceneDeps {
   input: Pick<Input, 'wasPressed'>;
   menuOverlay: Pick<MenuOverlay, 'show' | 'hide' | 'takeAction' | 'setPlayReady'>;
   optionsOverlay: Pick<OptionsOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
-  profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack'>;
+  profileOverlay: Pick<ProfileOverlay, 'show' | 'hide' | 'takeBack' | 'takeTab' | 'showTab'>;
   characterOverlay: Pick<CharacterOverlay, 'show' | 'hide' | 'takeChoice' | 'takeBack'>;
   shopOverlay: Pick<ShopOverlay, 'show' | 'hide' | 'refresh' | 'takeAction'>;
   hud: Pick<Hud, 'setVisible'>;
@@ -217,8 +217,21 @@ export class MenuScene implements Scene {
   }
 
   private updateProfile(): void {
-    const back = this.deps.profileOverlay.takeBack();
-    if (back || this.deps.input.wasPressed(CONTROLS.back)) this.open('main');
+    const { profileOverlay, input } = this.deps;
+    const back = profileOverlay.takeBack();
+    if (back || input.wasPressed(CONTROLS.back)) {
+      this.open('main');
+      return;
+    }
+    // Onglets : clic, ou flèches gauche / droite (Q / D, A / D aussi : ce sont les touches de marche).
+    const tab =
+      profileOverlay.takeTab() ??
+      (input.wasPressed(CONTROLS.left)
+        ? 'stats'
+        : input.wasPressed(CONTROLS.right)
+          ? 'history'
+          : null);
+    if (tab) profileOverlay.showTab(tab);
   }
 
   /** Affiche un écran et masque les autres. */

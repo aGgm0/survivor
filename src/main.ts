@@ -124,6 +124,12 @@ const profileOverlay = new ProfileOverlay(
   getElement('profile-overlay', HTMLDivElement),
   getElement('profile-summary', HTMLDivElement),
   getElement('profile-weapons', HTMLDivElement),
+  getElement('profile-history', HTMLDivElement),
+  getElement('profile-stats', HTMLDivElement),
+  {
+    stats: getElement('profile-tab-stats', HTMLButtonElement),
+    history: getElement('profile-tab-history', HTMLButtonElement),
+  },
   getElement('profile-back', HTMLButtonElement),
 );
 // Version affichée dans le menu et sur l'écran de fin (fixe pour tout le build).
@@ -333,6 +339,7 @@ function startRun(chosen: CharacterDef = character): void {
       startWeapon: character.weapon,
       shopRanks: profile.shop,
       sprite: CHARACTER_SPRITES[character.id],
+      characterId: character.id,
     },
   );
   game.setScene(scene);

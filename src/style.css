@@ -1731,3 +1731,204 @@ body {
   font-size: var(--ui-text-small);
   line-height: var(--ui-text-small-line);
 }
+
+/* ------------------------------------------------------- Profil en onglets (2026-11-27) */
+
+/*
+ * Avec les 8 armes jouées, l'écran dépassait de 720 px (le titre sortait par le haut). Les
+ * statistiques passent sur 2 colonnes (cumuls à gauche, cartes d'armes en grille à droite) et
+ * l'historique a son propre onglet.
+ */
+#profile-overlay {
+  gap: 16px;
+}
+
+#profile-overlay .overlay-title {
+  font-size: 40px;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.profile-tab {
+  min-width: 260px;
+  opacity: 0.6;
+}
+
+.profile-tab.is-active {
+  opacity: 1;
+  color: var(--ui-gold);
+}
+
+.profile-stats {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.profile-stats[hidden],
+.profile-history[hidden] {
+  display: none;
+}
+
+#profile-summary {
+  width: 420px;
+}
+
+.profile-weapons {
+  display: grid;
+  grid-template-columns: repeat(2, 330px);
+  gap: 8px;
+}
+
+#profile-weapons {
+  padding: 0;
+  border: none;
+  border-image: none;
+}
+
+.profile-weapon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border-left-width: 4px;
+  padding: 6px 10px;
+}
+
+.profile-weapon .icon {
+  flex: none;
+}
+
+.profile-weapon-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-weapon-name {
+  font-size: 12px;
+  color: var(--ui-gold);
+}
+
+.profile-weapon-detail {
+  font-family: var(--ui-font-text);
+  font-size: var(--ui-text-small);
+  line-height: 0.8;
+  color: #d8cfbd;
+  white-space: nowrap;
+}
+
+/* Historique : une ligne par partie */
+.profile-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 1200px;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 190px 110px 290px 200px 200px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 4px solid var(--ui-tan);
+}
+
+.history-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-name {
+  font-size: 12px;
+}
+
+/* Portrait animé ×2 (celui de l'écran de choix est ×3) */
+.history-portrait {
+  flex: none;
+  width: 32px;
+  height: 56px;
+  background-image: url('/assets/sprites/0x72/0x72_DungeonTilesetII_v1.7.png');
+  background-size: 1024px 1024px;
+  background-position: -256px calc(var(--portrait-y, 164) * -2px);
+  image-rendering: pixelated;
+  animation: history-portrait-idle 0.6s steps(4) infinite;
+}
+
+@keyframes history-portrait-idle {
+  to {
+    background-position-x: -384px;
+  }
+}
+
+.history-result {
+  font-size: 12px;
+}
+
+.history-result.is-victory,
+.history-result.is-endless {
+  color: var(--ui-gold);
+}
+
+.history-result.is-defeat {
+  color: #e05a4f;
+}
+
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.history-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+}
+
+.history-stat-label,
+.history-slot-value,
+.history-when {
+  font-family: var(--ui-font-text);
+  font-size: var(--ui-text-small);
+  line-height: 0.8;
+  color: #a89f8c;
+}
+
+.history-icons {
+  display: flex;
+  gap: 4px;
+}
+
+.history-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40px;
+  white-space: nowrap;
+}
+
+.history-when {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.history-maxed {
+  color: var(--ui-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .history-portrait {
+    animation: none;
+  }
+}

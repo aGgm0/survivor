@@ -19,8 +19,16 @@ export interface WeaponReport {
   readonly share: number;
 }
 
+/** Un passif du build en fin de partie. */
+export interface PassiveReport {
+  readonly id: string;
+  readonly level: number;
+}
+
 /** Bilan affiché sur l'écran de fin (victoire ou défaite). */
 export interface RunReport {
+  /** id du perso joué (data/characters.ts) ; '' si inconnu (tests, bot) */
+  readonly character: string;
   readonly victory: boolean;
   /** Vrai si le joueur a continué en mode sans fin après la victoire */
   readonly endless: boolean;
@@ -36,4 +44,6 @@ export interface RunReport {
   readonly maxedAt: number | null;
   /** Armes triées de la plus efficace à la moins efficace */
   readonly weapons: readonly WeaponReport[];
+  /** Passifs du build (niveau > 0), dans l'ordre de data/upgrades.ts */
+  readonly passives: readonly PassiveReport[];
 }

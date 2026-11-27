@@ -85,6 +85,8 @@ describe('pièces et nourriture', () => {
 describe('or au profil', () => {
   it('l’or d’une partie terminée s’ajoute au total', () => {
     const report: RunReport = {
+      character: '',
+      passives: [],
       victory: false,
       endless: false,
       time: 100,

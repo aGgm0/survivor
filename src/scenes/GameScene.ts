@@ -34,6 +34,7 @@ import {
 import { ENEMY_POOL_SIZE, SPAWN } from '../data/spawn';
 import { BOSS_ABILITIES, BOSS_TYPE } from '../data/waves';
 import { PROJECTILE_POOL_SIZE, WEAPONS, type WeaponDef } from '../data/weapons';
+import { PASSIVES } from '../data/upgrades';
 import { BOSS_CHALLENGES } from '../data/characters';
 import { FURNITURE, PICKUPS } from '../data/furniture';
 import { applyShopBonuses } from '../data/shop';
@@ -181,6 +182,8 @@ export class GameScene implements Scene, Build {
   readonly progression = new XpSystem();
   /** Niveau de chaque passif possédé (absent = 0) */
   readonly passiveLevels = new Map<string, number>();
+  /** id du perso joué (bilan de fin de partie) */
+  private readonly characterId: string;
   /** Level up gagnés mais pas encore choisis (plusieurs d'un coup avec une grosse gemme) */
   private pendingLevelUps = 0;
   /** Choix affichés à l'écran ; null = pas de level up en cours */
@@ -231,12 +234,15 @@ export class GameScene implements Scene, Build {
       startWeapon?: WeaponDef;
       /** Apparence du perso choisi (purement visuel) */
       sprite?: SpriteDef;
+      /** id du perso choisi, gardé dans le bilan (historique du profil) */
+      characterId?: string;
       /** Rangs achetés à la boutique (bonus de départ) */
       shopRanks?: Readonly<Record<string, number>>;
     } = {},
   ) {
     this.effects = new EffectsSystem(deps.effects ?? null, deps.sprites ?? null);
     if (options.sprite) this.player.sprite = options.sprite;
+    this.characterId = options.characterId ?? '';
     // Bonus de boutique : appliqués avant tout, sans prendre d'emplacement de passif.
     this.shopRanks = options.shopRanks ?? {};
     this.xpGainMult = applyShopBonuses(this.player, this.shopRanks);
@@ -715,8 +721,14 @@ export class GameScene implements Scene, Build {
       gold: this.gold,
       level: this.progression.level,
       challenges: this.challenges.slice(),
+      character: this.characterId,
       maxedAt: this.maxedAt,
       weapons: buildDamageReport(this.weapons),
+      // Une seule fois, en fin de partie : créer ce tableau ici est sans risque.
+      passives: PASSIVES.flatMap((p) => {
+        const level = this.passiveLevels.get(p.id) ?? 0;
+        return level > 0 ? [{ id: p.id, level }] : [];
+      }),
     };
   }
 

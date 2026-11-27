@@ -19,6 +19,8 @@ const [ARCANIST, PYRO, RUNIST] = CHARACTERS as [
 
 function report(overrides: Partial<RunReport> = {}): RunReport {
   return {
+    character: '',
+    passives: [],
     victory: false,
     endless: false,
     time: 300,

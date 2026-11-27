@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HISTORY_SIZE,
   PROFILE_VERSION,
   emptyProfile,
   favoriteWeapon,
@@ -11,6 +12,8 @@ import type { RunReport } from '../src/types/RunReport';
 
 function report(overrides: Partial<RunReport> = {}): RunReport {
   return {
+    character: '',
+    passives: [],
     victory: false,
     endless: false,
     time: 300,
@@ -135,5 +138,60 @@ describe('parseProfile', () => {
   it('aller-retour : ce qui est sauvegardé est relu à l’identique', () => {
     const profile = recordRun(emptyProfile(), report({ victory: true }));
     expect(parseProfile(JSON.parse(JSON.stringify(serializeProfile(profile))))).toEqual(profile);
+  });
+});
+
+describe('historique des parties', () => {
+  it('garde les 5 dernières parties, la plus récente en premier', () => {
+    const profile = emptyProfile();
+    for (let i = 1; i <= HISTORY_SIZE + 2; i++) recordRun(profile, report({ kills: i }), i * 1000);
+    expect(profile.history).toHaveLength(HISTORY_SIZE);
+    expect(profile.history.map((h) => h.kills)).toEqual([7, 6, 5, 4, 3]);
+    expect(profile.history[0]?.at).toBe(7000);
+  });
+
+  it('garde le perso, les armes (icône de mutation, part des dégâts) et les passifs', () => {
+    const profile = emptyProfile();
+    recordRun(
+      profile,
+      report({ character: 'pyromancer', passives: [{ id: 'power', level: 3 }], maxedAt: 540 }),
+    );
+    const entry = profile.history[0];
+    expect(entry?.character).toBe('pyromancer');
+    expect(entry?.weapons.map((w) => [w.icon, w.level, w.share])).toEqual([
+      ['frostAura', 5, 0.7],
+      ['arcaneBolt', 3, 0.3],
+    ]);
+    expect(entry?.passives).toEqual([{ id: 'power', level: 3 }]);
+    expect(entry?.maxedAt).toBe(540);
+  });
+
+  it('relu sans confiance : ligne abîmée ignorée, armes et passifs inconnus retirés', () => {
+    const profile = parseProfile({
+      history: [
+        'n’importe quoi',
+        { victory: 'oui' },
+        {
+          victory: true,
+          time: 600,
+          character: 'arcanist',
+          weapons: [{ id: 'arcaneBolt', icon: 'inventée', share: 7 }, { id: 'laser' }],
+          passives: [
+            { id: 'power', level: 2 },
+            { id: 'inventé', level: 9 },
+          ],
+        },
+      ],
+    });
+    expect(profile.history).toHaveLength(1);
+    const entry = profile.history[0];
+    expect(entry?.weapons).toHaveLength(1);
+    expect(entry?.weapons[0]?.icon).toBe('arcaneBolt');
+    expect(entry?.weapons[0]?.share).toBe(1);
+    expect(entry?.passives).toEqual([{ id: 'power', level: 2 }]);
+  });
+
+  it('ancienne sauvegarde sans historique : historique vide', () => {
+    expect(parseProfile({ version: 1, runs: 3 }).history).toEqual([]);
   });
 });

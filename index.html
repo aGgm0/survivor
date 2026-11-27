@@ -75,11 +75,23 @@
           </div>
           <div id="profile-overlay" class="overlay overlay-menu" hidden>
             <p class="overlay-title">PROFIL</p>
-            <div id="profile-summary" class="profile-list"></div>
-            <div id="profile-weapons" class="profile-list"></div>
+            <div class="profile-tabs">
+              <button id="profile-tab-stats" type="button" class="menu-button profile-tab">
+                Statistiques
+              </button>
+              <button id="profile-tab-history" type="button" class="menu-button profile-tab">
+                Dernières parties
+              </button>
+            </div>
+            <div id="profile-stats" class="profile-stats">
+              <div id="profile-summary" class="profile-list"></div>
+              <div id="profile-weapons" class="profile-weapons"></div>
+            </div>
+            <div id="profile-history" class="profile-history" hidden></div>
             <div class="menu-buttons">
               <button id="profile-back" type="button" class="menu-button">Retour (Échap)</button>
             </div>
+            <p class="overlay-hint">← → : changer d’onglet</p>
           </div>
           <div id="options-overlay" class="overlay overlay-menu" hidden>
             <p class="overlay-title">OPTIONS</p>

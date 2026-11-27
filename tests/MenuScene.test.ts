@@ -16,6 +16,7 @@ function newMenu(profile: Profile = emptyProfile()) {
     optionsVisible: false,
     profileVisible: false,
     profileBack: false,
+    profileTab: '',
     hudVisible: true,
     plays: 0,
     /** Perso de la dernière partie lancée */
@@ -65,6 +66,8 @@ function newMenu(profile: Profile = emptyProfile()) {
     profileOverlay: {
       show: () => (ui.profileVisible = true),
       hide: () => (ui.profileVisible = false),
+      takeTab: () => null,
+      showTab: (tab: string) => (ui.profileTab = tab),
       takeBack: () => {
         const b = ui.profileBack;
         ui.profileBack = false;
@@ -286,6 +289,17 @@ describe('MenuScene — Profil', () => {
     press('Escape');
     expect(scene.currentScreen).toBe('main');
     expect(ui.plays).toBe(0);
+  });
+
+  it('flèche droite : onglet Dernières parties ; flèche gauche : Statistiques', () => {
+    const { scene, ui, press } = newMenu();
+    ui.menuClick = 'profile';
+    scene.update();
+    press('ArrowRight');
+    expect(ui.profileTab).toBe('history');
+    press('ArrowLeft');
+    expect(ui.profileTab).toBe('stats');
+    expect(scene.currentScreen).toBe('profile');
   });
 });
 

@@ -4,8 +4,13 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 
 ## [Non publié]
 
+### Ajouté
+
+- **Historique des 5 dernières parties** dans le Profil (onglet « Dernières parties ») : perso, résultat, temps, niveau, kills, or, armes et passifs de chaque partie.
+
 ### Modifié
 
+- **Profil** refait en 2 onglets, avec l'icône de chaque arme : il tient enfin à l'écran avec les 8 armes.
 - **Mines refaites** : une mine met 0,5 s à s'armer (elle saute derrière toi, dans la horde qui te suit), puis explose plus large (90 px) et plus fort (×5), avec une vraie boule de feu (pack Pixel Spells: Inferno) et un gros « boum », et **laisse des flammes au sol pendant 3 s** qui brûlent tout ce qui passe dedans. Les mines durent aussi 2 fois plus longtemps.
 - **Arc continu** : les sauts vont beaucoup plus loin (450 px), mais un long saut fait perdre plus de dégâts ; +2 sauts au lieu de +3.
 - **Orage** plus fort : 5 foudres par décharge au lieu de 2, et chacune laisse une zone électrique au sol pendant 1,5 s. Les foudres ne lancent plus de chaîne.
