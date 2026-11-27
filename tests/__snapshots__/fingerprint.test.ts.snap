@@ -1994,102 +1994,36 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > sword i
 
 exports[`empreinte des parties (refactors sans changement de gameplay) > throwingAxe imposée, mutation -1, 1 min 1`] = `
 {
-  "activeEnemies": 11,
+  "activeEnemies": 9,
   "enemies": [
     [
       "basic",
-      206.243,
-      -615.436,
-      23,
-    ],
-    [
-      "basic",
-      -829.312,
-      -325.031,
+      -2068.404,
+      25.514,
       23,
     ],
     [
       "fast",
-      -517.606,
-      -935.082,
-      5,
-    ],
-    [
-      "fast",
-      -811.424,
-      -362.258,
+      -1186.229,
+      599.788,
       5,
     ],
     [
       "basic",
-      -800.491,
-      -604.956,
-      23,
-    ],
-  ],
-  "gold": 1,
-  "hp": 115,
-  "level": 4,
-  "player": [
-    -633.24,
-    -506.171,
-  ],
-  "time": 60.017,
-  "weapons": [
-    [
-      "arcaneBolt",
-      1,
-      371,
-      29,
-    ],
-    [
-      "twinAxes",
-      6,
-      245,
-      26,
-    ],
-    [
-      "caltrops",
-      1,
-      21,
-      4,
-    ],
-  ],
-}
-`;
-
-exports[`empreinte des parties (refactors sans changement de gameplay) > throwingAxe imposée, mutation 0, 1 min 1`] = `
-{
-  "activeEnemies": 10,
-  "enemies": [
-    [
-      "fast",
-      -1821.25,
-      -205.812,
-      5,
-    ],
-    [
-      "basic",
-      -2290.174,
-      -6.747,
+      -1965.312,
+      126.55,
       23,
     ],
     [
       "fast",
-      -1572.983,
-      795.829,
+      -1772.834,
+      420.007,
       5,
     ],
     [
       "fast",
-      -1908.245,
-      442.642,
-      5,
-    ],
-    [
-      "fast",
-      -708.013,
-      369.205,
+      -1122.256,
+      -3.851,
       5,
     ],
   ],
@@ -2097,31 +2031,103 @@ exports[`empreinte des parties (refactors sans changement de gameplay) > throwin
   "hp": 100,
   "level": 4,
   "player": [
-    -1503.085,
-    357.504,
+    -1210.294,
+    -200.734,
   ],
   "time": 60.017,
   "weapons": [
     [
       "arcaneBolt",
       1,
-      289,
-      30,
+      356,
+      29,
     ],
     [
       "twinAxes",
       6,
-      110,
-      10,
+      315,
+      28,
+    ],
+    [
+      "caltrops",
+      1,
+      25,
+      3,
+    ],
+    [
+      "burningAura",
+      1,
+      5,
+      1,
+    ],
+  ],
+}
+`;
+
+exports[`empreinte des parties (refactors sans changement de gameplay) > throwingAxe imposée, mutation 0, 1 min 1`] = `
+{
+  "activeEnemies": 11,
+  "enemies": [
+    [
+      "basic",
+      -2176.613,
+      164.815,
+      23,
+    ],
+    [
+      "fast",
+      -1848.836,
+      470.951,
+      5,
+    ],
+    [
+      "fast",
+      -2712.42,
+      783.888,
+      5,
+    ],
+    [
+      "basic",
+      -3205.687,
+      108.004,
+      23,
+    ],
+    [
+      "fast",
+      -2542.051,
+      710.845,
+      5,
+    ],
+  ],
+  "gold": 0,
+  "hp": 100,
+  "level": 4,
+  "player": [
+    -2591.058,
+    318.509,
+  ],
+  "time": 60.017,
+  "weapons": [
+    [
+      "arcaneBolt",
+      1,
+      314,
+      27,
+    ],
+    [
+      "twinAxes",
+      6,
+      102,
+      11,
     ],
     [
       "chainLightning",
       1,
-      320,
+      293,
       21,
     ],
     [
-      "sword",
+      "runicOrbs",
       1,
       0,
       0,

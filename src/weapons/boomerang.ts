@@ -171,12 +171,14 @@ export const BOOMERANG_BEHAVIOR: WeaponBehavior<BoomerangWeaponDef> = {
     // La 1re hache part droit sur la cible, les suivantes de part et d'autre, en alternant
     // (0°, +25°, −25°, +50°...). Un éventail centré ratait la cible avec un nombre pair de
     // haches : elles passaient des deux côtés (retour de jeu).
+    // Haches jumelles : tout autour, régulièrement espacées (la 1re reste sur la cible).
     const base = Math.atan2(target.y - ctx.y, target.x - ctx.x);
-    const spread = (def.spreadDeg * Math.PI) / 180;
+    const around = weapon.mutation?.around === true;
+    const spread = around ? (Math.PI * 2) / weapon.count : (def.spreadDeg * Math.PI) / 180;
     let thrown = 0;
     for (let k = 0; k < weapon.count; k++) {
       const side = k % 2 === 1 ? 1 : -1;
-      const offset = side * Math.ceil(k / 2) * spread;
+      const offset = around ? k * spread : side * Math.ceil(k / 2) * spread;
       if (launch(weapon, ctx.x, ctx.y, base + offset)) thrown++;
     }
     if (thrown === 0) return; // toutes en vol : on retente à l'update suivante

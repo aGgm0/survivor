@@ -87,6 +87,11 @@ export interface MutationDef {
   readonly penetration?: number;
   /** Boomerang : multiplicateur de la vitesse de vol */
   readonly speedMult?: number;
+  /**
+   * Boomerang : les haches partent tout autour du joueur (régulièrement espacées, la 1re droit
+   * sur la cible) au lieu d'un éventail vers la cible
+   */
+  readonly around?: boolean;
   /** Zone : multiplicateur de la durée des zones */
   readonly durationMult?: number;
   /**
@@ -516,11 +521,14 @@ export const WEAPONS = {
         id: 'twinAxes',
         name: 'Haches jumelles',
         short: 'Hj',
-        description: '4 haches doubles en éventail à chaque lancer, dégâts ×0,9',
+        description: '6 haches doubles lancées tout autour de toi, dégâts ×0,675',
         color: '#e8e8f0',
-        count: 4,
-        // ×0,8 → ×0,9 (2026-11-27, petit buff : un peu moins forte que le Bourreau)
-        damageMult: 0.9,
+        // Retours de la 0.3.7 (2026-11-27) : tout autour au lieu d'un éventail, 4 → 6 haches,
+        // ×0,9 → ×0,675 (−25 %). Contre la horde qui encercle : 6 × 0,675 = 4,05 contre 3,6 ;
+        // une seule hache part vers la cible : plus faible sur un boss (le Bourreau garde ce rôle).
+        count: 6,
+        around: true,
+        damageMult: 0.675,
         // La hache double du Bourreau, à la taille normale (le Bourreau est ×1,6) : demandé.
         sprite: 'weapon_double_axe',
       },

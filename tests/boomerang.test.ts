@@ -7,6 +7,7 @@ import { Projectile } from '../src/entities/Projectile';
 import { Weapon } from '../src/entities/Weapon';
 import { CollisionSystem } from '../src/systems/CollisionSystem';
 import { WeaponSystem } from '../src/systems/WeaponSystem';
+import { FLIGHT_STRIDE } from '../src/weapons/boomerang';
 
 const NO_MODS = { damageMult: 1, cooldownMult: 1, knockbackMult: 1 };
 const DT = 1 / 60;
@@ -63,11 +64,25 @@ describe('Hache de lancer', () => {
     expect(axe.cooldownTimer).toBe(0);
   });
 
-  it('Haches jumelles : 4 haches par lancer ; Hache du bourreau : plus grosse et plus lente', () => {
-    const twin = new Weapon(WEAPONS.throwingAxe);
-    twin.mutation = WEAPONS.throwingAxe.mutations[0];
-    twin.recompute(NO_MODS);
-    expect(twin.count).toBe(4);
+  it('Haches jumelles : 6 haches tout autour, la 1re droit sur la cible', () => {
+    const { axe, run } = setup(150); // cible à droite (angle 0)
+    axe.level = 5;
+    axe.mutation = WEAPONS.throwingAxe.mutations[0];
+    axe.recompute(NO_MODS);
+    expect(axe.count).toBe(6);
+    run(DT); // un lancer
+    const angles: number[] = [];
+    const f = axe.flights;
+    if (!f) throw new Error();
+    for (let o = 0; o < f.length; o += FLIGHT_STRIDE) {
+      if (f[o] === 0) continue;
+      const deg = (Math.atan2(f[o + 6] ?? 0, f[o + 5] ?? 0) * 180) / Math.PI;
+      angles.push(Math.round((deg + 360) % 360));
+    }
+    expect(angles.sort((a, b) => a - b)).toEqual([0, 60, 120, 180, 240, 300]);
+  });
+
+  it('Hache du bourreau : plus grosse et plus lente', () => {
     const big = new Weapon(WEAPONS.throwingAxe);
     big.level = 5;
     big.mutation = WEAPONS.throwingAxe.mutations[1];
