@@ -127,6 +127,28 @@
         color: #a89f8c;
         font-size: 10px;
       }
+      .used-tag {
+        color: #7bd36b;
+        font-size: 10px;
+        font-weight: normal;
+        font-family: 'DungeonMode', monospace;
+      }
+      .cell.used {
+        border-color: #4f7a46;
+      }
+      .cell .name {
+        max-width: 180px;
+        overflow-wrap: anywhere;
+        text-align: center;
+      }
+      #search {
+        font: inherit;
+        font-size: 12px;
+        background: #1d1a24;
+        color: #ece6d6;
+        border: 2px solid #3a3446;
+        padding: 6px 8px;
+      }
       canvas {
         image-rendering: pixelated;
         display: block;
@@ -136,7 +158,10 @@
   </head>
   <body>
     <h1>Assets du jeu</h1>
-    <p>Toutes les planches d'outils, et les packs de sprites candidats (pas encore en jeu).</p>
+    <p>
+      Toutes les planches d'outils, tous les sprites du jeu, et les packs de sprites candidats (pas
+      encore en jeu).
+    </p>
 
     <h2>Planches</h2>
     <div class="links">
@@ -152,6 +177,28 @@
       <a href="/tools/ui/fonts-preview.html">Polices<span>comparaison des polices pixel</span></a>
       <a href="/tools/audio/preview.html">Bruitages<span>écoute et rafale des sons du jeu</span></a>
     </div>
+
+    <h2>Sprites du jeu</h2>
+    <p>
+      Tous les sprites livrés avec le jeu : pack 0x72 DungeonTileset II (CC0), monstres faits maison
+      (<code>sprites/monsters/</code>) et atlas d'effets généré (<code>sprites/fx/</code>). Une case
+      par animation ; <b class="used-tag">EN JEU</b> = cité par <code>data/sprites.ts</code> ou
+      <code>data/weapons.ts</code>.
+    </p>
+    <div class="toolbar">
+      <label>Chercher <input id="search" type="search" placeholder="demon, sword…" /></label>
+      <label
+        >Catégorie
+        <select id="category">
+          <option value="">toutes</option>
+        </select>
+      </label>
+      <label><input id="only-used" type="checkbox" /> en jeu seulement</label>
+      <span class="meta" id="count"></span>
+    </div>
+    <div id="game-sprites"></div>
+    <h3>Atlas du sol et des murs (0x72)</h3>
+    <div class="grid" id="atlases"></div>
 
     <h2>Sprites candidats</h2>
     <div class="toolbar">
@@ -228,6 +275,186 @@
       }
       zoomSelect.addEventListener('change', () => players.forEach(resize));
 
+      // --- Sprites du jeu : atlas découpés par leur liste (« nom x y l h » par ligne) ---
+      const SPRITES = '/assets/sprites/';
+      const GAME_ATLASES = [
+        {
+          pack: '0x72',
+          image: `${SPRITES}0x72/0x72_DungeonTilesetII_v1.7.png`,
+          list: `${SPRITES}0x72/tile_list_v1.7`,
+        },
+        {
+          pack: 'maison',
+          image: `${SPRITES}monsters/monsters.png`,
+          list: `${SPRITES}monsters/monsters_list`,
+        },
+        { pack: 'fx', image: `${SPRITES}fx/fx.png`, list: `${SPRITES}fx/fx_list` },
+      ];
+      /** Catégorie d'une animation, d'après son nom (premier mot-clé trouvé). */
+      const CATEGORIES = [
+        ['Héros', /^(knight|wizzard|elf|dwarf|lizard|angel|doc|pumpkin_dude)_/],
+        [
+          'Monstres',
+          /(demon|zombie|orc|ogre|imp|chort|goblin|skelet|slug|swampy|muddy|necromancer|wogol)/,
+        ],
+        ['Armes', /^weapon_/],
+        ['Effets', /^(gem|bolt|orb)/],
+        ['Objets', /^(flask|coin|chest|crate|skull|bomb|ui_heart)/],
+        ['Sol', /^(floor|hole|edge)/],
+        ['Murs et décor', /./],
+      ];
+      const category = (name) => CATEGORIES.find(([, re]) => re.test(name))[0];
+
+      // Noms cités par les données du jeu (Vite sert le TypeScript tel quel en dev).
+      let usedText = '';
+      for (const file of ['/src/data/sprites.ts', '/src/data/weapons.ts']) {
+        try {
+          const data = await import(file);
+          usedText += JSON.stringify(Object.values(data).filter((v) => typeof v !== 'function'));
+        } catch {
+          // module illisible : ses sprites ne seront simplement pas marqués
+        }
+      }
+      // Sprites cités hors des données (constantes de code).
+      usedText += JSON.stringify(['weapon_knight_sword']); // épée de l'Estoc (systems/EffectsSystem.ts)
+      const isUsed = (anim) => usedText.includes(`"${anim}`);
+
+      const gameEl = document.getElementById('game-sprites');
+      const gameCells = [];
+      for (const atlas of GAME_ATLASES) {
+        let img, text;
+        try {
+          [img, text] = await Promise.all([
+            loadImage(atlas.image),
+            fetch(atlas.list).then((r) => (r.ok ? r.text() : Promise.reject())),
+          ]);
+        } catch {
+          continue;
+        }
+        // Regroupe les images `nom_f0`, `nom_f1`… en une animation.
+        const anims = new Map();
+        for (const line of text.split('\n')) {
+          const [name, x, y, w, h] = line.trim().split(/\s+/);
+          if (!h) continue;
+          const anim = name.replace(/_f\d+$/, '');
+          if (!anims.has(anim)) anims.set(anim, []);
+          anims.get(anim).push({ x: +x, y: +y, w: +w, h: +h });
+        }
+        for (const [anim, frames] of anims) {
+          const w = Math.max(...frames.map((f) => f.w));
+          const h = Math.max(...frames.map((f) => f.h));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const p = { canvas, img, w, h, frames: frames.length, ms: 100, rects: frames };
+          resize(p);
+          players.push(p);
+          const used = isUsed(anim);
+          const cell = document.createElement('div');
+          cell.className = `cell${used ? ' used' : ''}`;
+          cell.title = 'Clic : copier le nom';
+          cell.style.cursor = 'pointer';
+          cell.addEventListener('click', () => navigator.clipboard?.writeText(anim));
+          const meta = `${atlas.pack} · ${frames.length > 1 ? `${frames.length} images · ` : ''}${w}×${h}`;
+          cell.append(
+            canvas,
+            Object.assign(document.createElement('div'), { className: 'name', textContent: anim }),
+            Object.assign(document.createElement('div'), { className: 'meta', textContent: meta }),
+          );
+          if (used) {
+            cell.append(
+              Object.assign(document.createElement('div'), {
+                className: 'used-tag',
+                textContent: 'EN JEU',
+              }),
+            );
+          }
+          gameCells.push({ cell, anim, used, cat: category(anim) });
+        }
+      }
+
+      // Une grille par catégorie, dans l'ordre de CATEGORIES.
+      const categorySelect = document.getElementById('category');
+      const sections = new Map();
+      for (const [cat] of CATEGORIES) {
+        const cells = gameCells.filter((c) => c.cat === cat);
+        if (cells.length === 0) continue;
+        categorySelect.append(
+          Object.assign(document.createElement('option'), { value: cat, textContent: cat }),
+        );
+        const title = document.createElement('h3');
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        grid.append(...cells.map((c) => c.cell));
+        gameEl.append(title, grid);
+        sections.set(cat, { title, grid, cells });
+      }
+      if (gameCells.length === 0) {
+        gameEl.append(
+          Object.assign(document.createElement('p'), {
+            textContent: 'Atlas introuvables : lancer la page avec npm run dev.',
+          }),
+        );
+      }
+
+      const searchInput = document.getElementById('search');
+      const onlyUsed = document.getElementById('only-used');
+      function filterSprites() {
+        const q = searchInput.value.trim().toLowerCase();
+        const cat = categorySelect.value;
+        let shown = 0;
+        for (const [name, s] of sections) {
+          let visible = 0;
+          for (const c of s.cells) {
+            const ok =
+              (!q || c.anim.includes(q)) && (!onlyUsed.checked || c.used) && (!cat || cat === name);
+            c.cell.style.display = ok ? '' : 'none';
+            if (ok) visible++;
+          }
+          s.title.textContent = `${name} (${visible})`;
+          s.title.style.display = s.grid.style.display = visible ? '' : 'none';
+          shown += visible;
+        }
+        document.getElementById('count').textContent = `${shown} / ${gameCells.length} sprites`;
+      }
+      searchInput.addEventListener('input', filterSprites);
+      categorySelect.addEventListener('change', filterSprites);
+      onlyUsed.addEventListener('change', filterSprites);
+      filterSprites();
+
+      // Atlas entiers du sol et des murs (pas de liste : affichés tels quels).
+      const atlasesEl = document.getElementById('atlases');
+      for (const file of [
+        'atlas_floor-16x16.png',
+        'atlas_walls_low-16x16.png',
+        'atlas_walls_high-16x32.png',
+      ]) {
+        let img;
+        try {
+          img = await loadImage(`${SPRITES}0x72/${file}`);
+        } catch {
+          continue;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        const p = { canvas, w: img.width, h: img.height, frames: 1, static: true };
+        resize(p);
+        players.push(p);
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.append(
+          canvas,
+          Object.assign(document.createElement('div'), { textContent: file }),
+          Object.assign(document.createElement('div'), {
+            className: 'meta',
+            textContent: `${img.width}×${img.height}`,
+          }),
+        );
+        atlasesEl.append(cell);
+      }
+
       const packsEl = document.getElementById('packs');
       for (const pack of SPRITE_PACKS) {
         const h = document.createElement('h3');
@@ -291,12 +518,19 @@
 
       function tick(now) {
         for (const p of players) {
+          if (p.static) continue;
           const index = Math.floor(now / p.ms) % p.frames;
           if (index === p.last) continue;
           p.last = index;
           const ctx = p.canvas.getContext('2d');
           ctx.clearRect(0, 0, p.w, p.h);
-          ctx.drawImage(p.img, index * p.w, 0, p.w, p.h, 0, 0, p.w, p.h);
+          if (p.rects) {
+            // Image d'atlas : posée en bas au centre (comme en jeu, pieds en bas).
+            const r = p.rects[index];
+            ctx.drawImage(p.img, r.x, r.y, r.w, r.h, (p.w - r.w) / 2, p.h - r.h, r.w, r.h);
+          } else {
+            ctx.drawImage(p.img, index * p.w, 0, p.w, p.h, 0, 0, p.w, p.h);
+          }
         }
         requestAnimationFrame(tick);
       }

@@ -15,6 +15,7 @@ Toutes les versions publiées du jeu. Format : [Keep a Changelog](https://keepac
 ### Modifié
 
 - **Arc continu** moins fort : +3 sauts au lieu de +4, et chaque saut perd 8 % des dégâts (avant : aucune perte).
+- **Fournaise** plus forte : +40 % de dégâts, onde 20 % plus grande, et une onde toutes les 1,2 s au lieu de 1,5 s.
 - **Fournaise** : l'onde de feu est maintenant un vrai anneau de flammes qui s'élargit jusqu'à sa portée (effet du pack Pixel Spells: Inferno, Odd Jelly Games).
 - **Champ de ronces** plus lisible : des buissons de ronces remplissent toute la zone qui ralentit.
 - **Chausse-trapes** : juste avant de disparaître, un grand pic sort et frappe fort tous les ennemis dans la zone (30 dégâts au niveau 1).

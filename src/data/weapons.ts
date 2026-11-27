@@ -589,14 +589,15 @@ export const WEAPONS = {
         name: 'Fournaise',
         short: 'Fo',
         description:
-          'Toutes les 1,5 s, une onde de feu part de toi (×1,3 rayon) : dégâts ×5,6 sur les gros, ×2 sur les autres, pénétration +30',
+          'Toutes les 1,2 s, une onde de feu part de toi (×1,6 rayon) : dégâts ×7,8 sur les gros, ×2,8 sur les autres, pénétration +30',
         color: '#ff5a1f',
         penetration: 30, // 0.3 : anti-gros, et retour « Fournaise trop faible » (tank : −33 % → −17 %)
-        radiusMult: 1.2, // +20 % (retour de jeu)
-        damageMult: 4,
+        // 1,2 → 1,44 (+20 %) et dégâts 4 → 5,6 (+40 %), retour de jeu du 2026-11-27 : trop faible
+        radiusMult: 1.44,
+        damageMult: 5.6,
         // 0,5 → 1,5 s (1,8 s du 2026-11-21 au 2026-11-23 : bot, Fournaise 7:13 contre 8:51 pour
-        // l'Aura sans mutation)
-        cooldownMult: 3,
+        // l'Aura sans mutation) ; 1,5 → 1,2 s le 2026-11-27 (−20 %)
+        cooldownMult: 2.4,
         // 3 → 1,5 : le recul sortait les ennemis de la zone avant le souffle suivant (bot : la
         // Fournaise faisait moins bien que l'aura de base)
         knockbackMult: 1.5,

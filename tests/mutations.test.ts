@@ -64,16 +64,16 @@ describe('mutation — effets sur les stats', () => {
     expect(w.color).toBe(FROST.color);
   });
 
-  it('Fournaise : rayon ×1,2, dégâts ×4, une onde toutes les 1,5 s (la Hâte compte)', () => {
+  it('Fournaise : rayon ×1,44, dégâts ×5,6, une onde toutes les 1,2 s (la Hâte compte)', () => {
     const w = maxedAura();
     const [radius, damage] = [w.radius, w.damage];
     w.mutation = FURNACE;
     w.recompute(NO_MODS);
-    expect(w.radius).toBeCloseTo(radius * 1.2);
-    expect(w.damage).toBeCloseTo(damage * 4);
-    expect(w.cooldown).toBeCloseTo(1.5);
+    expect(w.radius).toBeCloseTo(radius * 1.44);
+    expect(w.damage).toBeCloseTo(damage * 5.6);
+    expect(w.cooldown).toBeCloseTo(1.2);
     w.recompute({ ...NO_MODS, cooldownMult: 0.5 });
-    expect(w.cooldown).toBeCloseTo(0.75);
+    expect(w.cooldown).toBeCloseTo(0.6);
   });
 
   it('le damage meter affiche le nom de la mutation avec une étoile', () => {
